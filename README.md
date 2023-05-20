@@ -2,7 +2,6 @@
 web media player
 
 
-
 ## Prepare Raspberry Pi 4 
 
 
