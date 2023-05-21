@@ -13,9 +13,10 @@ class Property(object):
 
     def getDict(self):
         with open(self.file_full_path,"r") as file_object:
-            data=yaml.load(file_object,Loader=yaml.SafeLoader)
+            data=yaml.load(file_object, Loader=yaml.SafeLoader)
             return data
 
     def writeDict(self, dataDict):
-        with open(self.file_full_path,"w") as file_object:
-            yaml.dump(dataDict,file_object)
+        os.makedirs(os.path.dirname(self.file_full_path), exist_ok=True)
+        with open(self.file_full_path,"w", encoding="utf-8") as file_object:
+            yaml.dump(dataDict, file_object)

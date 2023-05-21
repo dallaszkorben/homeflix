@@ -16,7 +16,7 @@ class Config( Property ):
     DEFAULT_WEB_RELATIVE_PATH = "/playem"
     DEFAULT_WEB_ABSOLUTE_PATH = "/var/www/playem"
 
-    DAFAULT_MEDIA_ABSOLUTE_PATH = "/media/pi/01.Movie"
+    DEFAULT_MEDIA_ABSOLUTE_PATH = "/media/pi/01.Movie"
 
     __instance = None
 
@@ -43,7 +43,7 @@ class Config( Property ):
     def buildConfDict(self):
         confDict = {}
         confDict['log'] = {}
-        confDict['log']['level'] = Config.DEFAUL_LOG_LEVEL
+        confDict['log']['level'] = Config.DEFAULT_LOG_LEVEL
         confDict['log']['file-name'] = Config.DEFAULT_LOG_FILE_NAME
         
         confDict['web'] = {}
@@ -51,7 +51,7 @@ class Config( Property ):
         confDict['web']['absolute-path'] = Config.DEFAULT_WEB_ABSOLUTE_PATH
 
         confDict['media'] = {}
-        confDict['media']['absolute-path'] = Config DEFAULT_MEDIA_ABSOLUTE_PATH
+        confDict['media']['absolute-path'] = Config.DEFAULT_MEDIA_ABSOLUTE_PATH
 
         self.writeDict(confDict)
         return confDict
