@@ -5,6 +5,15 @@ web media player
 ## Prepare Raspberry Pi 4 
 
 
+~~
+### Install python 3.7
+```sh
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.7
+sudo rm /usr/bin/python3
+sudo ln -s /usr/bin/python3.7 /usr/bin/python3
+```
+
 ### Get rid of the old python 
 ```sh
 sudo apt-get update
@@ -15,39 +24,39 @@ sudo apt -s remove python2
 sudo apt-get autoremove
 ```
 
+## Get rid of the old pip 
+```sh
+sudo apt remove python3-pip
+sudo apt install python3-pip
+```
+~~
+
+
+## Install python 3.10 
+```sh
+sudo apt update && sudo apt upgrade -y
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.10
+python3.10 --version
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+python3.10 -m pip --version
+python3.10 -m pip install --upgrade pip
+sudo apt install python3.10-venv
+```
+
+```sh
+~~~ sudo rm /usr/bin/python ~~~
+sudo rm /usr/bin/python3
+sudo ln -s /usr/local/bin/python3.10 /usr/bin/python3
+~~~ sudo ln -s /usr/bin/python3 /usr/bin/python ~~~
+```
+
+
 ### Install WSGI module to appache2
 ```sh
 sudo apt-get install libapache2-mod-wsgi-py3 python-dev
-python -m pip install mod-wsgi
 sudo a2enmod wsgi 
-
-
-(==>
-sudo mkdir /usr/local/programs
-sudo chown root:pi /usr/local/programs
-sudo chmod 775 /usr/local/programs
-cd /usr/local/programs
-
-wget https://www.python.org/ftp/python/3.9.15/Python-3.9.15.tgz
-tar -zxvf Python-3.9.15.tgz
-cd /usr/local/programs/Python-3.9.15
-./configure --enable-optimizations
-sudo make altinstall
-sudo rm /usr/bin/python
-sudo rm /usr/bin/python3
-sudo ln -s /usr/local/bin/python3.9 /usr/bin/python
-sudo ln -s /usr/local/bin/python3.9 /usr/bin/python3
-python -m pip --version
-python -m pip install --upgrade pip
-<==)
-
-
-### Create file system for your code - Before the project was pushed first time - Skip it
-```sh
-python3 -m pip install virtualenv
-sudo ln -s  /home/pi/Projects/playem/var/www/playem/ /var/www/playem
-cd /var/www/playem
-virtualenv --python=python3 env
 ```
 
 ### Clone the project
@@ -61,11 +70,28 @@ sudo rm /etc/apache2/sites-enabled/*.conf
 sudo ln -s  /etc/apache2/sites-available/playem.conf /etc/apache2/sites-enabled/
 ```
 
+### Create file system for your code - Before the project was pushed first time - Skip it
+```sh
+python3 -m pip install virtualenv
+cd /var/www/playem
+virtualenv --python=python3 env
+```
+
 ### Install python packages
 ```sh
+sudo apt-get install python3-distutils
+
 source /home/pi/Projects/playem/var/www/playem/python/env/bin/activate
+
 python -m pip install Flask==2.1.2
 python -m pip install Flask-Classful==0.15.0b1
 python -m pip install Flask-Cors==3.0.10
+
+python -m pip uninstall Werkzeug
+python -m pip install Werkzeug==2.1.2
+
 python -m pip install python-dateutil
+python -m pip install distlib
+python -m pip install pyyaml
+
 ```
