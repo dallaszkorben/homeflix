@@ -3,7 +3,7 @@ import configparser
 from pathlib import Path
 import logging
 
-from playem.config.property import Property
+from playem.property.property import Property
 
 class Config( Property ):
     HOME = str(Path.home())
@@ -16,7 +16,9 @@ class Config( Property ):
     DEFAULT_WEB_RELATIVE_PATH = "/playem"
     DEFAULT_WEB_ABSOLUTE_PATH = "/var/www/playem"
 
-    DEFAULT_MEDIA_ABSOLUTE_PATH = "/media/pi/01.Movie"
+    DEFAULT_MEDIA_ABSOLUTE_PATH = "/media/pi/Movie"
+
+    DEFAULT_CARD_DB_NAME = "playem.db"
 
     __instance = None
 
@@ -32,9 +34,9 @@ class Config( Property ):
         return inst
 
     def __init__(self):
-        file_full_path = os.path.join(Config.HOME, Config.FOLDER, Config.CONFIG_FILE_NAME)
-        path = os.path.join(Config.HOME, Config.FOLDER)
-        super().__init__( file_full_path,  path)
+        self.config_path = os.path.join(Config.HOME, Config.FOLDER)
+        file_full_path = os.path.join(self.config_path, Config.CONFIG_FILE_NAME)
+        super().__init__( file_full_path)
         try:
             self.confDict = self.getDict()
         except FileNotFoundError:
@@ -42,6 +44,7 @@ class Config( Property ):
 
     def buildConfDict(self):
         confDict = {}
+
         confDict['log'] = {}
         confDict['log']['level'] = Config.DEFAULT_LOG_LEVEL
         confDict['log']['file-name'] = Config.DEFAULT_LOG_FILE_NAME
@@ -53,8 +56,14 @@ class Config( Property ):
         confDict['media'] = {}
         confDict['media']['absolute-path'] = Config.DEFAULT_MEDIA_ABSOLUTE_PATH
 
+        confDict['card'] = {}
+        confDict['card']['db-name'] = Config.DEFAULT_CARD_DB_NAME
+
         self.writeDict(confDict)
         return confDict
+
+    def getConfigPath(self):
+        return self.config_path
 
     def getLogLevel(self):
         return self.confDict['log']['level']
@@ -70,3 +79,24 @@ class Config( Property ):
 
     def getMediaAbsolutePath(self):
         return self.confDict['media']['absolute-path']
+
+    def getCardDBName(self):
+        return self.confDict['card']['db-name']
+
+def getConfig():
+    cb = Config.getInstance()
+    config = {}
+
+    config["path"] = cb.getConfigPath()
+
+    config["log-level"] = cb.getLogLevel()
+    config["log-file-name"] = cb.getLogFileName()
+        
+    config["web-relative-path"] = cb.getWebRelativePath()
+    config["web-absolute-path"] = cb.getWebAbsolutePath()
+
+    config["media-absolute-path"] = cb.getMediaAbsolutePath()
+
+    config["card-db-name"] = cb.getCardDBName()
+
+    return config

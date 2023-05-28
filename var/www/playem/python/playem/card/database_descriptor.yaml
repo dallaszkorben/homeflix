@@ -1,0 +1,60 @@
+fields:
+    movie:
+        title:
+            orig: 
+                mandatory: True
+            title: 
+        storyline:
+            mandatory: True
+
+        general:
+            date:
+                mandatory: True
+                relation: 1
+                regex: \d{4}([\.\-]\d{2}[\.\-]\d{2})?
+            director:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-director
+            writer:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-writer
+            actor:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-actor
+            voice:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-voice
+            length:
+                mandatory: True
+                relation: 1
+                regex: \d{2}:\d{2}([\:]\d{2})?
+            sound:
+                mandatory: False
+                relation: n-m
+                table: language
+                int-table: card-sound
+            sub:
+                mandatory: False
+                relation: n-m
+                table: language
+                int-table: card-sub
+            genre:
+                mandatory: True
+                relation: n-m
+                table: genre
+                int-table: card-genre
+            theme:
+                mandatory: False
+                relation: n-m
+                table: theme
+                int-table: card-theme
+
+

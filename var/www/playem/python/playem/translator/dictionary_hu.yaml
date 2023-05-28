@@ -1,0 +1,518 @@
+language:
+    short:
+        hu: Hun
+        en: Eng
+        sv: Swe
+        fr: Fre
+        es: Spa
+        it: Ita
+        de: Ger
+        ru: Rus
+        pl: Pol
+        'no': Nor
+        dk: Dan
+        cs: Cze
+        ko: Kor
+
+    long:
+        hu: Hungarian
+        en: English
+        sv: Swedish
+        fr: French
+        es: Spanish
+        it: Italian
+        de: German
+        ru: Russian
+        pl: Polish
+        'no': Norwegian
+        dk: Danish
+        cs: Czech
+        ko: Korean
+
+country:
+    short:
+        eu: Eu
+        hu: Hun
+        us: USA
+        se: Swe
+        gb: UK
+        uk: UK
+        es: Spa
+        de: Ger
+        it: Ita
+        fr: Fra
+        ca: Can
+        ru: Rus
+        dk: Den
+        ch: CH
+        mx: MX
+        at: AT
+        pl: PL
+        'no': 'NO'
+        au: AU
+        nz: NZ
+        be: BE
+        cz: CZ
+        kr: KR
+        ar: AR
+        jp: JP
+        ie: IE
+
+    long:
+        eu: Europian Union
+        hu: Hungary
+        us: USA
+        se: Sweden
+        gb: United Kingdom
+        uk: UK
+        es: Spain
+        de: Germany
+        it: Italy
+        fr: France
+        ca: Canada
+        ru: Russia
+        dk: Denmark
+        ch: Switzerland
+        mx: Mexico
+        at: Austria
+        pl: Poland
+        'no': Norway
+        au: Australia
+        nz: New Zealand
+        be: Belgium
+        cz: Czechia
+        kr: Korea
+        ar: Argentina
+        jp: Japan
+        ie: Ireland
+
+category:
+    movie: Movie
+    music: Music
+    radio_play: Radio Play
+    knowledge: Knowledge
+    entertainment: Entertainment
+    dia: Dia
+    recipe: Recipe
+    personal: Personal
+
+fields:
+    movie:
+        title:
+            orig: 
+                mandatory: True
+            title: 
+        storyline:
+            mandatory: True
+
+        general:
+            date:
+                mandatory: True
+                relation: 1
+                regex: \d{4}([\.\-]\d{2}[\.\-]\d{2})?
+            director:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-director
+            writer:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-writer
+            actor:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-actor
+            voice:
+                mandatory: False
+                relation: n-m
+                table: person
+                int-table: card-voice
+            length:
+                mandatory: True
+                relation: 1
+                regex: \d{2}:\d{2}([\:]\d{2})?
+            sound:
+                mandatory: False
+                relation: n-m
+                table: language
+                int-table: card-sound
+            sub:
+                mandatory: False
+                relation: n-m
+                table: language
+                int-table: card-sub
+            genre:
+                mandatory: True
+                relation: n-m
+                table: genre
+                int-table: card-genre
+            theme:
+                mandatory: False
+                relation: n-m
+                table: theme
+                int-table: card-theme
+
+
+genre:
+    common:
+        &common
+        tale: Tale
+        scifi: Sci-fi
+        fantasy: Fantasy
+        crime: Crime
+        drama: Dráma
+        history: History
+        romance: Romance
+
+    movie:
+        <<: *common
+        film_noir: Film-Noir
+        action: Action
+        western: Western
+        comedy: Comedy
+        adventure: Adventure
+        horror: Horror
+        music: Music
+        musical: Musical
+        war: War
+        parody: Parody
+        dark_comedy: Dark Comedy
+        thriller: Thriller
+        mystery: Mystery
+        satire: Satire
+        biography: Biography
+        animation: Animation
+        documentary: Documentary
+        portrait: Portrait
+        science_nature_documentary: Science and Nature Documentary
+
+    dia:
+        <<: *common
+
+    radio_play:
+        <<: *common
+
+    book:
+        <<: *common
+        nonfiction: Nonfiction
+        political_fiction: Political Fiction
+        document: Document
+        social_science: Social Science
+        study_guide: Study Guide
+        graphic_novel: Graphic Novel
+        lecture_notes: Lecture Notes
+
+    music:
+        synth: Synth
+        new_wave: New Wave
+        synthpop: Synthpop
+        electropop: Electropop
+        world: World
+        alternative: Alternative
+        pop: Pop
+        house: House
+        electronica: Electronica
+        electronic: Electronic
+        rock: Rock
+        disco: Disco
+        soul: Soul
+        funk: Funk
+
+
+    knowledge:
+        lecture: Lecture
+        e-learning: E-learning
+        diy: DIY
+        datasheet: Datasheet
+        syllabus: Syllabus
+        document: Document
+        tutorial: Tutorial
+
+    recipe:
+        soup: Soup
+        pasta: Pasta
+        rice: Rice
+        bufet: Bufet
+        beef: Beef
+        cookie: Cookie
+        chicken: Chicken
+
+    entertainment:
+        standup: Standup
+        skit: Skit
+
+
+    personal:
+        photos: Photos
+        documents: Documents
+        videos: Videos
+
+theme:
+        revenge: Revenge
+        love: Love
+        evil: Evil
+        devil: Devil
+        hell: Hell
+        state_power: State power
+        drog: Drog
+        new_old_world: New and Old World
+        maffia: Maffia
+        self_search: Self search
+        media: Media
+        conspiracy: Conspiracy
+        great_reset: Great Reset
+        new_world_order: New World Order
+        truth_search: Truth search
+        hypocrisy: Hypocrisy
+        lie: Lie
+        moral: Moral
+        friendship: Friendship
+        robbery: Robbery
+        garbage_person: Garbage person
+        schizophrenia: Schizophrenia
+        psychopathy: Psychopathy
+        social_criticism: Social criticism
+        betrayal: Betrayal
+        power_strugle: Power strugle
+        fear: Fear
+        heroism: Heroism
+        ai: Artifical Intelligent
+        robot: Robot
+        clone: Clone
+        search_god: Search for God
+        faith: Faith
+        commitment: Commitment
+        loyalty: Loyalty
+        cheating: Cheating
+        fraud: Fraud
+        antiutopia: Anti-utopia
+        utopia: Utopia
+        dystopia: Dystopia
+        post_apocalypse: Post-apocalypse
+        apocalypse: Apocalypse
+        zombie: Zombie
+        money: Money
+        greed: Greed
+        murder: Murder
+        small_man_rebellion: Rebellion of a small man
+        stupidity: Stupidity
+        concern_future: Concern for the future
+        bureaucracy: Bureaucracy
+        meaning_of_life: Meaning of life
+        origin_of_life: Origin of Life
+        destiny: Destiny
+        virtual_reality: Virtual Reality
+        godless_world: Godless World
+        inhumanity: Inhumanity
+        prejudice: Prejudice
+        opportunism: Opportunism
+        talent_mediocrity: Talent and Mediocrity
+        envy: Envy
+        jealousy: Jealousy
+        pc: PC criticism
+        gender: Gender
+        alien: Alien
+        careerism: Careerism
+        hopelessness: Hopelessness
+        dignity: Dignity
+        aging: Aging
+        life: Life
+        death: Death
+        passing: Passing
+        social_media: Social Media
+        safe_space: Safe Space
+        war: War
+        ukrain_war: Ukrain War
+        disaster: Disaster
+        a_bomb: A-bomb
+        movie: Movie
+        politics: Politics
+        culture: Culture
+        totalitarianism: Totalitarianism
+        science: Science
+        astronomy: Astronomy
+        physics: Physics
+        math: Math
+        quantum_physics: Quantum Physics
+        quantum_computing: Quantum Computing
+        chemistry: Chemistry
+        biology: Biology
+        psychology: Psychology
+        health: Health
+        cancer: Cancer
+        oil: Oil
+        brain: Brain
+        future: Future
+        history_of_science: History of science
+        history: History
+        art: Art
+        economy: Economy
+        2008_financial_crisis: 2008 Financial Crisis
+        informatics: Informatics
+        genetics: Genetics
+        global_warming: Global Warming
+        terrorism: Terrorism
+        migration: Migration
+        corruption: Corruption
+        covid19: COVID-19
+        virus: Virus
+        911: 911
+        mobile: Mobile
+        cia: CIA
+        drug: Drug
+        ufo: UFO
+        iot: IoT
+        it: IT
+        light: Light
+        jewellery: Jewellery
+        eu: European Union
+        scandal: Scandal
+        cathastroph: Catastrophe
+        collapse: Collapse
+
+title:
+        title: Title
+        list: List
+        media: Media
+        films: Fiction movies
+        _documentaries: Documetary
+        series: Series
+        podcast: Podcast
+        category: Category
+        genre: Genre
+        theme: Theme
+        recipetype: Recipe type
+
+        writer: Writer
+        author: Author
+        director: Director
+        maker: Maker
+
+        actor: Actor
+        performer: Performer
+        lecturer: Lecturer
+        contributor: Contributor
+        interviewee: Interviewee
+        interviewer: Interviewer
+        anchor: Anchor
+        voice: Voice
+        presenter: Presenter
+
+        date: Date
+        year: Year
+        rate: Rate
+        country: Country
+
+        storyline: Story
+        lyrics: Lyrics
+        topic: Topic
+        ingredient: Ingredients
+        method: Method
+
+        best: Best
+        new: New
+        favorite: Favorite
+        tag: Tags
+        all: All
+
+        sound: Sound
+        language: Language
+        sub: Subtitle
+
+        length: Length
+        selection_by: Selected by
+        show_original_title: Show original title
+        settings: Settings
+        media_path: Media Folder
+        select_media_path: Select Media-Folder
+        media_player_video: Video Player
+        select_media_player_video: Select Video Player
+        media_player_video_param: Video Parameters
+        media_player_audio: Audio Player
+        select_media_player_audio: Select Audio Player
+        media_player_audio_param: Audio Parameters
+        media_player_odt: Document Viewer
+        select_media_player_odt: Select Document Viewer
+        media_player_odt_param: Document Parameters
+        media_player_pdf: PDF Viewer
+        select_media_player_pdf: Select PDF Viewer
+        media_player_pdf_param: PDF Parameters
+
+        part: Part {0}.
+        season: Season {0}
+
+
+
+
+
+
+
+
+
+# genre_radioplay=Radio Play
+# 
+# 
+# genre_analysis=Analysis
+# genre_talk=Talk
+# genre_interview=Interview
+# genre_standup=Stand-up Comedy
+# genre_skit=Skit
+# genre_lecture=Lecture
+# genre_diy=DIY
+# genre_news=News
+# genre_spotnews=Spot News
+# genre_press_conference=Press Conference
+# genre_compilation=Compilation
+# genre_footage=Footage
+# genre_speech=Speech
+# genre_performamnce=Performance
+# genre_demo=Demo
+# genre_demonstration=Demonstration
+# genre_advertisement=Advertisement
+# 
+# 
+# 
+# 
+# media_video: Video
+# media_audio: Audio
+# media_dia: Dia
+# media_ebook: E-Book
+# media_elearn: E-Learn
+# media_picture: Picture
+# 
+# category_talk: Talk
+# category_movie: Movie
+# category_music: Music
+# category_show: Show
+# category_presentation: Presentation
+# category_alternative: Alternative Media
+# category_miscellaneous: Miscellaneous
+# category_radioplay: Radio Play
+# category_recipe: Recipe
+# category_footage: Footage
+# category_news: News
+# category_speech: Speech
+# category_language: Language
+# 
+# 
+# button_ok: Ok
+# button_cancel: Cancel
+# button_filter: Filter
+# button_clear: Clear
+# 
+# media_video: Video
+# media_audio: Audio
+# 
+# 
+# recipetype_soup=Soup
+# recipetype_pasta=Pasta
+# recipetype_rice=Rice
+# recipetype_chicken=Chicken
+# recipetype_beef=Beef
+# recipetype_pork=Pork
+# recipetype_cookie=Cookie
+# recipetype_buffet=Buffet
+

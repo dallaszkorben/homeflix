@@ -2,11 +2,14 @@
 
 import sys,os
 
-print("\n\n===================================")
-print("The playem app started: %s" % (__file__))
+# This text goes to the logs/error.log
+print()
+print()
+print("=======================================================================")
+print("The playem app started: {0}".format(__file__))
 print("Python version: {0}".format(sys.version))
-print("Python path: {0}".format(sys.path))
-print("===================================")
+print("Python path: {0})".format(sys.executable))
+print("=======================================================================")
 
 sys.path.insert(0, os.path.realpath(os.path.dirname(__file__)))
 
