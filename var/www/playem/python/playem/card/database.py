@@ -8,7 +8,6 @@ from playem.translator.translator import Translator
 
 class SqlDatabase:
 
-    TABLE_TITLE_CARD = "title_card"
     TABLE_PERSON = "person"
     TABLE_COUNTRY = "country"
     TABLE_LANGUAGE = "language"
@@ -24,6 +23,7 @@ class SqlDatabase:
     TABLE_CARD_WRITER = "card_writer"
     TABLE_CARD_DIRECTOR = "card_director"
     TABLE_CARD_VOICE = "card_voice"
+    TABLE_TEXT_CARD_LANG = "text_card_lang"
 
     def __init__(self):
         config = getConfig()
@@ -44,6 +44,8 @@ class SqlDatabase:
         self.fill_up_constant_dicts()
 
     def delete_tables(self):
+
+        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TEXT_CARD_LANG + ";")
 
         self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_VOICE + ";")
         self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_WRITER + ";")
@@ -67,6 +69,11 @@ class SqlDatabase:
 
 
     def drop_tables(self):
+
+        try:
+            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_TEXT_CARD_LANG + ";")
+        except sqlite3.OperationalError as e:
+            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_TEXT_CARD_LANG, e))
 
         try:
             self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_WRITER + ";")
@@ -115,10 +122,10 @@ class SqlDatabase:
 
 
 
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_TITLE_CARD + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_TITLE_CARD, e))
+        # try:
+        #     self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_TITLE_CARD + ";")
+        # except sqlite3.OperationalError as e:
+        #     logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_TITLE_CARD, e))
 
 
 
@@ -142,12 +149,6 @@ class SqlDatabase:
             self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_PERSON + ";")
         except sqlite3.OperationalError as e:
             logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_PERSON, e))
-
-
-
-
- 
-    
 
 #        self.conn.create_function('translate_method', 2, translate)
 
@@ -201,6 +202,8 @@ class SqlDatabase:
                 id_title_orig  INTEGER     NOT NULL,
                 date           TEXT        NOT NULL,
                 length         TEXT,
+                path           TEXT        NOT NULL,
+                media          TEXT        NOT NULL,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id)
             );
         ''')
@@ -302,12 +305,14 @@ class SqlDatabase:
 
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_TITLE_CARD + '''(
-                title        TEXT     NOT NULL,
+            CREATE TABLE ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''(
+                text         TEXT     NOT NULL,
                 id_language  INTEGER  NOT NULL,
-                id_card     INTEGER  NOT NULL,
-                FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
-                PRIMARY KEY (id_card, id_language)
+                id_card      INTEGER  NOT NULL,
+                type         TEXT     NOT NULL,
+                FOREIGN KEY (id_language)  REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
+                FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                PRIMARY KEY (id_card, id_language, type)
             );
         ''' )
 
@@ -317,10 +322,15 @@ class SqlDatabase:
         self.fill_up_country_table_from_dict()
 
     def fill_up_constant_dicts(self):
-        self.genre_dict = {}
-        self.theme_dict = {}
-        self.language_dict = {}
-        self.country_dict = {}
+        self.genre_name_id_dict = {}
+        self.theme_name_id_dict = {}
+        self.language_name_id_dict = {}
+        self.country_name_id_dict = {}
+
+        self.genre_id_name_dict = {}
+        self.theme_id_name_dict = {}
+        self.language_id_name_dict = {}
+        self.country_id_name_dict = {}
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -328,63 +338,76 @@ class SqlDatabase:
         query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_GENRE + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
         for pair in records:
-            self.genre_dict[pair[0]] = pair[1]
+            self.genre_name_id_dict[pair[0]] = pair[1]
+            self.genre_id_name_dict[pair[1]] = pair[0]
             
         query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_THEME + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
         for pair in records:
-            self.theme_dict[pair[0]] = pair[1]
+            self.theme_name_id_dict[pair[0]] = pair[1]
+            self.theme_id_name_dict[pair[1]] = pair[0]
 
         query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_LANGUAGE + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
         for pair in records:
-            self.language_dict[pair[0]] = pair[1]
+            self.language_name_id_dict[pair[0]] = pair[1]
+            self.language_id_name_dict[pair[1]] = pair[0]
 
         query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_COUNTRY + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
         for pair in records:
-            self.country_dict[pair[0]] = pair[1]
+            self.country_name_id_dict[pair[0]] = pair[1]
+            self.country_id_name_dict[pair[1]] = pair[0]
 
         cur.execute("commit")
 
     def fill_up_genre_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-        self.genre_dict = {}
+        self.genre_name_id_dict = {}
+        self.genre_id_name_dict = {}
         genre_list = self.translator.get_all_genre_codes()
         for genre in genre_list:
             id = self.append_genre(cur, genre)
-            self.genre_dict[genre] = id
+            self.genre_name_id_dict[genre] = id
+            self.genre_id_name_dict[id] = genre
+
         cur.execute("commit")
 
     def fill_up_theme_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-        self.theme_dict = {}
+        self.theme_name_id_dict = {}
+        self.theme_id_name_dict = {}
         theme_list = self.translator.get_all_theme_codes()
         for theme in theme_list:
             id = self.append_theme(cur, theme)
-            self.theme_dict[theme] = id
+            self.theme_name_id_dict[theme] = id
+            self.theme_id_name_dict[id] = theme
         cur.execute("commit")
 
     def fill_up_language_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-        self.language_dict = {}
+        self.language_name_id_dict = {}
+        self.language_id_name_dict = {}
         lang_list = self.translator.get_all_language_codes()
         for lang in lang_list:
             id = self.append_language(cur, lang)
-            self.language_dict[lang] = id
+            self.language_name_id_dict[lang] = id
+            self.language_id_name_dict[id] = lang
         cur.execute("commit")
 
     def fill_up_country_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-        self.country_dict = {}        
+        self.country_name_id_dict = {}        
+        self.country_id_name_dict = {}        
         country_list = self.translator.get_all_country_codes()
         for country in country_list:
             id = self.append_country(cur, country)
-            self.country_dict[country] = id
+            self.country_name_id_dict[country] = id
+            self.country_id_name_dict[id] = country
         cur.execute("commit")
 
     def append_language(self, cur, sound):
@@ -412,23 +435,23 @@ class SqlDatabase:
         (theme_id, ) = record if record else (None,)
         return theme_id
 
-    def append_card_movie(self, title_orig_lang, titles={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[]):
+    def append_card_movie(self, title_orig, titles={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], path=None, media=None):
 
         try:
             cur = self.conn.cursor()
             cur.execute("begin")
 
-            title_orig_lang_id = self.language_dict[title_orig_lang]
+            title_orig_id = self.language_name_id_dict[title_orig]
 
             #
             # INSERT into CARD
             #
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                (id_title_orig, date, length)
-                VALUES (?, ?, ?)
+                (id_title_orig, date, length, path, media)
+                VALUES (?, ?, ?, ?, ?)
                 RETURNING id;
             '''
-            cur.execute(query, (title_orig_lang_id, date, length))
+            cur.execute(query, (title_orig_id, date, length, path, media))
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
 
@@ -440,7 +463,7 @@ class SqlDatabase:
                     (id_sound, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.language_dict[sound], card_id))
+                cur.execute(query, (self.language_name_id_dict[sound], card_id))
 
             #
             # INSERT into TABLE_CARD_SUB
@@ -450,7 +473,7 @@ class SqlDatabase:
                     (id_sub, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.language_dict[sub], card_id))
+                cur.execute(query, (self.language_name_id_dict[sub], card_id))
 
             #
             # INSERT into TABLE_CARD_GENRE
@@ -460,7 +483,7 @@ class SqlDatabase:
                     (id_genre, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.genre_dict[sub], card_id))
+                cur.execute(query, (self.genre_name_id_dict[sub], card_id))
 
             #
             # INSERT into TABLE_CARD_THEME
@@ -470,7 +493,7 @@ class SqlDatabase:
                     (id_theme, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.theme_dict[theme], card_id))
+                cur.execute(query, (self.theme_name_id_dict[theme], card_id))
             
             #
             # INSERT into TABLE_CARD_ORIGIN
@@ -480,7 +503,27 @@ class SqlDatabase:
                     (id_origin, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.country_dict[origin], card_id))            
+                cur.execute(query, (self.country_name_id_dict[origin], card_id))            
+
+            #
+            # INSERT into TABLE_TEXT_CARD_LANG Title
+            #
+            for lang, title in titles.items():
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''
+                    (id_language, id_card, text, type)
+                    VALUES (?, ?, ?, "T");
+                '''
+                cur.execute(query, (self.language_name_id_dict[lang], card_id, title))    
+
+            #
+            # INSERT into TABLE_TEXT_CARD_LANG Storyline
+            #
+            for lang, storyline in storylines.items():
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''
+                    (id_language, id_card, text, type)
+                    VALUES (?, ?, ?, "S");
+                '''
+                cur.execute(query, (self.language_name_id_dict[lang], card_id, storyline))    
 
             # close the insert transaction
             cur.execute("commit")
@@ -500,13 +543,9 @@ class SqlDatabase:
         # Get Card list
         query = '''SELECT * FROM ''' + SqlDatabase.TABLE_CARD + ''';'''
         records=cur.execute(query).fetchall()
-        
-        print("Select *: {0}".format(records))
 
         for record in records:
-            card_id = record[0]
-
-            print(card_id)
+            card_id = record['id']
 
             # Get Sound list
             sound_long_list = []
@@ -514,7 +553,7 @@ class SqlDatabase:
                 SELECT sound.name 
                 FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' sound, ''' + SqlDatabase.TABLE_CARD_SOUND + ''' cs 
                 WHERE card.id=? AND cs.id_card=card.id AND cs.id_sound=sound.id '''
-            for row in cur.execute(query, (card_id,)):
+            for row in cur.execute(query, (card_id,)).fetchall():
                 sound_long_list.append(self.translator.translate_language_long(row[0]))
 
             # Get Sub list
@@ -523,7 +562,7 @@ class SqlDatabase:
                 SELECT sub.name 
                 FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' sub, ''' + SqlDatabase.TABLE_CARD_SUB + ''' cs 
                 WHERE card.id=? AND cs.id_card=card.id AND cs.id_sub=sub.id '''
-            for row in cur.execute(query, (card_id,)):
+            for row in cur.execute(query, (card_id,)).fetchall():
                 sub_long_list.append(self.translator.translate_language_long(row[0]))
 
             # Get Genre list
@@ -532,7 +571,7 @@ class SqlDatabase:
                 SELECT genre.name 
                 FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_GENRE + ''' genre, ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg 
                 WHERE card.id=? AND cg.id_card=card.id AND cg.id_genre=genre.id '''
-            for row in cur.execute(query, (card_id,)):
+            for row in cur.execute(query, (card_id,)).fetchall():
                 genre_list.append(self.translator.translate_genre('movie', row[0]))
 
             # Get Theme list
@@ -541,7 +580,7 @@ class SqlDatabase:
                 SELECT theme.name 
                 FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_THEME + ''' theme, ''' + SqlDatabase.TABLE_CARD_THEME + ''' ct
                 WHERE card.id=? AND ct.id_card=card.id AND ct.id_theme=theme.id '''
-            for row in cur.execute(query, (card_id,)):
+            for row in cur.execute(query, (card_id,)).fetchall():
                 theme_list.append(self.translator.translate_theme(row[0]))
 
             # Get Origin list
@@ -550,10 +589,37 @@ class SqlDatabase:
                 SELECT origin.name 
                 FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_COUNTRY + ''' origin, ''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co
                 WHERE card.id=? AND co.id_card=card.id AND co.id_origin=origin.id '''
-            for row in cur.execute(query, (card_id,)):
+            for row in cur.execute(query, (card_id,)).fetchall():
                 origin_long_list.append(self.translator.translate_country_long(row[0]))
 
+            # Get Titles
+            title_dict = {}
+            query = '''
+                SELECT language.name, title.text
+                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' title
+                WHERE card.id=? AND title.id_card=card.id AND title.id_language=language.id AND title.type=?'''
+            for row in cur.execute(query, (card_id, "T")).fetchall():
+                title_dict[row[0]] = row[1]
+
+            # Get Storyline
+            storyline_dict = {}
+            query = '''
+                SELECT language.name, title.text
+                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' title
+                WHERE card.id=? AND title.id_card=card.id AND title.id_language=language.id AND title.type=?'''
+            for row in cur.execute(query, (card_id, "S")).fetchall():
+                storyline_dict[row[0]] = row[1]
+
+            title_orig_name = self.language_id_name_dict[record['id_title_orig']]
+            date = record['date']
+            length = record['length']
+
             return_records[card_id] = {}
+            return_records[card_id]['date'] = date
+            return_records[card_id]['length'] = length
+            return_records[card_id]['title_orig'] = title_orig_name
+            return_records[card_id]['title'] = title_dict
+            return_records[card_id]['storyline'] = storyline_dict
             return_records[card_id]['sound'] = sound_long_list
             return_records[card_id]['sub'] = sub_long_list
             return_records[card_id]['genre'] = genre_list

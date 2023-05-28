@@ -33,43 +33,68 @@ db.create_tables()
 
 
 db.append_card_movie(
-    title_orig_lang="hu", 
+    title_orig="hu", 
     titles={"hu": "Csapdlecsacsi"}, 
+    storylines={"hu": "Ez egy nagyon jo film"},
     date="1990", 
     length="01:00:00",
     sounds=['hu'], 
     subs=[], 
     genres=['satire','drama'], 
     themes=['life'], 
-    origins=['hu']
+    origins=['hu'],
+
+    path='/var/dfdsf/fgsfd',
+    media='movie.mkv'
 )
 
 db.append_card_movie(
-    title_orig_lang="sv", 
-    titles={"hu": "Magyar cim", "sv": "Man som heter Ove", "en": "Man who is called Ove"}, 
+    title_orig="sv", 
+    titles={"hu": "Ember akit Ovenek hívnak", "sv": "Man som heter Ove", "en": "Man who is called Ove"}, 
+    storylines={"hu": "Vicces történet", "en": "Very interesting movie"},
     date="1989", 
     length="01:45:23",
     sounds=['sv','en'], 
     subs=['en','hu'], 
     genres=['crime','action'], 
     themes=['war'], 
-    origins=['se', 'gb']
+    origins=['se', 'gb'],
+
+    path='/var/dfdsf/fgsfd',
+    media='movie2.mkv'
 )
 
 db.append_card_movie(
-    title_orig_lang="sv", 
+    title_orig="sv", 
     titles={"hu": "Another movie", "sv": "Vem", "en": "Who"}, 
+    storylines={"hu": "Ezt a filmet nem ismerem", "en": "I do not know this movie"},
     date="1970", 
     length="00:20:00",
     sounds=['sv','en'], 
     subs=['en','sv'], 
     genres=['action'], 
     themes=['ai'], 
-    origins=['se', 'no']
+    origins=['se', 'no'],
+
+    path='/var/dfdsf/fgsfd',
+    media='movie3.mkv'
 )
 
 records=db.get_all_cards()
-print(records)
+
+for id, record in records.items():
+    print("Id: {0}, Original title: {1}".format(id, record['title'][record['title_orig']]))
+    print("    Storyline:   {0}".format(record['storyline']))
+    print("    Date:        {0}".format(record['date']))
+    print("    Length:      {0}".format(record['length']))
+
+    print("    Sound:       {0}".format(record['sound']))
+    print("    Sub:         {0}".format(record['sub']))
+    print("    Genre:       {0}".format(record['genre']))
+    print("    Theme:       {0}".format(record['theme']))
+
+
+
 
 
 
