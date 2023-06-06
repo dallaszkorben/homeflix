@@ -96,6 +96,12 @@ category:
     recipe: Recipe
     personal: Personal
 
+mtype:
+    video: Video
+    audio: Audio
+    text: Text
+    picture: Picture
+
 genre:
     common:
         &common

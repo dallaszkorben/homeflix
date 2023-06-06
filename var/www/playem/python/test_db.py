@@ -33,6 +33,8 @@ db.create_tables()
 
 
 db.append_card_movie(
+    category="movie",
+    mtypes=["video"],
     title_orig="hu", 
     titles={"hu": "Csapdlecsacsi"}, 
     storylines={"hu": "Ez egy nagyon jo film"},
@@ -44,11 +46,13 @@ db.append_card_movie(
     themes=['life'], 
     origins=['hu'],
 
-    path='/var/dfdsf/fgsfd',
-    media='movie.mkv'
+    source_path='/var/dfdsf/fgsfd',
+    media=['movie.mkv']
 )
 
 db.append_card_movie(
+    category="music",
+    mtypes=["video"],
     title_orig="sv", 
     titles={"hu": "Ember akit Ovenek hívnak", "sv": "Man som heter Ove", "en": "Man who is called Ove"}, 
     storylines={"hu": "Vicces történet", "en": "Very interesting movie"},
@@ -60,11 +64,13 @@ db.append_card_movie(
     themes=['war'], 
     origins=['se', 'gb'],
 
-    path='/var/dfdsf/fgsfd',
-    media='movie2.mkv'
+    source_path='/var/dfdsf/fgsfd',
+    media=['movie2.mkv']
 )
 
 db.append_card_movie(
+    category="radio_play",
+    mtypes=["audio"],
     title_orig="sv", 
     titles={"hu": "Another movie", "sv": "Vem", "en": "Who"}, 
     storylines={"hu": "Ezt a filmet nem ismerem", "en": "I do not know this movie"},
@@ -76,22 +82,45 @@ db.append_card_movie(
     themes=['ai'], 
     origins=['se', 'no'],
 
-    path='/var/dfdsf/fgsfd',
-    media='movie3.mkv'
+    source_path='/var/dfdsf/fgsfd',
+    media=['music.mp3']
 )
 
 records=db.get_all_cards()
 
 for id, record in records.items():
-    print("Id: {0}, Original title: {1}".format(id, record['title'][record['title_orig']]))
-    print("    Storyline:   {0}".format(record['storyline']))
-    print("    Date:        {0}".format(record['date']))
-    print("    Length:      {0}".format(record['length']))
 
-    print("    Sound:       {0}".format(record['sound']))
-    print("    Sub:         {0}".format(record['sub']))
-    print("    Genre:       {0}".format(record['genre']))
-    print("    Theme:       {0}".format(record['theme']))
+    print("Id: {0}, Title: {1}".format(id, record['title']))
+    print("    Original Title: {0}".format(record['original_title']))
+
+    print("    Category:       {0}".format(record['category']))
+    print("    Storyline:      {0}".format(record['storyline']))
+    print("    Date:           {0}".format(record['date']))
+    print("    Length:         {0}".format(record['length']))
+
+    print("    Sound:          {0}".format(record['sounds']))
+    print("    Sub:            {0}".format(record['subs']))
+    print("    Genre:          {0}".format(record['genres']))
+    print("    Theme:          {0}".format(record['themes']))
+    print("    Origin:         {0}".format(record['origins']))
+
+    print("    Source Path:    {0}".format(record['source_path']))
+    print("    Media:          {0}".format(record['media']))
+    print("    Media type:     {0}".format(record['mtypes']))
+
+
+    # print("Id: {0}, Original title: {1}".format(id, record['title'][record['title_orig']]))
+    # print("    Category:    {0}".format(record['category']))
+    # print("    Storyline:   {0}".format(record['storyline']))
+    # print("    Date:        {0}".format(record['date']))
+    # print("    Length:      {0}".format(record['length']))
+
+    # print("    Sound:       {0}".format(record['sound']))
+    # print("    Sub:         {0}".format(record['sub']))
+    # print("    Genre:       {0}".format(record['genre']))
+    # print("    Theme:       {0}".format(record['theme']))
+    # print("    Source Path: {0}".format(record['source_path']))
+    # print("    Media:       {0}".format(record['media']))
 
 
 

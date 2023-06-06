@@ -62,6 +62,13 @@ class Translator( Property ):
             tr = theme
         return tr
 
+    def translate_mtype(self, mtype):
+        try:        
+            tr = self.actual_dictionary['mtype'][mtype]
+        except KeyError:
+            tr = mtype
+        return tr
+
     def translate_language_short(self, text):
         try:
             tr = self.actual_dictionary['language']['short'][text]
@@ -89,6 +96,15 @@ class Translator( Property ):
         except KeyError:
             tr = text
         return tr
+
+# ---
+
+    def get_all_category_codes(self):
+        category_list = []
+        category_dict=self.actual_dictionary['categroy']
+        for category in category_dict:
+            category_list.append(category)
+        return category_list
 
     def get_all_language_codes(self):
         lang_list = []
@@ -119,6 +135,13 @@ class Translator( Property ):
         for theme in theme_dict:
             theme_list.append(theme)
         return theme_list
+
+    def get_all_mtype_codes(self):
+        mtype_list = []
+        mtype_dict=self.actual_dictionary['mtype']
+        for mtype in mtype_dict:
+            mtype_list.append(mtype)
+        return mtype_list
 
     def get_all_category_codes(self):
         category_list = []
