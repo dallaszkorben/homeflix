@@ -5,29 +5,33 @@ from sqlite3 import Error
 
 from playem.config.config import getConfig
 from playem.translator.translator import Translator
+from playem.exceptions.not_existing_table import NotExistingTable
+
 
 class SqlDatabase:
 
-    TABLE_CATEGORY = "category"
-    TABLE_PERSON = "person"
-    TABLE_COUNTRY = "country"
-    TABLE_LANGUAGE = "language"
-    TABLE_GENRE = "genre"
-    TABLE_THEME = "theme"
-    TABLE_MTYPE = "mtype"
-    TABLE_CARD = "card"
-    TABLE_CARD_GENRE = "card_genre"
-    TABLE_CARD_THEME = "card_theme"
-    TABLE_CARD_MTYPE = "card_mtype"
-    TABLE_CARD_SOUND = "card_sound"
-    TABLE_CARD_SUB = "card_sub"
-    TABLE_CARD_ORIGIN = "card_origin"
-    TABLE_CARD_ACTOR = "card_actor"
-    TABLE_CARD_WRITER = "card_writer"
-    TABLE_CARD_DIRECTOR = "card_director"
-    TABLE_CARD_VOICE = "card_voice"
-    TABLE_TEXT_CARD_LANG = "text_card_lang"
-    TABLE_MEDIUM = "medium"
+    TABLE_CATEGORY = "Category"
+    TABLE_PERSON = "Person"
+    TABLE_COUNTRY = "Country"
+    TABLE_LANGUAGE = "Language"
+    TABLE_GENRE = "Genre"
+    TABLE_THEME = "Theme"
+    TABLE_MTYPE = "MediaType"
+    TABLE_MEDIUM = "Medium"
+    TABLE_CARD = "Card"
+    TABLE_CARD_GENRE = "Card_Genre"
+    TABLE_CARD_THEME = "Card_Theme"
+    TABLE_CARD_MTYPE = "Card_MType"
+    TABLE_CARD_SOUND = "Card_Sound"
+    TABLE_CARD_SUB = "Card_Sub"
+    TABLE_CARD_ORIGIN = "Card_Origin"
+    TABLE_CARD_ACTOR = "Card_Actor"
+    TABLE_CARD_WRITER = "Card_Writer"
+    TABLE_CARD_DIRECTOR = "Card_Director"
+    TABLE_CARD_VOICE = "Card_Voice"
+    TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
+    TABLE_SUBLEVEL = "Sublevel"
+
 
     def __init__(self):
         config = getConfig()
@@ -35,6 +39,32 @@ class SqlDatabase:
         self.translator = Translator.getInstance("en")
 
         self.language = self.translator.get_actual_language_code()
+
+        self.table_list = [
+                SqlDatabase.TABLE_TEXT_CARD_LANG,
+                SqlDatabase.TABLE_MEDIUM,
+                SqlDatabase.TABLE_CARD_VOICE,
+                SqlDatabase.TABLE_CARD_WRITER,
+                SqlDatabase.TABLE_CARD_DIRECTOR,
+                SqlDatabase.TABLE_CARD_ACTOR,
+                SqlDatabase.TABLE_CARD_ORIGIN,
+                SqlDatabase.TABLE_CARD_GENRE,
+                SqlDatabase.TABLE_CARD_THEME,
+                SqlDatabase.TABLE_CARD_SOUND,
+                SqlDatabase.TABLE_CARD_SUB,
+                SqlDatabase.TABLE_CARD_MTYPE,
+#                SqlDatabase.TABLE_TITLE_CARD,
+
+                SqlDatabase.TABLE_CARD,
+
+                SqlDatabase.TABLE_COUNTRY,
+                SqlDatabase.TABLE_LANGUAGE,
+                SqlDatabase.TABLE_GENRE,
+                SqlDatabase.TABLE_THEME,
+                SqlDatabase.TABLE_PERSON,
+                SqlDatabase.TABLE_MTYPE,
+                SqlDatabase.TABLE_CATEGORY,
+            ]
 
         # create connection
         self.conn = None
@@ -44,132 +74,94 @@ class SqlDatabase:
             self.conn.row_factory = sqlite3.Row 
         except Error as e:
             logging.error( "Connection to {0} SQLite failed. Error: {1}".format(self.db_path, e))
+            
             # TODO: handle this case
             exit()
 
+        # check if the databases are correct
+        if not self.is_dbs_ok():            
+            self.recreate_dbs()
+
         self.fill_up_constant_dicts()
 
-    def delete_tables(self):
+    def __del__(self):
+        self.conn.close()
 
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TEXT_CARD_LANG + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MEDIUM + ";")
+    def is_dbs_ok(self):
+        error_code = 1001
+        cur = self.conn.cursor()
+        cur.execute("begin")        
 
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_VOICE + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_WRITER + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_DIRECTOR + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_ACTOR + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_ORIGIN + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_GENRE + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_THEME + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SOUND + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SUB + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_MTYPE + ";")
+        try:
+            for table in self.table_list:
+                query ="SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{0}' ".format(table)
+                records = cur.execute(query).fetchone()
+                if records[0] != 1:
+                    raise NotExistingTable("{0} table does not exist. All tables must be recreated".format(table), error_code)
 
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TITLE_CARD + ";")
+        except NotExistingTable as e:
+            logging.debug(e.message)            
+            return False
 
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD + ";")
+        finally:
+            cur.execute("commit")
+        return True
 
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_COUNTRY + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_LANGUAGE + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_GENRE + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_THEME + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_PERSON + ";")
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MTYPE + ";")
+    def recreate_dbs(self):
+        self.drop_all_existing_tables()
+        logging.debug("All tables are dropped")            
+        self.create_tables()
+        logging.debug("All tables are recreated")            
 
-        self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CATEGORY + ";")
+    def drop_all_existing_tables(self):
+        cur = self.conn.cursor()
+        cur.execute("begin")    
+        tables = list(cur.execute("SELECT name FROM sqlite_master WHERE type is 'table'"))
+        cur.execute("commit")
+
+        for table in tables:
+            try:
+                self.conn.execute("DROP TABLE {0}".format(table[0]))
+            except sqlite3.OperationalError as e:
+                print(e)
+
+    # def delete_tables(self):
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TEXT_CARD_LANG + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MEDIUM + ";")
+
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_VOICE + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_WRITER + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_DIRECTOR + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_ACTOR + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_ORIGIN + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_GENRE + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_THEME + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SOUND + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SUB + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_MTYPE + ";")
+
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TITLE_CARD + ";")
+
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD + ";")
+
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_COUNTRY + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_LANGUAGE + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_GENRE + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_THEME + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_PERSON + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MTYPE + ";")
+
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CATEGORY + ";")
+
+
 
     def drop_tables(self):
 
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_TEXT_CARD_LANG + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_TEXT_CARD_LANG, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_MEDIUM + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_MEDIUM, e))
-
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_WRITER + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_WRITER, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_DIRECTOR + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_DIRECTOR, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_VOICE + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_VOICE, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_ACTOR + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_ACTOR, e))
-
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_ORIGIN + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_ORIGIN, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_GENRE + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_GENRE, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_THEME + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_THEME, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_SOUND + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_SOUND, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_SUB + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_SUB, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD_MTYPE + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD_MTYPE, e))
-
-
-
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CARD + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CARD, e))
-
-
-
-
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_COUNTRY + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_COUNTRY, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_LANGUAGE + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_LANGUAGE, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_GENRE + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_GENRE, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_THEME + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_THEME, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_PERSON + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_PERSON, e))
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_MTYPE + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_MTYPE, e))
-
-        try:
-            self.conn.execute("DROP TABLE " + SqlDatabase.TABLE_CATEGORY + ";")
-        except sqlite3.OperationalError as e:
-            logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(SqlDatabase.TABLE_CATEGORY, e))
+        for table in self.table_list:
+            try:
+                self.conn.execute("DROP TABLE {0};".format(table))
+            except sqlite3.OperationalError as e:
+                logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(table, e))
 
 #        self.conn.create_function('translate_method', 2, translate)
 
@@ -763,6 +755,8 @@ class SqlDatabase:
                 title = row[0]
             else:
                 title = original_title
+
+
 
             # Get Storyline
             storyline = ""

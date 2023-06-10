@@ -115,6 +115,7 @@ genre:
 
     movie:
         <<: *common
+        short: Short
         film_noir: Film-Noir
         action: Action
         western: Western
@@ -132,6 +133,7 @@ genre:
         biography: Biography
         animation: Animation
         documentary: Documentary
+        mockumentary: Mockumentary
         portrait: Portrait
         science_nature_documentary: Science and Nature Documentary
 

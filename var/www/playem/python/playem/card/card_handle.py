@@ -1,6 +1,7 @@
 import os
 import yaml
 import re
+import logging
 
 CARD_FILE_NAME = "card.yaml"
 
@@ -15,7 +16,7 @@ def getPatternMedia(mtypes):
     extension_list = []
     for mtype in mtypes:
         extension_list += media_type_dict[mtype]
-    compile_string = ".+\\." + "|".join(extension_list) + "$"
+    compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
     return re.compile(compile_string)
 
 def getPatternImage():
@@ -23,6 +24,12 @@ def getPatternImage():
 
 def getPatternCard():
     return re.compile( '^'+CARD_FILE_NAME+'$' )
+
+def getPatternDate():
+    return re.compile( r'^\d{4}(([-|\.])\d{2}\2\d{2})?$' )
+
+def getPatternLength():
+    return re.compile( r'^(\d{1,2}:\d{2}:\d{2})?$' )
 
 def collectCardsFromFileSystem(actualDir, db ):
     """ _________________________________________________________________
@@ -57,7 +64,8 @@ def collectCardsFromFileSystem(actualDir, db ):
     if card_path:
         data = None
         with open(card_path, "r", encoding="utf-8") as file_object:
-            data=yaml.load(file_object, Loader=yaml.SafeLoader)
+            #data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
+            data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
 
         category = data['category']
         mtypes = data['mtypes']
@@ -83,23 +91,86 @@ def collectCardsFromFileSystem(actualDir, db ):
             if getPatternMedia(mtypes).match( file_name ):
                 media.append(file_name)
 
+        # filter out empty titles
+        titles=dict((language, title) for language, title in titles.items() if title)
 
-        db.append_card_movie(
-            category=category,
-            mtypes=mtypes,
-            title_orig=title_orig, 
-            titles=titles, 
-            storylines=storylines,
-            date=date, 
-            length=length,
-            sounds=sounds, 
-            subs=subs, 
-            genres=genres, 
-            themes=themes, 
-            origins=origins,
+        # filter out empty storylines
+        storylines=dict((language, storyline) for language, storyline in storylines.items() if storyline)
 
-            source_path=source_path,
-            media=media
+        card_error = False
+
+        # search for wrong values
+        if not title_orig:
+            logging.error( "CARD - No original language set for title in {0}".format(card_path))
+            card_error = True
+        
+        if title_orig not in titles:
+            logging.error( "CARD - No title set for original language  in {0}".format(card_path))
+            card_error = True
+
+        if title_orig not in db.language_name_id_dict:
+            logging.error( "CARD - Original language ({1}) set for title in {0} is unknown".format(card_path, title_orig))
+            card_error = True
+
+        if category not in db.category_name_id_dict:
+            logging.error( "CARD - Category ({1}) in {0} is unknown".format(card_path, category))
+            card_error = True
+
+        for lang, text in storylines.items():
+            if lang not in db.language_name_id_dict:
+                logging.error( "CARD - Storyline language ({1}) in {0} is unknown".format(card_path, lang))
+                card_error = True
+
+        if not getPatternDate().match( date ):
+            logging.error( "CARD - Date ({1}) in {0} is missing or inunknown form".format(card_path, date))
+            card_error = True
+
+        if not getPatternLength().match(length):
+            logging.error( "CARD - Length ({1}) in {0} is unknown form".format(card_path, length))
+            card_error = True
+
+        for lang in subs:
+            if lang not in db.language_name_id_dict:
+                logging.error( "CARD - Sub language ({1}) in {0} is unknown".format(card_path, lang))
+                card_error = True
+
+        for lang in sounds:
+            if lang not in db.language_name_id_dict:
+                logging.error( "CARD - Sound language ({1}) in {0} is unknown".format(card_path, lang))
+                card_error = True
+
+        for genre in genres:
+            if genre not in db.genre_name_id_dict:
+                logging.error( "CARD - Genre ({1}) in {0} is unknown".format(card_path, genre))
+                card_error = True
+
+        for theme in themes:
+            if theme not in db.theme_name_id_dict:
+                logging.error( "CARD - Theme ({1}) in {0} is unknown".format(card_path, theme))
+                card_error = True
+
+        for origin in origins:
+            if origin not in db.country_name_id_dict:
+                logging.error( "CARD - Origin ({1}) in {0} is unknown".format(card_path, origin))
+                card_error = True
+
+        if not card_error:
+            db.append_card_movie(
+                category=category,
+                mtypes=mtypes,
+                title_orig=title_orig, 
+                titles=titles, 
+                storylines=storylines,
+                date=date, 
+                length=length,
+                sounds=sounds, 
+                subs=subs, 
+                genres=genres, 
+                themes=themes, 
+                origins=origins,
+
+                source_path=source_path,
+                media=media
         )        
 
     for name in dir_list:

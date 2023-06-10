@@ -1,15 +1,9 @@
 import sys
 
-class InvalidAPIUsage(Exception):
+class NotExistingTable(Exception):
     error_code = 400
 
     def __init__(self, message, error_code, *args, **kwargs):
-#        super().__init__(message)
-#        self.message = message
-#        if status_code is not None:
-#            self.status_code = status_code
-#            self.code = status_code
-#        self.payload = payload
 
         self.traceback = sys.exc_info()
 
@@ -20,4 +14,4 @@ class InvalidAPIUsage(Exception):
         except (IndexError, KeyError):
             self.message = '[{0}] {1}'.format(error_code, message)
 
-        super().__init__(msg)
+        super().__init__(message)

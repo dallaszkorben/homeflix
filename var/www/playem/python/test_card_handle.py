@@ -3,6 +3,7 @@ from playem.card.database import SqlDatabase as DB
 from playem.config.config import Config
 
 from playem.card.card_handle import collectCardsFromFileSystem
+import playem.card.card_handle as card_handle
 
 import sqlite3
 from sqlite3 import Error
@@ -13,12 +14,15 @@ config_path = config.getConfigPath()
 
 
 db=DB()
+
 db.drop_tables()
 db.create_tables()
 
 collectCardsFromFileSystem(media_path, db )
 
 records=db.get_all_cards()
+
+result = card_handle.getPatternMedia(['video']).match( "Buvos.Vadasz.avi" )
 
 for id, record in records.items():
 
