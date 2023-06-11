@@ -78,9 +78,22 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
         titles = data['title']['titles']
         storylines = data['storylines']
         date = data['date']
-        directors = data['directors']
-        writers = data['writers']
-        actors = data['actors']
+        try:
+            directors = data['directors']
+        except:
+            directors = []
+        try:
+            writers = data['writers']
+        except:
+            writers = []
+        try:       
+            actors = data['actors']
+        except:
+            actors = []
+        try:
+            host = data['host']
+        except:
+            host = []
         length = data['length']
         sounds = data['sounds']
         subs = data['subs']
