@@ -174,9 +174,11 @@ class SqlDatabase:
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL + '''(
                 id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
-                name            TEXT  NOT NULL,
+                name            TEXT       NOT NULL,
                 id_higher_level INTEGER,
-                source_path     TEXT  NOT NULL,
+                basename        TEXT       NOT NULL,
+                source_path     TEXT       NOT NULL,
+                sequence        INTEGER,
                 FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id)
             );
         ''')
@@ -247,7 +249,10 @@ class SqlDatabase:
                 date            TEXT        NOT NULL,
                 length          TEXT,
                 source_path     TEXT        NOT NULL,
+                basename        TEXT        NOT NULL,
                 id_higher_level INTEGER,
+                level           TEXT,
+                sequence        INTEGER,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id) 
             );
@@ -566,7 +571,7 @@ class SqlDatabase:
         (mtype_id, ) = record if record else (None,)
         return mtype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, mtypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], source_path=None, media=[], higher_level_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, mtypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], media=[], basename=None, source_path=None, level=None, sequence=None, higher_level_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -581,18 +586,18 @@ class SqlDatabase:
             #
             if higher_level_id:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id_title_orig, id_category, date, length, source_path, id_higher_level)
+                    (id_title_orig, id_category, date, length, basename, source_path, id_higher_level, level, sequence)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    RETURNING id;
+                '''
+                cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path, higher_level_id, level, sequence))
+            else:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                    (id_title_orig, id_category, date, length, basename, source_path)
                     VALUES (?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (title_orig_id, category_id, date, length, source_path, higher_level_id))
-            else:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id_title_orig, id_category, date, length, source_path)
-                    VALUES (?, ?, ?, ?, ?)
-                    RETURNING id;
-                '''
-                cur.execute(query, (title_orig_id, category_id, date, length, source_path))
+                cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path))
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
 
@@ -693,7 +698,7 @@ class SqlDatabase:
         # close the insert transaction
         cur.execute("commit")
 
-    def append_level(self, titles, level, source_path, higher_level_id=None):
+    def append_level(self, titles, level, basename, source_path, sequence=None, higher_level_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -703,20 +708,20 @@ class SqlDatabase:
             #
             # INSERT into Level
             #
-            if higher_level_id:
+            if higher_level_id:                
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
-                    (name, id_higher_level, source_path)
-                    VALUES (?, ?, ?)
+                    (name, id_higher_level, basename, source_path, sequence)
+                    VALUES (?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (level, higher_level_id, source_path))
+                cur.execute(query, (level, higher_level_id, basename, source_path, sequence))
             else:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
-                    (name, source_path)
-                    VALUES (?, ?)
+                    (name, basename, source_path, sequence)
+                    VALUES (?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (level,source_path))
+                cur.execute(query, (level, basename, source_path, sequence))
             record = cur.fetchone()
             (level_id, ) = record if record else (None,)
 
@@ -730,8 +735,6 @@ class SqlDatabase:
                 '''
                 cur.execute(query, (self.language_name_id_dict[lang], level_id, title))    
 
-
-
         except sqlite3.Error as e:
             logging.error("To append level failed with: '{0}' while inserting record. level: {1}".format(e, level))
             cur.execute("rollback")
@@ -744,6 +747,7 @@ class SqlDatabase:
 
 
 
+    # should filter like by series/category/genre
     def get_all_cards(self):
 
         cur = self.conn.cursor()
@@ -880,6 +884,8 @@ class SqlDatabase:
             return_records[card_id]['media'] = media_list
             return_records[card_id]['source_path'] = source_path
 
+            # return_records[card_id]['level'] = level
+            # return_records[card_id]['sequence'] = sequence
 
         # close the insert transaction
         cur.execute("commit")

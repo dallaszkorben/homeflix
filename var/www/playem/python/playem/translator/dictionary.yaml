@@ -199,6 +199,7 @@ genre:
     entertainment:
         standup: Standup
         skit: Skit
+        analysis: Analysis
 
 
     personal:

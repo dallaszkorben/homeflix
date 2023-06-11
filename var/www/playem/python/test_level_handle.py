@@ -20,27 +20,27 @@ db.create_tables()
 
 collectCardsFromFileSystem(media_path, db )
 
-records=db.get_series()
+#records=db.get_series()
 
-for id, record in records.items():
+# for id, record in records.items():
 
-    print("Id: {0}, Title: {1}".format(id, record['title']))
-    print("    Original Title: {0}".format(record['original_title']))
+#     print("Id: {0}, Title: {1}".format(id, record['title']))
+#     print("    Original Title: {0}".format(record['original_title']))
 
-    print("    Category:       {0}".format(record['category']))
-    print("    Storyline:      {0}".format(record['storyline']))
-    print("    Date:           {0}".format(record['date']))
-    print("    Length:         {0}".format(record['length']))
+#     print("    Category:       {0}".format(record['category']))
+#     print("    Storyline:      {0}".format(record['storyline']))
+#     print("    Date:           {0}".format(record['date']))
+#     print("    Length:         {0}".format(record['length']))
 
-    print("    Sound:          {0}".format(record['sounds']))
-    print("    Sub:            {0}".format(record['subs']))
-    print("    Genre:          {0}".format(record['genres']))
-    print("    Theme:          {0}".format(record['themes']))
-    print("    Origin:         {0}".format(record['origins']))
+#     print("    Sound:          {0}".format(record['sounds']))
+#     print("    Sub:            {0}".format(record['subs']))
+#     print("    Genre:          {0}".format(record['genres']))
+#     print("    Theme:          {0}".format(record['themes']))
+#     print("    Origin:         {0}".format(record['origins']))
 
-    print("    Source Path:    {0}".format(record['source_path']))
-    print("    Media:          {0}".format(record['media']))
-    print("    Media type:     {0}".format(record['mtypes']))
+#     print("    Source Path:    {0}".format(record['source_path']))
+#     print("    Media:          {0}".format(record['media']))
+#     print("    Media type:     {0}".format(record['mtypes']))
 
 
 

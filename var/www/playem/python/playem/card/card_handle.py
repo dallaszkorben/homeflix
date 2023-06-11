@@ -40,7 +40,9 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
     # Collect files and and dirs in the current directory
     file_list = [f for f in os.listdir(actualDir) if os.path.isfile(os.path.join(actualDir, f))] if os.path.exists(actualDir) else []
     dir_list = [d for d in os.listdir(actualDir) if os.path.isdir(os.path.join(actualDir, d))] if os.path.exists(actualDir) else []
-    
+
+    basename = os.path.basename(actualDir)
+
     source_path = None
     card_path = None
     card_file_name = None    
@@ -85,6 +87,10 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
         genres = data['genres']
         themes = data['themes']
         origins = data['origins']
+        try:
+            sequence = data['sequence']
+        except:
+            sequence = None
 
         # collect media files now, because at this point the category is known
         media = []
@@ -127,8 +133,10 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             level_id=db.append_level(
                 titles=titles,
                 level=level,
-                higher_level_id=higher_level_id,
-                source_path=source_path
+                basename=basename,
+                source_path=source_path,
+                sequence=sequence,
+                higher_level_id=higher_level_id                
             )
 
 
@@ -149,59 +157,59 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             #     card_error = True
 
             if category not in db.category_name_id_dict:
-                logging.error( "CARD - Category ({1}) in {0} is unknown".format(card_path, category))
+                logging.error( "CARD - Category ({1}) is unknown in {0}".format(card_path, category))
                 card_error = True
 
             for lang, text in storylines.items():
                 if lang not in db.language_name_id_dict:
-                    logging.error( "CARD - Storyline language ({1}) in {0} is unknown".format(card_path, lang))
+                    logging.error( "CARD - Storyline language ({1}) is unknown in {0}".format(card_path, lang))
                     card_error = True
 
             if not getPatternDate().match( date ):
-                logging.error( "CARD - Date ({1}) in {0} is missing or inunknown form".format(card_path, date))
+                logging.error( "CARD - Date ({1}) is missing or in unknown form in {0}".format(card_path, date))
                 card_error = True
 
             if not getPatternLength().match(length):
-                logging.error( "CARD - Length ({1}) in {0} is unknown form".format(card_path, length))
+                logging.error( "CARD - Length ({1}) is unknown form in {0}".format(card_path, length))
                 card_error = True
 
             for lang in subs:
                 if lang not in db.language_name_id_dict:
-                    logging.error( "CARD - Sub language ({1}) in {0} is unknown".format(card_path, lang))
+                    logging.error( "CARD - Sub language ({1}) is unknown in {0}".format(card_path, lang))
                     card_error = True
 
             for lang in sounds:
                 if lang not in db.language_name_id_dict:
-                    logging.error( "CARD - Sound language ({1}) in {0} is unknown".format(card_path, lang))
+                    logging.error( "CARD - Sound language ({1}) is unknown in {0}".format(card_path, lang))
                     card_error = True
 
             for genre in genres:
                 if genre not in db.genre_name_id_dict:
-                    logging.error( "CARD - Genre ({1}) in {0} is unknown".format(card_path, genre))
+                    logging.error( "CARD - Genre ({1}) is unknown in {0}".format(card_path, genre))
                     card_error = True
 
             for theme in themes:
                 if theme not in db.theme_name_id_dict:
-                    logging.error( "CARD - Theme ({1}) in {0} is unknown".format(card_path, theme))
+                    logging.error( "CARD - Theme ({1}) is unknown in {0}".format(card_path, theme))
                     card_error = True
 
             for origin in origins:
                 if origin not in db.country_name_id_dict:
-                    logging.error( "CARD - Origin ({1}) in {0} is unknown".format(card_path, origin))
+                    logging.error( "CARD - Origin ({1}) is unknown in {0}".format(card_path, origin))
                     card_error = True
 
             if not card_error:
             
                 # this is the lowest level
-                if level:
+                # if level:
 
-                    # create a new Level record + get back the id
-                    level_id=db.append_level(
-                        titles = titles,
-                        level=level, 
-                        higher_level_id=higher_level_id,
-                        source_path=source_path
-                    )
+                    # # create a new Level record + get back the id
+                    # level_id=db.append_level(
+                    #     titles = titles,
+                    #     level=level, 
+                    #     higher_level_id=higher_level_id,
+                    #     source_path=source_path
+                    # )
 
                     # create a new Card record with level reference
             
@@ -220,10 +228,15 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
                     themes=themes, 
                     origins=origins,
 
-                    source_path=source_path,
                     media=media,
 
-                    higher_level_id=level_id,
+                    level=level,
+                    basename=basename,
+                    source_path=source_path,
+
+                    sequence=sequence,
+                    # higher_level_id=level_id,
+                    higher_level_id=higher_level_id,
 
                 )        
 
