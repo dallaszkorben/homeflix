@@ -20,7 +20,7 @@ db.create_tables()
 
 collectCardsFromFileSystem(media_path, db )
 
-records=db.get_all_cards()
+records=db.get_series()
 
 for id, record in records.items():
 

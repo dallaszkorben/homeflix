@@ -19,6 +19,8 @@ class SqlDatabase:
     TABLE_MTYPE = "MediaType"
     TABLE_MEDIUM = "Medium"
     TABLE_CARD = "Card"
+    TABLE_LEVEL = "Level"
+
     TABLE_CARD_GENRE = "Card_Genre"
     TABLE_CARD_THEME = "Card_Theme"
     TABLE_CARD_MTYPE = "Card_MType"
@@ -30,8 +32,7 @@ class SqlDatabase:
     TABLE_CARD_DIRECTOR = "Card_Director"
     TABLE_CARD_VOICE = "Card_Voice"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
-    TABLE_SUBLEVEL = "Sublevel"
-
+    TABLE_LEVEL_LANG = "Level_Lang"
 
     def __init__(self):
         config = getConfig()
@@ -41,6 +42,7 @@ class SqlDatabase:
         self.language = self.translator.get_actual_language_code()
 
         self.table_list = [
+                SqlDatabase.TABLE_LEVEL_LANG,
                 SqlDatabase.TABLE_TEXT_CARD_LANG,
                 SqlDatabase.TABLE_MEDIUM,
                 SqlDatabase.TABLE_CARD_VOICE,
@@ -53,17 +55,19 @@ class SqlDatabase:
                 SqlDatabase.TABLE_CARD_SOUND,
                 SqlDatabase.TABLE_CARD_SUB,
                 SqlDatabase.TABLE_CARD_MTYPE,
-#                SqlDatabase.TABLE_TITLE_CARD,
 
                 SqlDatabase.TABLE_CARD,
 
                 SqlDatabase.TABLE_COUNTRY,
                 SqlDatabase.TABLE_LANGUAGE,
+
                 SqlDatabase.TABLE_GENRE,
                 SqlDatabase.TABLE_THEME,
                 SqlDatabase.TABLE_PERSON,
                 SqlDatabase.TABLE_MTYPE,
                 SqlDatabase.TABLE_CATEGORY,
+
+                SqlDatabase.TABLE_LEVEL
             ]
 
         # create connection
@@ -168,6 +172,16 @@ class SqlDatabase:
     def create_tables(self):
 
         self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL + '''(
+                id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                name            TEXT  NOT NULL,
+                id_higher_level INTEGER,
+                source_path     TEXT  NOT NULL,
+                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id)
+            );
+        ''')
+
+        self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CATEGORY + '''(
                 id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 name  TEXT  NOT NULL,
@@ -227,13 +241,15 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD + '''(
-                id             INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
-                id_title_orig  INTEGER     NOT NULL,
-                id_category    INTEGER     NOT NULL,
-                date           TEXT        NOT NULL,
-                length         TEXT,
-                source_path    TEXT        NOT NULL,
-                FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id)
+                id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                id_title_orig   INTEGER     NOT NULL,
+                id_category     INTEGER     NOT NULL,
+                date            TEXT        NOT NULL,
+                length          TEXT,
+                source_path     TEXT        NOT NULL,
+                id_higher_level INTEGER,
+                FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
+                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id) 
             );
         ''')
 
@@ -352,6 +368,17 @@ class SqlDatabase:
                 FOREIGN KEY (id_language)  REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 PRIMARY KEY (id_card, id_language, type)
+            );
+        ''' )
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL_LANG + '''(
+                text         TEXT     NOT NULL,
+                id_language  INTEGER  NOT NULL,
+                id_level     INTEGER  NOT NULL,
+                FOREIGN KEY (id_language)  REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
+                FOREIGN KEY (id_level)     REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id),
+                PRIMARY KEY (id_level, id_language)
             );
         ''' )
 
@@ -539,26 +566,36 @@ class SqlDatabase:
         (mtype_id, ) = record if record else (None,)
         return mtype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, mtypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], source_path=None, media=[]):
+    def append_card_movie(self, title_orig, titles={}, category=None, mtypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], source_path=None, media=[], higher_level_id=None):
+
+        cur = self.conn.cursor()
+        cur.execute("begin")
 
         try:
-            cur = self.conn.cursor()
-            cur.execute("begin")
 
             title_orig_id = self.language_name_id_dict[title_orig]
             category_id = self.category_name_id_dict[category]
+
             #
             # INSERT into CARD
             #
-            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                (id_title_orig, id_category, date, length, source_path)
-                VALUES (?, ?, ?, ?, ?)
-                RETURNING id;
-            '''
-
-            cur.execute(query, (title_orig_id, category_id, date, length, source_path))
+            if higher_level_id:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                    (id_title_orig, id_category, date, length, source_path, id_higher_level)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    RETURNING id;
+                '''
+                cur.execute(query, (title_orig_id, category_id, date, length, source_path, higher_level_id))
+            else:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                    (id_title_orig, id_category, date, length, source_path)
+                    VALUES (?, ?, ?, ?, ?)
+                    RETURNING id;
+                '''
+                cur.execute(query, (title_orig_id, category_id, date, length, source_path))
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
+
             #
             # INSERT into TABLE_CARD_SOUND
             #
@@ -648,13 +685,62 @@ class SqlDatabase:
                     VALUES (?, ?);
                 '''
                 cur.execute(query, (medium, card_id))   
-
-            # close the insert transaction
-            cur.execute("commit")
-
+        
         except sqlite3.Error as e:
             logging.error("To append media failed with: '{0}' while inserting record".format(e))
             cur.execute("rollback")
+
+        # close the insert transaction
+        cur.execute("commit")
+
+    def append_level(self, titles, level, source_path, higher_level_id=None):
+
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        try:
+
+            #
+            # INSERT into Level
+            #
+            if higher_level_id:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
+                    (name, id_higher_level, source_path)
+                    VALUES (?, ?, ?)
+                    RETURNING id;
+                '''
+                cur.execute(query, (level, higher_level_id, source_path))
+            else:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
+                    (name, source_path)
+                    VALUES (?, ?)
+                    RETURNING id;
+                '''
+                cur.execute(query, (level,source_path))
+            record = cur.fetchone()
+            (level_id, ) = record if record else (None,)
+
+            #
+            # INSERT into TABLE_LEVEL_LANG
+            #
+            for lang, title in titles.items():
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL_LANG + '''
+                    (id_language, id_level, text)
+                    VALUES (?, ?, ?);
+                '''
+                cur.execute(query, (self.language_name_id_dict[lang], level_id, title))    
+
+
+
+        except sqlite3.Error as e:
+            logging.error("To append level failed with: '{0}' while inserting record. level: {1}".format(e, level))
+            cur.execute("rollback")
+
+        cur.execute("commit")
+        return level_id
+
+
+
 
 
 
