@@ -73,10 +73,23 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
 
         category = data['category']
         mtypes = data['mtypes']
-        level = data['level']
-        title_orig = data['title']['orig']
-        titles = data['title']['titles']
-        storylines = data['storylines']
+        try:
+            level = data['level']
+        except:
+            level = None
+        try:
+            title_orig = data['title']['orig']
+        except:
+            title_orig = None
+        try:            
+            titles = data['title']['titles']
+        except:
+            titles = []
+        try:
+            storylines = data['storylines']
+        except:
+            storylines = []
+
         date = data['date']
         try:
             directors = data['directors']
@@ -95,11 +108,18 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
         except:
             host = []
         length = data['length']
-        sounds = data['sounds']
+
+        try:
+            sounds = data['sounds']
+        except:
+            sounds = []
         subs = data['subs']
         genres = data['genres']
         themes = data['themes']
-        origins = data['origins']
+        try:
+            origins = data['origins']
+        except:
+            origins = []
         try:
             sequence = data['sequence']
         except:
@@ -136,7 +156,7 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             logging.error( "CARD - Original language ({1}) set for title in {0} is unknown".format(card_path, title_orig))
             card_error = True
 
-# ---
+ # ---
 
 
         # this is a level not a media
@@ -144,7 +164,9 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
 
             # create a new Level record + get back the id
             level_id=db.append_level(
+                title_orig=title_orig,
                 titles=titles,
+                category=category,
                 level=level,
                 basename=basename,
                 source_path=source_path,

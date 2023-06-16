@@ -20,27 +20,32 @@ db.create_tables()
 
 collectCardsFromFileSystem(media_path, db )
 
-#records=db.get_series()
 
-# for id, record in records.items():
+lang='hu'
 
-#     print("Id: {0}, Title: {1}".format(id, record['title']))
-#     print("    Original Title: {0}".format(record['original_title']))
+# --- fetch all standalone movies with the title on the requested language ---
+records=db.get_all_standalone_movie(lang=lang, limit=100)
+print("\nStandalone movies titles on '{0}' language and on original language".format(lang))
+for record in records:
+    if record["title_req"]:
+        orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+        print("Id: {0}, Title: {1} {2}".format(record["id"], record["title_req"], orig_title))
+    else:
+        print("Id: {0}, Title: (Original [{1}]) {2}".format(record["id"], record["lang_orig"], record["title_orig"]))
+    print("              Source: {0}".format(record["source_path"]))
 
-#     print("    Category:       {0}".format(record['category']))
-#     print("    Storyline:      {0}".format(record['storyline']))
-#     print("    Date:           {0}".format(record['date']))
-#     print("    Length:         {0}".format(record['length']))
 
-#     print("    Sound:          {0}".format(record['sounds']))
-#     print("    Sub:            {0}".format(record['subs']))
-#     print("    Genre:          {0}".format(record['genres']))
-#     print("    Theme:          {0}".format(record['themes']))
-#     print("    Origin:         {0}".format(record['origins']))
+# --- fetch all movie series with the title on the requested language ---
+records=db.get_series_of_movies(lang=lang, limit=100)
+print("\nMovie Series titles on '{0}' language and on original language".format(lang))
+for record in records:
+    if record["title_req"]:
+        orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+        print("Id: {0}, Title: {1} {2}".format(record["id"], record["title_req"], orig_title))
+    else:
+        print("Id: {0}, Title: (Original [{1}]) {2}".format(record["id"], record["lang_orig"], record["title_orig"]))
+    print("              Source: {0}".format(record["source_path"]))
 
-#     print("    Source Path:    {0}".format(record['source_path']))
-#     print("    Media:          {0}".format(record['media']))
-#     print("    Media type:     {0}".format(record['mtypes']))
 
 
 

@@ -32,7 +32,7 @@ class SqlDatabase:
     TABLE_CARD_DIRECTOR = "Card_Director"
     TABLE_CARD_VOICE = "Card_Voice"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
-    TABLE_LEVEL_LANG = "Level_Lang"
+    TABLE_LEVEL_TITLE_LANG = "Level_Title_Lang"
 
     def __init__(self):
         config = getConfig()
@@ -42,7 +42,7 @@ class SqlDatabase:
         self.language = self.translator.get_actual_language_code()
 
         self.table_list = [
-                SqlDatabase.TABLE_LEVEL_LANG,
+                SqlDatabase.TABLE_LEVEL_TITLE_LANG,
                 SqlDatabase.TABLE_TEXT_CARD_LANG,
                 SqlDatabase.TABLE_MEDIUM,
                 SqlDatabase.TABLE_CARD_VOICE,
@@ -176,9 +176,13 @@ class SqlDatabase:
                 id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 name            TEXT       NOT NULL,
                 id_higher_level INTEGER,
+                id_title_orig   INTEGER    NOT NULL,
+                id_category     INTEGER    NOT NULL,
                 basename        TEXT       NOT NULL,
                 source_path     TEXT       NOT NULL,
                 sequence        INTEGER,
+                FOREIGN KEY (id_category)     REFERENCES ''' + SqlDatabase.TABLE_CATEGORY + ''' (id),
+                FOREIGN KEY (id_title_orig)   REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id)
             );
         ''')
@@ -377,7 +381,7 @@ class SqlDatabase:
         ''' )
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL_LANG + '''(
+            CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL_TITLE_LANG + '''(
                 text         TEXT     NOT NULL,
                 id_language  INTEGER  NOT NULL,
                 id_level     INTEGER  NOT NULL,
@@ -698,38 +702,41 @@ class SqlDatabase:
         # close the insert transaction
         cur.execute("commit")
 
-    def append_level(self, titles, level, basename, source_path, sequence=None, higher_level_id=None):
+    def append_level(self, title_orig, titles, category, level, basename, source_path, sequence=None, higher_level_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
 
         try:
 
+            category_id = self.category_name_id_dict[category]
+            title_orig_id = self.language_name_id_dict[title_orig]
+
             #
             # INSERT into Level
             #
             if higher_level_id:                
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
-                    (name, id_higher_level, basename, source_path, sequence)
-                    VALUES (?, ?, ?, ?, ?)
+                    (name, id_title_orig, id_category, id_higher_level, basename, source_path, sequence)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (level, higher_level_id, basename, source_path, sequence))
+                cur.execute(query, (level, title_orig_id, category_id, higher_level_id, basename, source_path, sequence))
             else:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
-                    (name, basename, source_path, sequence)
-                    VALUES (?, ?, ?, ?)
+                    (name, id_title_orig, id_category, basename, source_path, sequence)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (level, basename, source_path, sequence))
+                cur.execute(query, (level, title_orig_id, category_id, basename, source_path, sequence))
             record = cur.fetchone()
             (level_id, ) = record if record else (None,)
 
             #
-            # INSERT into TABLE_LEVEL_LANG
+            # INSERT into TABLE_LEVEL_TITLE_LANG
             #
             for lang, title in titles.items():
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL_LANG + '''
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL_TITLE_LANG + '''
                     (id_language, id_level, text)
                     VALUES (?, ?, ?);
                 '''
@@ -741,6 +748,239 @@ class SqlDatabase:
 
         cur.execute("commit")
         return level_id
+
+
+
+
+    def get_all_series_fast(self, lang):
+        """
+        It returns the series id, title on the requested language, or if it does not exist then the title on the original language
+        Return fields:
+            id:         series ID
+            title:      title
+            source_path:source path to the series
+            lang:       language of the title
+            orig,       original language
+        """
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        return_records = {}
+
+        # Get Card list
+        query = '''
+            SELECT 
+                level.id id, 
+                ltl.text title, 
+                level.source_path source_path, 
+                lang.name lang, 
+                orig.name orig,
+                ROW_NUMBER() OVER (
+                    PARTITION BY level.id 
+                    ORDER BY 
+                        CASE 
+                            WHEN lang.name=? THEN 0 
+                            WHEN lang.name=orig.name THEN 1 
+                            ELSE 2 END, text
+                    ) AS rn
+            FROM 
+                ''' + SqlDatabase.TABLE_LEVEL + ''' level, 
+                ''' + SqlDatabase.TABLE_LEVEL_TITLE_LANG + ''' ltl, 
+                ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang, 
+                ''' + SqlDatabase.TABLE_LANGUAGE + ''' orig
+            WHERE 
+                level.name='series' AND
+                ltl.id_level=level.id AND
+                ltl.id_language=lang.id AND
+                level.id_title_orig=orig.id AND
+                (lang.name=? OR level.id_title_orig=lang.id)
+            GROUP BY level.id                
+        '''
+        return_records=cur.execute(query, (lang,lang)).fetchall()
+
+        cur.execute("commit")
+
+        return return_records
+
+
+
+
+
+
+
+
+    def get_series_of_movies(self, lang, limit=100):
+        return self.get_all_series('movie', lang, limit)
+
+    def get_all_series(self, category, lang, limit=100):
+        return self.get_all_level('series', category, lang, limit)
+
+    def get_all_level(self, level, category, lang, limit=100):
+        """
+        It returns series with id, title on the required language and title on the original language.
+        If the requested language is the original language, then only the title with requested language will be returned
+        If the the title does not exist on the requested language, only the title with the original language will be returned
+        Return fields:
+            id:         series ID
+            title_req:  tile on the requested language
+            lang_req:   requested language
+            title_orig: title on the original language
+            lang_orig:  original language of the title
+            source_path:source path to the series
+        Example:
+            records=db.get_all_level(level="series", category="movie", lang="it")
+            for record in records:
+                if record["title_req"]:
+                    orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+                    print("Id: {0}, Title: {1} {2}".format(record["id"], record["title_req"], orig_title))
+                else:
+                    print("Id: {0}, Title: (Original [{1}]) {2}".format(record["id"], record["lang_orig"], record["title_orig"]))
+                print("              Source: {0}".format(record["source_path"]))
+        Output:
+            Id: 1, Title: (Original [en]) The IT Crowd
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/03.Series/Kockafejek
+            Id: 6, Title: (Original [hu]) Psyché és Nárcisz
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/03.Series/PsycheEsNarcisz-1980
+        """
+
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        return_records = {}
+
+        # Get Card list
+        query = '''
+            SELECT 
+                id, 
+                MAX(title_req) title_req, 
+                MAX(lang_req) lang_req, 
+                MAX(title_orig) title_orig, 
+                MAX(lang_orig) lang_orig,
+                source_path
+            FROM (
+                SELECT 
+                    level.id id, 
+                    NULL title_req, 
+                    NULL lang_req, 
+                    ltl.text title_orig, 
+                    lang.name lang_orig,
+                    level.source_path source_path
+                FROM 
+                    Level level, 
+                    Level_Title_Lang ltl,
+                    Category cat,
+                    Language lang
+                WHERE
+                    level.name=:level AND
+                    level.id_category=cat.id AND
+                    cat.name=:category AND
+                    ltl.id_level=level.id AND
+                    ltl.id_language=lang.id AND
+                    level.id_title_orig=lang.id AND
+                    lang.name <> :lang
+
+                UNION
+
+                SELECT 
+                    level.id id, 
+                    ltl.text title_req, 
+                    lang.name lang_req, 
+                    NULL title_orig, 
+                    NULL lang_orig,
+                    level.source_path source_path
+                FROM 
+                    Level level, 
+                    Level_Title_Lang ltl,
+                    Category cat,
+                    Language lang 
+                WHERE
+                    level.name=:level AND
+                    level.id_category=cat.id AND
+                    cat.name=:category AND
+                    ltl.id_level=level.id AND
+                    ltl.id_language=lang.id AND
+                    lang.name=:lang
+            )
+            GROUP BY id
+            ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+            LIMIT :limit;
+        '''
+        return_records=cur.execute(query, {'level': level, 'category': category, 'lang':lang, 'limit':limit}).fetchall()
+        cur.execute("commit")
+
+        return return_records
+
+    def get_all_standalone_movie(self, lang, limit=100):
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        return_records = {}
+
+        # Get Card list
+        query = '''
+            SELECT 
+                id, 
+                MAX(title_req) title_req, 
+                MAX(lang_req) lang_req, 
+                MAX(title_orig) title_orig, 
+                MAX(lang_orig) lang_orig,
+                source_path
+            FROM (
+                SELECT 
+                    card.id id, 
+                    NULL title_req, 
+                    NULL lang_req, 
+                    tcl.text title_orig, 
+                    lang.name lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang
+                WHERE
+                    card.id_higher_level IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    card.id_title_orig=lang.id AND
+                    cat.name = :category AND
+                    lang.name <> :lang
+
+                UNION
+
+                SELECT 
+                    card.id id, 
+                    tcl.text title_req, 
+                    lang.name lang_req, 
+                    NULL title_orig, 
+                    NULL lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang 
+                WHERE
+                    card.id_higher_level IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    card.id_title_orig=lang.id AND
+                    cat.name = :category AND
+                    lang.name=:lang)
+            GROUP BY id
+            ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+            LIMIT :limit;
+        '''
+        return_records=cur.execute(query, {'category': 'movie', 'lang':lang, 'limit':limit}).fetchall()
+        cur.execute("commit")
+
+        return return_records
+
+
+
+
 
 
 

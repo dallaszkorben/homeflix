@@ -6,24 +6,272 @@ con.execute('SELECT * from Level').fetchall()
 con.execute('SELECT * from Card').fetchall()
 
 
+=================================
+
+--- get all standalone movies ---
+ 
+==================================
+
+----------
+version 1:
+----------
+
+
+--- show original title of all standalone media except if the requested language is the original ---
+con.execute('''
+SELECT card.id id, NULL title_req, NULL lang_req, tcl.text title_orig, lang.name lang_orig
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang
+WHERE
+card.id_higher_level IS NULL AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+cat.name = :category AND
+lang.name <> :lang
+''', {'category': 'movie', 'lang': 'hu'}).fetchall()
+
+
+--- show requested title of all standalone films if there is ---
+
+con.execute('''
+SELECT card.id id, tcl.text title_req, lang.name lang_req, NULL title_orig, NULL lang_orig
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang 
+WHERE
+card.id_higher_level IS NULL AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+cat.name = :category AND
+lang.name=:lang
+''', {'category': 'movie', 'lang': 'hu'}).fetchall()
+
+
+--- combine the two lists ---
+
+
+
+
+con.execute('''
+SELECT id, MAX(title_req) title_req, MAX(lang_req) lang_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig
+
+FROM
+
+(SELECT card.id id, NULL title_req, NULL lang_req, tcl.text title_orig, lang.name lang_orig
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang
+WHERE
+card.id_higher_level IS NULL AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+cat.name = :category AND
+lang.name <> :lang
+
+UNION
+
+SELECT card.id id, tcl.text title_req, lang.name lang_req, NULL title_orig, NULL lang_orig
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang 
+WHERE
+card.id_higher_level IS NULL AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+cat.name = :category AND
+lang.name=:lang)
+
+GROUP BY id;
+
+''', {'lang': 'it', 'category': 'movie'}).fetchall()
+
+
+
+
+
+
+
+
 ======================
 -                    - 
 --- get all series ---
 -                    - 
 ======================
+
+----------
+version 1:
+----------
 input:  level.name, language.name, source_path
 
 con.execute('''
-SELECT level.id, level_lang.text, level.source_path
-FROM Level, Level_Lang, Language
+SELECT level.id, level_title_lang.text, level.source_path
+FROM Level, Level_Title_Lang, Language
 WHERE 
 level.name="series" AND
-level_lang.id_level=level.id AND
-level_lang.id_language=language.id AND
+level_title_lang.id_level=level.id AND
+level_title_lang.id_language=language.id AND
 language.name="hu"
 ''').fetchall()
 
 [(1, 'Kockafejek', '/media/akoel/vegyes/MEDIA/01.Movie/03.Series/Kockafejek'), (6, 'Psyché és Nárcisz', '/media/akoel/vegyes/MEDIA/01.Movie/03.Series/PsycheEsNarcisz-1980')]
+
+----------
+version 2:
+----------
+--- If there is no title on the given language, it gives back the title on the original language ---
+--- If there is title on the given language but it is different to the original title then it gives back 2 lines of the same id ---
+con.execute('''
+SELECT level.id, level_title_lang.text, level.source_path, language.name
+FROM Level, Level_Title_Lang, Language
+WHERE 
+level.name="series" AND
+level_title_lang.id_level=level.id AND
+level_title_lang.id_language=language.id AND
+(language.name="hu" OR level.id_title_orig=language.id)
+''').fetchall()
+
+----------
+version 3:
+----------
+--- It gives back the title on the given language
+--- If there is no title on the given language, it gives back the title on the original language ---
+--- It uses the ROW_NUMBER() function to order the title in the same level.id. First: the title on the requested language, second: the title on the original language, third: title on any other language. Finally it GROUP BY the level.id and only the first line will be kept in every group (every id)
+con.execute('''
+SELECT level.id id, 
+ltl.text title, 
+level.source_path source_path, 
+language.name lang, 
+orig.name orig, 
+ROW_NUMBER() OVER (PARTITION BY level.id ORDER BY CASE WHEN language.name='hu' THEN 0 WHEN language.name=orig.name THEN 1 ELSE 2 END, language.name) AS rn
+FROM 
+Level level, 
+Level_Title_Lang ltl, 
+Language language, 
+Language orig
+WHERE 
+level.name='series' AND
+ltl.id_level=level.id AND
+ltl.id_language=language.id AND
+level.id_title_orig=orig.id AND
+(language.name='hu' OR level.id_title_orig=language.id)
+GROUP BY level.id
+''').fetchall()
+
+
+----------
+version 4:
+----------
+--- It gives back the title on the given language
+--- If there is no title on the given language, it gives back the title on the original language ---
+--- It uses the ROW_NUMBER() function to order the title in the same level.id. First: the title on the requested language, second: the title on the original language, third: title on any other language. Finally it GROUP BY the level.id and only the first line will be kept in every group (every id)
+
+--- show original title of all series ---
+con.execute('''
+SELECT level.id id, NULL title_req, NULL lang_req, ltl.text title_orig, lang.name lang_orig
+FROM 
+Level level, 
+Level_Title_Lang ltl, 
+Language lang 
+WHERE
+level.name='series' AND
+ltl.id_level=level.id AND
+ltl.id_language=lang.id AND
+level.id_title_orig=lang.id
+''').fetchall()
+
+--- show original title of all series except if the requested language is the original ---
+con.execute('''
+SELECT level.id id, NULL title_req, NULL lang_req, ltl.text title_orig, lang.name lang_orig
+FROM 
+Level level, 
+Level_Title_Lang ltl, 
+Language lang,
+Language orig
+WHERE
+level.name='series' AND
+ltl.id_level=level.id AND
+ltl.id_language=lang.id AND
+level.id_title_orig=lang.id AND
+level.id_title_orig=orig.id AND
+orig.name <> 'en'
+''').fetchall()
+
+
+--- show requested title of all series if there is ---
+
+con.execute('''
+SELECT level.id id, level.category category, ltl.text title_req, lang.name lang_req, NULL title_orig, NULL lang_orig
+FROM 
+Level level, 
+Level_Title_Lang ltl, 
+Language lang 
+WHERE
+level.name=:level AND
+level.category = :category AND
+ltl.id_level=level.id AND
+ltl.id_language=lang.id AND
+lang.name=:lang
+''', {"level": "series", "lang": "en", "category":"movie"}).fetchall()
+
+--- combine the two lists ---
+
+con.execute('''
+
+SELECT id, MAX(title_req) title_req, MAX(lang_req) lang_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig
+
+FROM
+(SELECT level.id id, NULL title_req, NULL lang_req, ltl.text title_orig, lang.name lang_orig
+FROM 
+Level level,
+Level_Title_Lang ltl,
+Category cat,
+Language lang
+WHERE
+level.name=:level AND
+ltl.id_level=level.id AND
+ltl.id_language=lang.id AND
+level.id_title_orig=lang.id AND
+level.id_category=cat.id AND
+cat.name=:category AND
+lang.name <> :lang
+
+UNION
+
+SELECT level.id id, ltl.text title_req, lang.name lang_req, NULL title_orig, NULL lang_orig
+FROM 
+Level level, 
+Level_Title_Lang ltl, 
+Category cat,
+Language lang 
+WHERE
+level.name=:level AND
+ltl.id_level=level.id AND
+ltl.id_language=lang.id AND
+level.id_category=cat.id AND
+cat.name=:category AND
+lang.name=:lang)
+
+GROUP BY id;
+
+''', {'level': 'series', 'lang': 'it', 'category': 'movie'}).fetchall()
+
 
 ===================================
                                 
@@ -37,12 +285,12 @@ input:  actual level ID, language
 output: sublevel ID, sublevel name, sublevel title, source_path
 
 con.execute('''
-SELECT level.id, level.name, level_lang.text, level.source_path
-FROM Level, level_lang, language
+SELECT level.id, level.name, level_title_lang.text, level.source_path
+FROM Level, level_title_lang, language
 WHERE 
 level.id_higher_level=6 AND
-level_lang.id_level=level.id AND
-level_lang.id_language=language.id AND
+level_title_lang.id_level=level.id AND
+level_title_lang.id_language=language.id AND
 language.name="hu"
 ''').fetchall()
 
@@ -70,12 +318,12 @@ text_card_lang.id_language=language.id AND
 text_card_lang.id_card=card.id AND
 text_card_lang.type="T"
 UNION
-SELECT level.id level_id, NULL card_id, level.sequence sequence, level.name level_name, level_lang.text title, level.source_path path
-FROM Level, level_lang, language
+SELECT level.id level_id, NULL card_id, level.sequence sequence, level.name level_name, level_title_lang.text title, level.source_path path
+FROM Level, level_title_lang, language
 WHERE 
 level.id_higher_level=6 AND
-level_lang.id_level=level.id AND
-level_lang.id_language=language.id AND
+level_title_lang.id_level=level.id AND
+level_title_lang.id_language=language.id AND
 language.name="hu"
 ''').fetchall()
 
@@ -108,12 +356,12 @@ text_card_lang.type="T"
 
 UNION
 
-SELECT level.id level_id, NULL card_id, level.name level_name, level_lang.text title, level.sequence sequence, level.basename basename, level.source_path path
-FROM Level, level_lang, language
+SELECT level.id level_id, NULL card_id, level.name level_name, level_title_lang.text title, level.sequence sequence, level.basename basename, level.source_path path
+FROM Level, level_title_lang, language
 WHERE 
 level.id_higher_level=1 AND
-level_lang.id_level=level.id AND
-level_lang.id_language=language.id AND
+level_title_lang.id_level=level.id AND
+level_title_lang.id_language=language.id AND
 language.name="hu" 
 ORDER BY sequence, basename ASC
 ''').fetchall()
@@ -172,7 +420,7 @@ input: Level ID, Language Name
 output: As many levels as there are records. Every record has level.id, level.name, title
 
 con.execute('''
-SELECT level.id, level.name, level_lang.text FROM 
+SELECT level.id, level.name, level_title_lang.text FROM 
 (WITH RECURSIVE
 b(id) AS (
 SELECT id_higher_level FROM Card WHERE id=1
@@ -180,15 +428,15 @@ UNION
 SELECT actual.id_higher_level
 FROM b, Level as actual
 WHERE b.id=actual.id AND actual.id_higher_level IS NOT NULL
-) SELECT * FROM b) as level_id, Level, Level_Lang, Language
+) SELECT * FROM b) as level_id, Level, Level_title_Lang, Language
 WHERE 
 level_id.id=level.id AND
-level.id=level_lang.id_level AND
-level_lang.id_language=language.id AND
+level.id=level_title_lang.id_level AND
+level_title_lang.id_language=language.id AND
 language.name="hu"
 ''').fetchall()
 
-[(3, 'episode', 'A tegnapi lekvár'), (2, 'season', 'S01'), (1, 'series', 'Kockafejek')]
+[(2, 'season', 'S01'), (1, 'series', 'Kockafejek')]
 
 --- 
 
