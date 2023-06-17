@@ -31,7 +31,7 @@ def getPatternDate():
 def getPatternLength():
     return re.compile( r'^(\d{1,2}:\d{2}:\d{2})?$' )
 
-def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
+def collectCardsFromFileSystem(actualDir, db, higher_hierarchy_id=None ):
     """ _________________________________________________________________
         Recursive analysis on the the file system
         _________________________________________________________________
@@ -49,7 +49,7 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
     #image_path = None
     image_file_name = None
 
-    level_id = None
+    hierarchy_id = None
 
     for file_name in file_list:
         
@@ -184,7 +184,7 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
         if not media and not card_error:
 
             # create a new Level record + get back the id
-            level_id=db.append_level(
+            hierarchy_id=db.append_hierarchy(
                 title_orig=title_orig,
                 titles=titles,
                 category=category,
@@ -192,7 +192,7 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
                 basename=basename,
                 source_path=source_path,
                 sequence=sequence,
-                higher_level_id=higher_level_id                
+                higher_hierarchy_id=higher_hierarchy_id                
             )
 
 
@@ -263,11 +263,11 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
                     source_path=source_path,
 
                     sequence=sequence,
-                    higher_level_id=higher_level_id,
+                    higher_hierarchy_id=higher_hierarchy_id,
                 )        
 
     for name in dir_list:
         subfolder_path_os = os.path.join(actualDir, name)
-        val = collectCardsFromFileSystem( subfolder_path_os, db, higher_level_id=level_id )
+        val = collectCardsFromFileSystem( subfolder_path_os, db, higher_hierarchy_id=hierarchy_id )
 
     return

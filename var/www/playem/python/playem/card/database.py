@@ -32,7 +32,7 @@ class SqlDatabase:
     TABLE_CARD_DIRECTOR = "Card_Director"
     TABLE_CARD_VOICE = "Card_Voice"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
-    TABLE_HIERARCHY_TITLE_LANG = "Level_Title_Lang"
+    TABLE_HIERARCHY_TITLE_LANG = "Hierarchy_Title_Lang"
 
     def __init__(self):
         config = getConfig()
@@ -129,36 +129,6 @@ class SqlDatabase:
             except sqlite3.OperationalError as e:
                 print(e)
 
-    # def delete_tables(self):
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TEXT_CARD_LANG + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MEDIUM + ";")
-
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_VOICE + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_WRITER + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_DIRECTOR + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_ACTOR + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_ORIGIN + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_GENRE + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_THEME + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SOUND + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SUB + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_MEDIATYPE + ";")
-
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TITLE_CARD + ";")
-
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD + ";")
-
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_COUNTRY + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_LANGUAGE + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_GENRE + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_THEME + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_PERSON + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MEDIATYPE + ";")
-
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CATEGORY + ";")
-
-
-
     def drop_tables(self):
 
         for table in self.table_list:
@@ -173,17 +143,17 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_HIERARCHY + '''(
-                id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
-                name            TEXT       NOT NULL,
-                id_higher_level INTEGER,
-                id_title_orig   INTEGER    NOT NULL,
-                id_category     INTEGER    NOT NULL,
-                basename        TEXT       NOT NULL,
-                source_path     TEXT       NOT NULL,
-                sequence        INTEGER,
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                level               TEXT       NOT NULL,
+                id_higher_hierarchy INTEGER,
+                id_title_orig       INTEGER    NOT NULL,
+                id_category         INTEGER    NOT NULL,
+                basename            TEXT       NOT NULL,
+                source_path         TEXT       NOT NULL,
+                sequence            INTEGER,
                 FOREIGN KEY (id_category)     REFERENCES ''' + SqlDatabase.TABLE_CATEGORY + ''' (id),
                 FOREIGN KEY (id_title_orig)   REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id)
+                FOREIGN KEY (id_higher_hierarchy) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id)
             );
         ''')
 
@@ -247,18 +217,18 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD + '''(
-                id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
-                id_title_orig   INTEGER     NOT NULL,
-                id_category     INTEGER     NOT NULL,
-                date            TEXT        NOT NULL,
-                length          TEXT,
-                source_path     TEXT        NOT NULL,
-                basename        TEXT        NOT NULL,
-                sequence        INTEGER,
-                id_higher_level INTEGER,
-                level           TEXT,
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                id_title_orig       INTEGER     NOT NULL,
+                id_category         INTEGER     NOT NULL,
+                date                TEXT        NOT NULL,
+                length              TEXT,
+                source_path         TEXT        NOT NULL,
+                basename            TEXT        NOT NULL,
+                sequence            INTEGER,
+                id_higher_hierarchy INTEGER,
+                level               TEXT,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id) 
+                FOREIGN KEY (id_higher_hierarchy) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id) 
             );
         ''')
 
@@ -384,10 +354,10 @@ class SqlDatabase:
             CREATE TABLE ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + '''(
                 text         TEXT     NOT NULL,
                 id_language  INTEGER  NOT NULL,
-                id_level     INTEGER  NOT NULL,
+                id_hierarchy INTEGER  NOT NULL,
                 FOREIGN KEY (id_language)  REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_level)     REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id),
-                PRIMARY KEY (id_level, id_language)
+                FOREIGN KEY (id_hierarchy) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id),
+                PRIMARY KEY (id_hierarchy, id_language)
             );
         ''' )
 
@@ -575,7 +545,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, mediatypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], media=[], basename=None, source_path=None, sequence=None, higher_level_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, mediatypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], media=[], basename=None, source_path=None, sequence=None, higher_hierarchy_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -588,13 +558,13 @@ class SqlDatabase:
             #
             # INSERT into CARD
             #
-            if higher_level_id:
+            if higher_hierarchy_id:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id_title_orig, id_category, date, length, basename, source_path, id_higher_level, sequence)
+                    (id_title_orig, id_category, date, length, basename, source_path, id_higher_hierarchy, sequence)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path, higher_level_id, sequence))
+                cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path, higher_hierarchy_id, sequence))
             else:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
                     (id_title_orig, id_category, date, length, basename, source_path)
@@ -702,7 +672,7 @@ class SqlDatabase:
         # close the insert transaction
         cur.execute("commit")
 
-    def append_level(self, title_orig, titles, category, level, basename, source_path, sequence=None, higher_level_id=None):
+    def append_hierarchy(self, title_orig, titles, category, level, basename, source_path, sequence=None, higher_hierarchy_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -715,92 +685,92 @@ class SqlDatabase:
             #
             # INSERT into Level
             #
-            if higher_level_id:                
+            if higher_hierarchy_id:                
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_HIERARCHY + '''
-                    (name, id_title_orig, id_category, id_higher_level, basename, source_path, sequence)
+                    (level, id_title_orig, id_category, id_higher_hierarchy, basename, source_path, sequence)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (level, title_orig_id, category_id, higher_level_id, basename, source_path, sequence))
+                cur.execute(query, (level, title_orig_id, category_id, higher_hierarchy_id, basename, source_path, sequence))
             else:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_HIERARCHY + '''
-                    (name, id_title_orig, id_category, basename, source_path, sequence)
+                    (level, id_title_orig, id_category, basename, source_path, sequence)
                     VALUES (?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
                 cur.execute(query, (level, title_orig_id, category_id, basename, source_path, sequence))
             record = cur.fetchone()
-            (level_id, ) = record if record else (None,)
+            (hierarchy_id, ) = record if record else (None,)
 
             #
             # INSERT into TABLE_HIERARCHY_TITLE_LANG
             #
             for lang, title in titles.items():
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + '''
-                    (id_language, id_level, text)
+                    (id_language, id_hierarchy, text)
                     VALUES (?, ?, ?);
                 '''
-                cur.execute(query, (self.language_name_id_dict[lang], level_id, title))    
+                cur.execute(query, (self.language_name_id_dict[lang], hierarchy_id, title))    
 
         except sqlite3.Error as e:
-            logging.error("To append level failed with: '{0}' while inserting record. level: {1}".format(e, level))
+            logging.error("To append hierarchy failed with: '{0}' while inserting record. Level: {1}".format(e, level))
             cur.execute("rollback")
 
         cur.execute("commit")
-        return level_id
+        return hierarchy_id
 
 
 
 
-    def get_all_series_fast(self, lang):
-        """
-        It returns the series id, title on the requested language, or if it does not exist then the title on the original language
-        Return fields:
-            id:         series ID
-            title:      title
-            source_path:source path to the series
-            lang:       language of the title
-            orig,       original language
-        """
-        cur = self.conn.cursor()
-        cur.execute("begin")
+    # def get_all_series_fast(self, lang):
+    #     """
+    #     It returns the series id, title on the requested language, or if it does not exist then the title on the original language
+    #     Return fields:
+    #         id:         series ID
+    #         title:      title
+    #         source_path:source path to the series
+    #         lang:       language of the title
+    #         orig,       original language
+    #     """
+    #     cur = self.conn.cursor()
+    #     cur.execute("begin")
 
-        return_records = {}
+    #     return_records = {}
 
-        # Get Card list
-        query = '''
-            SELECT 
-                level.id id, 
-                ltl.text title, 
-                level.source_path source_path, 
-                lang.name lang, 
-                orig.name orig,
-                ROW_NUMBER() OVER (
-                    PARTITION BY level.id 
-                    ORDER BY 
-                        CASE 
-                            WHEN lang.name=? THEN 0 
-                            WHEN lang.name=orig.name THEN 1 
-                            ELSE 2 END, text
-                    ) AS rn
-            FROM 
-                ''' + SqlDatabase.TABLE_HIERARCHY + ''' level, 
-                ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl, 
-                ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang, 
-                ''' + SqlDatabase.TABLE_LANGUAGE + ''' orig
-            WHERE 
-                level.name='series' AND
-                ltl.id_level=level.id AND
-                ltl.id_language=lang.id AND
-                level.id_title_orig=orig.id AND
-                (lang.name=? OR level.id_title_orig=lang.id)
-            GROUP BY level.id                
-        '''
-        return_records=cur.execute(query, (lang,lang)).fetchall()
+    #     # Get Card list
+    #     query = '''
+    #         SELECT 
+    #             level.id id, 
+    #             ltl.text title, 
+    #             level.source_path source_path, 
+    #             lang.name lang, 
+    #             orig.name orig,
+    #             ROW_NUMBER() OVER (
+    #                 PARTITION BY level.id 
+    #                 ORDER BY 
+    #                     CASE 
+    #                         WHEN lang.name=? THEN 0 
+    #                         WHEN lang.name=orig.name THEN 1 
+    #                         ELSE 2 END, text
+    #                 ) AS rn
+    #         FROM 
+    #             ''' + SqlDatabase.TABLE_HIERARCHY + ''' hierarchy, 
+    #             ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl, 
+    #             ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang, 
+    #             ''' + SqlDatabase.TABLE_LANGUAGE + ''' orig
+    #         WHERE 
+    #             level.name='series' AND
+    #             ltl.id_level=level.id AND
+    #             ltl.id_language=lang.id AND
+    #             level.id_title_orig=orig.id AND
+    #             (lang.name=? OR level.id_title_orig=lang.id)
+    #         GROUP BY level.id                
+    #     '''
+    #     return_records=cur.execute(query, (lang,lang)).fetchall()
 
-        cur.execute("commit")
+    #     cur.execute("commit")
 
-        return return_records
+    #     return return_records
 
 
 
@@ -860,50 +830,50 @@ class SqlDatabase:
                 source_path
             FROM (
                 SELECT 
-                    level.id id, 
+                    hrchy.id id, 
                     NULL title_req, 
                     NULL lang_req, 
-                    ltl.text title_orig, 
+                    htl.text title_orig, 
                     lang.name lang_orig,
-                    level.source_path source_path,
-                    level.sequence sequence,
-                    level.basename
+                    hrchy.source_path source_path,
+                    hrchy.sequence sequence,
+                    hrchy.basename
                 FROM 
-                    ''' + SqlDatabase.TABLE_HIERARCHY + ''' level, 
-                    ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl,
+                    ''' + SqlDatabase.TABLE_HIERARCHY + ''' hrchy, 
+                    ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' htl,
                     ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
-                    level.name=:level AND
-                    level.id_category=cat.id AND
+                    hrchy.level=:level AND
+                    hrchy.id_category=cat.id AND
                     cat.name=:category AND
-                    ltl.id_level=level.id AND
-                    ltl.id_language=lang.id AND
-                    level.id_title_orig=lang.id AND
+                    htl.id_hierarchy=hrchy.id AND
+                    htl.id_language=lang.id AND
+                    hrchy.id_title_orig=lang.id AND
                     lang.name <> :lang
 
                 UNION
 
                 SELECT 
-                    level.id id, 
-                    ltl.text title_req, 
+                    hrchy.id id, 
+                    htl.text title_req, 
                     lang.name lang_req, 
                     NULL title_orig, 
                     NULL lang_orig,
-                    level.source_path source_path,
-                    level.sequence sequence,
-                    level.basename
+                    hrchy.source_path source_path,
+                    hrchy.sequence sequence,
+                    hrchy.basename
                 FROM 
-                    ''' + SqlDatabase.TABLE_HIERARCHY + ''' level, 
-                    ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl,
+                    ''' + SqlDatabase.TABLE_HIERARCHY + ''' hrchy, 
+                    ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' htl,
                     ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
-                    level.name=:level AND
-                    level.id_category=cat.id AND
+                    hrchy.level=:level AND
+                    hrchy.id_category=cat.id AND
                     cat.name=:category AND
-                    ltl.id_level=level.id AND
-                    ltl.id_language=lang.id AND
+                    htl.id_hierarchy=hrchy.id AND
+                    htl.id_language=lang.id AND
                     lang.name=:lang
             )
             GROUP BY id
@@ -985,7 +955,7 @@ class SqlDatabase:
                     ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
-                    card.id_higher_level IS NULL AND
+                    card.id_higher_hierarchy IS NULL AND
                     tcl.id_card=card.id AND
                     tcl.id_language=lang.id AND
                     tcl.type="T" AND
@@ -1008,7 +978,7 @@ class SqlDatabase:
                     ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
-                    card.id_higher_level IS NULL AND
+                    card.id_higher_hierarchy IS NULL AND
                     tcl.id_card=card.id AND
                     tcl.id_language=lang.id AND
                     tcl.type="T" AND
@@ -1019,6 +989,7 @@ class SqlDatabase:
             ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
         '''
+        print(query)
         return_records=cur.execute(query, {'category': 'movie', 'lang':lang, 'limit':limit}).fetchall()
         cur.execute("commit")
 
@@ -1033,147 +1004,147 @@ class SqlDatabase:
 
 
 
-    # should filter like by series/category/genre
-    def get_all_cards(self):
+    # # should filter like by series/category/genre
+    # def get_all_cards(self):
 
-        cur = self.conn.cursor()
-        cur.execute("begin")
+    #     cur = self.conn.cursor()
+    #     cur.execute("begin")
 
-        return_records = {}
+    #     return_records = {}
 
-        # Get Card list
-        query = '''SELECT card.*, category.name as c_name, title_orig.name as t_name
-        FROM ''' + SqlDatabase.TABLE_CARD + ''' card, ''' + SqlDatabase.TABLE_CATEGORY + ''' category, ''' + SqlDatabase.TABLE_LANGUAGE + ''' title_orig 
-        WHERE card.id_category=category.id AND card.id_title_orig=title_orig.id;'''
-        records=cur.execute(query).fetchall()
+    #     # Get Card list
+    #     query = '''SELECT card.*, category.name as c_name, title_orig.name as t_name
+    #     FROM ''' + SqlDatabase.TABLE_CARD + ''' card, ''' + SqlDatabase.TABLE_CATEGORY + ''' category, ''' + SqlDatabase.TABLE_LANGUAGE + ''' title_orig 
+    #     WHERE card.id_category=category.id AND card.id_title_orig=title_orig.id;'''
+    #     records=cur.execute(query).fetchall()
 
-        for record in records:
-            card_id = record['id']
+    #     for record in records:
+    #         card_id = record['id']
 
-            category = record['c_name']
-            source_path = record['source_path']
-            date = record['date']
-            length = record['length']
-            title_orig_name = record['t_name']
+    #         category = record['c_name']
+    #         source_path = record['source_path']
+    #         date = record['date']
+    #         length = record['length']
+    #         title_orig_name = record['t_name']
             
-            # Get Sound list
-            sound_long_list = []
-            query = '''
-                SELECT sound.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' sound, ''' + SqlDatabase.TABLE_CARD_SOUND + ''' cs 
-                WHERE card.id=? AND cs.id_card=card.id AND cs.id_sound=sound.id '''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                sound_long_list.append(self.translator.translate_language_long(row[0]))
+    #         # Get Sound list
+    #         sound_long_list = []
+    #         query = '''
+    #             SELECT sound.name 
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' sound, ''' + SqlDatabase.TABLE_CARD_SOUND + ''' cs 
+    #             WHERE card.id=? AND cs.id_card=card.id AND cs.id_sound=sound.id '''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             sound_long_list.append(self.translator.translate_language_long(row[0]))
 
-            # Get Sub list
-            sub_long_list = []
-            query = '''
-                SELECT sub.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' sub, ''' + SqlDatabase.TABLE_CARD_SUB + ''' cs 
-                WHERE card.id=? AND cs.id_card=card.id AND cs.id_sub=sub.id '''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                sub_long_list.append(self.translator.translate_language_long(row[0]))
+    #         # Get Sub list
+    #         sub_long_list = []
+    #         query = '''
+    #             SELECT sub.name 
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' sub, ''' + SqlDatabase.TABLE_CARD_SUB + ''' cs 
+    #             WHERE card.id=? AND cs.id_card=card.id AND cs.id_sub=sub.id '''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             sub_long_list.append(self.translator.translate_language_long(row[0]))
 
-            # Get Genre list
-            genre_list = []
-            query = '''
-                SELECT genre.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_GENRE + ''' genre, ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg 
-                WHERE card.id=? AND cg.id_card=card.id AND cg.id_genre=genre.id '''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                genre_list.append(self.translator.translate_genre('movie', row[0]))
+    #         # Get Genre list
+    #         genre_list = []
+    #         query = '''
+    #             SELECT genre.name 
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_GENRE + ''' genre, ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg 
+    #             WHERE card.id=? AND cg.id_card=card.id AND cg.id_genre=genre.id '''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             genre_list.append(self.translator.translate_genre('movie', row[0]))
 
-            # Get Theme list
-            theme_list = []
-            query = '''
-                SELECT theme.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_THEME + ''' theme, ''' + SqlDatabase.TABLE_CARD_THEME + ''' ct
-                WHERE card.id=? AND ct.id_card=card.id AND ct.id_theme=theme.id '''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                theme_list.append(self.translator.translate_theme(row[0]))
+    #         # Get Theme list
+    #         theme_list = []
+    #         query = '''
+    #             SELECT theme.name 
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_THEME + ''' theme, ''' + SqlDatabase.TABLE_CARD_THEME + ''' ct
+    #             WHERE card.id=? AND ct.id_card=card.id AND ct.id_theme=theme.id '''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             theme_list.append(self.translator.translate_theme(row[0]))
 
-            # Get MediaType list
-            mediatype_list = []
-            query = '''
-                SELECT mediatype.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_MEDIATYPE + ''' mediatype, ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + ''' cmt
-                WHERE card.id=? AND cmt.id_card=card.id AND cmt.id_mediatype=mediatype.id '''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                mediatype_list.append(self.translator.translate_mediatype(row[0]))
+    #         # Get MediaType list
+    #         mediatype_list = []
+    #         query = '''
+    #             SELECT mediatype.name 
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_MEDIATYPE + ''' mediatype, ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + ''' cmt
+    #             WHERE card.id=? AND cmt.id_card=card.id AND cmt.id_mediatype=mediatype.id '''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             mediatype_list.append(self.translator.translate_mediatype(row[0]))
 
-            # Get Origin list
-            origin_long_list = []
-            query = '''
-                SELECT origin.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_COUNTRY + ''' origin, ''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co
-                WHERE card.id=? AND co.id_card=card.id AND co.id_origin=origin.id '''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                origin_long_list.append(self.translator.translate_country_long(row[0]))
+    #         # Get Origin list
+    #         origin_long_list = []
+    #         query = '''
+    #             SELECT origin.name 
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_COUNTRY + ''' origin, ''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co
+    #             WHERE card.id=? AND co.id_card=card.id AND co.id_origin=origin.id '''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             origin_long_list.append(self.translator.translate_country_long(row[0]))
 
-            # Get Original Title
-            original_title = ""
-            if title_orig_name != self.language:
-                query = '''
-                    SELECT title.text
-                    FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' title
-                    WHERE card.id=? AND title.id_card=card.id AND title.id_language=language.id AND title.type=? AND language.name=?'''
-                row = cur.execute(query, (card_id, "T", title_orig_name)).fetchone()
-                original_title = row[0]
+    #         # Get Original Title
+    #         original_title = ""
+    #         if title_orig_name != self.language:
+    #             query = '''
+    #                 SELECT title.text
+    #                 FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' title
+    #                 WHERE card.id=? AND title.id_card=card.id AND title.id_language=language.id AND title.type=? AND language.name=?'''
+    #             row = cur.execute(query, (card_id, "T", title_orig_name)).fetchone()
+    #             original_title = row[0]
 
-            # Get Title
-            title = ""
-            query = '''
-                SELECT title.text
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' title
-                WHERE card.id=? AND title.id_card=card.id AND title.id_language=language.id AND title.type=? AND language.name=?'''
-            row = cur.execute(query, (card_id, "T", self.language)).fetchone()
-            if row is not None:
-                title = row[0]
-            else:
-                title = original_title
+    #         # Get Title
+    #         title = ""
+    #         query = '''
+    #             SELECT title.text
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' title
+    #             WHERE card.id=? AND title.id_card=card.id AND title.id_language=language.id AND title.type=? AND language.name=?'''
+    #         row = cur.execute(query, (card_id, "T", self.language)).fetchone()
+    #         if row is not None:
+    #             title = row[0]
+    #         else:
+    #             title = original_title
 
 
 
-            # Get Storyline
-            storyline = ""
-            query = '''
-                SELECT storyline.text
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' storyline
-                WHERE card.id=? AND storyline.id_card=card.id AND storyline.id_language=language.id AND storyline.type=? AND language.name=?'''
-            row = cur.execute(query, (card_id, "S", self.language)).fetchone()
-            if row is not None:
-                storyline = row[0]
+    #         # Get Storyline
+    #         storyline = ""
+    #         query = '''
+    #             SELECT storyline.text
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_LANGUAGE + ''' language, ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' storyline
+    #             WHERE card.id=? AND storyline.id_card=card.id AND storyline.id_language=language.id AND storyline.type=? AND language.name=?'''
+    #         row = cur.execute(query, (card_id, "S", self.language)).fetchone()
+    #         if row is not None:
+    #             storyline = row[0]
 
-            # Get media list
-            media_list = []
-            query = '''
-                SELECT name
-                FROM ''' + SqlDatabase.TABLE_CARD + ''' card, ''' + SqlDatabase.TABLE_MEDIUM + ''' medium
-                WHERE card.id=? AND medium.id_card=card.id'''
-            for row in cur.execute(query, (card_id,)).fetchall():
-                media_list.append(row[0])
+    #         # Get media list
+    #         media_list = []
+    #         query = '''
+    #             SELECT name
+    #             FROM ''' + SqlDatabase.TABLE_CARD + ''' card, ''' + SqlDatabase.TABLE_MEDIUM + ''' medium
+    #             WHERE card.id=? AND medium.id_card=card.id'''
+    #         for row in cur.execute(query, (card_id,)).fetchall():
+    #             media_list.append(row[0])
 
-            return_records[card_id] = {}
-            return_records[card_id]['category'] = category
-            return_records[card_id]['date'] = date
-            return_records[card_id]['length'] = length
-            return_records[card_id]['original_title'] = original_title
-            return_records[card_id]['title'] = title
-            return_records[card_id]['storyline'] = storyline
+    #         return_records[card_id] = {}
+    #         return_records[card_id]['category'] = category
+    #         return_records[card_id]['date'] = date
+    #         return_records[card_id]['length'] = length
+    #         return_records[card_id]['original_title'] = original_title
+    #         return_records[card_id]['title'] = title
+    #         return_records[card_id]['storyline'] = storyline
 
-            return_records[card_id]['sounds'] = sound_long_list
-            return_records[card_id]['subs'] = sub_long_list
-            return_records[card_id]['genres'] = genre_list
-            return_records[card_id]['themes'] = theme_list
-            return_records[card_id]['origins'] = origin_long_list          
-            return_records[card_id]['mediatypes'] = mediatype_list
-            return_records[card_id]['media'] = media_list
-            return_records[card_id]['source_path'] = source_path
+    #         return_records[card_id]['sounds'] = sound_long_list
+    #         return_records[card_id]['subs'] = sub_long_list
+    #         return_records[card_id]['genres'] = genre_list
+    #         return_records[card_id]['themes'] = theme_list
+    #         return_records[card_id]['origins'] = origin_long_list          
+    #         return_records[card_id]['mediatypes'] = mediatype_list
+    #         return_records[card_id]['media'] = media_list
+    #         return_records[card_id]['source_path'] = source_path
 
-            # return_records[card_id]['level'] = level
-            # return_records[card_id]['sequence'] = sequence
+    #         # return_records[card_id]['level'] = level
+    #         # return_records[card_id]['sequence'] = sequence
 
-        # close the insert transaction
-        cur.execute("commit")
+    #     # close the insert transaction
+    #     cur.execute("commit")
 
-        return return_records
+    #     return return_records
