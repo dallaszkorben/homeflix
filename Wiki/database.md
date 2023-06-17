@@ -32,20 +32,30 @@ erDiagram
     Card_Theme many(1) to 1 Card : id_card
     Card_Theme many(1) to 1 Theme: id_theme
 
-    Card_Genre }|--|| Card: id_card
-    Card_Genre }|--|| Genre: id_genre
+    Card_Genre many(1) to 1 Card: id_card
+    Card_Genre many(1) to 1 Genre: id_genre
 
-    Card_Origin }|--|| Card: id_card
-    Card_Origin }|--|| Country: id_origin
+    Card_Origin many(1) to 1 Card: id_card
+    Card_Origin many(1) to 1 Country: id_origin
 
-    Medium }|--|| Card: id_card
+    Medium many(1) to 1 Card: id_card
 
-    Card }|--|| Language: id_title_orig
+    Card many(1) to 1 Language: id_title_orig
 
-    Card_Sub }|--|| Card: id_card
-    Card_Sub }|--|| Language: id_sub
+    Card_Sub many(1) to 1 Card: id_card
+    Card_Sub many(1) to 1 Language: id_sub
 
-    Card_Sound }|--|| Card: id_card
-    Card_Sound }|--|| Language: id_sound
+    Card_Sound many(1) to 1 Card: id_card
+    Card_Sound many(1) to 1 Language: id_sound
+
+    Text_Card_Language many(1) to 1 Language : id_language
+    Text_Card_Language many(1) to 1 Card : id_card
+
+    Text_card_Language{
+        String type
+        String text
+    }
+
+
 
 ```
