@@ -6,16 +6,16 @@ import logging
 CARD_FILE_NAME = "card.yaml"
 
 media_type_dict = {
-    'video': {'mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg'},
+    'video': {'mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'},
     'audio': {'mp3', 'ogg', 'm4a'}, 
     'text':  {'doc', 'odt', 'pdf', 'epub', 'mobi', 'azw', 'azw3', 'iba', 'txt','rtf'}, 
     'image': {'jpg', 'jpeg', 'png'}, 
 }
 
-def getPatternMedia(mtypes):
+def getPatternMedia(mediatypes):
     extension_list = []
-    for mtype in mtypes:
-        extension_list += media_type_dict[mtype]
+    for mediatype in mediatypes:
+        extension_list += media_type_dict[mediatype]
     compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
     return re.compile(compile_string)
 
@@ -72,7 +72,10 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
 
         category = data['category']
-        mtypes = data['mtypes']
+        try:
+            mediatypes = data['mediatypes']
+        except:
+            mediatypes = []
         try:
             level = data['level']
         except:
@@ -125,13 +128,17 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
         except:
             sequence = None
 
+
+
         # collect media files now, because at this point the category is known
         media = []
         for file_name in file_list:
 
             # find media
-            if getPatternMedia(mtypes).match( file_name ):
+            if getPatternMedia(mediatypes).match( file_name ):
                 media.append(file_name)
+
+
 
         # filter out empty titles
         titles=dict((language, title) for language, title in titles.items() if title)
@@ -142,8 +149,9 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
         card_error = False
 
 # ---
-
-        # search for wrong values in case of lowest level or simple card
+        # ---------------------------------------
+        # filter out wrong cards in general case
+        # ---------------------------------------
         if not title_orig:
             logging.error( "CARD - No original language set for title in {0}".format(card_path))
             card_error = True
@@ -156,11 +164,22 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             logging.error( "CARD - Original language ({1}) set for title in {0} is unknown".format(card_path, title_orig))
             card_error = True
 
+        if not mediatypes and not level:
+            logging.error( "CARD - There is NO mediatype nor level configured in in {0}. At least one of them should be there".format(card_path))
+            card_error = True
+
+        if mediatypes and not media:
+            logging.error( "CARD - There is mediatype configured {1} for the card in {0}. But there was NO media ({2}) found in the folder".format(card_path, mediatypes, [media_type_dict[mediatype] for mediatype in mediatypes]  ))
+            card_error = True
+
+        if not mediatypes and level and not dir_list:
+            logging.error( "CARD - There is level ({1}) and no mediatype configured for the card in {0} which means, it should be in the higher hierarchy. But there are NO subdirectories in the folder".format(card_path, level ))
+            card_error = True
+
  # ---
 
-
-        # this is a level not a media
-        if not mtypes and level and not card_error:
+        # this is a level in the hierarchy / not a media
+        if not media and not card_error:
 
             # create a new Level record + get back the id
             level_id=db.append_level(
@@ -175,22 +194,9 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             )
 
 
-        # this could be the lowest level or a simple card
+        # this must be the lowest level or a simple card
         else:
        
-            # # search for wrong values in case of lowest level or simple card
-            # if not title_orig:
-            #     logging.error( "CARD - No original language set for title in {0}".format(card_path))
-            #     card_error = True
-        
-            # if title_orig not in titles:
-            #     logging.error( "CARD - No title set for original language  in {0}".format(card_path))
-            #     card_error = True
-
-            # if title_orig not in db.language_name_id_dict:
-            #     logging.error( "CARD - Original language ({1}) set for title in {0} is unknown".format(card_path, title_orig))
-            #     card_error = True
-
             if category not in db.category_name_id_dict:
                 logging.error( "CARD - Category ({1}) is unknown in {0}".format(card_path, category))
                 card_error = True
@@ -234,24 +240,10 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
                     card_error = True
 
             if not card_error:
-            
-                # this is the lowest level
-                # if level:
-
-                    # # create a new Level record + get back the id
-                    # level_id=db.append_level(
-                    #     titles = titles,
-                    #     level=level, 
-                    #     higher_level_id=higher_level_id,
-                    #     source_path=source_path
-                    # )
-
-                    # create a new Card record with level reference
-            
-            
+         
                 db.append_card_movie(
                     category=category,
-                    mtypes=mtypes,
+                    mediatypes=mediatypes,
                     title_orig=title_orig, 
                     titles=titles, 
                     storylines=storylines,
@@ -265,14 +257,11 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
 
                     media=media,
 
-                    level=level,
                     basename=basename,
                     source_path=source_path,
 
                     sequence=sequence,
-                    # higher_level_id=level_id,
                     higher_level_id=higher_level_id,
-
                 )        
 
     for name in dir_list:

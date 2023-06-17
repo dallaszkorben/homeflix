@@ -16,14 +16,14 @@ class SqlDatabase:
     TABLE_LANGUAGE = "Language"
     TABLE_GENRE = "Genre"
     TABLE_THEME = "Theme"
-    TABLE_MTYPE = "MediaType"
+    TABLE_MEDIATYPE = "MediaType"
     TABLE_MEDIUM = "Medium"
     TABLE_CARD = "Card"
     TABLE_LEVEL = "Level"
 
     TABLE_CARD_GENRE = "Card_Genre"
     TABLE_CARD_THEME = "Card_Theme"
-    TABLE_CARD_MTYPE = "Card_MType"
+    TABLE_CARD_MEDIATYPE = "Card_MediaType"
     TABLE_CARD_SOUND = "Card_Sound"
     TABLE_CARD_SUB = "Card_Sub"
     TABLE_CARD_ORIGIN = "Card_Origin"
@@ -54,7 +54,7 @@ class SqlDatabase:
                 SqlDatabase.TABLE_CARD_THEME,
                 SqlDatabase.TABLE_CARD_SOUND,
                 SqlDatabase.TABLE_CARD_SUB,
-                SqlDatabase.TABLE_CARD_MTYPE,
+                SqlDatabase.TABLE_CARD_MEDIATYPE,
 
                 SqlDatabase.TABLE_CARD,
 
@@ -64,7 +64,7 @@ class SqlDatabase:
                 SqlDatabase.TABLE_GENRE,
                 SqlDatabase.TABLE_THEME,
                 SqlDatabase.TABLE_PERSON,
-                SqlDatabase.TABLE_MTYPE,
+                SqlDatabase.TABLE_MEDIATYPE,
                 SqlDatabase.TABLE_CATEGORY,
 
                 SqlDatabase.TABLE_LEVEL
@@ -142,7 +142,7 @@ class SqlDatabase:
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_THEME + ";")
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SOUND + ";")
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_SUB + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_MTYPE + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CARD_MEDIATYPE + ";")
 
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_TITLE_CARD + ";")
 
@@ -153,7 +153,7 @@ class SqlDatabase:
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_GENRE + ";")
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_THEME + ";")
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_PERSON + ";")
-    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MTYPE + ";")
+    #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_MEDIATYPE + ";")
 
     #     self.conn.execute("DELETE FROM " + SqlDatabase.TABLE_CATEGORY + ";")
 
@@ -235,7 +235,7 @@ class SqlDatabase:
         ''')
 
         result=self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_MTYPE + '''(
+            CREATE TABLE ''' + SqlDatabase.TABLE_MEDIATYPE + '''(
                 id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 name  TEXT  NOT NULL,
                 UNIQUE(name)
@@ -287,12 +287,12 @@ class SqlDatabase:
         ''' )
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_MTYPE + '''(
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + '''(
                 id_card INTEGER      NOT NULL,
-                id_mtype INTEGER      NOT NULL,
+                id_mediatype INTEGER      NOT NULL,
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
-                FOREIGN KEY (id_mtype) REFERENCES ''' + SqlDatabase.TABLE_MTYPE + ''' (id),
-                PRIMARY KEY (id_card, id_mtype) 
+                FOREIGN KEY (id_mediatype) REFERENCES ''' + SqlDatabase.TABLE_MEDIATYPE + ''' (id),
+                PRIMARY KEY (id_card, id_mediatype) 
             );
         ''' )
 
@@ -405,7 +405,7 @@ class SqlDatabase:
         self.fill_up_language_table_from_dict()
         self.fill_up_country_table_from_dict()
         self.fill_up_category_table_from_dict()
-        self.fill_up_mtype_table_from_dict()
+        self.fill_up_mediatype_table_from_dict()
 
     def fill_up_constant_dicts(self):
         self.category_name_id_dict = {}
@@ -413,14 +413,14 @@ class SqlDatabase:
         self.theme_name_id_dict = {}
         self.language_name_id_dict = {}
         self.country_name_id_dict = {}
-        self.mtype_name_id_dict = {}
+        self.mediatype_name_id_dict = {}
 
         self.category_id_name_dict = {}
         self.genre_id_name_dict = {}
         self.theme_id_name_dict = {}
         self.language_id_name_dict = {}
         self.country_id_name_dict = {}
-        self.mtype_id_name_dict = {}
+        self.mediatype_id_name_dict = {}
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -443,11 +443,11 @@ class SqlDatabase:
             self.theme_name_id_dict[pair[0]] = pair[1]
             self.theme_id_name_dict[pair[1]] = pair[0]
 
-        query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_MTYPE + ' ORDER BY name;'
+        query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_MEDIATYPE + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
         for pair in records:
-            self.mtype_name_id_dict[pair[0]] = pair[1]
-            self.mtype_id_name_dict[pair[1]] = pair[0]
+            self.mediatype_name_id_dict[pair[0]] = pair[1]
+            self.mediatype_id_name_dict[pair[1]] = pair[0]
 
         query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_LANGUAGE + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
@@ -488,16 +488,16 @@ class SqlDatabase:
 
         cur.execute("commit")
 
-    def fill_up_mtype_table_from_dict(self):
+    def fill_up_mediatype_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-        self.mtype_name_id_dict = {}
-        self.mtype_id_name_dict = {}
-        mtype_list = self.translator.get_all_mtype_codes()
-        for mtype in mtype_list:
-            id = self.append_mtype(cur, mtype)
-            self.mtype_name_id_dict[mtype] = id
-            self.mtype_id_name_dict[id] = mtype
+        self.mediatype_name_id_dict = {}
+        self.mediatype_id_name_dict = {}
+        mediatype_list = self.translator.get_all_mediatype_codes()
+        for mediatype in mediatype_list:
+            id = self.append_mediatype(cur, mediatype)
+            self.mediatype_name_id_dict[mediatype] = id
+            self.mediatype_id_name_dict[id] = mediatype
 
         cur.execute("commit")
 
@@ -569,13 +569,13 @@ class SqlDatabase:
         (theme_id, ) = record if record else (None,)
         return theme_id
 
-    def append_mtype(self, cur, mtype):
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_MTYPE + ' (name) VALUES (?) RETURNING id', (mtype,))
+    def append_mediatype(self, cur, mediatype):
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_MEDIATYPE + ' (name) VALUES (?) RETURNING id', (mediatype,))
         record = cur.fetchone()
-        (mtype_id, ) = record if record else (None,)
-        return mtype_id
+        (mediatype_id, ) = record if record else (None,)
+        return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, mtypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], media=[], basename=None, source_path=None, level=None, sequence=None, higher_level_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, mediatypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], media=[], basename=None, source_path=None, sequence=None, higher_level_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -590,11 +590,11 @@ class SqlDatabase:
             #
             if higher_level_id:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id_title_orig, id_category, date, length, basename, source_path, id_higher_level, level, sequence)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (id_title_orig, id_category, date, length, basename, source_path, id_higher_level, sequence)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
-                cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path, higher_level_id, level, sequence))
+                cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path, higher_level_id, sequence))
             else:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
                     (id_title_orig, id_category, date, length, basename, source_path)
@@ -646,14 +646,14 @@ class SqlDatabase:
                 cur.execute(query, (self.theme_name_id_dict[theme], card_id))
             
             #
-            # INSERT into TABLE_CARD_MTYPE
+            # INSERT into TABLE_CARD_MEDIATYPE
             #
-            for mtype in mtypes:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_MTYPE + '''
-                    (id_mtype, id_card)
+            for mediatype in mediatypes:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + '''
+                    (id_mediatype, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.mtype_name_id_dict[mtype], card_id))
+                cur.execute(query, (self.mediatype_name_id_dict[mediatype], card_id))
 
             #
             # INSERT into TABLE_CARD_ORIGIN
@@ -807,7 +807,8 @@ class SqlDatabase:
 
 
 
-
+    def get_all_bands(self, lang, limit=100):
+        return self.get_all_level('band', 'music', lang, limit)
 
     def get_series_of_movies(self, lang, limit=100):
         return self.get_all_series('movie', lang, limit)
@@ -817,7 +818,7 @@ class SqlDatabase:
 
     def get_all_level(self, level, category, lang, limit=100):
         """
-        It returns series with id, title on the required language and title on the original language.
+        It returns a list of series with id, title on the required language and title on the original language.
         If the requested language is the original language, then only the title with requested language will be returned
         If the the title does not exist on the requested language, only the title with the original language will be returned
         Return fields:
@@ -911,6 +912,41 @@ class SqlDatabase:
         return return_records
 
     def get_all_standalone_movie(self, lang, limit=100):
+        """
+        It returns a list of standalone movies with card id, title on the required language and title on the original language and the source path.
+        If the requested language is the original language, then only the title with requested language will be returned
+        If the the title does not exist on the requested language, only the title with the original language will be returned
+        Return fields:
+            id:         card ID
+            title_req:  tile on the requested language
+            lang_req:   requested language
+            title_orig: title on the original language
+            lang_orig:  original language of the title
+            source_path:source path to the series
+        Example:
+            records=db.get_all_standalone_movie(lang=lang, limit=100)
+            for record in records:
+                if record["title_req"]:
+                    orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+                    print("Id: {0}, Title: {1} {2}".format(record["id"], record["title_req"], orig_title))
+                else:
+                    print("Id: {0}, Title: (Original [{1}]) {2}".format(record["id"], record["lang_orig"], record["title_orig"]))
+                print("              Source: {0}".format(record["source_path"]))
+        Output:
+            Id: 1, Title: A kenguru 
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/A.Kenguru-1976
+            Id: 3, Title: Büvös vadász 
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/Buvos.Vadasz-1994
+            Id: 4, Title: Diorissimo 
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/Diorissimo-1980
+            Id: 5, Title: Eszkimó asszony fázik 
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/EszkimoAsszonyFazik-1984
+            Id: 2, Title: (Original [fr]) Le professionnel
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/A.Profi-1981
+            Id: 6, Title: Régi idők focija 
+                          Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/RegiIdokFocija-1973
+        """
+
         cur = self.conn.cursor()
         cur.execute("begin")
 
@@ -1046,14 +1082,14 @@ class SqlDatabase:
             for row in cur.execute(query, (card_id,)).fetchall():
                 theme_list.append(self.translator.translate_theme(row[0]))
 
-            # Get Mtype list
-            mtype_list = []
+            # Get MediaType list
+            mediatype_list = []
             query = '''
-                SELECT mtype.name 
-                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_MTYPE + ''' mtype, ''' + SqlDatabase.TABLE_CARD_MTYPE + ''' cmt
-                WHERE card.id=? AND cmt.id_card=card.id AND cmt.id_mtype=mtype.id '''
+                SELECT mediatype.name 
+                FROM ''' + SqlDatabase.TABLE_CARD + ''', ''' + SqlDatabase.TABLE_MEDIATYPE + ''' mediatype, ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + ''' cmt
+                WHERE card.id=? AND cmt.id_card=card.id AND cmt.id_mediatype=mediatype.id '''
             for row in cur.execute(query, (card_id,)).fetchall():
-                mtype_list.append(self.translator.translate_mtype(row[0]))
+                mediatype_list.append(self.translator.translate_mediatype(row[0]))
 
             # Get Origin list
             origin_long_list = []
@@ -1120,7 +1156,7 @@ class SqlDatabase:
             return_records[card_id]['genres'] = genre_list
             return_records[card_id]['themes'] = theme_list
             return_records[card_id]['origins'] = origin_long_list          
-            return_records[card_id]['mtypes'] = mtype_list
+            return_records[card_id]['mediatypes'] = mediatype_list
             return_records[card_id]['media'] = media_list
             return_records[card_id]['source_path'] = source_path
 

@@ -62,11 +62,11 @@ class Translator( Property ):
             tr = theme
         return tr
 
-    def translate_mtype(self, mtype):
+    def translate_mediatype(self, mediatype):
         try:        
-            tr = self.actual_dictionary['mtype'][mtype]
+            tr = self.actual_dictionary['mediatype'][mediatype]
         except KeyError:
-            tr = mtype
+            tr = mediatype
         return tr
 
     def translate_language_short(self, text):
@@ -136,12 +136,12 @@ class Translator( Property ):
             theme_list.append(theme)
         return theme_list
 
-    def get_all_mtype_codes(self):
-        mtype_list = []
-        mtype_dict=self.actual_dictionary['mtype']
-        for mtype in mtype_dict:
-            mtype_list.append(mtype)
-        return mtype_list
+    def get_all_mediatype_codes(self):
+        mediatype_list = []
+        mediatype_dict=self.actual_dictionary['mediatype']
+        for mediatype in mediatype_dict:
+            mediatype_list.append(mediatype)
+        return mediatype_list
 
     def get_all_category_codes(self):
         category_list = []

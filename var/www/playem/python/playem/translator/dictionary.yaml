@@ -96,7 +96,7 @@ category:
     recipe: Recipe
     personal: Personal
 
-mtype:
+mediatype:
     video: Video
     audio: Audio
     text: Text
