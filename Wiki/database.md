@@ -7,7 +7,29 @@ web media player
 
 ```mermaid
 erDiagram
-    Card
+    Card {
+        int id
+        String length
+        String date
+        String source_path
+    }
+    Card_Theme {
+        int id_card
+        int id_theme
+        String name
+    }
+
+    Card_Genre {
+        int id_card
+        int id_genre
+        String name
+    }
+
+    Medium {
+        String name
+        int id_card
+    }
+
     Theme
     MediaType
     Genre
@@ -16,12 +38,17 @@ erDiagram
     Country
     Hierarchy
     Category
-    Medium
     Level
+
     Card_Theme }|--|| Card : id_card
     Card_Theme }|--|| Theme: id_theme
+
+    Card_Genre }|--|| Card: id_card
+    Card_Genre }|--|| Genre: id_genre
+
+    Medium }|--|| Card: id_card
+
     Card_Mediatype
-    Card_Genre
     Card_Sub
     Card_Sound
     Card_Origin
