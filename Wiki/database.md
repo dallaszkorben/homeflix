@@ -51,11 +51,19 @@ erDiagram
     Text_Card_Language many(1) to 1 Language : id_language
     Text_Card_Language many(1) to 1 Card : id_card
 
-    Text_card_Language{
+    Text_Card_Language{
         String type
         String text
     }
 
+    Card many(1) to 1 Hierarchy : id_higher_level
+    Card many(1) to 1 Category : id_category
+    Hierarchy many(1) to 1 Hierarchy : id_higher_level
+    Hierarchy many(1) to 1 Category : id_category
+    Hierarchy many(1) to 1 Language : id_title_orig
+    Level_Title_Lang many(1) to 1 Language : id_language
+    Level_Title_Lang Many(1) to 1 Hierarchy : id_level
 
-
+    Medium many(1) to 1 Card : id_card
+    
 ```
