@@ -30,10 +30,8 @@ erDiagram
         int id_card
     }
 
-    Theme
     MediaType
     Genre
-    Language
     Text_Card_Language
     Country
     Hierarchy
@@ -46,7 +44,12 @@ erDiagram
     Card_Genre }|--|| Card: id_card
     Card_Genre }|--|| Genre: id_genre
 
+    Card_Origin }|--|| Card: id_card
+    Card_Origin }|--|| Country: id_origin
+
     Medium }|--|| Card: id_card
+
+    Card }|--|| Language: id_title_orig
 
     Card_Mediatype
     Card_Sub
