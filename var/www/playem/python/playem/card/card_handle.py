@@ -125,6 +125,8 @@ def collectCardsFromFileSystem(actualDir, db, higher_level_id=None ):
             origins = []
         try:
             sequence = data['sequence']
+            if not sequence:
+                sequence = None
         except:
             sequence = None
 

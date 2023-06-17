@@ -254,9 +254,9 @@ class SqlDatabase:
                 length          TEXT,
                 source_path     TEXT        NOT NULL,
                 basename        TEXT        NOT NULL,
+                sequence        INTEGER,
                 id_higher_level INTEGER,
                 level           TEXT,
-                sequence        INTEGER,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id) 
             );
@@ -865,7 +865,9 @@ class SqlDatabase:
                     NULL lang_req, 
                     ltl.text title_orig, 
                     lang.name lang_orig,
-                    level.source_path source_path
+                    level.source_path source_path,
+                    level.sequence sequence,
+                    level.basename
                 FROM 
                     Level level, 
                     Level_Title_Lang ltl,
@@ -888,7 +890,9 @@ class SqlDatabase:
                     lang.name lang_req, 
                     NULL title_orig, 
                     NULL lang_orig,
-                    level.source_path source_path
+                    level.source_path source_path,
+                    level.sequence sequence,
+                    level.basename
                 FROM 
                     Level level, 
                     Level_Title_Lang ltl,
@@ -903,7 +907,13 @@ class SqlDatabase:
                     lang.name=:lang
             )
             GROUP BY id
-            ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+--            ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
         '''
         return_records=cur.execute(query, {'level': level, 'category': category, 'lang':lang, 'limit':limit}).fetchall()
