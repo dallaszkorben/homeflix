@@ -14,14 +14,10 @@ erDiagram
         String source_path
     }
     Card_Theme {
-        int id_card
-        int id_theme
         String name
     }
 
     Card_Genre {
-        int id_card
-        int id_genre
         String name
     }
 
@@ -29,6 +25,9 @@ erDiagram
         String name
         int id_card
     }
+
+    Card_Mediatype }|--|| Card : id_card
+    Card_Mediatype }|--|| Mediatype: id_mediatype
 
     Card_Theme }|--|| Card : id_card
     Card_Theme }|--|| Theme: id_theme
@@ -42,5 +41,11 @@ erDiagram
     Medium }|--|| Card: id_card
 
     Card }|--|| Language: id_title_orig
+
+    Card_Sub }|--|| Card: id_card
+    Card_Sub }|--|| Language: id_sub
+
+    Card_Sound }|--|| Card: id_card
+    Card_Sound }|--|| Language: id_sound
 
 ```
