@@ -30,14 +30,6 @@ erDiagram
         int id_card
     }
 
-    MediaType
-    Genre
-    Text_Card_Language
-    Country
-    Hierarchy
-    Category
-    Level
-
     Card_Theme }|--|| Card : id_card
     Card_Theme }|--|| Theme: id_theme
 
@@ -51,9 +43,4 @@ erDiagram
 
     Card }|--|| Language: id_title_orig
 
-    Card_Mediatype
-    Card_Sub
-    Card_Sound
-    Card_Origin
-    Level_Title_Lang
 ```
