@@ -26,11 +26,11 @@ erDiagram
         int id_card
     }
 
-    Card_Mediatype }|--|| Card : id_card
-    Card_Mediatype }|--|| Mediatype: id_mediatype
+    Card_Mediatype many(1) to 1 Card : id_card
+    Card_Mediatype many(1) to 1 Mediatype: id_mediatype
 
-    Card_Theme }|--|| Card : id_card
-    Card_Theme }|--|| Theme: id_theme
+    Card_Theme many(1) to 1 Card : id_card
+    Card_Theme many(1) to 1 Theme: id_theme
 
     Card_Genre }|--|| Card: id_card
     Card_Genre }|--|| Genre: id_genre
