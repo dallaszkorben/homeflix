@@ -19,7 +19,7 @@ class SqlDatabase:
     TABLE_MEDIATYPE = "MediaType"
     TABLE_MEDIUM = "Medium"
     TABLE_CARD = "Card"
-    TABLE_LEVEL = "Level"
+    TABLE_HIERARCHY = "Hierarchy"
 
     TABLE_CARD_GENRE = "Card_Genre"
     TABLE_CARD_THEME = "Card_Theme"
@@ -32,7 +32,7 @@ class SqlDatabase:
     TABLE_CARD_DIRECTOR = "Card_Director"
     TABLE_CARD_VOICE = "Card_Voice"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
-    TABLE_LEVEL_TITLE_LANG = "Level_Title_Lang"
+    TABLE_HIERARCHY_TITLE_LANG = "Level_Title_Lang"
 
     def __init__(self):
         config = getConfig()
@@ -42,7 +42,7 @@ class SqlDatabase:
         self.language = self.translator.get_actual_language_code()
 
         self.table_list = [
-                SqlDatabase.TABLE_LEVEL_TITLE_LANG,
+                SqlDatabase.TABLE_HIERARCHY_TITLE_LANG,
                 SqlDatabase.TABLE_TEXT_CARD_LANG,
                 SqlDatabase.TABLE_MEDIUM,
                 SqlDatabase.TABLE_CARD_VOICE,
@@ -67,7 +67,7 @@ class SqlDatabase:
                 SqlDatabase.TABLE_MEDIATYPE,
                 SqlDatabase.TABLE_CATEGORY,
 
-                SqlDatabase.TABLE_LEVEL
+                SqlDatabase.TABLE_HIERARCHY
             ]
 
         # create connection
@@ -172,7 +172,7 @@ class SqlDatabase:
     def create_tables(self):
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL + '''(
+            CREATE TABLE ''' + SqlDatabase.TABLE_HIERARCHY + '''(
                 id              INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 name            TEXT       NOT NULL,
                 id_higher_level INTEGER,
@@ -183,7 +183,7 @@ class SqlDatabase:
                 sequence        INTEGER,
                 FOREIGN KEY (id_category)     REFERENCES ''' + SqlDatabase.TABLE_CATEGORY + ''' (id),
                 FOREIGN KEY (id_title_orig)   REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id)
+                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id)
             );
         ''')
 
@@ -258,7 +258,7 @@ class SqlDatabase:
                 id_higher_level INTEGER,
                 level           TEXT,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id) 
+                FOREIGN KEY (id_higher_level) REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id) 
             );
         ''')
 
@@ -381,12 +381,12 @@ class SqlDatabase:
         ''' )
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_LEVEL_TITLE_LANG + '''(
+            CREATE TABLE ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + '''(
                 text         TEXT     NOT NULL,
                 id_language  INTEGER  NOT NULL,
                 id_level     INTEGER  NOT NULL,
                 FOREIGN KEY (id_language)  REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_level)     REFERENCES ''' + SqlDatabase.TABLE_LEVEL + ''' (id),
+                FOREIGN KEY (id_level)     REFERENCES ''' + SqlDatabase.TABLE_HIERARCHY + ''' (id),
                 PRIMARY KEY (id_level, id_language)
             );
         ''' )
@@ -716,14 +716,14 @@ class SqlDatabase:
             # INSERT into Level
             #
             if higher_level_id:                
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_HIERARCHY + '''
                     (name, id_title_orig, id_category, id_higher_level, basename, source_path, sequence)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     RETURNING id;
                 '''
                 cur.execute(query, (level, title_orig_id, category_id, higher_level_id, basename, source_path, sequence))
             else:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL + '''
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_HIERARCHY + '''
                     (name, id_title_orig, id_category, basename, source_path, sequence)
                     VALUES (?, ?, ?, ?, ?, ?)
                     RETURNING id;
@@ -733,10 +733,10 @@ class SqlDatabase:
             (level_id, ) = record if record else (None,)
 
             #
-            # INSERT into TABLE_LEVEL_TITLE_LANG
+            # INSERT into TABLE_HIERARCHY_TITLE_LANG
             #
             for lang, title in titles.items():
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_LEVEL_TITLE_LANG + '''
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + '''
                     (id_language, id_level, text)
                     VALUES (?, ?, ?);
                 '''
@@ -784,8 +784,8 @@ class SqlDatabase:
                             ELSE 2 END, text
                     ) AS rn
             FROM 
-                ''' + SqlDatabase.TABLE_LEVEL + ''' level, 
-                ''' + SqlDatabase.TABLE_LEVEL_TITLE_LANG + ''' ltl, 
+                ''' + SqlDatabase.TABLE_HIERARCHY + ''' level, 
+                ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl, 
                 ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang, 
                 ''' + SqlDatabase.TABLE_LANGUAGE + ''' orig
             WHERE 
@@ -869,10 +869,10 @@ class SqlDatabase:
                     level.sequence sequence,
                     level.basename
                 FROM 
-                    Level level, 
-                    Level_Title_Lang ltl,
-                    Category cat,
-                    Language lang
+                    ''' + SqlDatabase.TABLE_HIERARCHY + ''' level, 
+                    ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl,
+                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
                     level.name=:level AND
                     level.id_category=cat.id AND
@@ -894,10 +894,10 @@ class SqlDatabase:
                     level.sequence sequence,
                     level.basename
                 FROM 
-                    Level level, 
-                    Level_Title_Lang ltl,
-                    Category cat,
-                    Language lang 
+                    ''' + SqlDatabase.TABLE_HIERARCHY + ''' level, 
+                    ''' + SqlDatabase.TABLE_HIERARCHY_TITLE_LANG + ''' ltl,
+                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
                     level.name=:level AND
                     level.id_category=cat.id AND
@@ -980,10 +980,10 @@ class SqlDatabase:
                     lang.name lang_orig,
                     card.source_path source_path
                 FROM 
-                    Card card, 
-                    Text_Card_Lang tcl, 
-                    Category cat,
-                    Language lang
+                    ''' + SqlDatabase.TABLE_CARD + ''' card, 
+                    ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
+                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
                     card.id_higher_level IS NULL AND
                     tcl.id_card=card.id AND
@@ -1003,10 +1003,10 @@ class SqlDatabase:
                     NULL lang_orig,
                     card.source_path source_path
                 FROM 
-                    Card card, 
-                    Text_Card_Lang tcl, 
-                    Category cat,
-                    Language lang 
+                    ''' + SqlDatabase.TABLE_CARD + ''' card, 
+                    ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
+                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
                     card.id_higher_level IS NULL AND
                     tcl.id_card=card.id AND
