@@ -46,4 +46,4 @@ class EPInfoIsAlive(EP):
                 )
         )
 
-        return output_json( {'result': 'OK'}, EP.CODE_OK)
+        return output_json( {'result': True}, EP.CODE_OK)

@@ -440,3 +440,199 @@ language.name="hu"
 
 --- 
 
+
+
+
+===================================
+                                
+--- get all sub-hierarchy/card  ---
+                               
+===================================
+----------
+version 1:
+----------
+
+# --- In Hierarchy ---
+
+con.execute('''
+SELECT id, level, MAX(title_req) title_req, MAX(title_orig) title_orig
+
+FROM
+(SELECT hrchy.id id, hrchy.level level, NULL title_req, htl.text title_orig
+FROM 
+Hierarchy hrchy, 
+Hierarchy_Title_Lang htl,
+Category cat,
+Language lang
+WHERE
+-- hrchy.level=:level AND
+hrchy.id_higher_hierarchy=:hierarchy_id AND
+htl.id_hierarchy=hrchy.id AND
+htl.id_language=lang.id AND
+hrchy.id_title_orig=lang.id AND
+hrchy.id_category=cat.id AND
+--cat.name=:category AND
+lang.name <> :lang
+
+UNION
+
+SELECT hrchy.id id, hrchy.level level, htl.text title_req, NULL title_orig
+FROM 
+Hierarchy hrchy, 
+Hierarchy_Title_Lang htl, 
+Category cat,
+Language lang 
+WHERE
+--hrchy.level=:level AND
+hrchy.id_higher_hierarchy=:hierarchy_id AND
+htl.id_hierarchy=hrchy.id AND
+htl.id_language=lang.id AND
+hrchy.id_category=cat.id AND
+--cat.name=:category AND
+lang.name=:lang)
+
+GROUP BY id;
+
+''', {'hierarchy_id': 1, 'lang': 'it'}).fetchall()
+
+# --- In CARD ---
+
+con.execute('''
+SELECT id, NULL level, MAX(title_req) title_req, MAX(title_orig) title_orig
+
+FROM
+
+(SELECT card.id id, NULL title_req, tcl.text title_orig
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang
+WHERE
+card.id_higher_hierarchy=:hierarchy_id AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+-- cat.name = :category AND
+lang.name <> :lang
+
+UNION
+
+SELECT card.id id, tcl.text title_req, NULL title_orig
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang 
+WHERE
+card.id_higher_hierarchy=:hierarchy_id AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+-- cat.name = :category AND
+lang.name=:lang)
+
+GROUP BY id;
+
+''', {'hierarchy_id': 6, 'lang': 'it'}).fetchall()
+
+# --- Combine 2 requests ---
+
+con.execute('''
+SELECT id, level, title_req, title_orig, sequence, source_path
+FROM (
+
+SELECT id, level, MAX(title_req) title_req, MAX(title_orig) title_orig, sequence, basename, source_path
+
+FROM
+(SELECT hrchy.id id, hrchy.level level, NULL title_req, htl.text title_orig, sequence, basename, source_path
+FROM 
+Hierarchy hrchy, 
+Hierarchy_Title_Lang htl,
+Category cat,
+Language lang
+WHERE
+-- hrchy.level=:level AND
+hrchy.id_higher_hierarchy=:hierarchy_id AND
+htl.id_hierarchy=hrchy.id AND
+htl.id_language=lang.id AND
+hrchy.id_title_orig=lang.id AND
+hrchy.id_category=cat.id AND
+--cat.name=:category AND
+lang.name <> :lang
+
+UNION
+
+SELECT hrchy.id id, hrchy.level level, htl.text title_req, NULL title_orig, sequence, basename, source_path
+FROM 
+Hierarchy hrchy, 
+Hierarchy_Title_Lang htl, 
+Category cat,
+Language lang 
+WHERE
+--hrchy.level=:level AND
+hrchy.id_higher_hierarchy=:hierarchy_id AND
+htl.id_hierarchy=hrchy.id AND
+htl.id_language=lang.id AND
+hrchy.id_category=cat.id AND
+--cat.name=:category AND
+lang.name=:lang)
+
+GROUP BY id
+
+
+
+
+UNION
+
+
+
+SELECT id, NULL level, MAX(title_req) title_req, MAX(title_orig) title_orig, sequence, basename, source_path
+
+FROM
+
+(SELECT card.id id, NULL title_req, tcl.text title_orig, sequence, basename, source_path
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang
+WHERE
+card.id_higher_hierarchy=:hierarchy_id AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+-- cat.name = :category AND
+lang.name <> :lang
+
+UNION
+
+SELECT card.id id, tcl.text title_req, NULL title_orig, sequence, basename, source_path
+FROM 
+Card card, 
+Text_Card_Lang tcl, 
+Category cat,
+Language lang 
+WHERE
+card.id_higher_hierarchy=:hierarchy_id AND
+tcl.id_card=card.id AND
+tcl.id_language=lang.id AND
+tcl.type="T" AND
+card.id_title_orig=lang.id AND
+-- cat.name = :category AND
+lang.name=:lang)
+
+GROUP BY id
+)
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+
+''', {'hierarchy_id': 6, 'lang': 'it'}).fetchall()
+

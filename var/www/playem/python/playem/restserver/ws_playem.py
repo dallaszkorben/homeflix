@@ -16,6 +16,9 @@ from flask import session
 from flask_classful import FlaskView, route, request
 from flask_cors import CORS
 
+from playem.card.database import SqlDatabase as DB
+from playem.card.card_handle import collectCardsFromFileSystem
+
 from playem.config.config import getConfig
 #from greenwall.config.ini_location import IniLocation
 
@@ -48,20 +51,21 @@ class WSPlayem(Flask):
         self.app = self
 
         # Fetch Confiuration variables
-        cg = getConfig()        # defined in config.py
-        self.configPath = cg["path"]
-        logLevel = cg["log-level"]
-        self.logFileName = cg["log-file-name"]
-        self.webRelativePath = cg["web-relative-path"]
-        self.webAbsolutePath = cg["web-absolute-path"]
-        self.mediaAbsolutePath = cg["media-absolute-path"]
+        self.cg = getConfig()        # defined in config.py
+        self.configPath = self.cg["path"]
+        logLevel = self.cg["log-level"]
+        self.logFileName = self.cg["log-file-name"]
+        self.webRelativePath = self.cg["web-relative-path"]
+        self.webAbsolutePath = self.cg["web-absolute-path"]
+        self.mediaAbsolutePath = self.cg["media-absolute-path"]
 
         # LOG 
-        logPath = os.path.join(self.configPath, logFileName)
+        self.logPath = os.path.join(self.configPath, self.logFileName)
         logging.basicConfig(
             handlers=[RotatingFileHandler(self.logPath, maxBytes=5*1024*1024, backupCount=5)],
             format='%(asctime)s %(levelname)8s - %(message)s' , 
             level = logging.ERROR if logLevel == 'ERROR' else logging.WARNING if logLevel == 'WARNING' else logging.INFO if logLevel == 'INFO' else logging.DEBUG if logLevel == 'DEBUG' else 'CRITICAL' )
+
 
         # This will enable CORS for all routes
         CORS(self.app)
@@ -74,10 +78,22 @@ class WSPlayem(Flask):
 #        LampView.register(self.app, init_argument=self)
 #        PumpView.register(self.app, init_argument=self)
 
-        mediaDict = self.collectCardsFromFileSystem(self.mediaAbsolutePath)
+        self.db=DB()
 
+        # TODO: at every start I recreate the table. Has to be fixed
+        self.db.drop_tables()
+        self.db.create_tables()
+
+        print("Started to collect media...")
+        start = time.time()
+        collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
+        end = time.time()
+        diff = end-start
+        records = self.db.get_numbers_of_records_in_card()
+        print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))
+   
         print("The FQDN of the main file: %s" % (__name__))
-        print("Web access: http://localhost{0}".format(webRelativePath))
+        print("Web access: http://localhost{0}".format(self.webRelativePath))
 
     def getThreadControllerStatus(self):
         return self.gradualThreadController.getStatus()

@@ -95,3 +95,21 @@ python -m pip install distlib
 python -m pip install pyyaml
 
 ```
+
+### Configure Apache
+copy the playem/etc/apache2/site-available folder to the /etc/apache2 folder
+copy the playem/etc/apache2/envvars file to the /etc/apache2 folder
+
+Why do you need the envvars file?
+The critical part is this
+
+```sh
+## Uncomment the following line to use the system default locale instead:
+. /etc/default/locale
+```
+If you do not do that, the os.listdir() in the code will fail in case of UTF-8 characters in the file name
+
+
+
+
+

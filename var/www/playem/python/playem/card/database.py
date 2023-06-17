@@ -774,19 +774,27 @@ class SqlDatabase:
 
 
 
+    def get_numbers_of_records_in_card(self):
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        # Get Card list
+        query = "SELECT COUNT(*) FROM " + SqlDatabase.TABLE_CARD + ";" 
+        record=cur.execute(query).fetchone()
+        cur.execute("commit")
+        return record
 
 
+    def get_all_bands(self, lang, limit=100, json=True):
+        return self.get_all_level('band', 'music', lang, limit, json)
 
-    def get_all_bands(self, lang, limit=100):
-        return self.get_all_level('band', 'music', lang, limit)
+    def get_series_of_movies(self, lang, limit=100, json=True):
+        return self.get_all_series('movie', lang, limit, json)
 
-    def get_series_of_movies(self, lang, limit=100):
-        return self.get_all_series('movie', lang, limit)
+    def get_all_series(self, category, lang, limit=100, json=True):
+        return self.get_all_level('series', category, lang, limit, json)
 
-    def get_all_series(self, category, lang, limit=100):
-        return self.get_all_level('series', category, lang, limit)
-
-    def get_all_level(self, level, category, lang, limit=100):
+    def get_all_level(self, level, category, lang, limit=100, json=True):
         """
         It returns a list of series with id, title on the required language and title on the original language.
         If the requested language is the original language, then only the title with requested language will be returned
@@ -817,7 +825,7 @@ class SqlDatabase:
         cur = self.conn.cursor()
         cur.execute("begin")
 
-        return_records = {}
+        records = {}
 
         # Get Card list
         query = '''
@@ -883,15 +891,120 @@ class SqlDatabase:
                 WHEN sequence<0 THEN basename
                 WHEN sequence>=0 THEN sequence
             END
---            ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
         '''
-        return_records=cur.execute(query, {'level': level, 'category': category, 'lang':lang, 'limit':limit}).fetchall()
+        records=cur.execute(query, {'level': level, 'category': category, 'lang':lang, 'limit':limit}).fetchall()
         cur.execute("commit")
 
-        return return_records
+        if json:
+            records = [{key: record[key] for key in record.keys()} for record in records]
 
-    def get_all_standalone_movie(self, lang, limit=100):
+        return records
+
+
+    def get_child_hierarchy_or_card(self, hierarchy_id, lang, json=True):
+        """
+        """
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        records = {}
+
+        # Get Card list
+        query = '''
+            SELECT id, level, title_req, title_orig, sequence, source_path
+            FROM (
+                SELECT id, level, MAX(title_req) title_req, MAX(title_orig) title_orig, sequence, basename, source_path
+                FROM (
+                    SELECT hrchy.id id, hrchy.level level, NULL title_req, htl.text title_orig, sequence, basename, source_path
+                    FROM 
+                        Hierarchy hrchy, 
+                        Hierarchy_Title_Lang htl,
+                        Category cat,
+                        Language lang
+                    WHERE
+                        hrchy.id_higher_hierarchy=:hierarchy_id AND
+                        htl.id_hierarchy=hrchy.id AND
+                        htl.id_language=lang.id AND
+                        hrchy.id_title_orig=lang.id AND
+                        hrchy.id_category=cat.id AND
+                        lang.name <> :lang
+
+                    UNION
+
+                    SELECT hrchy.id id, hrchy.level level, htl.text title_req, NULL title_orig, sequence, basename, source_path
+                    FROM 
+                        Hierarchy hrchy, 
+                        Hierarchy_Title_Lang htl, 
+                        Category cat,
+                        Language lang 
+                    WHERE
+                        hrchy.id_higher_hierarchy=:hierarchy_id AND
+                        htl.id_hierarchy=hrchy.id AND
+                        htl.id_language=lang.id AND
+                        hrchy.id_category=cat.id AND
+                        lang.name=:lang
+                )
+                GROUP BY id
+
+                UNION
+
+                SELECT id, NULL level, MAX(title_req) title_req, MAX(title_orig) title_orig, sequence, basename, source_path
+                FROM (
+                    SELECT card.id id, NULL title_req, tcl.text title_orig, sequence, basename, source_path
+                    FROM 
+                        Card card, 
+                        Text_Card_Lang tcl, 
+                        Category cat,
+                        Language lang
+                    WHERE
+                        card.id_higher_hierarchy=:hierarchy_id AND
+                        tcl.id_card=card.id AND
+                        tcl.id_language=lang.id AND
+                        tcl.type="T" AND
+                        card.id_title_orig=lang.id AND
+                        lang.name <> :lang
+
+                    UNION
+
+                    SELECT card.id id, tcl.text title_req, NULL title_orig, sequence, basename, source_path
+                    FROM 
+                        Card card, 
+                        Text_Card_Lang tcl, 
+                        Category cat,
+                        Language lang 
+                    WHERE
+                        card.id_higher_hierarchy=:hierarchy_id AND
+                        tcl.id_card=card.id AND
+                        tcl.id_language=lang.id AND
+                        tcl.type="T" AND
+                        card.id_title_orig=lang.id AND
+                        lang.name=:lang
+                )
+                GROUP BY id
+            )
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+        '''
+        records=cur.execute(query, {'hierarchy_id': hierarchy_id, 'lang':lang}).fetchall()
+        cur.execute("commit")
+
+        if json:
+            records = [{key: record[key] for key in record.keys()} for record in records]
+
+        return records
+
+
+#    def get_card_
+
+
+
+
+    def get_all_standalone_movie(self, lang, limit=100, json=True):
         """
         It returns a list of standalone movies with card id, title on the required language and title on the original language and the source path.
         If the requested language is the original language, then only the title with requested language will be returned
@@ -930,24 +1043,24 @@ class SqlDatabase:
         cur = self.conn.cursor()
         cur.execute("begin")
 
-        return_records = {}
+        records = {}
 
         # Get Card list
         query = '''
             SELECT 
                 id, 
                 MAX(title_req) title_req, 
-                MAX(lang_req) lang_req, 
+                -- MAX(lang_req) lang_req, 
                 MAX(title_orig) title_orig, 
-                MAX(lang_orig) lang_orig,
+                -- MAX(lang_orig) lang_orig,
                 source_path
             FROM (
                 SELECT 
                     card.id id, 
                     NULL title_req, 
-                    NULL lang_req, 
+                    -- NULL lang_req, 
                     tcl.text title_orig, 
-                    lang.name lang_orig,
+                    -- lang.name lang_orig,
                     card.source_path source_path
                 FROM 
                     ''' + SqlDatabase.TABLE_CARD + ''' card, 
@@ -968,9 +1081,9 @@ class SqlDatabase:
                 SELECT 
                     card.id id, 
                     tcl.text title_req, 
-                    lang.name lang_req, 
+                    -- lang.name lang_req, 
                     NULL title_orig, 
-                    NULL lang_orig,
+                    -- NULL lang_orig,
                     card.source_path source_path
                 FROM 
                     ''' + SqlDatabase.TABLE_CARD + ''' card, 
@@ -989,11 +1102,13 @@ class SqlDatabase:
             ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
         '''
-        print(query)
-        return_records=cur.execute(query, {'category': 'movie', 'lang':lang, 'limit':limit}).fetchall()
+        records=cur.execute(query, {'category': 'movie', 'lang':lang, 'limit':limit}).fetchall()
         cur.execute("commit")
 
-        return return_records
+        if json:
+            records = [{key: record[key] for key in record.keys()} for record in records]
+
+        return records
 
 
 
