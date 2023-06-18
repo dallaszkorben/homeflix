@@ -73,7 +73,7 @@ class SqlDatabase:
         # create connection
         self.conn = None
         try:
-            self.conn = sqlite3.connect(self.db_path)
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             logging.debug( "Connection to {0} SQLite was successful".format(self.db_path))
             self.conn.row_factory = sqlite3.Row 
         except Error as e:
@@ -775,6 +775,9 @@ class SqlDatabase:
 
 
     def get_numbers_of_records_in_card(self):
+        """
+        Gives back the number of records in the Card table
+        """
         cur = self.conn.cursor()
         cur.execute("begin")
 
@@ -898,7 +901,7 @@ class SqlDatabase:
 
         if json:
             records = [{key: record[key] for key in record.keys()} for record in records]
-
+        
         return records
 
 

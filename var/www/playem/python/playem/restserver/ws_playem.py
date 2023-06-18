@@ -20,27 +20,9 @@ from playem.card.database import SqlDatabase as DB
 from playem.card.card_handle import collectCardsFromFileSystem
 
 from playem.config.config import getConfig
-#from greenwall.config.ini_location import IniLocation
-
-#from greenwall.controlbox.controlbox import Controlbox
-#from greenwall.lamp.lamp import Lamp
-#from greenwall.pump.pump import Pump
-#from greenwall.cam.cam import Cam
-#from greenwall.sensor.sensor import Sensor
-
 
 from playem.restserver.view_info import InfoView
-#from greenwall.restserver.view_sensor import SensorView
-#from greenwall.restserver.view_cam import CamView
-#from greenwall.restserver.view_lamp import LampView
-#from greenwall.restserver.view_pump import PumpView
-#
-#from greenwall.utilities.report_sensor import ReportSensor
-#
-#from greenwall.utilities.register_sensor import RegisterSensor
-#from greenwall.utilities.register_lamp import RegisterLamp
-#from greenwall.utilities.register_pump import RegisterPump
-#from greenwall.utilities.register_cam import RegisterCam
+from playem.restserver.view_collect import CollectView
 
 class WSPlayem(Flask):
 
@@ -66,17 +48,12 @@ class WSPlayem(Flask):
             format='%(asctime)s %(levelname)8s - %(message)s' , 
             level = logging.ERROR if logLevel == 'ERROR' else logging.WARNING if logLevel == 'WARNING' else logging.INFO if logLevel == 'INFO' else logging.DEBUG if logLevel == 'DEBUG' else 'CRITICAL' )
 
-
         # This will enable CORS for all routes
         CORS(self.app)
 
         # register the end-points
         InfoView.register(self.app, init_argument=self)
-
-#        SensorView.register(self.app, init_argument=self)
-#        CamView.register(self.app, init_argument=self)
-#        LampView.register(self.app, init_argument=self)
-#        PumpView.register(self.app, init_argument=self)
+        CollectView.register(self.app, init_argument=self)
 
         self.db=DB()
 

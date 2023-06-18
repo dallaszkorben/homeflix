@@ -8,7 +8,6 @@ from flask_classful import FlaskView, route, request
 from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
-#from playem.restserver.endpoints.ep_info_functions import EPInfoFunctions
 from playem.restserver.endpoints.ep_info_is_alive import EPInfoIsAlive
 
 # -----------------------------------

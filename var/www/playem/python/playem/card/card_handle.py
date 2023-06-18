@@ -70,7 +70,6 @@ def collectCardsFromFileSystem(actualDir, db, higher_hierarchy_id=None ):
         with open(card_path, "r", encoding="utf-8") as file_object:
             #data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
             data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
-
         category = data['category']
         try:
             mediatypes = data['mediatypes']
