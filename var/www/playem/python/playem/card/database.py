@@ -791,7 +791,7 @@ class SqlDatabase:
     def get_all_bands(self, lang, limit=100, json=True):
         return self.get_all_level('band', 'music', lang, limit, json)
 
-    def get_series_of_movies(self, lang, limit=100, json=True):
+    def get_all_series_of_movies(self, lang, limit=100, json=True):
         return self.get_all_series('movie', lang, limit, json)
 
     def get_all_series(self, category, lang, limit=100, json=True):
@@ -907,6 +907,8 @@ class SqlDatabase:
 
     def get_child_hierarchy_or_card(self, hierarchy_id, lang, json=True):
         """
+        Gives back child Hiearchy of the given hierarchy id. If the child hierarchy is Card
+        then it gives back the child Cards
         """
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1007,7 +1009,7 @@ class SqlDatabase:
 
 
 
-    def get_all_standalone_movie(self, lang, limit=100, json=True):
+    def get_all_standalone_movies(self, lang, limit=100, json=True):
         """
         It returns a list of standalone movies with card id, title on the required language and title on the original language and the source path.
         If the requested language is the original language, then only the title with requested language will be returned

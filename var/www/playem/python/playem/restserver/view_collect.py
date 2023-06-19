@@ -9,6 +9,8 @@ from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
 from playem.restserver.endpoints.ep_collect_all_series_movies import EPCollectAllSeriesMovies
+from playem.restserver.endpoints.ep_collect_all_standalone_movies import EPCollectAllStandaloneMovies
+from playem.restserver.endpoints.ep_collect_child_hierarchy_or_card import EPCollectChildHierarchyOrCard
 
 # -----------------------------------
 #
@@ -26,6 +28,9 @@ class CollectView(FlaskView):
         self.web_gadget = web_gadget
 
         self.epCollectAllSeriesMovies = EPCollectAllSeriesMovies(web_gadget)
+        self.epCollectAllStandaloneMovies = EPCollectAllStandaloneMovies(web_gadget)
+        self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
+
 
     #
     # GET http://localhost:5000/collect/
@@ -71,3 +76,40 @@ class CollectView(FlaskView):
 
         out = self.epCollectAllSeriesMovies.executeByParameters(lang=lang)
         return out
+
+# ===
+
+    #
+    # Gives back list of records of all standalone movies with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/all/standalone/movies/lang/en
+    #
+    # GET http://localhost:80/collect/all/standalone/movies/lang/en
+    #
+    #@route('/all/standalone/movies/lang/<lang>')
+    @route(EPCollectAllStandaloneMovies.PATH_PAR_URL, methods=[EPCollectAllStandaloneMovies.METHOD])
+    def collectAllStandaloneMoviesWithParameter(self, lang):
+
+        out = self.epCollectAllStandaloneMovies.executeByParameters(lang=lang)
+        return out
+
+# ===
+
+    #
+    # Gives back child Hiearchy of the given hierarchy id. If the child hierarchy is Card
+    # then it gives back the child Cards
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/child_hierarchy_or_card/id/123/lang/en
+    #
+    # GET http://localhost:80/collect/child_hierarchy_or_card/id/123/lang/en
+    #
+    #@route('//id/<id>/lang/<lang>')
+    @route(EPCollectChildHierarchyOrCard.PATH_PAR_URL, methods=[EPCollectChildHierarchyOrCard.METHOD])
+    def collectChildHierarchyOrCardWithParameter(self, id, lang):
+
+        out = self.epCollectChildHierarchyOrCard.executeByParameters(id=id, lang=lang)
+        return out
+
+
+
+
