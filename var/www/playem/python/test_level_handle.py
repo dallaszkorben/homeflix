@@ -49,11 +49,16 @@ for record in records:
 
 
 # --- fetch all standalone movies with the title on the requested language ---
-records=db.get_all_standalone_movies(lang=lang, json=True, limit=100)
-for record in records:
-    print(record)
+#records=db.get_standalone_movies_all(lang=lang, json=True, limit=100)
+#for record in records:
+#    print(record)
 
-
-
-
-
+# --- fetch standalone movies with genre=action ---
+print("Dramas:")
+records=db.get_standalone_movies_by_genre(genre='drama', lang=lang, json=True, limit=100)
+for record in records:    
+    if record["title_req"]:
+        orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+        print("Id: {0}, Title: {1} {2}".format(record["id"], record["title_req"], orig_title))
+    else:
+        print("Id: {0}, Title: (Original [{1}]) {2}".format(record["id"], record["lang_orig"], record["title_orig"]))

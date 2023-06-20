@@ -4,7 +4,7 @@ import sqlite3
 con = sqlite3.connect("/home/akoel/.playem/playem.db")
 con.execute('SELECT * from Level').fetchall()
 con.execute('SELECT * from Card').fetchall()
-
+con.execute('SELECT * from Text_Card_Language WHERE type="T"').fetchall()
 
 =================================
 
@@ -19,92 +19,205 @@ version 1:
 
 --- show original title of all standalone media except if the requested language is the original ---
 con.execute('''
-SELECT card.id id, NULL title_req, NULL lang_req, tcl.text title_orig, lang.name lang_orig
-FROM 
-Card card, 
-Text_Card_Lang tcl, 
-Category cat,
-Language lang
-WHERE
-card.id_higher_level IS NULL AND
-tcl.id_card=card.id AND
-tcl.id_language=lang.id AND
-tcl.type="T" AND
-card.id_title_orig=lang.id AND
-cat.name = :category AND
-lang.name <> :lang
+                SELECT 
+                    card.id id, 
+                    NULL title_req, 
+                    -- NULL lang_req, 
+                    tcl.text title_orig, 
+                    -- lang.name lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    card.id_title_orig=lang.id AND
+                    cat.name = :category AND
+                    lang.name <> :lang;
 ''', {'category': 'movie', 'lang': 'hu'}).fetchall()
 
 
 --- show requested title of all standalone films if there is ---
 
 con.execute('''
-SELECT card.id id, tcl.text title_req, lang.name lang_req, NULL title_orig, NULL lang_orig
-FROM 
-Card card, 
-Text_Card_Lang tcl, 
-Category cat,
-Language lang 
-WHERE
-card.id_higher_level IS NULL AND
-tcl.id_card=card.id AND
-tcl.id_language=lang.id AND
-tcl.type="T" AND
-card.id_title_orig=lang.id AND
-cat.name = :category AND
-lang.name=:lang
+                SELECT 
+                    card.id id, 
+                    tcl.text title_req, 
+                    -- lang.name lang_req, 
+                    NULL title_orig, 
+                    -- NULL lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    --card.id_title_orig=lang.id AND
+                    card.id_category=cat.id AND
+                    cat.name = :category AND
+                    lang.name=:lang
 ''', {'category': 'movie', 'lang': 'hu'}).fetchall()
-
 
 --- combine the two lists ---
 
-
-
-
 con.execute('''
-SELECT id, MAX(title_req) title_req, MAX(lang_req) lang_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig
+SELECT 
+id, 
+MAX(text_req) title_req, 
+MAX(text_orig) title_orig, 
+MAX(lang_orig) lang_orig,
+source_path
 
 FROM
 
-(SELECT card.id id, NULL title_req, NULL lang_req, tcl.text title_orig, lang.name lang_orig
-FROM 
-Card card, 
-Text_Card_Lang tcl, 
-Category cat,
-Language lang
-WHERE
-card.id_higher_level IS NULL AND
-tcl.id_card=card.id AND
-tcl.id_language=lang.id AND
-tcl.type="T" AND
-card.id_title_orig=lang.id AND
-cat.name = :category AND
-lang.name <> :lang
+(                SELECT 
+                    card.id id, 
+                    NULL text_req, 
+                    -- NULL lang_req, 
+                    tcl.text text_orig, 
+                    lang.name lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    card.id_title_orig=lang.id AND
+                    cat.name = :category AND
+                    lang.name <> :lang
 
 UNION
+                SELECT 
+                    card.id id, 
+                    tcl.text text_req, 
+                    -- lang.name lang_req, 
+                    NULL text_orig, 
+                    NULL lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    --card.id_title_orig=lang.id AND
+                    card.id_category=cat.id AND
+                    cat.name = :category AND
+                    lang.name=:lang
+)
 
-SELECT card.id id, tcl.text title_req, lang.name lang_req, NULL title_orig, NULL lang_orig
-FROM 
-Card card, 
-Text_Card_Lang tcl, 
-Category cat,
-Language lang 
-WHERE
-card.id_higher_level IS NULL AND
-tcl.id_card=card.id AND
-tcl.id_language=lang.id AND
-tcl.type="T" AND
-card.id_title_orig=lang.id AND
-cat.name = :category AND
-lang.name=:lang)
+GROUP BY id
+ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
 
-GROUP BY id;
-
-''', {'lang': 'it', 'category': 'movie'}).fetchall()
+''', {'lang': 'hu', 'category': 'movie'}).fetchall()
 
 
 
+===================================================
 
+--- get all standalone movies with genre=action ---
+ 
+===================================================
+
+----------
+version 1:
+----------
+
+
+con.execute('''
+SELECT 
+id, 
+MAX(text_req) title_req,
+MAX(text_orig) title_orig,
+MAX(lang_orig) lang_orig,
+source_path
+
+FROM
+
+(                SELECT 
+                    card.id id, 
+                    NULL text_req, 
+                    -- NULL lang_req, 
+                    tcl.text text_orig, 
+                    lang.name lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang,
+                    
+                    Genre genre, 
+                    Card_Genre cg
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    
+                    cg.id_card=card.id AND
+                    cg.id_genre=genre.id AND
+                    genre.name=:genre AND
+                    
+                    card.id_title_orig=lang.id AND
+                    cat.name = :category AND
+                    lang.name <> :lang
+
+UNION
+                SELECT 
+                    card.id id, 
+                    tcl.text text_req, 
+                    -- lang.name lang_req, 
+                    NULL text_orig, 
+                    NULL lang_orig,
+                    card.source_path source_path
+                FROM 
+                    Card card, 
+                    Text_Card_Lang tcl, 
+                    Category cat,
+                    Language lang,
+
+                    Genre genre, 
+                    Card_Genre cg
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+                    
+                    cg.id_card=card.id AND
+                    cg.id_genre=genre.id AND
+                    genre.name=:genre AND
+                    
+                    --card.id_title_orig=lang.id AND
+                    card.id_category=cat.id AND
+                    cat.name = :category AND
+                    lang.name=:lang
+)
+
+GROUP BY id
+ORDER BY CASE WHEN title_req IS NULL THEN title_orig ELSE title_req END
+
+''', {'genre': 'action', 'lang': 'hu', 'category': 'movie'}).fetchall()
 
 
 

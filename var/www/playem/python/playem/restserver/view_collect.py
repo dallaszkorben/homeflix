@@ -9,7 +9,8 @@ from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
 from playem.restserver.endpoints.ep_collect_all_series_movies import EPCollectAllSeriesMovies
-from playem.restserver.endpoints.ep_collect_all_standalone_movies import EPCollectAllStandaloneMovies
+from playem.restserver.endpoints.ep_collect_standalone_movies_all import EPCollectStandaloneMoviesAll
+from playem.restserver.endpoints.ep_collect_standalone_movies_by_genre import EPCollectStandaloneMoviesByGenre
 from playem.restserver.endpoints.ep_collect_child_hierarchy_or_card import EPCollectChildHierarchyOrCard
 
 # -----------------------------------
@@ -28,9 +29,9 @@ class CollectView(FlaskView):
         self.web_gadget = web_gadget
 
         self.epCollectAllSeriesMovies = EPCollectAllSeriesMovies(web_gadget)
-        self.epCollectAllStandaloneMovies = EPCollectAllStandaloneMovies(web_gadget)
+        self.epCollectStandaloneMoviesAll = EPCollectStandaloneMoviesAll(web_gadget)
+        self.epCollectStandaloneMoviesByGenre = EPCollectStandaloneMoviesByGenre(web_gadget)
         self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
-
 
     #
     # GET http://localhost:5000/collect/
@@ -82,15 +83,31 @@ class CollectView(FlaskView):
     #
     # Gives back list of records of all standalone movies with parameters
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/all/standalone/movies/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/lang/en
     #
-    # GET http://localhost:80/collect/all/standalone/movies/lang/en
+    # GET http://localhost:80/collect/standalone/movies/lang/en
     #
     #@route('/all/standalone/movies/lang/<lang>')
-    @route(EPCollectAllStandaloneMovies.PATH_PAR_URL, methods=[EPCollectAllStandaloneMovies.METHOD])
-    def collectAllStandaloneMoviesWithParameter(self, lang):
+    @route(EPCollectStandaloneMoviesAll.PATH_PAR_URL, methods=[EPCollectStandaloneMoviesAll.METHOD])
+    def collectStandaloneMoviesAllWithParameter(self, lang):
 
-        out = self.epCollectAllStandaloneMovies.executeByParameters(lang=lang)
+        out = self.epCollectStandaloneMoviesAll.executeByParameters(lang=lang)
+        return out
+
+# ===
+
+    #
+    # Gives back list of records of standalone movies with genre with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/genre/dramalang/en
+    #
+    # GET http://localhost:80/collect/standalone/movies/genre/drama/lang/en
+    #
+    #@route('/standalone/movies/genre/<genre>/lang/<lang>')
+    @route(EPCollectStandaloneMoviesByGenre.PATH_PAR_URL, methods=[EPCollectStandaloneMoviesByGenre.METHOD])
+    def collectStandaloneMoviesByGenreWithParameter(self, genre, lang):
+
+        out = self.epCollectStandaloneMoviesByGenre.executeByParameters(genre=genre, lang=lang)
         return out
 
 # ===

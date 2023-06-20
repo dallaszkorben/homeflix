@@ -14,6 +14,7 @@ headers = {
 
 data = ''
 
+print("Series:")
 response = requests.get('http://192.168.0.21/collect/all/series/movies/lang/hu', headers=headers, data=data)
 if response.status_code == 200: 
     for record in response.json():
@@ -30,9 +31,18 @@ if response.status_code == 200:
                 print("       {1} {2}".format(child_record["id"], child_record["title_req"], child_orig_title))
             else:
                 print("       (Original: {2}".format(child_record["id"], child_record["title_orig"]))
-
-
-
 else:
     print("Reason: {1}\nCode:   {0}".format(response.status_code, response.reason))
 
+
+print("Dramas:")
+response = requests.get('http://192.168.0.21/collect/standalone/movies/genre/drama/lang/hu', headers=headers, data=data)
+if response.status_code == 200: 
+    for record in response.json():
+        if record["title_req"]:
+            orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+            print("Id: {0}, Title: {1} {2}".format(record["id"], record["title_req"], orig_title))
+        else:
+            print("Id: {0}, Title: (Original [{1}]) {2}".format(record["id"], record["lang_orig"], record["title_orig"]))
+else:
+    print("Reason: {1}\nCode:   {0}".format(response.status_code, response.reason))

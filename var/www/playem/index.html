@@ -1,1 +1,61 @@
-HELLO
+<meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+
+<html>
+<head>
+
+    <title>Playem</title>
+
+    <style>
+
+
+    </style>
+    
+    <!-- JQuery -->
+    <script src="script/jquery/jquery-3.6.0.min.js"></script>
+    <script src="script/jquery-ui/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="script/jquery-ui/jquery-ui.css">
+
+    <script>
+
+    // ================================================
+    // ================================================
+    //
+    //  When the page is loaded
+    //
+    // ================================================
+    // ================================================
+    $(document).ready(function(){
+        $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
+            success: function(result){
+                text = "";
+                for (i in result) {
+                    record=result[i];
+                    if ( record["title_req"] != null ){
+                        //orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
+                        orig_title = "";
+                        text += "Id: " + record["id"] + ", Title: " + record["title_req"] + " " + orig_title + "<br>";
+                    }else{
+                        text += "Id: " + record["id"] + ", Title: (Original [" + record["lang_orig"] + "]) " + record["title_orig"] + "<br>";
+                    }
+                }
+                $("#message").html(text);
+            },
+            error: function(xhr,status,error){
+                    $("#message").html("");
+                    $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
+//                    $("#spinner").hide();
+            }
+        })
+    })
+
+</script>
+
+</head>
+<body style="background-color:DarkGrey;">
+
+    <div id="message"></div>
+    <div id="errormessage"></div>
+</body>
+</html>

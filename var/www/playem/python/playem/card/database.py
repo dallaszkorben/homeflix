@@ -1009,6 +1009,94 @@ class SqlDatabase:
 
 
 
+    def get_standalone_movies_by_genre(self, genre, lang, limit=100, json=True):
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        records = {}
+
+        # Get Card list
+        query = '''
+            SELECT 
+                id, 
+                MAX(text_req) title_req, 
+                MAX(text_orig) title_orig, 
+                MAX(lang_orig) lang_orig,
+                source_path
+            FROM (
+                SELECT 
+                    card.id id, 
+                    NULL text_req, 
+                    -- NULL lang_req, 
+                    tcl.text text_orig, 
+                    lang.name lang_orig,
+                    card.source_path source_path
+                FROM 
+                    ''' + SqlDatabase.TABLE_CARD + ''' card, 
+                    ''' + SqlDatabase.TABLE_GENRE + ''' genre, 
+                    ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg, 
+
+                    ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
+                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+
+                    cg.id_card=card.id AND
+                    cg.id_genre=genre.id AND
+                    genre.name=:genre AND
+
+                    card.id_title_orig=lang.id AND
+                    cat.name = :category AND
+                    lang.name <> :lang
+
+                UNION
+
+                SELECT 
+                    card.id id, 
+                    tcl.text text_req, 
+                    -- lang.name lang_req, 
+                    NULL text_orig, 
+                    NULL lang_orig,
+                    card.source_path source_path
+                FROM 
+                    ''' + SqlDatabase.TABLE_CARD + ''' card, 
+                    ''' + SqlDatabase.TABLE_GENRE + ''' genre, 
+                    ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg, 
+
+                    ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
+                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl.id_card=card.id AND
+                    tcl.id_language=lang.id AND
+                    tcl.type="T" AND
+
+                    cg.id_card=card.id AND
+                    cg.id_genre=genre.id AND
+                    genre.name=:genre AND
+
+                    --card.id_title_orig=lang.id AND
+                    card.id_category=cat.id AND
+                    cat.name = :category AND
+                    lang.name=:lang)
+            GROUP BY id
+            ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+            LIMIT :limit;
+        '''
+        records=cur.execute(query, {'category': 'movie', 'genre': genre, 'lang':lang, 'limit':limit}).fetchall()
+        cur.execute("commit")
+
+        if json:
+            records = [{key: record[key] for key in record.keys()} for record in records]
+
+        return records
+
+
     def get_all_standalone_movies(self, lang, limit=100, json=True):
         """
         It returns a list of standalone movies with card id, title on the required language and title on the original language and the source path.
@@ -1054,18 +1142,17 @@ class SqlDatabase:
         query = '''
             SELECT 
                 id, 
-                MAX(title_req) title_req, 
-                -- MAX(lang_req) lang_req, 
-                MAX(title_orig) title_orig, 
-                -- MAX(lang_orig) lang_orig,
+                MAX(text_req) title_req, 
+                MAX(text_orig) title_orig, 
+                MAX(lang_orig) lang_orig,
                 source_path
             FROM (
                 SELECT 
                     card.id id, 
-                    NULL title_req, 
+                    NULL text_req, 
                     -- NULL lang_req, 
-                    tcl.text title_orig, 
-                    -- lang.name lang_orig,
+                    tcl.text text_orig, 
+                    lang.name lang_orig,
                     card.source_path source_path
                 FROM 
                     ''' + SqlDatabase.TABLE_CARD + ''' card, 
@@ -1085,10 +1172,10 @@ class SqlDatabase:
 
                 SELECT 
                     card.id id, 
-                    tcl.text title_req, 
+                    tcl.text text_req, 
                     -- lang.name lang_req, 
-                    NULL title_orig, 
-                    -- NULL lang_orig,
+                    NULL text_orig, 
+                    NULL lang_orig,
                     card.source_path source_path
                 FROM 
                     ''' + SqlDatabase.TABLE_CARD + ''' card, 
@@ -1100,7 +1187,8 @@ class SqlDatabase:
                     tcl.id_card=card.id AND
                     tcl.id_language=lang.id AND
                     tcl.type="T" AND
-                    card.id_title_orig=lang.id AND
+                    --card.id_title_orig=lang.id AND
+                    card.id_category=cat.id AND
                     cat.name = :category AND
                     lang.name=:lang)
             GROUP BY id
