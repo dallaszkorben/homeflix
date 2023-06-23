@@ -1,5 +1,4 @@
 <meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
-
 <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
 
 <html>
@@ -8,8 +7,55 @@
     <title>Playem</title>
 
     <style>
+        #thumbnail-container {
+            width: 100%;
+            overflow: hidden;
+            /*white-space: nowrap;*/
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        .thumbnail {
+/*            display: inline-block;*/
+            width: 200px;
+            height: 150px;
+            margin: 0px;
+            border: 3px solid transparent;
+            background-color: black;
+  
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .thumbnail img {
+            /* width: 100%;*/
+            /* height: auto; */
+            /*object-fit: contain;*/
+            /*object-position: center;*/
+            /*background-color: red; */
 
 
+            /*  object-fit: contain;
+            object-position: center; */
+            width: 200px;
+            height: auto;
+            max-height: 150px;
+        }        
+
+#left-arrow,
+#right-arrow {
+  cursor: pointer;
+  font-size: 24px;
+  margin-top: 5px;
+}
+
+#left-arrow {
+  margin-right: 10px;
+}
     </style>
     
     <!-- JQuery -->
@@ -19,6 +65,24 @@
 
     <script>
 
+$('#right-arrow').click(function() {
+    thumbnails.eq(currentIndex).css('border-color', 'transparent');
+    currentIndex = (currentIndex + 1) % thumbnails.length;
+    thumbnails.eq(currentIndex).css('border-color', 'white');
+    scrollThumbnails();
+  });
+
+  $('#left-arrow').click(function() {
+    thumbnails.eq(currentIndex).css('border-color', 'transparent');
+    currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+    thumbnails.eq(currentIndex).css('border-color', 'white');
+    scrollThumbnails();
+  });
+
+
+
+ 
+
     // ================================================
     // ================================================
     //
@@ -27,6 +91,10 @@
     // ================================================
     // ================================================
     $(document).ready(function(){
+        var thumbnails;
+        var currentIndex = 0;
+
+        // Get Standalone drama movies and generate div for them inside #thumbnail-container' div
         $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
             success: function(result){
                 text = "";
@@ -39,8 +107,17 @@
                     }else{
                         text += "Id: " + record["id"] + ", Title: (Original [" + record["lang_orig"] + "]) " + record["title_orig"] + "<br>";
                     }
+
+                    image = $('<img src="http://localhost/' + record["source_path"] + '/image.jpg" alt="Image 1">');
+                    thumbnail = $('<div class="thumbnail">');
+                    thumbnail.append(image);                 
+                    $('#thumbnail-container').append(thumbnail);
+
                 }
-                $("#message").html(text);
+                                
+                thumbnails = $('.thumbnail');
+                currentIndex = 0;
+                thumbnails.eq(currentIndex).css('border-color', 'white');
             },
             error: function(xhr,status,error){
                     $("#message").html("");
@@ -48,7 +125,60 @@
 //                    $("#spinner").hide();
             }
         })
-    })
+
+        // var thumbnails = $('.thumbnail');
+        // var currentIndex = 0;
+
+        // The default value is the first box
+        //thumbnails.eq(currentIndex).css('border-color', 'white');
+
+        function go_left(){
+            thumbnails.eq(currentIndex).css('border-color', 'transparent');
+            currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+            thumbnails.eq(currentIndex).css('border-color', 'white');
+            scrollThumbnails();
+        }
+
+        function go_up(){console.log('up');}
+
+        function go_right(){
+            thumbnails.eq(currentIndex).css('border-color', 'transparent');
+            currentIndex = (currentIndex + 1) % thumbnails.length;
+            thumbnails.eq(currentIndex).css('border-color', 'white');
+            scrollThumbnails();
+        }
+
+        function go_down(){console.log('down');}
+
+        $(document).on('keydown',function(e){
+            var act={37:go_left, 38:go_up, 39:go_right, 40:go_down};
+
+            //console.log(e.which)
+
+            if(act[e.which]) 
+                var a=new act[e.which];
+        });
+
+
+        function scrollThumbnails() {
+            var container = $('#thumbnail-container');
+            var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
+            var containerWidth = container.width();
+            var containerScrollLeft = container.scrollLeft();
+            var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
+
+            console.log(visibleThumbnails);
+            console.log(containerScrollLeft);
+
+
+            if (currentIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
+                container.animate({ scrollLeft: thumbnailWidth * (currentIndex - visibleThumbnails + 1) }, 200);
+            } else if (currentIndex < containerScrollLeft / thumbnailWidth) {
+                container.animate({ scrollLeft: thumbnailWidth * currentIndex }, 200);
+            }
+        }
+
+})
 
 </script>
 
@@ -57,5 +187,19 @@
 
     <div id="message"></div>
     <div id="errormessage"></div>
+
+
+    <div id="thumbnail-container" style="border:3px red solid;">
+<!--        <div class="thumbnail">
+            <img src="images/image3.jpg" alt="Thumbnail 7" />
+        </div>
+
+        További thumbnail-ök hozzáadása itt -->
+      </div>
+      <div id="arrow-container">
+        <span id="left-arrow">&lt;</span>
+        <span id="right-arrow">&gt;</span>
+      </div>
+
 </body>
 </html>

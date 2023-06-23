@@ -16,7 +16,8 @@ class Config( Property ):
     DEFAULT_WEB_RELATIVE_PATH = "/playem"
     DEFAULT_WEB_ABSOLUTE_PATH = "/var/www/playem"
 
-    DEFAULT_MEDIA_ABSOLUTE_PATH = "/media/pi/Movie"
+    DEFAULT_MEDIA_ABSOLUTE_PATH = "/var/www/playem/MEDIA"
+    DEFAULT_MEDIA_RELATIVE_PATH = "playem/MEDIA/"
 
     DEFAULT_CARD_DB_NAME = "playem.db"
 
@@ -55,6 +56,7 @@ class Config( Property ):
 
         confDict['media'] = {}
         confDict['media']['absolute-path'] = Config.DEFAULT_MEDIA_ABSOLUTE_PATH
+        confDict['media']['relative-path'] = Config.DEFAULT_MEDIA_RELATIVE_PATH
 
         confDict['card'] = {}
         confDict['card']['db-name'] = Config.DEFAULT_CARD_DB_NAME
@@ -80,6 +82,9 @@ class Config( Property ):
     def getMediaAbsolutePath(self):
         return self.confDict['media']['absolute-path']
 
+    def getMediaRelativePath(self):
+        return self.confDict['media']['relative-path']
+
     def getCardDBName(self):
         return self.confDict['card']['db-name']
 
@@ -96,6 +101,7 @@ def getConfig():
     config["web-absolute-path"] = cb.getWebAbsolutePath()
 
     config["media-absolute-path"] = cb.getMediaAbsolutePath()
+    config["media-relative-path"] = cb.getMediaRelativePath()
 
     config["card-db-name"] = cb.getCardDBName()
 

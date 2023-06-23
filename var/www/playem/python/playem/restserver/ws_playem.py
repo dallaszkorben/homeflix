@@ -6,7 +6,6 @@ from logging.handlers import RotatingFileHandler
 
 from datetime import datetime
 import time
-
 import distlib
 
 import json
@@ -17,7 +16,8 @@ from flask_classful import FlaskView, route, request
 from flask_cors import CORS
 
 from playem.card.database import SqlDatabase as DB
-from playem.card.card_handle import collectCardsFromFileSystem
+#from playem.card.card_handle import collectCardsFromFileSystem
+from playem.card.card_handle import CardHandle
 
 from playem.config.config import getConfig
 
@@ -40,6 +40,8 @@ class WSPlayem(Flask):
         self.webRelativePath = self.cg["web-relative-path"]
         self.webAbsolutePath = self.cg["web-absolute-path"]
         self.mediaAbsolutePath = self.cg["media-absolute-path"]
+        self.mediaRelativePath = self.cg["media-relative-path"]
+
 
         # LOG 
         self.logPath = os.path.join(self.configPath, self.logFileName)
@@ -61,9 +63,10 @@ class WSPlayem(Flask):
         self.db.drop_tables()
         self.db.create_tables()
 
+        self.cardHandle = CardHandle(self)
         print("Started to collect media...")
         start = time.time()
-        collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
+        self.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
         end = time.time()
         diff = end-start
         records = self.db.get_numbers_of_records_in_card()
