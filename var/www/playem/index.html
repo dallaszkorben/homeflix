@@ -7,21 +7,31 @@
     <title>Playem</title>
 
     <style>
-        #thumbnail-container {
+
+        .thumbnail-section {
+            border:3px red solid;
+/*            overflow: hidden; */
+            /*white-space: nowrap;*/
+/*            display: flex; */
+/*            flex-direction: row; */
+/*            flex-wrap: nowrap; */
+        }
+
+        .thumbnail-container {
             width: 100%;
-            overflow: hidden;
+            overflow: hidden; 
             /*white-space: nowrap;*/
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
             justify-content: flex-start;
             align-items: flex-start;
+            border:3px blue solid;
         }
 
         .thumbnail {
-/*            display: inline-block;*/
             width: 200px;
-            height: 150px;
+            height: 150;
             margin: 0px;
             border: 3px solid transparent;
             background-color: black;
@@ -32,15 +42,9 @@
         }
 
         .thumbnail img {
-            /* width: 100%;*/
-            /* height: auto; */
             /*object-fit: contain;*/
-            /*object-position: center;*/
-            /*background-color: red; */
-
-
             /*  object-fit: contain;
-            object-position: center; */
+            /*object-position: center; */
             width: 200px;
             height: auto;
             max-height: 150px;
@@ -79,9 +83,21 @@ $('#right-arrow').click(function() {
     scrollThumbnails();
   });
 
+    var sectionMap = [
+        {
+            "index": 0,
+            "id": "section-0",
+            "class": "thumbnail-section",
+            "containers": [
+                {
+                    "index": 0,
+                    "id": "section-0_container-0",
+                    "class": "thumbnail-container"
+                }
+            ]
+        }
+    ]
 
-
- 
 
     // ================================================
     // ================================================
@@ -91,13 +107,34 @@ $('#right-arrow').click(function() {
     // ================================================
     // ================================================
     $(document).ready(function(){
+
+        thumbnailSectionIndex = 0;
+
+        // Create thumbnail-section
+        //thumbnailSection = $('#thumbnail-section')
+        thumbnailSection_1 = $('<div>', {
+            id: sectionMap[thumbnailSectionIndex]["id"],
+            class: sectionMap[thumbnailSectionIndex]["class"],
+        })
+
         var thumbnails;
         var currentIndex = 0;
 
-        // Get Standalone drama movies and generate div for them inside #thumbnail-container' div
+        // Get Standalone DRAMA movies and generate div for them inside #thumbnail-container' div
         $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
             success: function(result){
+                sectionIndex = 0;
+                containerIndex = 0;
+
                 text = "";
+
+                // Create thumbnail-container
+                //thumbnailContainer = $('<div id="thumbnail-container-' + 0 + '", class="thumbnail-container">')
+                thumbnailContainer = $('<div>', {
+                    id: sectionMap[thumbnailSectionIndex]["containers"][containerIndex]["id"],
+                    class: sectionMap[thumbnailSectionIndex]["containers"][containerIndex]["class"],
+                })
+
                 for (i in result) {
                     record=result[i];
                     if ( record["title_req"] != null ){
@@ -108,16 +145,30 @@ $('#right-arrow').click(function() {
                         text += "Id: " + record["id"] + ", Title: (Original [" + record["lang_orig"] + "]) " + record["title_orig"] + "<br>";
                     }
 
+                    // Create image
                     image = $('<img src="http://localhost/' + record["source_path"] + '/image.jpg" alt="Image 1">');
+                    
+                    // Create thumbnail
                     thumbnail = $('<div class="thumbnail">');
                     thumbnail.append(image);                 
-                    $('#thumbnail-container').append(thumbnail);
+
+                    // Place thumbnail into thumbnail-container
+                    thumbnailContainer.append(thumbnail);
 
                 }
-                                
+                
+                // Place thumbnail Container into thumbnail-section
+                thumbnailSection_1.append(thumbnailContainer)
+
+                $('body').append(thumbnailSection_1);
+
                 thumbnails = $('.thumbnail');
                 currentIndex = 0;
-                thumbnails.eq(currentIndex).css('border-color', 'white');
+                scrollThumbnails();
+
+//                thumbnails = $('.thumbnail');
+//                currentIndex = 0;
+//                thumbnails.eq(currentIndex).css('border-color', 'white');
             },
             error: function(xhr,status,error){
                     $("#message").html("");
@@ -161,7 +212,7 @@ $('#right-arrow').click(function() {
 
 
         function scrollThumbnails() {
-            var container = $('#thumbnail-container');
+            var container = $('.thumbnail-container');
             var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
             var containerWidth = container.width();
             var containerScrollLeft = container.scrollLeft();
@@ -170,11 +221,12 @@ $('#right-arrow').click(function() {
             console.log(visibleThumbnails);
             console.log(containerScrollLeft);
 
-
             if (currentIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
                 container.animate({ scrollLeft: thumbnailWidth * (currentIndex - visibleThumbnails + 1) }, 200);
+                console.log(thumbnailWidth * (currentIndex - visibleThumbnails + 1) );
             } else if (currentIndex < containerScrollLeft / thumbnailWidth) {
                 container.animate({ scrollLeft: thumbnailWidth * currentIndex }, 200);
+                console.log(thumbnailWidth * currentIndex);
             }
         }
 
@@ -188,18 +240,20 @@ $('#right-arrow').click(function() {
     <div id="message"></div>
     <div id="errormessage"></div>
 
-
-    <div id="thumbnail-container" style="border:3px red solid;">
-<!--        <div class="thumbnail">
-            <img src="images/image3.jpg" alt="Thumbnail 7" />
-        </div>
-
-        További thumbnail-ök hozzáadása itt -->
-      </div>
-      <div id="arrow-container">
+<!--    <div id="thumbnail-section" class="thumbnail-section"> -->
+<!--        <div id="thumbnail-container"> -->
+<!--            <div class="thumbnail">
+                <img src="images/image3.jpg" alt="Thumbnail 7" />
+            </div>
+-->            
+<!--        </div> -->
+<!--    </div> -->
+    
+<!--<div id="arrow-container">
         <span id="left-arrow">&lt;</span>
         <span id="right-arrow">&gt;</span>
-      </div>
+    </div>
+-->
 
 </body>
 </html>
