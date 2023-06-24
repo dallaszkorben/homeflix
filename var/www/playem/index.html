@@ -170,11 +170,22 @@
         // Get Standalone DRAMA movies and generate div for them inside #thumbnail-container' div
         $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
             success: function(result){
-                containerIndex = 0;
+//                containerIndex = 0;
+//                text = "";
+//
+//                // Create thumbnail-container
+//                 thumbnailContainer = $('<div>', {
+//                    class: attributeMap["container-class"],
+//                    id: attributeMap["container-id"].format(sectionIndex, containerIndex)
+//                })
+
                 text = "";
 
+                newLength = sectionMap_1["containers"].push({});
+                containerIndex = newLength - 1;
+
                 // Create thumbnail-container
-                 thumbnailContainer = $('<div>', {
+                thumbnailContainer = $('<div>', {
                     class: attributeMap["container-class"],
                     id: attributeMap["container-id"].format(sectionIndex, containerIndex)
                 })
@@ -237,17 +248,18 @@
         // Get Standalone DRAMA movies and generate div for them inside #thumbnail-container' div
         $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
             success: function(result){
-                containerIndex = 1;
+                
                 text = "";
 
+                newLength = sectionMap_1["containers"].push({});
+                containerIndex = newLength - 1;
+
                 // Create thumbnail-container
-                 thumbnailContainer = $('<div>', {
+                thumbnailContainer = $('<div>', {
                     class: attributeMap["container-class"],
                     id: attributeMap["container-id"].format(sectionIndex, containerIndex)
                 })
 
-                //sectionMap_1["current-container-index"] = containerIndex;
-                sectionMap_1["containers"].push({});
                 sectionMap_1["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
                 
                 sectionMap_1["containers"][containerIndex]["thumbnail-class"] = attributeMap["thumbnail-class"];

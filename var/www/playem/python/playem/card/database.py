@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import logging
+from threading import Lock
 from sqlite3 import Error
 
 from playem.config.config import getConfig
@@ -69,6 +70,8 @@ class SqlDatabase:
 
                 SqlDatabase.TABLE_HIERARCHY
             ]
+
+        self.lock = Lock()
 
         # create connection
         self.conn = None
@@ -719,7 +722,7 @@ class SqlDatabase:
         cur.execute("commit")
         return hierarchy_id
 
-
+    # === requests ===
 
 
     # def get_all_series_fast(self, lang):
@@ -778,14 +781,15 @@ class SqlDatabase:
         """
         Gives back the number of records in the Card table
         """
-        cur = self.conn.cursor()
-        cur.execute("begin")
+        with self.lock:
+            cur = self.conn.cursor()
+            cur.execute("begin")
 
-        # Get Card list
-        query = "SELECT COUNT(*) FROM " + SqlDatabase.TABLE_CARD + ";" 
-        record=cur.execute(query).fetchone()
-        cur.execute("commit")
-        return record
+            # Get Card list
+            query = "SELECT COUNT(*) FROM " + SqlDatabase.TABLE_CARD + ";" 
+            record=cur.execute(query).fetchone()
+            cur.execute("commit")
+            return record
 
 
     def get_all_bands(self, lang, limit=100, json=True):
@@ -824,14 +828,15 @@ class SqlDatabase:
             Id: 6, Title: (Original [hu]) Psyché és Nárcisz
                           Source: /media/akoel/vegyes/MEDIA/01.Movie/03.Series/PsycheEsNarcisz-1980
         """
+        with self.lock:
 
-        cur = self.conn.cursor()
-        cur.execute("begin")
+            cur = self.conn.cursor()
+            cur.execute("begin")
 
-        records = {}
+            records = {}
 
-        # Get Card list
-        query = '''
+            # Get Card list
+            query = '''
             SELECT 
                 id, 
                 MAX(title_req) title_req, 
@@ -895,14 +900,14 @@ class SqlDatabase:
                 WHEN sequence>=0 THEN sequence
             END
             LIMIT :limit;
-        '''
-        records=cur.execute(query, {'level': level, 'category': category, 'lang':lang, 'limit':limit}).fetchall()
-        cur.execute("commit")
+            '''
+            records=cur.execute(query, {'level': level, 'category': category, 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
 
-        if json:
-            records = [{key: record[key] for key in record.keys()} for record in records]
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
         
-        return records
+            return records
 
 
     def get_child_hierarchy_or_card(self, hierarchy_id, lang, json=True):
@@ -910,13 +915,15 @@ class SqlDatabase:
         Gives back child Hiearchy of the given hierarchy id. If the child hierarchy is Card
         then it gives back the child Cards
         """
-        cur = self.conn.cursor()
-        cur.execute("begin")
+        with self.lock:
 
-        records = {}
+            cur = self.conn.cursor()
+            cur.execute("begin")
 
-        # Get Card list
-        query = '''
+            records = {}
+
+            # Get Card list
+            query = '''
             SELECT id, level, title_req, title_orig, sequence, source_path
             FROM (
                 SELECT id, level, MAX(title_req) title_req, MAX(title_orig) title_orig, sequence, basename, source_path
@@ -994,14 +1001,14 @@ class SqlDatabase:
                 WHEN sequence<0 THEN basename
                 WHEN sequence>=0 THEN sequence
             END
-        '''
-        records=cur.execute(query, {'hierarchy_id': hierarchy_id, 'lang':lang}).fetchall()
-        cur.execute("commit")
+            '''
+            records=cur.execute(query, {'hierarchy_id': hierarchy_id, 'lang':lang}).fetchall()
+            cur.execute("commit")
 
-        if json:
-            records = [{key: record[key] for key in record.keys()} for record in records]
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
 
-        return records
+            return records
 
 
 #    def get_card_
@@ -1010,13 +1017,16 @@ class SqlDatabase:
 
 
     def get_standalone_movies_by_genre(self, genre, lang, limit=100, json=True):
-        cur = self.conn.cursor()
-        cur.execute("begin")
 
-        records = {}
+        with self.lock:
 
-        # Get Card list
-        query = '''
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            # Get Card list
+            query = '''
             SELECT 
                 id, 
                 MAX(text_req) title_req, 
@@ -1087,14 +1097,14 @@ class SqlDatabase:
             GROUP BY id
             ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
-        '''
-        records=cur.execute(query, {'category': 'movie', 'genre': genre, 'lang':lang, 'limit':limit}).fetchall()
-        cur.execute("commit")
+            '''
+            records=cur.execute(query, {'category': 'movie', 'genre': genre, 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
 
-        if json:
-            records = [{key: record[key] for key in record.keys()} for record in records]
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
 
-        return records
+            return records
 
 
     def get_all_standalone_movies(self, lang, limit=100, json=True):
@@ -1132,14 +1142,15 @@ class SqlDatabase:
             Id: 6, Title: Régi idők focija 
                           Source: /media/akoel/vegyes/MEDIA/01.Movie/01.Standalone/RegiIdokFocija-1973
         """
+        with self.lock:
 
-        cur = self.conn.cursor()
-        cur.execute("begin")
+            cur = self.conn.cursor()
+            cur.execute("begin")
 
-        records = {}
+            records = {}
 
-        # Get Card list
-        query = '''
+            # Get Card list
+            query = '''
             SELECT 
                 id, 
                 MAX(text_req) title_req, 
@@ -1194,14 +1205,14 @@ class SqlDatabase:
             GROUP BY id
             ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
-        '''
-        records=cur.execute(query, {'category': 'movie', 'lang':lang, 'limit':limit}).fetchall()
-        cur.execute("commit")
+            '''
+            records=cur.execute(query, {'category': 'movie', 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
 
-        if json:
-            records = [{key: record[key] for key in record.keys()} for record in records]
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
 
-        return records
+            return records
 
 
 
