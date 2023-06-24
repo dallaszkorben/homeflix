@@ -11,17 +11,11 @@
         .thumbnail-section {
             border:3px red solid;
             width: 100%;
-/*            overflow: hidden; */
-            /*white-space: nowrap;*/
-/*            display: flex; */
-/*            flex-direction: row; */
-/*            flex-wrap: nowrap; */
         }
 
         .thumbnail-container {
             width: 100%;
             overflow: hidden; 
-            /*white-space: nowrap;*/
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
@@ -44,9 +38,6 @@
         }
 
         .thumbnail img {
-            /*object-fit: contain;*/
-            /*  object-fit: contain;
-            /*object-position: center; */
             width: 400px;
             height: auto;
             max-height: 300px;
@@ -134,48 +125,173 @@
     //     ]
     // }
 
+    $(document).on('keydown',function(e){
+            var act={37:go_left, 38:go_up, 39:go_right, 40:go_down};
+
+            //console.log(e.which)
+
+            if(act[e.which]) 
+                var a=new act[e.which];
+    });
+
+    function getIndexesByThumbnailId(thumbnailId){
+
+        var found = false;
+        var sectionIndex=0;
+        var containerIndex=0;
+        var thumbnailIndex=0;
+
+        for (sectionIndex=0; sectionIndex < sectionsMap["sections"].length; sectionIndex++){
+            
+            containerList = sectionsMap["sections"][sectionIndex]["containers"];
+            for(containerIndex=0; containerIndex < containerList.length; containerIndex++){
+
+                thumbnailList = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"];
+                for(thumbnailIndex=0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+
+                    if (sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] == thumbnailId){
+                        found = true;
+                        break;
+                    }
+                }
+                if(found){break;}
+            }
+            if(found){break;}
+        }
+
+        return {
+            sectionIndex: sectionIndex,
+            containerIndex: containerIndex,
+            thumbnailIndex: thumbnailIndex
+        }
+    }
+
     /*
     Remove the old selection border
     Show the new selection border
     */
     function selectThumbnail(nextThumbnail){
-        nextThumbnailIndex = nextThumbnail.index();
-        nextContainer = nextThumbnail.parent();
-        nextContainerIndex = nextContainer.index();
-        nextSection = nextContainer.parent();
-        nextSectionIndex = nextSection.index();
-        // Remove selection border from all thumbnail on all containers
-        //currentSectionId = sectionsMap["section-id"];
+
+        // First remove the previous selection wherever it is
         currentSectionIndex = sectionsMap["current-section-index"];
-        currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"]
-        sectionsMap["sections"][currentSectionIndex]["current-container-index"] = nextContainerIndex
-        currentThumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["container-id"]
-        thumbnailClass = attributeMap["thumbnail-class"]
-        currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"]
-        currentThumbnails = $("#" + currentThumbnailContainerId + " ." + thumbnailClass)
-        currentThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-        // ---            
-        // put the selector border to the selected thumbnail
+        currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
+        currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"];
+        
+        thumbnailList = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["thumbnails"];
+        currentThumbnailId = thumbnailList[currentThumbnailIndex]["thumbnail-id"];
+        currentThumbnail = $("#" + currentThumbnailId);
+        currentThumbnail.css('border-color', 'transparent');
+
+        // Select the new thumbnail
+        nextThumbnailId = nextThumbnail.attr('id');
+        nextThumbnail = $("#" + nextThumbnailId);
         nextThumbnail.css('border-color', 'white');
-        // Refresh the thumbnail index
+
+        // Identify the new section/container/thumbnail and set them as current-
+        indexes = getIndexesByThumbnailId(nextThumbnailId);
+        nextSectionIndex = indexes["sectionIndex"];
+        nextContainerIndex = indexes["containerIndex"];
+        nextThumbnailIndex = indexes["thumbnailIndex"];
+
+        sectionsMap["current-section-index"] = nextSectionIndex
+        sectionsMap["sections"][nextSectionIndex]["current-container-index"] = nextContainerIndex
         sectionsMap["sections"][nextSectionIndex]["containers"][ nextContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
-        scrollThumbnails(nextContainer, nextThumbnailIndex);
+
+        scrollThumbnails(nextSectionIndex, nextContainerIndex, nextThumbnailIndex);
     }
-    
-    function scrollThumbnails(container, currentIndex) {
-        // does not mater which thumbnail
-        thumbnails = $('.' + attributeMap["thumbnail-class"]);
-        var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
-        var containerWidth = container.width();
-        var containerScrollLeft = container.scrollLeft();
+
+    function scrollThumbnails(sectionIndex, containerIndex, thumbnailIndex) {
+
+        thumbnailId = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"];
+        thumbnail = $("#" + thumbnailId);
+        thumbnailWidth = thumbnail.outerWidth(true);
+
+        containerId = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["container-id"]           
+        container = $("#" + containerId);
+        containerWidth = container.width();
+        containerScrollLeft = container.scrollLeft();
+
         var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
-        if (currentIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
-            container.animate({ scrollLeft: thumbnailWidth * (currentIndex - visibleThumbnails + 1) }, 200);
-            console.log(thumbnailWidth * (currentIndex - visibleThumbnails + 1) );
-        } else if (currentIndex < containerScrollLeft / thumbnailWidth) {
-            container.animate({ scrollLeft: thumbnailWidth * currentIndex }, 200);
-            console.log(thumbnailWidth * currentIndex);
-        }
+
+        if (thumbnailIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
+            container.animate({ scrollLeft: thumbnailWidth * (thumbnailIndex - visibleThumbnails + 1) }, 200);
+        } else if (thumbnailIndex < containerScrollLeft / thumbnailWidth) {
+            container.animate({ scrollLeft: thumbnailWidth * thumbnailIndex }, 200);
+        }    
+    }
+
+    /*
+    Rotates to right the the selection on the thumbnails
+    It stays in the same container
+    */
+    function go_right(){
+        currentSectionIndex = sectionsMap["current-section-index"];
+        currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
+        currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"];
+        
+        thumbnailList = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["thumbnails"];
+        currentThumbnailId = thumbnailList[currentThumbnailIndex]["thumbnail-id"];
+        currentThumbnail = $("#" + currentThumbnailId);
+        currentThumbnail.css('border-color', 'transparent');
+        nextThumbnailIndex = (currentThumbnailIndex + 1) % thumbnailList.length;
+        nextThumbnailId = thumbnailList[nextThumbnailIndex]["thumbnail-id"];
+        nextThumbnail = $("#" + nextThumbnailId);
+        nextThumbnail.css('border-color', 'white');
+        sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
+
+        scrollThumbnails(currentSectionIndex, currentContainerIndex, nextThumbnailIndex);
+    }
+
+    /*
+    Rotates to right the the selection on the thumbnails
+    It stays in the same container
+    */
+    function go_left(){
+        currentSectionIndex = sectionsMap["current-section-index"];
+        currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
+        currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"];
+        
+        thumbnailList = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["thumbnails"];
+        currentThumbnailId = thumbnailList[currentThumbnailIndex]["thumbnail-id"];
+        currentThumbnail = $("#" + currentThumbnailId);
+        currentThumbnail.css('border-color', 'transparent');
+        
+        nextThumbnailIndex = (currentThumbnailIndex - 1 + thumbnailList.length) % thumbnailList.length;
+        nextThumbnailId = thumbnailList[nextThumbnailIndex]["thumbnail-id"];
+        nextThumbnail = $("#" + nextThumbnailId);
+        nextThumbnail.css('border-color', 'white');
+        sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
+
+        scrollThumbnails(currentSectionIndex, currentContainerIndex, nextThumbnailIndex);
+    }
+
+    /*
+    Rotates the selection on the thumbnails to up to the previous container in the same section
+    */
+    function go_up(){
+        currentSectionIndex = sectionsMap["current-section-index"];
+        currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
+        containerList = sectionsMap["sections"][currentSectionIndex]["containers"];
+        
+        nextContainerIndex = (currentContainerIndex - 1 + containerList.length) % containerList.length;
+        nextThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["current-thumbnail-index"];
+        nextThumbnailId = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["thumbnails"][nextThumbnailIndex]["thumbnail-id"];
+        nextThumbnail = $("#" + nextThumbnailId);
+        selectThumbnail(nextThumbnail);
+    }
+
+    /*
+    Rotates the selection on the thumbnails to up to the previous container in the same section
+    */
+    function go_down(){
+        currentSectionIndex = sectionsMap["current-section-index"];
+        currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
+        containerList = sectionsMap["sections"][currentSectionIndex]["containers"];
+        nextContainerIndex = (currentContainerIndex + 1) % containerList.length;
+        nextThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["current-thumbnail-index"];
+        nextThumbnailId = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["thumbnails"][nextThumbnailIndex]["thumbnail-id"];
+        nextThumbnail = $("#" + nextThumbnailId);
+        selectThumbnail(nextThumbnail);
     }
 
     /*
@@ -204,7 +320,7 @@
             // Create thumbnail-container object
             thumbnailContainer = $('<div>', {
                 class: attributeMap["container-class"],
-                id: attributeMap["container-id"].format(sectionIndex0, containerIndex)
+                id: attributeMap["container-id"].format(sectionIndex, containerIndex)
             })
             sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
             sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["current-thumbnail-index"] = 0;
@@ -217,28 +333,6 @@
         sectionIndex = param["sectionIndex"];
         thumbnailSection = param["thumbnailSection"];
      
-   // var sectionsMap = 
-    // {
-    //     "current-section-index": 0,
-    //     "sections": [
-    //         {
-    //             "section-id": "section-0",
-    //             "current-container-index": 0,
-    //             "containers": [
-    //                 {                    
-    //                     "container-id": "section-0_container-0",
-    //                     "current-thumbnail-index": 0,
-    //                     "thumbnails": [
-    //                          {
-    //                              "thumbnail-id": "section-0_container-0_thumbnail-0"
-    //                          }
-    //                     ]
-    //                 },
-    //             ]
-    //         }
-    //     ]
-    // }        
-
         $.ajax({type: param["type"], url: param["url"], async: true,
             success: function(result){
 
@@ -267,7 +361,7 @@
                     // Create thumbnail
                     thumbnail = $("<div>", {
                         class: attributeMap["thumbnail-class"],
-                        id: attributeMap["thumbnail-id"].format(sectionIndex0, containerIndex, thumbnailIndex)
+                        id: attributeMap["thumbnail-id"].format(sectionIndex, containerIndex, thumbnailIndex)
                     });
 
                     sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
@@ -288,9 +382,11 @@
                     thumbnailContainer.append(thumbnail);
                 }               
 
-                //thumbnailSection.append($("<div>").text("hello"));
+                //
+                thumbnailSection.append($("<div>", {height: "30px"}).text("hello"));
 
-                    // Place thumbnail Container into thumbnail-section
+
+                // Place thumbnail Container into thumbnail-section
                 thumbnailSection.append(thumbnailContainer);
 
                 // selection border for the default first thumbnail - it is possible as at least one section container is done
@@ -304,10 +400,11 @@
         })
     }
 
-
     var defaultCurrentSectionIndex = 0;
     var defaultCurrentContainerIndex = 0;
     var defaultCurrentThumbnailIndex = 0;
+
+    var languageCode = 'hu';
 
     // ================================================
     // ================================================
@@ -331,16 +428,6 @@
         sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
         sectionsMap["sections"][sectionIndex0]["containers"] = [];
         sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
-        // {
-        //     "current-section-index": 0,
-        //     "sections": [
-        //         {
-        //             "section-id": "section-0",
-        //             "current-container-index": 0,
-        //             "containers": []
-        //          }
-        //     ]
-        // }
 
         // Place thumbnail-section into the thumbnail section
         $('#thumbnail-sections').append(thumbnailSection_0);
@@ -348,7 +435,7 @@
         // Drama container
         createNewContainer({
             type: "GET",
-            url: "/collect/standalone/movies/genre/drama/lang/hu",
+            url: "/collect/standalone/movies/genre/drama/lang/" + languageCode,
             sectionIndex: sectionIndex0,
             sectionsMap: sectionsMap,
             thumbnailSection: thumbnailSection_0
@@ -357,114 +444,14 @@
         // Action container
         createNewContainer({
             type: "GET",
-            url: "/collect/standalone/movies/genre/action/lang/hu",
+            url: "/collect/standalone/movies/genre/action/lang/" + languageCode,
             sectionIndex: sectionIndex0,
             sectionsMap: sectionsMap,
             thumbnailSection: thumbnailSection_0
         });
-   
+  
 
 // ---
-     
-        function go_right(){
-            currentSectionIndex = sectionsMap["current-section-index"];
-
-            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"]  
-            thumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["container-id"]
-
-            thumbnailClass = attributeMap["thumbnail-class"]
-            currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"]
-
-            thumbnails = $("#" + thumbnailContainerId + " ." + thumbnailClass)
-            thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-
-            nextThumbnailIndex = (currentThumbnailIndex + 1) % thumbnails.length;
-            sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
-            thumbnails.eq(nextThumbnailIndex).css('border-color', 'white');
-
-            nextThumbnail = thumbnails.eq(nextThumbnailIndex);
-            nextContainer = nextThumbnail.parent();
-
-            scrollThumbnails(nextContainer, nextThumbnailIndex);
-        }
-
-        function go_left(){
-            currentSectionIndex = sectionsMap["current-section-index"];
-            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"]  
-            thumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["container-id"]
-
-            thumbnailClass = attributeMap["thumbnail-class"]
-            currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"]
-
-            thumbnails = $("#" + thumbnailContainerId + " ." + thumbnailClass)
-            thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-
-            nextThumbnailIndex = (currentThumbnailIndex - 1 + thumbnails.length) % thumbnails.length;
-
-            sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
-            thumbnails.eq(nextThumbnailIndex).css('border-color', 'white');
-
-            nextThumbnail = thumbnails.eq(nextThumbnailIndex);
-            nextContainer = nextThumbnail.parent();
-
-            scrollThumbnails(nextContainer, nextThumbnailIndex);
-        }
-
-        function go_up(){
-            currentSectionIndex = sectionsMap["current-section-index"];
-            currentSectionId = sectionsMap["sections"][currentSectionIndex]["section-id"];
-            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
-            containerClass = attributeMap["container-class"];
-            containers = $("#" + currentSectionId + " ." + containerClass);
-
-            //
-            nextContainerIndex = (currentContainerIndex - 1 + containers.length) % containers.length;
-            //
-
-            nextThumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["container-id"];
-
-            thumbnailClass = attributeMap["thumbnail-class"];
-            nextThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["current-thumbnail-index"];
-
-            nextThumbnails = $("#" + nextThumbnailContainerId + " ." + thumbnailClass);
-            nextThumbnail = nextThumbnails.eq(nextThumbnailIndex);
-
-            selectThumbnail(nextThumbnail);
-        }
-
-        function go_down(){
-            currentSectionIndex = sectionsMap["current-section-index"];
-            currentSectionId = sectionsMap["sections"][currentSectionIndex]["section-id"];
-            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
-            containerClass = attributeMap["container-class"];
-            containers = $("#" + currentSectionId + " ." + containerClass);
-
-            //
-            nextContainerIndex = (currentContainerIndex + 1) % containers.length;
-            //
-
-            nextThumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["container-id"];
-
-            thumbnailClass = attributeMap["thumbnail-class"];
-            nextThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["current-thumbnail-index"];
-
-            nextThumbnails = $("#" + nextThumbnailContainerId + " ." + thumbnailClass);
-            nextThumbnail = nextThumbnails.eq(nextThumbnailIndex);
-
-            selectThumbnail(nextThumbnail);
-        }
-
-        $(document).on('keydown',function(e){
-            var act={37:go_left, 38:go_up, 39:go_right, 40:go_down};
-
-            //console.log(e.which)
-
-            if(act[e.which]) 
-                var a=new act[e.which];
-        });
-
-
-
 
     })
 
@@ -477,20 +464,6 @@
     <div id="errormessage"></div>
 
     <div id="thumbnail-sections"></div>
-<!--    <div id="thumbnail-section" class="thumbnail-section"> -->
-<!--        <div id="thumbnail-container"> -->
-<!--            <div class="thumbnail">
-                <img src="images/image3.jpg" alt="Thumbnail 7" />
-            </div>
--->            
-<!--        </div> -->
-<!--    </div> -->
-    
-<!--<div id="arrow-container">
-        <span id="left-arrow">&lt;</span>
-        <span id="right-arrow">&gt;</span>
-    </div>
--->
 
 </body>
 </html>
