@@ -71,19 +71,19 @@
 
     <script>
 
-  $('#right-arrow').click(function() {
-    thumbnails.eq(currentIndex).css('border-color', 'transparent');
-    currentIndex = (currentIndex + 1) % thumbnails.length;
-    thumbnails.eq(currentIndex).css('border-color', 'white');
-    scrollThumbnails();
-  });
+    $('#right-arrow').click(function() {
+        thumbnails.eq(currentIndex).css('border-color', 'transparent');
+        currentIndex = (currentIndex + 1) % thumbnails.length;
+        thumbnails.eq(currentIndex).css('border-color', 'white');
+        scrollThumbnails();
+    });
 
-  $('#left-arrow').click(function() {
-    thumbnails.eq(currentIndex).css('border-color', 'transparent');
-    currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
-    thumbnails.eq(currentIndex).css('border-color', 'white');
-    scrollThumbnails();
-  });
+    $('#left-arrow').click(function() {
+        thumbnails.eq(currentIndex).css('border-color', 'transparent');
+        currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+        thumbnails.eq(currentIndex).css('border-color', 'white');
+        scrollThumbnails();
+    });
 
     // var sectionMap_1 = 
     // {
@@ -98,6 +98,11 @@
     //         }
     //     ]
     // }
+
+    /*
+    Substitute substrings, similar to "Hello {0}".format("world") mechanizm
+    Usage: "hello {}".format("world")
+    */ 
     String.prototype.format = function () {
         var i = 0, args = arguments;
         return this.replace(/{}/g, function () {
@@ -111,41 +116,40 @@
         "container-class": "thumbnail-container",
         "thumbnail-class": "thumbnail",
         "section-id"     : "section-{}",
-        "container-id": "section-{}_container-{}",
-        
+        "container-id": "section-{}_container-{}",        
     }
 
-    var sectionMap_1 = {
-            "section-class": attributeMap["section-class"],
-            "container-class": attributeMap["container-class"],
-            "current-container-index": 0,
-            "containers": []
+    var sectionsMap = 
+    {
+        "current-section-index": 0,
+        "sections": []
     }
+
+    // var sectionsMap = 
+    // {
+    //     "current-section-index": 0,
+    //     "sections": [
+    //         {
+    //             "section-id": "section-0",
+    //             "current-container-index": 0,
+    //             "containers": [
+    //                 {                    
+    //                     "container-id": "section-0_container-0",
+    //                     "current-thumbnail-index": 0,
+    //                 },
+    //                 {                    
+    //                     "container-id": "section-0_container-1",
+    //                     "current-thumbnail-index": 0,
+    //                 },
+    //             ]
+    //         }
+    //     ]
+    // }
 
     var defaultCurrentSectionIndex = 0;
     var defaultCurrentContainerIndex = 0;
     var defaultCurrentThumbnailIndex = 0;
 
-    //var sectionMap_1 = 
-    // {
-    //     "section-class": "thumbnail-section",
-    //     "section-id": "section-0",
-    //     "container-class": "thumbnail-container",
-    //     "current-container-index": 0,
-    //     "containers": [
-    //         {                    
-    //             "container-id": "section-0_container-0",
-    //             "thumbnail-class": "thumbnail",
-    //             "current-thumbnail-index": 0,
-    //         },
-    //         {                    
-    //             "container-id": "section-0_container-1",
-    //             "thumbnail-class": "thumbnail",
-    //             "current-thumbnail-index": 0,
-    //         },
-    //     ]
-    // }
-    
     // ================================================
     // ================================================
     //
@@ -155,47 +159,67 @@
     // ================================================
     $(document).ready(function(){
 
-        // Create thumbnail-section
-        var sectionIndex = 0;
-        thumbnailSection_1 = $('<div>', {
-            id: attributeMap["section-id"].format(sectionIndex),
+        // Create a new thumbnail-section
+        sectionLength = sectionsMap["sections"].push({});
+        sectionIndex0 = sectionLength - 1;
+        sectionsMap["current-section-index"] = sectionIndex0;
+
+        thumbnailSection_0 = $('<div>', {
+            id: attributeMap["section-id"].format(sectionIndex0),
             class: attributeMap["section-class"],
         })
 
-        sectionMap_1["section-id"] = thumbnailSection_1.attr('id')
+        sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
+        sectionsMap["sections"][sectionIndex0]["containers"] = [];
+        sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
+        // {
+        //     "current-section-index": 0,
+        //     "sections": [
+        //         {
+        //             "section-id": "section-0",
+        //             "current-container-index": 0,
+        //             "containers": []
+        //          }
+        //     ]
+        // }
 
         // Place thumbnail-section into the thumbnail section
-        $('#thumbnail-sections').append(thumbnailSection_1);
+        $('#thumbnail-sections').append(thumbnailSection_0);
 
         // Get Standalone DRAMA movies and generate div for them inside #thumbnail-container' div
         $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
             success: function(result){
-//                containerIndex = 0;
-//                text = "";
-//
-//                // Create thumbnail-container
-//                 thumbnailContainer = $('<div>', {
-//                    class: attributeMap["container-class"],
-//                    id: attributeMap["container-id"].format(sectionIndex, containerIndex)
-//                })
 
                 text = "";
-
-                newLength = sectionMap_1["containers"].push({});
+                
+                // Add empty container to the container list in the section-0
+                newLength = sectionsMap["sections"][sectionIndex0]["containers"].push({});
                 containerIndex = newLength - 1;
 
-                // Create thumbnail-container
+                // Create thumbnail-container object
                 thumbnailContainer = $('<div>', {
                     class: attributeMap["container-class"],
-                    id: attributeMap["container-id"].format(sectionIndex, containerIndex)
+                    id: attributeMap["container-id"].format(sectionIndex0, containerIndex)
                 })
 
-                //sectionMap_1["current-container-index"] = containerIndex;
-                sectionMap_1["containers"].push({});
-                sectionMap_1["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
-                
-                sectionMap_1["containers"][containerIndex]["thumbnail-class"] = attributeMap["thumbnail-class"];
-                sectionMap_1["containers"][containerIndex]["current-thumbnail-index"] = 0
+                sectionsMap["sections"][sectionIndex0]["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
+                sectionsMap["sections"][sectionIndex0]["containers"][containerIndex]["current-thumbnail-index"] = 0
+
+                // {
+                //     "current-section-index": 0,
+                //     "sections": [
+                //         {
+                //             "section-id": "section-0",
+                //             "current-container-index": 0,
+                //             "containers": [
+                //                 {                    
+                //                     "container-id": "section-0_container-0",
+                //                     "current-thumbnail-index": 0,
+                //                 },
+                //             ]
+                //         }
+                //     ]
+                // }
 
                 for (i in result) {
                     record=result[i];
@@ -227,10 +251,10 @@
                 }               
 
                 // Place thumbnail Container into thumbnail-section
-                thumbnailSection_1.append(thumbnailContainer);
+                thumbnailSection_0.append(thumbnailContainer);
 
                 // selection border for the default first thumbnail - it is possible as at least one section container is done
-                defaultThumbnailContainerId = sectionMap_1["containers"][defaultCurrentContainerIndex]["container-id"];
+                defaultThumbnailContainerId = sectionsMap["sections"][sectionIndex0]["containers"][defaultCurrentContainerIndex]["container-id"];
                 thumbnailClass = attributeMap["thumbnail-class"];
                 defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
                 defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
@@ -244,106 +268,43 @@
         })
 
 // ---
-
-        // Get Standalone DRAMA movies and generate div for them inside #thumbnail-container' div
-        $.ajax({type: "GET", url: "/collect/standalone/movies/genre/drama/lang/hu", async: true,
-            success: function(result){
-                
-                text = "";
-
-                newLength = sectionMap_1["containers"].push({});
-                containerIndex = newLength - 1;
-
-                // Create thumbnail-container
-                thumbnailContainer = $('<div>', {
-                    class: attributeMap["container-class"],
-                    id: attributeMap["container-id"].format(sectionIndex, containerIndex)
-                })
-
-                sectionMap_1["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
-                
-                sectionMap_1["containers"][containerIndex]["thumbnail-class"] = attributeMap["thumbnail-class"];
-                sectionMap_1["containers"][containerIndex]["current-thumbnail-index"] = 0
-
-                for (i in result) {
-                    record=result[i];
-                    if ( record["title_req"] != null ){
-                        //orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
-                        orig_title = "";
-                        text += "Id: " + record["id"] + ", Title: " + record["title_req"] + " " + orig_title + "<br>";
-                    }else{
-                        text += "Id: " + record["id"] + ", Title: (Original [" + record["lang_orig"] + "]) " + record["title_orig"] + "<br>";
-                    }
-
-                    // Create image
-                    image = $('<img src="' + record["source_path"] + '/image.jpg" alt="Image 1">');
-                    
-                    // Create thumbnail
-                    thumbnail = $("<div>", {
-                        class: attributeMap["thumbnail-class"],
-                    })
-                    thumbnail.append(image);                 
-
-                    // mouse event for thumbnail
-                    thumbnail.click(function(){
-                        selectThumbnail($(this))
-                    });
-
-                    // Place thumbnail into thumbnail-container
-                    thumbnailContainer.append(thumbnail);
-                }               
-
-                // Place thumbnail Container into thumbnail-section
-                thumbnailSection_1.append(thumbnailContainer)
-
-                // selection border for the first thumbnail
-                defaultThumbnailContainerId = sectionMap_1["containers"][defaultCurrentContainerIndex]["container-id"];
-                thumbnailClass = attributeMap["thumbnail-class"];
-                defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
-                defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
-                selectThumbnail(defaultThumbnail);
-            },
-            error: function(xhr,status,error){
-                    $("#message").html("");
-                    $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
-//                    $("#spinner").hide();
-            }
-        })
      
         function go_right(){
-            currentContainerIndex = sectionMap_1["current-container-index"]  
-            thumbnailContainerId = sectionMap_1["containers"][currentContainerIndex]["container-id"]
+            currentSectionIndex = sectionsMap["current-section-index"];
+
+            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"]  
+            thumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["container-id"]
 
             thumbnailClass = attributeMap["thumbnail-class"]
-            currentThumbnailIndex = sectionMap_1["containers"][currentContainerIndex]["current-thumbnail-index"]
+            currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"]
 
             thumbnails = $("#" + thumbnailContainerId + " ." + thumbnailClass)
             thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
 
             nextThumbnailIndex = (currentThumbnailIndex + 1) % thumbnails.length;
-            sectionMap_1["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
+            sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
             thumbnails.eq(nextThumbnailIndex).css('border-color', 'white');
 
             nextThumbnail = thumbnails.eq(nextThumbnailIndex);
             nextContainer = nextThumbnail.parent();
 
             scrollThumbnails(nextContainer, nextThumbnailIndex);
-
         }
 
         function go_left(){
-
-            currentContainerIndex = sectionMap_1["current-container-index"]  
-            thumbnailContainerId = sectionMap_1["containers"][currentContainerIndex]["container-id"]
+            currentSectionIndex = sectionsMap["current-section-index"];
+            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"]  
+            thumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["container-id"]
 
             thumbnailClass = attributeMap["thumbnail-class"]
-            currentThumbnailIndex = sectionMap_1["containers"][currentContainerIndex]["current-thumbnail-index"]
+            currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"]
 
             thumbnails = $("#" + thumbnailContainerId + " ." + thumbnailClass)
             thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
 
             nextThumbnailIndex = (currentThumbnailIndex - 1 + thumbnails.length) % thumbnails.length;
-            sectionMap_1["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
+
+            sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
             thumbnails.eq(nextThumbnailIndex).css('border-color', 'white');
 
             nextThumbnail = thumbnails.eq(nextThumbnailIndex);
@@ -353,46 +314,44 @@
         }
 
         function go_up(){
+            currentSectionId = sectionsMap["section-id"];
+            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
             containerClass = attributeMap["container-class"];
-            sectionId = sectionMap_1["section-id"];
-
-            currentContainerIndex = sectionMap_1["current-container-index"];
-
-            containers = $("#" + sectionId + " ." + containerClass);
-
-            nextContainerIndex = (currentContainerIndex - 1 + containers.length) % containers.length;
+            containers = $("#" + currentSectionId + " ." + containerClass);
 
             //
+            nextContainerIndex = (currentContainerIndex - 1 + containers.length) % containers.length;
+            //
 
-            nextThumbnailContainerId = sectionMap_1["containers"][nextContainerIndex]["container-id"];
+            nextThumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["container-id"];
 
             thumbnailClass = attributeMap["thumbnail-class"];
-            nextThumbnailIndex = sectionMap_1["containers"][nextContainerIndex]["current-thumbnail-index"];
+            nextThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["current-thumbnail-index"];
 
             nextThumbnails = $("#" + nextThumbnailContainerId + " ." + thumbnailClass);
             nextThumbnail = nextThumbnails.eq(nextThumbnailIndex);
+
             selectThumbnail(nextThumbnail);
         }
 
         function go_down(){
+            currentSectionId = sectionsMap["section-id"];
+            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"];
             containerClass = attributeMap["container-class"];
-            sectionId = sectionMap_1["section-id"];
+            containers = $("#" + currentSectionId + " ." + containerClass);
 
-            currentContainerIndex = sectionMap_1["current-container-index"];
-
-            containers = $("#" + sectionId + " ." + containerClass);
-
+            //
             nextContainerIndex = (currentContainerIndex + 1) % containers.length;
-        
             //
 
-            nextThumbnailContainerId = sectionMap_1["containers"][nextContainerIndex]["container-id"];
+            nextThumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["container-id"];
 
             thumbnailClass = attributeMap["thumbnail-class"];
-            nextThumbnailIndex = sectionMap_1["containers"][nextContainerIndex]["current-thumbnail-index"];
+            nextThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][nextContainerIndex]["current-thumbnail-index"];
 
             nextThumbnails = $("#" + nextThumbnailContainerId + " ." + thumbnailClass);
             nextThumbnail = nextThumbnails.eq(nextThumbnailIndex);
+
             selectThumbnail(nextThumbnail);
         }
 
@@ -420,28 +379,25 @@
             nextSectionIndex = nextSection.index();
 
             // Remove selection border from all thumbnail on all containers
-
-            currentContainerIndex = sectionMap_1["current-container-index"]
-            sectionMap_1["current-container-index"] = nextContainerIndex
-            currentThumbnailContainerId = sectionMap_1["containers"][currentContainerIndex]["container-id"]
+            //currentSectionId = sectionsMap["section-id"];
+            currentSectionIndex = sectionsMap["current-section-index"];
+            currentContainerIndex = sectionsMap["sections"][currentSectionIndex]["current-container-index"]
+            sectionsMap["sections"][currentSectionIndex]["current-container-index"] = nextContainerIndex
+            currentThumbnailContainerId = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["container-id"]
 
             thumbnailClass = attributeMap["thumbnail-class"]
-            currentThumbnailIndex = sectionMap_1["containers"][currentContainerIndex]["current-thumbnail-index"]
+            currentThumbnailIndex = sectionsMap["sections"][currentSectionIndex]["containers"][currentContainerIndex]["current-thumbnail-index"]
 
             currentThumbnails = $("#" + currentThumbnailContainerId + " ." + thumbnailClass)
             currentThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-
 // ---            
-
             // put the selector border to the selected thumbnail
             nextThumbnail.css('border-color', 'white');
 
             // Refresh the thumbnail index
-            sectionMap_1["containers"][ nextContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
+            sectionsMap["sections"][nextSectionIndex]["containers"][ nextContainerIndex]["current-thumbnail-index"] = nextThumbnailIndex
 
             scrollThumbnails(nextContainer, nextThumbnailIndex);
-
-
         }
 
         function scrollThumbnails(container, currentIndex) {
