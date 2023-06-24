@@ -85,20 +85,6 @@
         scrollThumbnails();
     });
 
-    // var sectionMap_1 = 
-    // {
-    //     "currentContainerIndex": 0,
-    //     "id": "section-0",
-    //     "class": "thumbnail-section",
-    //     "containers": [
-    //         {
-    //             "currentThumbnailIndex": 0,
-    //             "id": "section-0_container-0",
-    //             "class": "thumbnail-container"
-    //         }
-    //     ]
-    // }
-
     /*
     Substitute substrings, similar to "Hello {0}".format("world") mechanizm
     Usage: "hello {}".format("world")
@@ -116,7 +102,8 @@
         "container-class": "thumbnail-container",
         "thumbnail-class": "thumbnail",
         "section-id"     : "section-{}",
-        "container-id": "section-{}_container-{}",        
+        "container-id": "section-{}_container-{}",
+        "thumbnail-id": "section-{}_container-{}_thumbnail-{}",
     }
 
     var sectionsMap = 
@@ -136,25 +123,16 @@
     //                 {                    
     //                     "container-id": "section-0_container-0",
     //                     "current-thumbnail-index": 0,
-    //                 },
-    //                 {                    
-    //                     "container-id": "section-0_container-1",
-    //                     "current-thumbnail-index": 0,
+    //                     "thumbnails": [
+    //                          {
+    //                              "thumbnail-id": "section-0_container-0_thumbnail-0"
+    //                          }
+    //                     ]
     //                 },
     //             ]
     //         }
     //     ]
     // }
-
-/*    createNewContainer({
-            type: "GET",
-            url: "/collect/standalone/movies/genre/drama/lang/hu",
-            result: function(record){
-
-            }
-        });
-*/
-
 
     /*
     Remove the old selection border
@@ -203,10 +181,9 @@
     /*
     type:
     url:
-    sectionsMap:
     sectionIndex:
+    sectionsMap:
     thumbnailSection:
-    method_on_record:
     */
     function createNewContainer(param){
      
@@ -218,7 +195,7 @@
                 selectThumbnail(defaultThumbnail);
         }
 
-        function addNewContainerToSection(sectionMap, sectionIndex, thumbnailSection){
+        function addNewContainerToSection(sectionsMap, sectionIndex){
         
            // Add an empty thumbnail-container to the container list
             newLength = sectionsMap["sections"][sectionIndex]["containers"].push({});
@@ -230,13 +207,37 @@
                 id: attributeMap["container-id"].format(sectionIndex0, containerIndex)
             })
             sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
-            sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["current-thumbnail-index"] = 0
+            sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["current-thumbnail-index"] = 0;
+            sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"] = [];
 
-            // Place thumbnail Container into thumbnail-section
-            thumbnailSection.append(thumbnailContainer);
-
-            return thumbnailContainer
+            return {containerIndex: containerIndex, thumbnailContainer: thumbnailContainer}
         }
+
+        sectionsMap = param["sectionsMap"];
+        sectionIndex = param["sectionIndex"];
+        thumbnailSection = param["thumbnailSection"];
+     
+   // var sectionsMap = 
+    // {
+    //     "current-section-index": 0,
+    //     "sections": [
+    //         {
+    //             "section-id": "section-0",
+    //             "current-container-index": 0,
+    //             "containers": [
+    //                 {                    
+    //                     "container-id": "section-0_container-0",
+    //                     "current-thumbnail-index": 0,
+    //                     "thumbnails": [
+    //                          {
+    //                              "thumbnail-id": "section-0_container-0_thumbnail-0"
+    //                          }
+    //                     ]
+    //                 },
+    //             ]
+    //         }
+    //     ]
+    // }        
 
         $.ajax({type: param["type"], url: param["url"], async: true,
             success: function(result){
@@ -244,7 +245,9 @@
                 text = "";
                 
                 // Add empty container to the container list and create and return thumbnail-container object
-                thumbnailContainer = addNewContainerToSection(param["sectionsMap"], param["sectionIndex"], param["thumbnailSection"]);
+                ret = addNewContainerToSection(sectionsMap, sectionIndex);
+                containerIndex = ret["containerIndex"];
+                thumbnailContainer = ret["thumbnailContainer"];
 
                 for (i in result) {
                     record=result[i];
@@ -257,14 +260,23 @@
                         text += "Id: " + record["id"] + ", Title: (Original [" + record["lang_orig"] + "]) " + record["title_orig"] + "<br>";
                     }
 
-                    // Create image
-                    image = $('<img src="' + record["source_path"] + '/image.jpg" alt="Image 1">');
-    
+                    // Add an empty thumbnail to the thumbnail list
+                    newLength = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]['thumbnails'].push({});
+                    thumbnailIndex = newLength - 1;
+   
                     // Create thumbnail
                     thumbnail = $("<div>", {
                         class: attributeMap["thumbnail-class"],
-                    })
+                        id: attributeMap["thumbnail-id"].format(sectionIndex0, containerIndex, thumbnailIndex)
+                    });
 
+                    sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
+
+                    // Create image
+                    image = $("<img>",{
+                        src: record["source_path"] + '/image.jpg',
+                        alt: "Image 1"
+                    });
                     thumbnail.append(image);                 
 
                     // mouse event for thumbnail
@@ -275,6 +287,11 @@
                     // Place thumbnail into thumbnail-container
                     thumbnailContainer.append(thumbnail);
                 }               
+
+                //thumbnailSection.append($("<div>").text("hello"));
+
+                    // Place thumbnail Container into thumbnail-section
+                thumbnailSection.append(thumbnailContainer);
 
                 // selection border for the default first thumbnail - it is possible as at least one section container is done
                 selectDefaultThumbnail(param["sectionsMap"]);
@@ -332,8 +349,8 @@
         createNewContainer({
             type: "GET",
             url: "/collect/standalone/movies/genre/drama/lang/hu",
-            sectionsMap: sectionsMap,
             sectionIndex: sectionIndex0,
+            sectionsMap: sectionsMap,
             thumbnailSection: thumbnailSection_0
         });
         
@@ -341,8 +358,8 @@
         createNewContainer({
             type: "GET",
             url: "/collect/standalone/movies/genre/action/lang/hu",
-            sectionsMap: sectionsMap,
             sectionIndex: sectionIndex0,
+            sectionsMap: sectionsMap,
             thumbnailSection: thumbnailSection_0
         });
    
