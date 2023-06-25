@@ -9,37 +9,89 @@
     <style>
 
         :root {
-            --thumbnail-width: 300px;
             --container-height: 250px;
             --selector-border-width: 6px; 
             --tmp-border-width: 10px;
+            --background-image: "";
         }
 
         #detail-screen{
             /*height: 600px;*/
             height: 60%;
             width: 100%;
-            background-color: gray;
+
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+
+            background-color: rgb(255, 255, 255);
             border: var(--tmp-border-width) green solid;
-            box-sizing:border-box;
+            box-sizing:border-box;            
         }
 
-        #detail-image{
+        #detail-text-div{
             height: 100%;
+            width: 50%;
+
+            font-family: 'Brush Script MT', cursive;
+            
+/*            background-color: aquamarine;*/
+
+            background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
         }
 
-        #detail-title{
-            position: absolute;
+        #detail-text-title{
+            position: relative;
             top:10px;
-            right: 80px;
+            left: 10px;
             text-shadow: 
                 0px 0px 20px black;
-
-            font-family: cursive;
             font-weight: bold;
             font-size: 70px;
             color: white;
         }
+
+
+        /* #example2 {
+  border: 2px solid black;
+  padding: 25px;
+  width: 1200px;
+  height: 600px;
+  background: url(MEDIA/01.Movie/01.Standalone/A.Kenguru-1976/image.jpg);
+  background-repeat: no-repeat;
+  background-size: contain;
+        } */
+
+
+        #detail-image-div{
+            height: 100%;
+            width: 50%;
+
+
+/*    border: 2px solid black;            */
+/*            width: 900px;
+            height: 600px;
+*/            
+/*            background-color: gold;*/
+/*            background: url(MEDIA/01.Movie/01.Standalone/A.Kenguru-1976/image.jpg);*/
+
+            background: var(--background-image);
+            box-shadow: inset 100px 0 40px 0 #FFF;
+            background-position: right top;
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+
+/*        #detail-image{
+            height: 100%;
+            width: 100%;
+            object-fit: contain;
+        }
+*/
+
+
+
+
 
         .thumbnail-section {
             height: 40%;
@@ -50,12 +102,22 @@
             border:var(--tmp-border-width) red solid;
             width: 100%;
             box-sizing:border-box;
+
+            background-color: rgb(77, 77, 77);
+        }
+
+        .thumbnail-container-title{
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 30px;
+            color: black;
         }
 
         .thumbnail-container {
             width: 100%;
-            height: var(--container-height);
-            min-height: var(--container-height);
+            height: var(--container-height); 
+            min-height: var(--container-height); 
+
             overflow: hidden; 
             display: flex;
             flex-direction: row;
@@ -64,11 +126,12 @@
             align-items: flex-start;
             border:var(--tmp-border-width) blue solid;
             box-sizing:border-box;
+
+            background-color: rgb(77, 77, 77);
         }
 
         .thumbnail {
-        /*    width: var(--width); */
-            height: 100%; /*var(--height);*/
+            height: 100%;         
             margin: 0px;
             border: var(--selector-border-width) solid transparent;
             background-color: black;
@@ -80,9 +143,14 @@
         }
 
         .thumbnail img {
-            width: var(--thumbnail-width);
-            height: auto;
-            /*max-height: var(--height);  */
+/*            width: var(--image-width);
+            height: var(--image-height);
+*/
+/*            height: 100%;            */
+            width: 300px;
+            height: 250px;
+            max-height: var(--image-height);
+            object-fit: contain;
         }        
 
 #left-arrow,
@@ -104,17 +172,21 @@
 
     <script>
 
-    const thumbnail_width = 300;
-    const container_height = 250;
-    const selector_border_width = 6;
-    const tmp_border_width = 10;
+
+    const selector_border_width = 4;
+    const tmp_border_width = 1;
+    const image_height = 250;
+    const container_height = image_height + (2*selector_border_width) + (2*tmp_border_width);
 
     var t = document.querySelector(':root');
-    t.style.setProperty('--thumbnail-width', thumbnail_width+'px');
+
     t.style.setProperty('--container-height', container_height + 'px');
     t.style.setProperty('--selector-border-width', selector_border_width + 'px'); 
+    t.style.setProperty('--image-height', image_height + 'px');
     t.style.setProperty('--tmp-border-width', tmp_border_width + 'px');
-//    t.style.setProperty('--height', '250px');
+
+/*    t.style.setProperty('--image-width', image_width+'px');
+    t.style.setProperty('--image-height', image_height+'px');*/
 
     $('#right-arrow').click(function() {
         thumbnails.eq(currentIndex).css('border-color', 'transparent');
@@ -222,39 +294,6 @@
         }
     }
    
-    // function getIndexesByThumbnailId(thumbnailId){
-
-    //     mygetIndexesByThumbnailId(thumbnailId);
-    //     var found = false;
-    //     var sectionIndex=0;
-    //     var containerIndex=0;
-    //     var thumbnailIndex=0;
-
-    //     for (sectionIndex=0; sectionIndex < sectionsMap["sections"].length; sectionIndex++){
-            
-    //         containerList = sectionsMap["sections"][sectionIndex]["containers"];
-    //         for(containerIndex=0; containerIndex < containerList.length; containerIndex++){
-
-    //             thumbnailList = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"];
-    //             for(thumbnailIndex=0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
-
-    //                 if (sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] == thumbnailId){
-    //                     found = true;
-    //                     break;
-    //                 }
-    //             }
-    //             if(found){break;}
-    //         }
-    //         if(found){break;}
-    //     }
-
-    //     return {
-    //         sectionIndex: sectionIndex,
-    //         containerIndex: containerIndex,
-    //         thumbnailIndex: thumbnailIndex
-    //     }
-    // }
-
     /*
     Remove the old selection border
     Show the new selection border
@@ -291,14 +330,38 @@
 
     function scrollThumbnails(sectionIndex, containerIndex, thumbnailIndex) {
 
+        // Vertical adjustment
+        containerId = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["container-id"]           
+        container = $("#" + containerId);
+
+        containerHeight = container.outerHeight(true);
+
+
+
+
+        sectionId = sectionsMap["sections"][sectionIndex]["section-id"]
+        section = $("#" + sectionId);
+        sectionHeight = section.outerHeight(true);
+
+        sectionHeight = section.height();
+        sectionScrollTop = section.scrollTop();        
+        
+        visibleContainers = Math.floor(sectionHeight / containerHeight);
+
+        if (containerIndex >= visibleContainers + sectionScrollTop / containerHeight) {
+            section.animate({ scrollTop: containerHeight * (containerIndex - visibleContainers + 1) }, 200);
+        } else if (containerIndex < sectionScrollTop / containerHeight) {
+            section.animate({ scrollTop: containerHeight * containerIndex }, 200);
+        }
+
+
+        // Horizontal adjustment
         thumbnailId = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"];
         thumbnail = $("#" + thumbnailId);
         thumbnailWidth = thumbnail.outerWidth(true);
 
-        containerId = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["container-id"]           
-        container = $("#" + containerId);
         containerWidth = container.width();
-        containerScrollLeft = container.scrollLeft();
+        containerScrollLeft = container.scrollLeft();        
 
         var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
 
@@ -392,12 +455,20 @@
         title_orig = thumbnail.children('img').attr('title_orig')
         lang_orig = thumbnail.children('img').attr('lang_orig')
         
-        $('#detail-image').attr("src", src);
-        
+//        $('#detail-image').attr("src", src);
+  
+//        $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+//        $('#detail-image-div').css("background", "url(" + src + ") no-repeat");
+  
+        // For an unknown reason only this solution works
+        // if I run the below command, it will not resize the image
+        // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+        t.style.setProperty('--background-image', "url(" + src + ")");
+
         if(title){
-            $('#detail-title').text(title);
+            $('#detail-text-title').text(title);
         }else{
-            $('#detail-title').text(title_orig);            
+            $('#detail-text-title').text(title_orig);            
         }
         
         // src: source_path + '/image.jpg',
@@ -521,9 +592,12 @@
                     // t.style.setProperty('----thumbnail-width', thumbnail_width + 'px');
                 }               
 
-                //
-                section.append($("<div>", {height: "30px"}).text("hello"));
-
+                // Append genre name before the container
+                genre = $("<div>",{
+                    class: "thumbnail-container-title",
+                    text: "hello"
+                });
+                section.append(genre);
 
                 // Place thumbnail Container into thumbnail-section
                 section.append(thumbnailContainer);
@@ -600,8 +674,13 @@
 <body style="background-color:DarkGrey;">
 
     <div id="detail-screen">
-        <img id="detail-image"/>
-        <div id="detail-title"></div>
+        <div id="detail-text-div">
+            <div id="detail-text-title"></div>
+        </div>
+        <div id="detail-image-div">
+<!--            <img id="detail-image"> -->
+        </div>
+
     </div>
 
 
@@ -609,5 +688,6 @@
 
     <div id="message"></div>
     <div id="errormessage"></div>
+    
 </body>
 </html>
