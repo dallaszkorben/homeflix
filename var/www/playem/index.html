@@ -8,39 +8,81 @@
 
     <style>
 
-        .thumbnail-section {
-            border:3px red solid;
+        :root {
+            --thumbnail-width: 300px;
+            --container-height: 250px;
+            --selector-border-width: 6px; 
+            --tmp-border-width: 10px;
+        }
+
+        #detail-screen{
+            /*height: 600px;*/
+            height: 60%;
             width: 100%;
+            background-color: gray;
+            border: var(--tmp-border-width) green solid;
+            box-sizing:border-box;
+        }
+
+        #detail-image{
+            height: 100%;
+        }
+
+        #detail-title{
+            position: absolute;
+            top:10px;
+            right: 80px;
+            text-shadow: 
+                0px 0px 20px black;
+
+            font-family: cursive;
+            font-weight: bold;
+            font-size: 70px;
+            color: white;
+        }
+
+        .thumbnail-section {
+            height: 40%;
+            display: flex;
+            flex-wrap: nowrap;
+            flex-direction: column;
+            overflow: hidden; 
+            border:var(--tmp-border-width) red solid;
+            width: 100%;
+            box-sizing:border-box;
         }
 
         .thumbnail-container {
             width: 100%;
+            height: var(--container-height);
+            min-height: var(--container-height);
             overflow: hidden; 
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
             justify-content: flex-start;
             align-items: flex-start;
-            border:3px blue solid;
+            border:var(--tmp-border-width) blue solid;
             box-sizing:border-box;
         }
 
         .thumbnail {
-            width: 400px;
-            height: 300;
+        /*    width: var(--width); */
+            height: 100%; /*var(--height);*/
             margin: 0px;
-            border: 3px solid transparent;
+            border: var(--selector-border-width) solid transparent;
             background-color: black;
   
             display: flex;
             justify-content: center;
             align-items: center;
+            box-sizing:border-box;
         }
 
         .thumbnail img {
-            width: 400px;
+            width: var(--thumbnail-width);
             height: auto;
-            max-height: 300px;
+            /*max-height: var(--height);  */
         }        
 
 #left-arrow,
@@ -61,6 +103,18 @@
     <link rel="stylesheet" href="script/jquery-ui/jquery-ui.css">
 
     <script>
+
+    const thumbnail_width = 300;
+    const container_height = 250;
+    const selector_border_width = 6;
+    const tmp_border_width = 10;
+
+    var t = document.querySelector(':root');
+    t.style.setProperty('--thumbnail-width', thumbnail_width+'px');
+    t.style.setProperty('--container-height', container_height + 'px');
+    t.style.setProperty('--selector-border-width', selector_border_width + 'px'); 
+    t.style.setProperty('--tmp-border-width', tmp_border_width + 'px');
+//    t.style.setProperty('--height', '250px');
 
     $('#right-arrow').click(function() {
         thumbnails.eq(currentIndex).css('border-color', 'transparent');
@@ -136,35 +190,70 @@
 
     function getIndexesByThumbnailId(thumbnailId){
 
-        var found = false;
-        var sectionIndex=0;
-        var containerIndex=0;
-        var thumbnailIndex=0;
+        // Searching elements in the DOM makes a little bit faster than go through in the sectionMap
+        thumbnail = $("#" + nextThumbnailId);        
+        container = thumbnail.closest('div.' + attributeMap["container-class"]).eq(0);
+        containerId = container.attr('id');
+        section = container.closest('div.' + attributeMap["section-class"]).eq(0);
+        sectionId = section.attr('id');
 
-        for (sectionIndex=0; sectionIndex < sectionsMap["sections"].length; sectionIndex++){
-            
-            containerList = sectionsMap["sections"][sectionIndex]["containers"];
-            for(containerIndex=0; containerIndex < containerList.length; containerIndex++){
-
-                thumbnailList = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"];
-                for(thumbnailIndex=0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
-
-                    if (sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] == thumbnailId){
-                        found = true;
-                        break;
-                    }
-                }
-                if(found){break;}
+        // And now I go back to the sectionMap
+        for (sectionIndex=0; sectionIndex < sectionsMap['sections'].length; sectionIndex++){
+            if(sectionsMap['sections'][sectionIndex]['section-id'] == sectionId){
+                break;
             }
-            if(found){break;}
         }
 
+        for (containerIndex=0; containerIndex < sectionsMap['sections'][sectionIndex]['containers'].length; containerIndex++){
+            if(sectionsMap['sections'][sectionIndex]['containers'][containerIndex]['container-id'] == containerId){
+                break;
+            }
+        }
+
+        for (thumbnailIndex=0; thumbnailIndex < sectionsMap['sections'][sectionIndex]['containers'][containerIndex]['thumbnails'].length; thumbnailIndex++){
+            if(sectionsMap['sections'][sectionIndex]['containers'][containerIndex]['thumbnails'][thumbnailIndex]['thumbnail-id'] == thumbnailId){
+                break;
+            }
+        }
         return {
             sectionIndex: sectionIndex,
             containerIndex: containerIndex,
             thumbnailIndex: thumbnailIndex
         }
     }
+   
+    // function getIndexesByThumbnailId(thumbnailId){
+
+    //     mygetIndexesByThumbnailId(thumbnailId);
+    //     var found = false;
+    //     var sectionIndex=0;
+    //     var containerIndex=0;
+    //     var thumbnailIndex=0;
+
+    //     for (sectionIndex=0; sectionIndex < sectionsMap["sections"].length; sectionIndex++){
+            
+    //         containerList = sectionsMap["sections"][sectionIndex]["containers"];
+    //         for(containerIndex=0; containerIndex < containerList.length; containerIndex++){
+
+    //             thumbnailList = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"];
+    //             for(thumbnailIndex=0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+
+    //                 if (sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] == thumbnailId){
+    //                     found = true;
+    //                     break;
+    //                 }
+    //             }
+    //             if(found){break;}
+    //         }
+    //         if(found){break;}
+    //     }
+
+    //     return {
+    //         sectionIndex: sectionIndex,
+    //         containerIndex: containerIndex,
+    //         thumbnailIndex: thumbnailIndex
+    //     }
+    // }
 
     /*
     Remove the old selection border
@@ -217,7 +306,9 @@
             container.animate({ scrollLeft: thumbnailWidth * (thumbnailIndex - visibleThumbnails + 1) }, 200);
         } else if (thumbnailIndex < containerScrollLeft / thumbnailWidth) {
             container.animate({ scrollLeft: thumbnailWidth * thumbnailIndex }, 200);
-        }    
+        }
+        
+        showDetails(thumbnail);
     }
 
     /*
@@ -294,6 +385,31 @@
         selectThumbnail(nextThumbnail);
     }
 
+    function showDetails(thumbnail){
+        //$('#detail-screen').html("");        
+        src = thumbnail.children('img').attr('src')
+        title = thumbnail.children('img').attr('title')
+        title_orig = thumbnail.children('img').attr('title_orig')
+        lang_orig = thumbnail.children('img').attr('lang_orig')
+        
+        $('#detail-image').attr("src", src);
+        
+        if(title){
+            $('#detail-title').text(title);
+        }else{
+            $('#detail-title').text(title_orig);            
+        }
+        
+        // src: source_path + '/image.jpg',
+        //                 alt: "Image 1",
+        //                 title: title,
+        //                 title_orig: title_orig,
+        //                 lang_orig: lang_orig,
+        //                 card_id: card_id,
+        //                 source_path: source_path,
+    }
+
+
     /*
     type:
     url:
@@ -304,7 +420,7 @@
     function createNewContainer(param){
      
         function selectDefaultThumbnail(sectionsMap){
-                defaultThumbnailContainerId = sectionsMap["sections"][sectionIndex0]["containers"][defaultCurrentContainerIndex]["container-id"];
+                defaultThumbnailContainerId = sectionsMap["sections"][sectionIndex]["containers"][defaultCurrentContainerIndex]["container-id"];
                 thumbnailClass = attributeMap["thumbnail-class"];
                 defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
                 defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
@@ -331,7 +447,7 @@
 
         sectionsMap = param["sectionsMap"];
         sectionIndex = param["sectionIndex"];
-        thumbnailSection = param["thumbnailSection"];
+        section = param["section"];
      
         $.ajax({type: param["type"], url: param["url"], async: true,
             success: function(result){
@@ -346,12 +462,18 @@
                 for (i in result) {
                     record=result[i];
 
+                    card_id = record["id"];
+                    source_path = record["source_path"];
+                    
+                    title = "";
+                    title_orig = "";
+                    lang_orig = "";
                     if ( record["title_req"] != null ){
-                        //orig_title = "(Original [{1}]: {0})".format(record["title_orig"], record["lang_orig"]) if record["title_orig"] else ""
-                        orig_title = "";
-                        text += "Id: " + record["id"] + ", Title: " + record["title_req"] + " " + orig_title + "<br>";
-                    }else{
-                        text += "Id: " + record["id"] + ", Title: (Original [" + record["lang_orig"] + "]) " + record["title_orig"] + "<br>";
+                        title = record["title_req"];
+                    }
+                    if ( record["title_orig"] != null ){
+                        title_orig = record["title_orig"];
+                        lang_orig = record["lang_orig"];
                     }
 
                     // Add an empty thumbnail to the thumbnail list
@@ -365,11 +487,18 @@
                     });
 
                     sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
+//                    sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["title"] = title;
+//                    sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["title"] = title;
 
                     // Create image
                     image = $("<img>",{
-                        src: record["source_path"] + '/image.jpg',
-                        alt: "Image 1"
+                        src: source_path + '/image.jpg',
+                        alt: "Image 1",
+                        title: title,
+                        title_orig: title_orig,
+                        lang_orig: lang_orig,
+                        card_id: card_id,
+                        source_path: source_path,
                     });
                     thumbnail.append(image);                 
 
@@ -380,14 +509,24 @@
 
                     // Place thumbnail into thumbnail-container
                     thumbnailContainer.append(thumbnail);
+
+                    // width = image.prop('naturalWidth');
+                    // height = image.prop('naturalHeight');
+                    // if (height > width){
+                    //     ratio = width/height;
+                    //     thumbailWidth = parseInt(height * ratio)
+                    // }else{
+                    //     thumbleWidth = thumbnail_width
+                    // }
+                    // t.style.setProperty('----thumbnail-width', thumbnail_width + 'px');
                 }               
 
                 //
-                thumbnailSection.append($("<div>", {height: "30px"}).text("hello"));
+                section.append($("<div>", {height: "30px"}).text("hello"));
 
 
                 // Place thumbnail Container into thumbnail-section
-                thumbnailSection.append(thumbnailContainer);
+                section.append(thumbnailContainer);
 
                 // selection border for the default first thumbnail - it is possible as at least one section container is done
                 selectDefaultThumbnail(param["sectionsMap"]);
@@ -436,18 +575,18 @@
         createNewContainer({
             type: "GET",
             url: "/collect/standalone/movies/genre/drama/lang/" + languageCode,
+            section: thumbnailSection_0,
             sectionIndex: sectionIndex0,
             sectionsMap: sectionsMap,
-            thumbnailSection: thumbnailSection_0
         });
         
         // Action container
         createNewContainer({
             type: "GET",
             url: "/collect/standalone/movies/genre/action/lang/" + languageCode,
+            section: thumbnailSection_0,
             sectionIndex: sectionIndex0,
             sectionsMap: sectionsMap,
-            thumbnailSection: thumbnailSection_0
         });
   
 
@@ -460,10 +599,15 @@
 </head>
 <body style="background-color:DarkGrey;">
 
-    <div id="message"></div>
-    <div id="errormessage"></div>
+    <div id="detail-screen">
+        <img id="detail-image"/>
+        <div id="detail-title"></div>
+    </div>
+
 
     <div id="thumbnail-sections"></div>
 
+    <div id="message"></div>
+    <div id="errormessage"></div>
 </body>
 </html>

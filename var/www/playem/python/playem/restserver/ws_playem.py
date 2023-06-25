@@ -23,6 +23,7 @@ from playem.config.config import getConfig
 
 from playem.restserver.view_info import InfoView
 from playem.restserver.view_collect import CollectView
+from playem.restserver.view_translate import TranslateView
 
 class WSPlayem(Flask):
 
@@ -56,6 +57,7 @@ class WSPlayem(Flask):
         # register the end-points
         InfoView.register(self.app, init_argument=self)
         CollectView.register(self.app, init_argument=self)
+        TranslateView.register(self.app, init_argument=self)
 
         self.db=DB()
 
