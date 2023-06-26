@@ -124,3 +124,62 @@ $(document).ready(function() {
 });
 
 ```
+
+### 4. Show and fit image to a DIV background while keep the aspect ratio:
+The idea was the following:
+
+CSS:
+```javascript
+<style>
+    #detail-image-div{
+        height: 100%;
+        width: 50%;
+
+        background: url(MEDIA/01.Movie/01.Standalone/A.Kenguru-1976/image.jpg);*/
+        background-position: right top;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+</style>
+```
+
+It works OK when the image url is hard coded.
+
+But when I want to change it dynamically in javascript, the image does not fit to the div container size and somehow it forget the "no-repeat"
+
+jQuery:
+```javascript
+src = thumbnail.children('img').attr('src')
+$('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+```
+
+So it needed an alternative way to make it work:
+
+CSS:
+```javascript
+<style>
+    :root {
+        --background-image: "";
+    }
+
+    #detail-image-div{
+        height: 100%;
+        width: 50%;
+
+        background: var(--background-image);
+        background-position: right top;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+</style>
+```
+
+jQuery:
+```javascript
+    var t = document.querySelector(':root');
+
+    ...
+
+    src = thumbnail.children('img').attr('src')
+    t.style.setProperty('--background-image', "url(" + src + ")");
+```
