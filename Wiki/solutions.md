@@ -1,9 +1,5 @@
-# playem
-web media player
-
-
-## Solutions
-### 1. Using the Flask, every second time whey I tried to create a new cursor (self.conn.cursor) to send SQL query, an error message appeared:
+# Solutions
+## 1. Using the Flask, every second time whey I tried to create a new cursor (self.conn.cursor) to send SQL query, an error message appeared:
 ```sh
 sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread. The object was created in thread id 140499707700800 and this is thread id 140499674129984.
 ```
@@ -22,7 +18,7 @@ self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
 
 
 
-### 2. Media selector:
+## 2. Media selector:
 
 HTML:
 ```javascript
@@ -125,7 +121,7 @@ $(document).ready(function() {
 
 ```
 
-### 4. Show and fit image to a DIV background while keep the aspect ratio:
+## 3. Show and fit image to a DIV background while keep the aspect ratio:
 The idea was the following:
 
 CSS:
@@ -174,8 +170,7 @@ CSS:
 </style>
 ```
 
-jQuery:
-```javascript
+jQuery:```javascript
     var t = document.querySelector(':root');
 
     ...
