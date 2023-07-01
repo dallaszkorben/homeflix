@@ -17,7 +17,7 @@
 
         #detail-screen{
             /*height: 600px;*/
-            height: 60%;
+            height: 50%;
             width: 100%;
 
             display: flex;
@@ -35,9 +35,9 @@
 
             font-family: 'Brush Script MT', cursive;
             
-/*            background-color: aquamarine;*/
-
+/*            background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);*/
             background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
+
         }
 
         #detail-text-title{
@@ -75,11 +75,15 @@
 /*            background-color: gold;*/
 /*            background: url(MEDIA/01.Movie/01.Standalone/A.Kenguru-1976/image.jpg);*/
 
+
+
             background: var(--background-image);
-            box-shadow: inset 100px 0 40px 0 #FFF;
+            box-shadow: inset 100px -100px 40px 0 #FFF;
             background-position: right top;
             background-repeat: no-repeat;
             background-size: contain;
+
+
         }
 
 /*        #detail-image{
@@ -251,6 +255,8 @@
     //     ]
     // }
 
+    let containerFocusEvent = new Event("hello", {bubbles: true});
+
     $(document).on('keydown',function(e){
             var act={37:go_left, 38:go_up, 39:go_right, 40:go_down};
 
@@ -337,8 +343,6 @@
         containerHeight = container.outerHeight(true);
 
 
-
-
         sectionId = sectionsMap["sections"][sectionIndex]["section-id"]
         section = $("#" + sectionId);
         sectionHeight = section.outerHeight(true);
@@ -371,7 +375,10 @@
             container.animate({ scrollLeft: thumbnailWidth * thumbnailIndex }, 200);
         }
         
-        showDetails(thumbnail);
+        thumbnail.trigger("containerFocusEvent");
+        //thumbnail.focus();     
+        
+//        showDetails(thumbnail);
     }
 
     /*
@@ -448,6 +455,11 @@
         selectThumbnail(nextThumbnail);
     }
 
+
+
+
+
+
     function showDetails(thumbnail){
         //$('#detail-screen').html("");        
         src = thumbnail.children('img').attr('src')
@@ -481,6 +493,302 @@
     }
 
 
+
+
+
+
+
+
+
+
+
+// ---
+
+
+
+
+    /*
+    Collects data for Container Boxes and when it is done, it shows them in the Container
+    
+    Parameters
+    sectionMap : A map where the thumbnail hierarchy is stored
+    sectionIndex : The index of the HTML's thumbnail-section <div> (inside the thumbnal-sections <div>) where the new Container should go
+    */
+    class Container{
+        constructor(sectionsMap, attributeMap, sectionIndex, section){
+            this.sectionsMap = sectionsMap;
+            this.attributeMap = attributeMap;
+            this.sectionIndex = sectionIndex;
+            this.section = section;
+        }
+
+        addNewContainerToSection(){
+        
+            // Add an empty thumbnail-container to the container list
+            var newLength = this.sectionsMap["sections"][this.sectionIndex]["containers"].push({});
+            var containerIndex = newLength - 1;
+
+            // Create thumbnail-container object
+            var thumbnailContainer = $('<div>', {
+                class: this.attributeMap["container-class"],
+                id: this.attributeMap["container-id"].format(this.sectionIndex, containerIndex)
+            })
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["current-thumbnail-index"] = 0;
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["thumbnails"] = [];
+
+            return {containerIndex: containerIndex, thumbnailContainer: thumbnailContainer}
+        }
+
+        selectDefaultThumbnail(){
+            var defaultThumbnailContainerId = this.sectionsMap["sections"][this.sectionIndex]["containers"][defaultCurrentContainerIndex]["container-id"];
+            var thumbnailClass = this.attributeMap["thumbnail-class"];
+            var defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
+            var defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
+            selectThumbnail(defaultThumbnail);                                
+        }
+
+        /*
+        This method should be called if all data was collected to be able to show the container
+        The boxess is a list of box
+        The box is a dictionary with:
+        "text", 
+        "image", 
+        "fn_focus", 
+        "fn_select"
+        */
+        ready(boxes){
+
+            // Add empty container to the container list and create and return thumbnail-container object
+            var ret = this.addNewContainerToSection(this.sectionsMap, this.sectionIndex);
+            var containerIndex = ret["containerIndex"];
+            var thumbnailContainer = ret["thumbnailContainer"];
+
+            for(var box in boxes){
+                
+                // card_id = record["id"];
+                // source_path = record["source_path"];
+                // title = record["title"];
+                // title_orig = record["title_orig"];
+                // lang_orig = record["lang_orig"];
+
+                // Add an empty thumbnail to the thumbnail list
+                var newLength = sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]['thumbnails'].push({});
+                var thumbnailIndex = newLength - 1;
+   
+                // Create thumbnail
+                var thumbnail = $("<div>", {
+                    class: attributeMap["thumbnail-class"],
+                    id: attributeMap["thumbnail-id"].format(this.sectionIndex, containerIndex, thumbnailIndex)
+                });
+
+                sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
+
+// Add Text to image
+
+                // Create image
+                var image = $("<img>",{
+                    src: boxes[box].getImage(),
+                    alt: "Image",
+                });
+                thumbnail.append(image);                 
+
+                // CLICK/SELECT event for thumbnail
+                // This special mechanism needed, otherwise the Function On Select always on the LATEST boxes[box] would be executed
+                // thumbnail.click(function(){
+                //     boxes[box].getFunctionOnSelect()();
+                // });
+                thumbnail.click((function(actualBox){
+                    return function(){
+                        actualBox.getFunctionOnSelect()();
+                    }
+                })(boxes[box]));
+
+                //FOCUS event for thumbnail
+                // This special mechanism needed, otherwise the Function On Container Focus always on the LATEST boxes[box] would be executed
+                // thumbnail.on("containerFocusEvent", function(event) {
+                //     boxes[box].getFunctionOnFocus()();
+                // });
+                thumbnail.on("containerFocusEvent", (function(actualBox){
+                    return function(event){
+                        actualBox.getFunctionOnFocus()();
+                    }
+                })(boxes[box]));
+
+                // Place thumbnail into thumbnail-container
+                thumbnailContainer.append(thumbnail);
+
+                    // width = image.prop('naturalWidth');
+                    // height = image.prop('naturalHeight');
+                    // if (height > width){
+                    //     ratio = width/height;
+                    //     thumbailWidth = parseInt(height * ratio)
+                    // }else{
+                    //     thumbleWidth = thumbnail_width
+                    // }
+                    // t.style.setProperty('----thumbnail-width', thumbnail_width + 'px');
+            }               
+
+                // // Append genre name before the container
+                // genre = $("<div>",{
+                //     class: "thumbnail-container-title",
+                //     text: "hello"
+                // });
+                // section.append(genre);
+
+            // Place thumbnail Container into thumbnail-section
+            this.section.append(thumbnailContainer);
+
+            // selection border for the default first thumbnail - it is possible as at least one section container is done
+            this.selectDefaultThumbnail();
+            
+        }
+    }
+
+    class AjaxCardContainer extends Container{
+
+        constructor(sectionsMap, attributeMap, sectionIndex, section, type, url, async){
+            super(sectionsMap, attributeMap, sectionIndex, section);
+
+            var refToThis = this;
+
+            /*
+            REST response should have records.
+            And all records should have:
+            "id"
+            "source_path"
+            "title_req"
+            "title_orig"
+            "lang_orig"
+            */
+            $.ajax({type: type, url: url, async: async,
+            success: function(result){
+
+                var boxes = [];
+
+                for (var i in result) {
+                    var record=result[i];
+
+                    var card_id = record["id"];
+                    var source_path = record["source_path"];
+                    
+                    var title = "";
+                    var title_orig = "";
+                    var lang_orig = "";
+                    if ( record["title_req"] != null ){
+                        title = record["title_req"];
+                    }
+                    if ( record["title_orig"] != null ){
+                        title_orig = record["title_orig"];
+                        lang_orig = record["lang_orig"];
+                    }
+
+                
+                    boxes.push(new ContainerBox(
+                        "",
+                        source_path + '/image.jpg',
+                        
+                        (function(card_id, source, title, title_orig, lang_orig) {
+                            return function() {
+                                refToThis.openDetails(card_id, source, title, title_orig, lang_orig);
+                            };
+                        })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
+                        
+                        function(){console.log("selected")}
+                    ))
+
+
+
+
+                    // boxes.push(new ContainerBox(
+                    //     "",
+                    //     source_path,                        
+                    //     (function(card_id, source, title, title_orig, lang_orig){return function() {refToThis.openDetails(card_id, source, title, title_orig, lang_orig);};})(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
+                    //     function(){console.log("selected")}
+                    // ))
+
+                    // boxes.push(new ContainerBox(
+                    //     "",
+                    //     source_path + '/image.jpg',
+                    //     function(){refToThis.openDetails(card_id, source_path + '/image.jpg', title, title_orig, lang_orig)},
+                    //     function(){console.log("selected")}
+                    // ))
+                }
+
+                refToThis.ready(boxes);
+
+            },
+            error: function(xhr,status,error){
+                $("#message").html("");
+                $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
+//              $("#spinner").hide();
+            }            
+        })}
+
+        openDetails(id, src, title, title_orig, lang_orig){
+       
+            // For an unknown reason only this solution works
+            // if I run the below command, it will not resize the image
+            // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+            t.style.setProperty('--background-image', "url(" + src + ")");
+
+            if(title){
+                $('#detail-text-title').text(title);
+            }else{
+                $('#detail-text-title').text(title_orig);            
+            }
+        }
+    }
+
+
+    class ContainerBox{
+        constructor(text, image, fn_focus, fn_select){
+            this.text = text;
+            this.image = image;
+            this.fn_focus = fn_focus;
+            this.fn_select = fn_select;
+        }
+
+        getText(){
+            return this.text;
+        }
+
+        getImage(){
+            return this.image;
+        }
+
+        getFunctionOnFocus(){
+            return this.fn_focus;
+        }
+
+        getFunctionOnSelect(){
+            return this.fn_select;
+        }
+    }
+
+
+
+
+// ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /*
     type:
     url:
@@ -495,7 +803,7 @@
                 thumbnailClass = attributeMap["thumbnail-class"];
                 defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
                 defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
-                selectThumbnail(defaultThumbnail);
+                selectThumbnail(defaultThumbnail);                                
         }
 
         function addNewContainerToSection(sectionsMap, sectionIndex){
@@ -604,6 +912,7 @@
 
                 // selection border for the default first thumbnail - it is possible as at least one section container is done
                 selectDefaultThumbnail(param["sectionsMap"]);
+
             },
             error: function(xhr,status,error){
                 $("#message").html("");
@@ -612,6 +921,14 @@
             }
         })
     }
+
+
+    
+
+
+
+
+
 
     var defaultCurrentSectionIndex = 0;
     var defaultCurrentContainerIndex = 0;
@@ -644,8 +961,28 @@
 
         // Place thumbnail-section into the thumbnail section
         $('#thumbnail-sections').append(thumbnailSection_0);
+       
+        dramaContainer = new AjaxCardContainer(
+            sectionsMap,
+            attributeMap, 
+            sectionIndex0,
+            thumbnailSection_0,
+            type="GET",
+            url="/collect/standalone/movies/genre/drama/lang/" + languageCode,
+            async=true
+        );
 
-        // Drama container
+        actionContainer = new AjaxCardContainer(
+            sectionsMap,
+            attributeMap, 
+            sectionIndex0,
+            thumbnailSection_0,
+            type="GET",
+            url="/collect/standalone/movies/genre/action/lang/" + languageCode,
+            async=true
+        );
+
+/*        // Drama container
         createNewContainer({
             type: "GET",
             url: "/collect/standalone/movies/genre/drama/lang/" + languageCode,
@@ -662,7 +999,7 @@
             sectionIndex: sectionIndex0,
             sectionsMap: sectionsMap,
         });
-  
+*/
 
 // ---
 
@@ -684,7 +1021,7 @@
     </div>
 
 
-    <div id="thumbnail-sections"></div>
+    <div id="thumbnail-sections" tabindex="0"></div>
 
     <div id="message"></div>
     <div id="errormessage"></div>

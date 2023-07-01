@@ -2,8 +2,8 @@
 from playem.card.database import SqlDatabase as DB
 from playem.config.config import Config
 
-from playem.card.card_handle import collectCardsFromFileSystem
-import playem.card.card_handle as card_handle
+from playem.card.card_handle import CardHandle
+#import playem.card.card_handle as card_handle
 
 import sqlite3
 #from sqlite3 import Error
@@ -18,6 +18,8 @@ db=DB()
 db.drop_tables()
 db.create_tables()
 
+#cardHandle = CardHandle
+# TODO: have to fix
 collectCardsFromFileSystem(media_path, db )
 
 
