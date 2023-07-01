@@ -606,7 +606,7 @@ lang.name=:lang)
 
 GROUP BY id;
 
-''', {'hierarchy_id': 1, 'lang': 'it'}).fetchall()
+''', {'hierarchy_id': 2, 'lang': 'hu'}).fetchall()
 
 # --- In CARD ---
 
@@ -632,6 +632,7 @@ lang.name <> :lang
 
 UNION
 
+
 SELECT card.id id, tcl.text title_req, NULL title_orig
 FROM 
 Card card, 
@@ -643,13 +644,13 @@ card.id_higher_hierarchy=:hierarchy_id AND
 tcl.id_card=card.id AND
 tcl.id_language=lang.id AND
 tcl.type="T" AND
-card.id_title_orig=lang.id AND
+--card.id_title_orig=lang.id AND
 -- cat.name = :category AND
 lang.name=:lang)
 
 GROUP BY id;
 
-''', {'hierarchy_id': 6, 'lang': 'it'}).fetchall()
+''', {'hierarchy_id': 2, 'lang': 'hu'}).fetchall()
 
 # --- Combine 2 requests ---
 
@@ -734,7 +735,7 @@ card.id_higher_hierarchy=:hierarchy_id AND
 tcl.id_card=card.id AND
 tcl.id_language=lang.id AND
 tcl.type="T" AND
-card.id_title_orig=lang.id AND
+--card.id_title_orig=lang.id AND
 -- cat.name = :category AND
 lang.name=:lang)
 
@@ -747,5 +748,5 @@ GROUP BY id
                 WHEN sequence>=0 THEN sequence
             END
 
-''', {'hierarchy_id': 6, 'lang': 'it'}).fetchall()
+''', {'hierarchy_id': 2, 'lang': 'hu'}).fetchall()
 

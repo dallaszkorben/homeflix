@@ -9,8 +9,7 @@ __pycache__/
 # C extensions
 *.so
 
-**/greenwall/cam-capture/*.jpg
-**/greenwall/cam-frame/**/*.jpg
+MEDIA
 
 
 # Distribution / packaging

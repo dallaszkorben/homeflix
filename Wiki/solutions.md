@@ -170,11 +170,21 @@ CSS:
 </style>
 ```
 
-jQuery:```javascript
+jQuery:
+```javascript
     var t = document.querySelector(':root');
 
     ...
 
     src = thumbnail.children('img').attr('src')
     t.style.setProperty('--background-image', "url(" + src + ")");
+```
+
+## 4. Fade image to white
+
+CSS:
+```javascript
+<style>
+
+</style>
 ```

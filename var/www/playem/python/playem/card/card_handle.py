@@ -65,7 +65,7 @@ class CardHandle:
                 card_file_name = file_name
                 #source_path = actualDir
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
-            
+
             # find the Image
             if self.getPatternImage().match( file_name ):
                 image_path = os.path.join(actualDir, file_name)

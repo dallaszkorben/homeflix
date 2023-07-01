@@ -15,8 +15,11 @@
             --background-image: "";
         }
 
+        body {
+            margin: 0px;
+        }
+
         #detail-screen{
-            /*height: 600px;*/
             height: 50%;
             width: 100%;
 
@@ -32,12 +35,9 @@
         #detail-text-div{
             height: 100%;
             width: 50%;
-
+            display:inline;
             font-family: 'Brush Script MT', cursive;
-            
-/*            background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);*/
             background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
-
         }
 
         #detail-text-title{
@@ -51,51 +51,16 @@
             color: white;
         }
 
-
-        /* #example2 {
-  border: 2px solid black;
-  padding: 25px;
-  width: 1200px;
-  height: 600px;
-  background: url(MEDIA/01.Movie/01.Standalone/A.Kenguru-1976/image.jpg);
-  background-repeat: no-repeat;
-  background-size: contain;
-        } */
-
-
         #detail-image-div{
             height: 100%;
             width: 50%;
-
-
-/*    border: 2px solid black;            */
-/*            width: 900px;
-            height: 600px;
-*/            
-/*            background-color: gold;*/
-/*            background: url(MEDIA/01.Movie/01.Standalone/A.Kenguru-1976/image.jpg);*/
-
-
 
             background: var(--background-image);
             box-shadow: inset 100px -100px 40px 0 #FFF;
             background-position: right top;
             background-repeat: no-repeat;
             background-size: contain;
-
-
         }
-
-/*        #detail-image{
-            height: 100%;
-            width: 100%;
-            object-fit: contain;
-        }
-*/
-
-
-
-
 
         .thumbnail-section {
             height: 40%;
@@ -144,17 +109,39 @@
             justify-content: center;
             align-items: center;
             box-sizing:border-box;
+            position: relative;              /* This made the animation with text work. I do not know how */
         }
 
         .thumbnail img {
-/*            width: var(--image-width);
+            width: var(--image-width);
             height: var(--image-height);
-*/
-/*            height: 100%;            */
-            width: 300px;
-            height: 250px;
             max-height: var(--image-height);
             object-fit: contain;
+        }
+        
+        .thumbnail-text-wrapper{            
+            position: absolute;              /* Needed for overlap text the image */
+            max-width: var(--image-width);   /* Needed to teach absolute div what is the size*/
+
+            width: var(--image-width);
+            height: var(--image-height);
+            max-height: var(--image-height);
+
+
+            font-family: 'Brush Script MT', cursive;
+            font-weight: bold;
+            font-size: 70px;
+            color: rgb(110, 176, 172);
+            text-shadow: 
+                -1px -1px 0px black,
+                1px -1px 0px black,
+                1px 1px 0px black,
+                -1px 1px 0px black;
+        }
+
+        .thumbnail-text{
+            position: relative;              /* Needed to wrap log text */
+            text-align: center;              /* Needed to centralized the wrapped text */
         }        
 
 #left-arrow,
@@ -176,10 +163,10 @@
 
     <script>
 
-
     const selector_border_width = 4;
     const tmp_border_width = 1;
     const image_height = 250;
+    const image_width = 300;
     const container_height = image_height + (2*selector_border_width) + (2*tmp_border_width);
 
     var t = document.querySelector(':root');
@@ -187,10 +174,8 @@
     t.style.setProperty('--container-height', container_height + 'px');
     t.style.setProperty('--selector-border-width', selector_border_width + 'px'); 
     t.style.setProperty('--image-height', image_height + 'px');
+    t.style.setProperty('--image-width', image_width + 'px');
     t.style.setProperty('--tmp-border-width', tmp_border_width + 'px');
-
-/*    t.style.setProperty('--image-width', image_width+'px');
-    t.style.setProperty('--image-height', image_height+'px');*/
 
     $('#right-arrow').click(function() {
         thumbnails.eq(currentIndex).css('border-color', 'transparent');
@@ -222,6 +207,9 @@
         "section-class": "thumbnail-section",
         "container-class": "thumbnail-container",
         "thumbnail-class": "thumbnail",
+        "thumbnail-text-wrapper-class": "thumbnail-text-wrapper",
+        "thumbnail-text-class": "thumbnail-text",
+
         "section-id"     : "section-{}",
         "container-id": "section-{}_container-{}",
         "thumbnail-id": "section-{}_container-{}_thumbnail-{}",
@@ -342,7 +330,6 @@
 
         containerHeight = container.outerHeight(true);
 
-
         sectionId = sectionsMap["sections"][sectionIndex]["section-id"]
         section = $("#" + sectionId);
         sectionHeight = section.outerHeight(true);
@@ -357,7 +344,6 @@
         } else if (containerIndex < sectionScrollTop / containerHeight) {
             section.animate({ scrollTop: containerHeight * containerIndex }, 200);
         }
-
 
         // Horizontal adjustment
         thumbnailId = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"];
@@ -376,9 +362,6 @@
         }
         
         thumbnail.trigger("containerFocusEvent");
-        //thumbnail.focus();     
-        
-//        showDetails(thumbnail);
     }
 
     /*
@@ -460,38 +443,6 @@
 
 
 
-    function showDetails(thumbnail){
-        //$('#detail-screen').html("");        
-        src = thumbnail.children('img').attr('src')
-        title = thumbnail.children('img').attr('title')
-        title_orig = thumbnail.children('img').attr('title_orig')
-        lang_orig = thumbnail.children('img').attr('lang_orig')
-        
-//        $('#detail-image').attr("src", src);
-  
-//        $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
-//        $('#detail-image-div').css("background", "url(" + src + ") no-repeat");
-  
-        // For an unknown reason only this solution works
-        // if I run the below command, it will not resize the image
-        // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
-        t.style.setProperty('--background-image', "url(" + src + ")");
-
-        if(title){
-            $('#detail-text-title').text(title);
-        }else{
-            $('#detail-text-title').text(title_orig);            
-        }
-        
-        // src: source_path + '/image.jpg',
-        //                 alt: "Image 1",
-        //                 title: title,
-        //                 title_orig: title_orig,
-        //                 lang_orig: lang_orig,
-        //                 card_id: card_id,
-        //                 source_path: source_path,
-    }
-
 
 
 
@@ -515,7 +466,8 @@
     sectionIndex : The index of the HTML's thumbnail-section <div> (inside the thumbnal-sections <div>) where the new Container should go
     */
     class Container{
-        constructor(sectionsMap, attributeMap, sectionIndex, section){
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section){
+            this.title = title;
             this.sectionsMap = sectionsMap;
             this.attributeMap = attributeMap;
             this.sectionIndex = sectionIndex;
@@ -545,7 +497,12 @@
             var thumbnailClass = this.attributeMap["thumbnail-class"];
             var defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
             var defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
+
+            // Turn off listeners
+
             selectThumbnail(defaultThumbnail);                                
+
+            // Turn back listeners
         }
 
         /*
@@ -584,7 +541,17 @@
 
                 sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
 
-// Add Text to image
+                // Add Text to image
+                var textWrapper = $("<div>", {
+                    class: attributeMap["thumbnail-text-wrapper-class"],
+                });
+                thumbnail.append(textWrapper);  
+
+                var text = $("<div>", {
+                    class: attributeMap["thumbnail-text-class"],
+                    text: boxes[box].getText(),
+                });
+                textWrapper.append(text);  
 
                 // Create image
                 var image = $("<img>",{
@@ -599,7 +566,8 @@
                 //     boxes[box].getFunctionOnSelect()();
                 // });
                 thumbnail.click((function(actualBox){
-                    return function(){
+                    return function(event){
+                        selectThumbnail($(event.currentTarget));
                         actualBox.getFunctionOnSelect()();
                     }
                 })(boxes[box]));
@@ -617,24 +585,14 @@
 
                 // Place thumbnail into thumbnail-container
                 thumbnailContainer.append(thumbnail);
-
-                    // width = image.prop('naturalWidth');
-                    // height = image.prop('naturalHeight');
-                    // if (height > width){
-                    //     ratio = width/height;
-                    //     thumbailWidth = parseInt(height * ratio)
-                    // }else{
-                    //     thumbleWidth = thumbnail_width
-                    // }
-                    // t.style.setProperty('----thumbnail-width', thumbnail_width + 'px');
             }               
 
-                // // Append genre name before the container
-                // genre = $("<div>",{
-                //     class: "thumbnail-container-title",
-                //     text: "hello"
-                // });
-                // section.append(genre);
+            // Append TITLE above the container
+            var title = $("<div>",{
+                class: "thumbnail-container-title",
+                text: this.title
+            });
+            this.section.append(title);
 
             // Place thumbnail Container into thumbnail-section
             this.section.append(thumbnailContainer);
@@ -646,9 +604,8 @@
     }
 
     class AjaxCardContainer extends Container{
-
-        constructor(sectionsMap, attributeMap, sectionIndex, section, type, url, async){
-            super(sectionsMap, attributeMap, sectionIndex, section);
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
+            super(title, sectionsMap, attributeMap, sectionIndex, section);
 
             var refToThis = this;
 
@@ -665,7 +622,6 @@
             success: function(result){
 
                 var boxes = [];
-
                 for (var i in result) {
                     var record=result[i];
 
@@ -682,7 +638,6 @@
                         title_orig = record["title_orig"];
                         lang_orig = record["lang_orig"];
                     }
-
                 
                     boxes.push(new ContainerBox(
                         "",
@@ -690,33 +645,20 @@
                         
                         (function(card_id, source, title, title_orig, lang_orig) {
                             return function() {
-                                refToThis.openDetails(card_id, source, title, title_orig, lang_orig);
+                                refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);
                             };
                         })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
                         
-                        function(){console.log("selected")}
+                        (function(card_id, source, title, title_orig, lang_orig) {
+                            return function() {
+//                                selectThumbnail(nextThumbnail)
+/*                                refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);*/
+                            };
+                        })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
                     ))
-
-
-
-
-                    // boxes.push(new ContainerBox(
-                    //     "",
-                    //     source_path,                        
-                    //     (function(card_id, source, title, title_orig, lang_orig){return function() {refToThis.openDetails(card_id, source, title, title_orig, lang_orig);};})(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
-                    //     function(){console.log("selected")}
-                    // ))
-
-                    // boxes.push(new ContainerBox(
-                    //     "",
-                    //     source_path + '/image.jpg',
-                    //     function(){refToThis.openDetails(card_id, source_path + '/image.jpg', title, title_orig, lang_orig)},
-                    //     function(){console.log("selected")}
-                    // ))
                 }
 
                 refToThis.ready(boxes);
-
             },
             error: function(xhr,status,error){
                 $("#message").html("");
@@ -725,7 +667,7 @@
             }            
         })}
 
-        openDetails(id, src, title, title_orig, lang_orig){
+        showBigPicture(id, src, title, title_orig, lang_orig){
        
             // For an unknown reason only this solution works
             // if I run the below command, it will not resize the image
@@ -740,6 +682,259 @@
         }
     }
 
+    class AjaxHierarchyContainer extends Container{
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
+            super(title, sectionsMap, attributeMap, sectionIndex, section);
+
+            var refToThis = this;
+
+            /*
+            REST response should have records.
+            And all records should have:
+            "id"
+            "source_path"
+            "title_req"
+            "title_orig"
+            "lang_orig"
+            */
+            $.ajax({type: type, url: url, async: async,
+            success: function(result){
+
+                var boxes = [];
+                for (var i in result) {
+                    var record=result[i];
+
+                    var id = record["id"];
+                    var source_path = record["source_path"];
+                    
+                    var box_title = "";
+                    var box_title_orig = "";
+                    var lang_orig = "";
+                    if ( record["title_req"] != null ){
+                        box_title = record["title_req"];
+                    }
+                    if ( record["title_orig"] != null ){
+                        box_title_orig = record["title_orig"];
+                        lang_orig = record["lang_orig"];
+                    }
+                
+                    boxes.push(new ContainerBox(
+                        "",                             /*series title on thumbnail, not necessary*/
+                        source_path + '/image.jpg',
+                        
+                        (function(id, source, title, title_orig, lang_orig) {
+                            return function() {
+                                refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
+                            };
+                        })(id, source_path + '/image.jpg', box_title, box_title_orig, lang_orig),
+                        
+                        (function(id, title) {
+                            return function() {
+                                refToThis.openChildHierarchyOrCardMenu(id, title);
+                            };
+                        })(id, box_title),
+                    ))
+                }
+
+                refToThis.ready(boxes);
+            },
+            error: function(xhr,status,error){
+                $("#message").html("");
+                $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
+//              $("#spinner").hide();
+            }            
+        })}
+
+        showBigPicture(id, src, box_title, box_title_orig, lang_orig){
+       
+            // For an unknown reason only this solution works
+            // if I run the below command, it will not resize the image
+            // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+            t.style.setProperty('--background-image', "url(" + src + ")");
+
+            if(box_title){
+                $('#detail-text-title').text(box_title);
+            }else{
+                $('#detail-text-title').text(box_title_orig);            
+            }
+        }
+
+        openChildHierarchyOrCardMenu(id, title){
+            
+            var ret = prepareNewOneSectionView();
+            var sectionIndex = ret["section-index"];
+            var section = ret["section"];
+
+            new AjaxChildHierarchyOrCardContainer(
+                title,
+                sectionsMap,
+                attributeMap, 
+                sectionIndex,
+                section,
+                type="GET",
+                url="/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
+                async=true
+            );            
+        }
+    }
+
+    class AjaxChildHierarchyOrCardContainer extends Container{
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
+            super(title, sectionsMap, attributeMap, sectionIndex, section);
+
+            var refToThis = this;
+
+            /*
+            REST response should have records.
+            And all records should have:
+            "id"
+            "level"
+            "sequence"
+            "source_path"
+            "title_req"
+            "title_orig"
+            "lang_orig"
+            */
+            $.ajax({type: type, url: url, async: async,
+            success: function(result){
+
+                var boxes = [];
+                for (var i in result) {
+                    var record=result[i];
+
+                    var id = record["id"];
+                    var level = record["level"];
+                    var sequence = record["sequence"];
+                    var source_path = record["source_path"];
+                    
+                    var box_title = "";
+                    var box_title_orig = "";
+                    var lang_orig = "";
+                    if ( record["title_req"] != null ){
+                        box_title = record["title_req"];
+                    }
+                    if ( record["title_orig"] != null ){
+                        box_title_orig = record["title_orig"];
+                        lang_orig = record["lang_orig"];
+                    }
+                                    
+                    boxes.push(new ContainerBox(
+                        level==null?sequence: box_title,   // if no level, than it is an episode
+                        source_path + '/image.jpg',
+                        
+                        (function(id, source, title, title_orig, lang_orig) {
+                            return function() {
+                                refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
+                            };
+// TODO: must fix the title: add to the right language
+                        })(id, source_path + '/image.jpg', refToThis.title + "-" + box_title, refToThis.title + "-" + box_title_orig, lang_orig),
+                        
+                        (function(id, level, title) {
+                            return function() {
+console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
+                            if(level != null){
+                                refToThis.openChildHierarchyOrCardMenu(id, level, refToThis.title + "-" + title)
+                            }
+                        };
+                        })(id, level, box_title),
+                    ))
+                }
+
+                refToThis.ready(boxes);
+            },
+            error: function(xhr,status,error){
+                $("#message").html("");
+                $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
+//              $("#spinner").hide();
+            }            
+        })}
+
+        showBigPicture(id, src, title, title_orig, lang_orig){
+       
+            // For an unknown reason only this solution works
+            // if I run the below command, it will not resize the image
+            // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+            t.style.setProperty('--background-image', "url(" + src + ")");
+
+            if(title){
+                $('#detail-text-title').text(title);
+            }else{
+                $('#detail-text-title').text(title_orig);            
+            }
+        }
+
+        openChildHierarchyOrCardMenu(id, level, title){
+            
+            var ret = prepareNewOneSectionView();
+            var sectionIndex = ret["section-index"];
+            var section = ret["section"];
+
+            new AjaxChildHierarchyOrCardContainer(
+                title,
+                sectionsMap,
+                attributeMap, 
+                sectionIndex,
+                section,
+                type="GET",
+                url="/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
+                async=true
+            );            
+        }
+    }
+
+    class MenuContainer extends Container{
+
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, records){
+            super(title, sectionsMap, attributeMap, sectionIndex, section);
+
+            var refToThis = this;
+
+            /*
+            The records is a list of records
+            And all recordss should have:
+            "text"
+            "image"
+            */
+            var boxes = [];
+
+            for (var i=0; i < records.length; i++) {
+        
+                var record = records[i];
+
+                boxes.push(new ContainerBox(
+                    record["text"],
+                    record["image"],
+               
+                    (function(par) {
+                        return function() {
+                            //refToThis.openDetails(par);
+                        };
+                    })(1),
+
+                    (function(fn_submenu) {
+                        return function() {
+                            fn_submenu();
+                        };
+                    })(record["fn_submenu"])
+                ))
+            }          
+            this.ready(boxes);
+        }   
+    
+        openDetails(id, src, title, title_orig, lang_orig){
+
+            // For an unknown reason only this solution works
+            // if I run the below command, it will not resize the image
+            // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
+            t.style.setProperty('--background-image', "url(" + src + ")");
+
+            if(title){
+                $('#detail-text-title').text(title);
+            }else{
+                $('#detail-text-title').text(title_orig);            
+            }
+        }
+    }
 
     class ContainerBox{
         constructor(text, image, fn_focus, fn_select){
@@ -771,156 +966,91 @@
 
 // ---
 
+    function prepareNewOneSectionView(){
+        
+        // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
+        // sectionsMap["sections"] = []
+        $("#thumbnail-sections").empty();
+        $("#detail-text-title").empty();
+        $("#detail-image-div").empty();
+        sectionsMap["sections"] = [];
 
+        // Create a new thumbnail-section
+        sectionLength = sectionsMap["sections"].push({});
+        sectionIndex0 = sectionLength - 1;
+        sectionsMap["current-section-index"] = sectionIndex0;
 
+        thumbnailSection_0 = $('<div>', {
+            id: attributeMap["section-id"].format(sectionIndex0),
+            class: attributeMap["section-class"],
+        })
 
+        sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
+        sectionsMap["sections"][sectionIndex0]["containers"] = [];
+        sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
 
+        // Place thumbnail-section into the thumbnail section
+        $('#thumbnail-sections').append(thumbnailSection_0);
 
-
-
-
-
-
-
-
-
-
-
-
+        return {"section": thumbnailSection_0, "section-index": sectionIndex0}
+    }
 
 
     /*
-    type:
-    url:
-    sectionIndex:
-    sectionsMap:
-    thumbnailSection:
+    Shows the Movie selection View
     */
-    function createNewContainer(param){
-     
-        function selectDefaultThumbnail(sectionsMap){
-                defaultThumbnailContainerId = sectionsMap["sections"][sectionIndex]["containers"][defaultCurrentContainerIndex]["container-id"];
-                thumbnailClass = attributeMap["thumbnail-class"];
-                defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
-                defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
-                selectThumbnail(defaultThumbnail);                                
-        }
-
-        function addNewContainerToSection(sectionsMap, sectionIndex){
+    function viewMovie(){
         
-           // Add an empty thumbnail-container to the container list
-            newLength = sectionsMap["sections"][sectionIndex]["containers"].push({});
-            containerIndex = newLength - 1;
+       ret = prepareNewOneSectionView();
+       sectionIndex = ret["section-index"];
+       section = ret["section"];
 
-            // Create thumbnail-container object
-            thumbnailContainer = $('<div>', {
-                class: attributeMap["container-class"],
-                id: attributeMap["container-id"].format(sectionIndex, containerIndex)
-            })
-            sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
-            sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["current-thumbnail-index"] = 0;
-            sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"] = [];
+        dramaContainer = new AjaxCardContainer(
+            "Drama",
+            sectionsMap,
+            attributeMap, 
+            sectionIndex,
+            section,
+            type="GET",
+            url="/collect/standalone/movies/genre/drama/lang/" + languageCode,
+            async=true
+        );
 
-            return {containerIndex: containerIndex, thumbnailContainer: thumbnailContainer}
-        }
-
-        sectionsMap = param["sectionsMap"];
-        sectionIndex = param["sectionIndex"];
-        section = param["section"];
-     
-        $.ajax({type: param["type"], url: param["url"], async: true,
-            success: function(result){
-
-                text = "";
-                
-                // Add empty container to the container list and create and return thumbnail-container object
-                ret = addNewContainerToSection(sectionsMap, sectionIndex);
-                containerIndex = ret["containerIndex"];
-                thumbnailContainer = ret["thumbnailContainer"];
-
-                for (i in result) {
-                    record=result[i];
-
-                    card_id = record["id"];
-                    source_path = record["source_path"];
-                    
-                    title = "";
-                    title_orig = "";
-                    lang_orig = "";
-                    if ( record["title_req"] != null ){
-                        title = record["title_req"];
-                    }
-                    if ( record["title_orig"] != null ){
-                        title_orig = record["title_orig"];
-                        lang_orig = record["lang_orig"];
-                    }
-
-                    // Add an empty thumbnail to the thumbnail list
-                    newLength = sectionsMap["sections"][sectionIndex]["containers"][containerIndex]['thumbnails'].push({});
-                    thumbnailIndex = newLength - 1;
-   
-                    // Create thumbnail
-                    thumbnail = $("<div>", {
-                        class: attributeMap["thumbnail-class"],
-                        id: attributeMap["thumbnail-id"].format(sectionIndex, containerIndex, thumbnailIndex)
-                    });
-
-                    sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
-//                    sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["title"] = title;
-//                    sectionsMap["sections"][sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["title"] = title;
-
-                    // Create image
-                    image = $("<img>",{
-                        src: source_path + '/image.jpg',
-                        alt: "Image 1",
-                        title: title,
-                        title_orig: title_orig,
-                        lang_orig: lang_orig,
-                        card_id: card_id,
-                        source_path: source_path,
-                    });
-                    thumbnail.append(image);                 
-
-                    // mouse event for thumbnail
-                    thumbnail.click(function(){
-                        selectThumbnail($(this))
-                    });
-
-                    // Place thumbnail into thumbnail-container
-                    thumbnailContainer.append(thumbnail);
-
-                    // width = image.prop('naturalWidth');
-                    // height = image.prop('naturalHeight');
-                    // if (height > width){
-                    //     ratio = width/height;
-                    //     thumbailWidth = parseInt(height * ratio)
-                    // }else{
-                    //     thumbleWidth = thumbnail_width
-                    // }
-                    // t.style.setProperty('----thumbnail-width', thumbnail_width + 'px');
-                }               
-
-                // Append genre name before the container
-                genre = $("<div>",{
-                    class: "thumbnail-container-title",
-                    text: "hello"
-                });
-                section.append(genre);
-
-                // Place thumbnail Container into thumbnail-section
-                section.append(thumbnailContainer);
-
-                // selection border for the default first thumbnail - it is possible as at least one section container is done
-                selectDefaultThumbnail(param["sectionsMap"]);
-
-            },
-            error: function(xhr,status,error){
-                $("#message").html("");
-                $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
-//              $("#spinner").hide();
-            }
-        })
+        actionContainer = new AjaxCardContainer(
+            "Action",
+            sectionsMap,
+            attributeMap, 
+            sectionIndex,
+            section,
+            type="GET",
+            url="/collect/standalone/movies/genre/action/lang/" + languageCode,
+            async=true
+        );
     }
+
+    /*
+    Shows the Movie Series selection View
+    */
+    function viewMovieSeries(){
+        
+        ret = prepareNewOneSectionView();
+        sectionIndex = ret["section-index"];
+        section = ret["section"];
+
+        series = new AjaxHierarchyContainer(
+            "Series",
+            sectionsMap,
+            attributeMap, 
+            sectionIndex,
+            section,
+            type="GET",
+            url="/collect/all/series/movies/lang/" + languageCode,
+            async=true
+        );
+    }
+
+
+
 
 
     
@@ -945,64 +1075,25 @@
     // ================================================
     $(document).ready(function(){
 
-        // Create a new thumbnail-section
-        sectionLength = sectionsMap["sections"].push({});
-        sectionIndex0 = sectionLength - 1;
-        sectionsMap["current-section-index"] = sectionIndex0;
-
-        thumbnailSection_0 = $('<div>', {
-            id: attributeMap["section-id"].format(sectionIndex0),
-            class: attributeMap["section-class"],
-        })
-
-        sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
-        sectionsMap["sections"][sectionIndex0]["containers"] = [];
-        sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
-
-        // Place thumbnail-section into the thumbnail section
-        $('#thumbnail-sections').append(thumbnailSection_0);
+        ret = prepareNewOneSectionView();
+        sectionIndex = ret["section-index"];
+        section = ret["section"];
        
-        dramaContainer = new AjaxCardContainer(
+        categoryMenu = new MenuContainer(
+            "Categories",
             sectionsMap,
             attributeMap, 
-            sectionIndex0,
-            thumbnailSection_0,
-            type="GET",
-            url="/collect/standalone/movies/genre/drama/lang/" + languageCode,
-            async=true
+            sectionIndex,
+            section,
+            [
+                {text: "Movies", image: "images/categories/movie.jpg", fn_submenu: function(){viewMovie()}},
+                {text: "Movie Series", image: "images/categories/series.jpg", fn_submenu: function(){viewMovieSeries()}},
+                {text: "Music Video", image: "images/categories/music_video.jpg", fn_submenu: function(){}},
+                {text: "Music Audio", image: "images/categories/music_audio.jpg", fn_submenu: function(){}},
+            ]
         );
-
-        actionContainer = new AjaxCardContainer(
-            sectionsMap,
-            attributeMap, 
-            sectionIndex0,
-            thumbnailSection_0,
-            type="GET",
-            url="/collect/standalone/movies/genre/action/lang/" + languageCode,
-            async=true
-        );
-
-/*        // Drama container
-        createNewContainer({
-            type: "GET",
-            url: "/collect/standalone/movies/genre/drama/lang/" + languageCode,
-            section: thumbnailSection_0,
-            sectionIndex: sectionIndex0,
-            sectionsMap: sectionsMap,
-        });
-        
-        // Action container
-        createNewContainer({
-            type: "GET",
-            url: "/collect/standalone/movies/genre/action/lang/" + languageCode,
-            section: thumbnailSection_0,
-            sectionIndex: sectionIndex0,
-            sectionsMap: sectionsMap,
-        });
-*/
-
 // ---
-
+       
     })
 
     </script>

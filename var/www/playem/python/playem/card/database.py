@@ -989,8 +989,7 @@ class SqlDatabase:
                         card.id_higher_hierarchy=:hierarchy_id AND
                         tcl.id_card=card.id AND
                         tcl.id_language=lang.id AND
-                        tcl.type="T" AND
-                        card.id_title_orig=lang.id AND
+                        tcl.type="T" AND                       
                         lang.name=:lang
                 )
                 GROUP BY id
