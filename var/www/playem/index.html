@@ -144,16 +144,6 @@
             text-align: center;              /* Needed to centralized the wrapped text */
         }        
 
-#left-arrow,
-#right-arrow {
-  cursor: pointer;
-  font-size: 24px;
-  margin-top: 5px;
-}
-
-#left-arrow {
-  margin-right: 10px;
-}
     </style>
     
     <!-- JQuery -->
@@ -598,25 +588,21 @@
             this.section.append(thumbnailContainer);
 
             // selection border for the default first thumbnail - it is possible as at least one section container is done
-            this.selectDefaultThumbnail();
-            
+            this.selectDefaultThumbnail();            
         }
     }
 
-    class AjaxCardContainer extends Container{
+
+
+    class AjaxContainer extends Container{
+
         constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
             super(title, sectionsMap, attributeMap, sectionIndex, section);
 
             var refToThis = this;
 
             /*
-            REST response should have records.
-            And all records should have:
-            "id"
-            "source_path"
-            "title_req"
-            "title_orig"
-            "lang_orig"
+            Fetches the records
             */
             $.ajax({type: type, url: url, async: async,
             success: function(result){
@@ -624,40 +610,9 @@
                 var boxes = [];
                 for (var i in result) {
                     var record=result[i];
-
-                    var card_id = record["id"];
-                    var source_path = record["source_path"];
-                    
-                    var title = "";
-                    var title_orig = "";
-                    var lang_orig = "";
-                    if ( record["title_req"] != null ){
-                        title = record["title_req"];
-                    }
-                    if ( record["title_orig"] != null ){
-                        title_orig = record["title_orig"];
-                        lang_orig = record["lang_orig"];
-                    }
-                
-                    boxes.push(new ContainerBox(
-                        "",
-                        source_path + '/image.jpg',
-                        
-                        (function(card_id, source, title, title_orig, lang_orig) {
-                            return function() {
-                                refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);
-                            };
-                        })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
-                        
-                        (function(card_id, source, title, title_orig, lang_orig) {
-                            return function() {
-//                                selectThumbnail(nextThumbnail)
-/*                                refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);*/
-                            };
-                        })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
-                    ))
+                    var containerBox = refToThis.getContainerBox(record);
+                    boxes.push(containerBox)
                 }
-
                 refToThis.ready(boxes);
             },
             error: function(xhr,status,error){
@@ -666,6 +621,11 @@
 //              $("#spinner").hide();
             }            
         })}
+
+        // Must return ContainerBox
+        getContainerBox(record){
+            throw new Error('You have to implement the method getContainerBox(record)!');
+        }
 
         showBigPicture(id, src, title, title_orig, lang_orig){
        
@@ -682,82 +642,105 @@
         }
     }
 
-    class AjaxHierarchyContainer extends Container{
-        constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
-            super(title, sectionsMap, attributeMap, sectionIndex, section);
 
+    /*
+    Collects records through the get_standalone_movies_by_genre() method
+    Typically used:
+        -From the main menu where we tell that we want menu of movies
+    the id of the record points to Card table if the level field IS null
+    The record has the following fields:
+        "id"
+        "source_path"
+        "title_req"
+        "title_orig"
+        "lang_orig"
+    */
+    class AjaxCardContainer extends AjaxContainer{
+        getContainerBox(record){
             var refToThis = this;
 
-            /*
-            REST response should have records.
-            And all records should have:
-            "id"
-            "source_path"
-            "title_req"
-            "title_orig"
-            "lang_orig"
-            */
-            $.ajax({type: type, url: url, async: async,
-            success: function(result){
-
-                var boxes = [];
-                for (var i in result) {
-                    var record=result[i];
-
-                    var id = record["id"];
-                    var source_path = record["source_path"];
-                    
-                    var box_title = "";
-                    var box_title_orig = "";
-                    var lang_orig = "";
-                    if ( record["title_req"] != null ){
-                        box_title = record["title_req"];
-                    }
-                    if ( record["title_orig"] != null ){
-                        box_title_orig = record["title_orig"];
-                        lang_orig = record["lang_orig"];
-                    }
-                
-                    boxes.push(new ContainerBox(
-                        "",                             /*series title on thumbnail, not necessary*/
-                        source_path + '/image.jpg',
-                        
-                        (function(id, source, title, title_orig, lang_orig) {
-                            return function() {
-                                refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
-                            };
-                        })(id, source_path + '/image.jpg', box_title, box_title_orig, lang_orig),
-                        
-                        (function(id, title) {
-                            return function() {
-                                refToThis.openChildHierarchyOrCardMenu(id, title);
-                            };
-                        })(id, box_title),
-                    ))
-                }
-
-                refToThis.ready(boxes);
-            },
-            error: function(xhr,status,error){
-                $("#message").html("");
-                $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
-//              $("#spinner").hide();
-            }            
-        })}
-
-        showBigPicture(id, src, box_title, box_title_orig, lang_orig){
-       
-            // For an unknown reason only this solution works
-            // if I run the below command, it will not resize the image
-            // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
-            t.style.setProperty('--background-image', "url(" + src + ")");
-
-            if(box_title){
-                $('#detail-text-title').text(box_title);
-            }else{
-                $('#detail-text-title').text(box_title_orig);            
+            var source_path = record["source_path"];
+            var title = "";
+            var title_orig = "";
+            var lang_orig = "";
+            if ( record["title_req"] != null ){
+                title = record["title_req"];
             }
+            if ( record["title_orig"] != null ){
+                title_orig = record["title_orig"];
+                lang_orig = record["lang_orig"];
+            }
+                
+            var container = new ContainerBox(
+                "",
+                source_path + '/image.jpg',
+                        
+                (function(card_id, source, title, title_orig, lang_orig) {
+                    return function() {
+                        refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);
+                    };
+                })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
+                        
+                (function(card_id, source, title, title_orig, lang_orig) {
+                    return function() {
+//                               selectThumbnail(nextThumbnail)
+/*                               refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);*/
+                    };
+                })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
+            );
+            return container;
         }
+    }
+
+    /*
+    Collects records through the get_all_series_of_movies() method
+    Typically used:
+        -From the main menu where we tell that we want menu of movie series
+    the id of the record points to Card table if the level field IS null
+    The record has the following fields:
+        "id"
+        "source_path"
+        "title_req"
+        "title_orig"
+        "lang_orig"
+    */
+    class AjaxHierarchyContainer extends AjaxContainer{
+
+        getContainerBox(record){
+            var refToThis = this;
+
+            var id = record["id"];
+            var source_path = record["source_path"];
+                    
+            var box_title = "";
+            var box_title_orig = "";
+            var lang_orig = "";
+            if ( record["title_req"] != null ){
+                box_title = record["title_req"];
+            }
+            if ( record["title_orig"] != null ){
+                box_title_orig = record["title_orig"];
+                lang_orig = record["lang_orig"];
+            }
+                
+            var container = new ContainerBox(
+                "",                             /*series title on thumbnail, not necessary*/
+                source_path + '/image.jpg',
+                        
+                (function(id, source, title, title_orig, lang_orig) {
+                    return function() {
+                        refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
+                    };
+                })(id, source_path + '/image.jpg', box_title, box_title_orig, lang_orig),
+                        
+                (function(id, title) {
+                    return function() {
+                        refToThis.openChildHierarchyOrCardMenu(id, title);
+                    };
+                })(id, box_title),
+            );
+            return container;
+        }           
 
         openChildHierarchyOrCardMenu(id, title){
             
@@ -778,89 +761,63 @@
         }
     }
 
-    class AjaxChildHierarchyOrCardContainer extends Container{
-        constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
-            super(title, sectionsMap, attributeMap, sectionIndex, section);
-
+    /*
+    Collects records through the get_child_hierarchy_or_card() method
+    Typically used:
+        -from the AjaxHierarchyContainer class as the selected element can be Card or Hierarchy as well
+        -from the AjaxChildHierarchyOrCardContainer (here) as the selected element can be Card or Hierarchy as well
+    The id of the record points to Hierarchy table if the level field is NOT null
+    the id of the record points to Card table if the level field IS null
+    The record has the following fields:
+        "id"
+        "level"
+        "sequence"
+        "source_path"
+        "title_req"
+        "title_orig"
+        "lang_orig"
+    */
+    class AjaxChildHierarchyOrCardContainer extends AjaxContainer{
+        getContainerBox(record){
             var refToThis = this;
 
-            /*
-            REST response should have records.
-            And all records should have:
-            "id"
-            "level"
-            "sequence"
-            "source_path"
-            "title_req"
-            "title_orig"
-            "lang_orig"
-            */
-            $.ajax({type: type, url: url, async: async,
-            success: function(result){
-
-                var boxes = [];
-                for (var i in result) {
-                    var record=result[i];
-
-                    var id = record["id"];
-                    var level = record["level"];
-                    var sequence = record["sequence"];
-                    var source_path = record["source_path"];
+            var id = record["id"];
+            var level = record["level"];
+            var sequence = record["sequence"];
+            var source_path = record["source_path"];
                     
-                    var box_title = "";
-                    var box_title_orig = "";
-                    var lang_orig = "";
-                    if ( record["title_req"] != null ){
-                        box_title = record["title_req"];
-                    }
-                    if ( record["title_orig"] != null ){
-                        box_title_orig = record["title_orig"];
-                        lang_orig = record["lang_orig"];
-                    }
-                                    
-                    boxes.push(new ContainerBox(
-                        level==null?sequence: box_title,   // if no level, than it is an episode
-                        source_path + '/image.jpg',
-                        
-                        (function(id, source, title, title_orig, lang_orig) {
-                            return function() {
-                                refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
-                            };
-// TODO: must fix the title: add to the right language
-                        })(id, source_path + '/image.jpg', refToThis.title + "-" + box_title, refToThis.title + "-" + box_title_orig, lang_orig),
-                        
-                        (function(id, level, title) {
-                            return function() {
-console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
-                            if(level != null){
-                                refToThis.openChildHierarchyOrCardMenu(id, level, refToThis.title + "-" + title)
-                            }
-                        };
-                        })(id, level, box_title),
-                    ))
-                }
-
-                refToThis.ready(boxes);
-            },
-            error: function(xhr,status,error){
-                $("#message").html("");
-                $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
-//              $("#spinner").hide();
-            }            
-        })}
-
-        showBigPicture(id, src, title, title_orig, lang_orig){
-       
-            // For an unknown reason only this solution works
-            // if I run the below command, it will not resize the image
-            // $('#detail-image-div').css("background", "url(" + src + ")  no-repeat 0 0");
-            t.style.setProperty('--background-image', "url(" + src + ")");
-
-            if(title){
-                $('#detail-text-title').text(title);
-            }else{
-                $('#detail-text-title').text(title_orig);            
+            var box_title = "";
+            var box_title_orig = "";
+            var lang_orig = "";
+            if ( record["title_req"] != null ){
+                box_title = record["title_req"];
             }
+            if ( record["title_orig"] != null ){
+                box_title_orig = record["title_orig"];
+                lang_orig = record["lang_orig"];
+            }
+                                    
+            container = new ContainerBox(
+                level==null?sequence: box_title,   // if no level, than it is an episode
+                source_path + '/image.jpg',
+                        
+                (function(id, source, title, title_orig, lang_orig) {
+                    return function() {
+                        refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
+                    };
+// TODO: must fix the title: add to the right language
+                })(id, source_path + '/image.jpg', refToThis.title + "-" + box_title, refToThis.title + "-" + box_title_orig, lang_orig),
+                        
+                (function(id, level, title) {
+                    return function() {
+console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
+                    if(level != null){
+                        refToThis.openChildHierarchyOrCardMenu(id, level, refToThis.title + "-" + title)
+                    }
+                };
+                })(id, level, box_title),
+            );
+            return container;
         }
 
         openChildHierarchyOrCardMenu(id, level, title){

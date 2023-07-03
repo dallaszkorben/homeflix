@@ -22,103 +22,179 @@ self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
 
 HTML:
 ```javascript
-<div id="thumbnail-container">
-  <div class="thumbnail">
-    <img src="images/image1.jpg" alt="Thumbnail 1" />
-  </div>
-  <div class="thumbnail">
-    <img src="images/image2.jpg" alt="Thumbnail 2" />
-  </div>
-  <div class="thumbnail">
-    <img src="images/image3.jpg" alt="Thumbnail 3" />
-  </div>
-  <!-- További thumbnail-ök hozzáadása itt -->
-</div>
-<div id="arrow-container">
-  <span id="left-arrow">&lt;</span>
-  <span id="right-arrow">&gt;</span>
-</div>
+<body>
+    <div id="thumbnail-sections" tabindex="0">
+        <div id="section-0" class="thumbnail-section">
+            <div class="thumbnail-container" id="section-0_container-0">
+                <div class="thumbnail" id="section-0_container-0_thumbnail-0">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">First box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+                <div class="thumbnail" id="section-0_container-0_thumbnail-1">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">Second box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+                <div class="thumbnail" id="section-0_container-0_thumbnail-2">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">Third box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+                <div class="thumbnail" id="section-0_container-0_thumbnail-3">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">Fourth box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+                <div class="thumbnail" id="section-0_container-0_thumbnail-3">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">Fifth box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+                <div class="thumbnail" id="section-0_container-0_thumbnail-3">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">Sixth box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+                <div class="thumbnail" id="section-0_container-0_thumbnail-3">
+                    <div class="thumbnail-text-wrapper">
+                        <div class="thumbnail-text">Seventh box</div>
+                    </div>
+                    <img src="images/categories/movie.jpg" alt="Image">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="left-arrow"><</div>
+    <div id="right-arrow">></div>
+</body>
 ```
 
 CSS:
 ```javascript
-.thumbnail-container {
-    width: 100%;
-    overflow: hidden; 
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: flex-start;
-    border:3px blue solid;
+.thumbnail-section {
+    box-sizing:border-box;      /* element and padding and border are included in the width and height */
+    height: 40%;                /* occupies the upper 40% of the browser's screen. if you chnage the browser's height, it changes */
+    width: 100%;                /* occupies the whole browser sceen horizontally */
+    display: flex;              /* flex box layout model */
+    flex-direction: column;     /* stacks the flex items vertically */
+    flex-wrap: nowrap;          /* the flex items will not wrap */
+    overflow: hidden;           /* flex items which does not fit, will be hidden */
+    border: 1px red solid;
+    background-color: rgb(205, 212, 19);
 }
+
+.thumbnail-container {
+    box-sizing:border-box;      /* element and padding and border are included in the width and height */
+    height: 250px;              /* fix height of the container */
+    min-height: 250px;          /* it must be set. ??? */
+    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+    display: flex;              /* flex box layout model */
+    flex-direction: row;        /* stacks the flex items vertically */
+    flex-wrap: nowrap;          /* the flex items will not wrap */
+    overflow: hidden;           /* flex items which does not fit, will be hidden */
+    border: 1px blue solid;
+    background-color: rgb(77, 77, 77);
+}
+
 .thumbnail {
-    width: 200px;
-    height: 150;
-    margin: 0px;
-    border: 3px solid transparent;
-    background-color: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    box-sizing:border-box;      /* element and padding and border are included in the width and height */
+    height: 100%;               /* occupies the full height of the .thumbnail-container */       
+    margin-right: 5px;
+    margin-left: 5px;
+
+    border: 5px solid transparent; /* for the focus frame */
+    background-color: rgb(35, 140, 135);
+
+    display: flex;              /* flex box layout model */
+    position: relative;          /* This made the animation with text work. I do not know how */
 }
 
 .thumbnail img {
-    width: 200px;
-    height: auto;
-    max-height: 150px;
+    width: 300px;
+    height: 238px;              /* .thumbnail-container height:300px -1px border -2x5px .thumbnail border */
+    max-height: 238px;
+    object-fit: contain;        /* resize the image: keeps aspect ratio, resize to fit to the dimesion */
+}
+
+.thumbnail-text-wrapper{            
+    position: absolute;         /* relative to the neares positioned ancestor: .thumbnail. That is the reason the .thumbnail has position: relative */
+    max-width: 300px;           /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+    width: 300px;               /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+    height: 238px;              /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+    max-height: 238px;          /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+
+    font-family: 'Brush Script MT', cursive;
+    font-weight: bold;
+    font-size: 70px;
+    color: rgb(70, 26, 231);
+    text-shadow: 
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        1px 1px 0px black,
+        -1px 1px 0px black;
+}
+
+.thumbnail-text{                /* needed to centralize horizontally the text*/
+    position: relative;
+    text-align: center;         /* the .thumbail-text-wrapper has position:absolute, so it is not possible to align to center */
 }
 
 #left-arrow,
 #right-arrow {
-  cursor: pointer;
-  font-size: 24px;
-  margin-top: 5px;
+    cursor: pointer;
+    font-size: 24px;
+    margin-top: 5px;
 }
 
 #left-arrow {
-  margin-right: 10px;
+    margin-right: 10px;
 }
 ```
 
 jQuery
 ```javascript
 $(document).ready(function() {
-  var thumbnails = $('.thumbnail');
-  var currentIndex = 0;
+    var thumbnails = $('.thumbnail');
+    var currentIndex = 0;
+          
+    // first thumbnail is selected by default
+    thumbnails.eq(currentIndex).css('border-color', 'red');
+          
+    $('#right-arrow').click(function() {
+        thumbnails.eq(currentIndex).css('border-color', 'transparent');
+        currentIndex = (currentIndex + 1) % thumbnails.length;
+        thumbnails.eq(currentIndex).css('border-color', 'red');
+        scrollThumbnails();
+    });
+          
+    $('#left-arrow').click(function() {
+        thumbnails.eq(currentIndex).css('border-color', 'transparent');
+        currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+        thumbnails.eq(currentIndex).css('border-color', 'red');
+        scrollThumbnails();
+    });
 
-  // Kezdetben a legelső thumbnail legyen kiválasztva
-  thumbnails.eq(currentIndex).css('border-color', 'white');
+    function scrollThumbnails() {
+        var container = $('.thumbnail-container');
+        var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
+        var containerWidth = container.width();
+        var containerScrollLeft = container.scrollLeft();
+        var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
 
-  $('#right-arrow').click(function() {
-    thumbnails.eq(currentIndex).css('border-color', 'transparent');
-    currentIndex = (currentIndex + 1) % thumbnails.length;
-    thumbnails.eq(currentIndex).css('border-color', 'white');
-    scrollThumbnails();
-  });
-
-  $('#left-arrow').click(function() {
-    thumbnails.eq(currentIndex).css('border-color', 'transparent');
-    currentIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
-    thumbnails.eq(currentIndex).css('border-color', 'white');
-    scrollThumbnails();
-  });
-
-  function scrollThumbnails() {
-    var container = $('#thumbnail-container');
-    var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
-    var containerWidth = container.width();
-    var containerScrollLeft = container.scrollLeft();
-    var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
-
-    if (currentIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
-      container.animate({ scrollLeft: thumbnailWidth * (currentIndex - visibleThumbnails + 1) }, 200);
-    } else if (currentIndex < containerScrollLeft / thumbnailWidth) {
-      container.animate({ scrollLeft: thumbnailWidth * currentIndex }, 200);
+        if (currentIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
+            container.animate({ scrollLeft: thumbnailWidth * (currentIndex - visibleThumbnails + 1) }, 200);
+        } else if (currentIndex < containerScrollLeft / thumbnailWidth) {
+            container.animate({ scrollLeft: thumbnailWidth * currentIndex }, 200);
+        }
     }
-  }
 });
-
 ```
 
 ## 3. Show and fit image to a DIV background while keep the aspect ratio:
