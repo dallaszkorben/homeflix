@@ -238,8 +238,8 @@
     //         {
     //             "section-id": "section-0",
     //             "current-container-index": 0,
-    //             "containers": [
-    //                 {                    
+    //             "containers": {
+    //                 "0": {                    
     //                     "container-id": "section-0_container-0",
     //                     "current-thumbnail-index": 0,
     //                     "thumbnails": [
@@ -248,7 +248,7 @@
     //                          }
     //                     ]
     //                 },
-    //             ]
+    //             }
     //         }
     //     ]
     // }
@@ -476,35 +476,45 @@
     sectionIndex : The index of the HTML's thumbnail-section <div> (inside the thumbnal-sections <div>) where the new Container should go
     */
     class Container{
-        constructor(title, sectionsMap, attributeMap, sectionIndex, section){
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, containerIndex){
             //this.history = history;
             this.title = title;
             this.sectionsMap = sectionsMap;
             this.attributeMap = attributeMap;
             this.sectionIndex = sectionIndex;
             this.section = section;
+            this.containerIndex = containerIndex
         }
 
         addNewContainerToSection(){
         
             // Add an empty thumbnail-container to the container list
-            var newLength = this.sectionsMap["sections"][this.sectionIndex]["containers"].push({});
-            var containerIndex = newLength - 1;
+//            var newLength = this.sectionsMap["sections"][this.sectionIndex]["containers"].push({});
+//            var containerIndex = newLength - 1;
 
             // Create thumbnail-container object
             var thumbnailContainer = $('<div>', {
                 class: this.attributeMap["container-class"],
-                id: this.attributeMap["container-id"].format(this.sectionIndex, containerIndex)
+                id: this.attributeMap["container-id"].format(this.sectionIndex, this.containerIndex)
             })
-            this.sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["container-id"] = thumbnailContainer.attr('id');
-            this.sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["current-thumbnail-index"] = 0;
-            this.sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["thumbnails"] = [];
+//            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["container-id"] = thumbnailContainer.attr('id');
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex] = {};
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["container-id"] = thumbnailContainer.attr('id')
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["current-thumbnail-index"] = 0;
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["thumbnails"] = [];
 
-            return {containerIndex: containerIndex, thumbnailContainer: thumbnailContainer}
+//            return {containerIndex: containerIndex, thumbnailContainer: thumbnailContainer}
+            return {thumbnailContainer: thumbnailContainer}            
         }
 
         selectDefaultThumbnail(){
-            var defaultThumbnailContainerId = this.sectionsMap["sections"][this.sectionIndex]["containers"][defaultCurrentContainerIndex]["container-id"];
+            var containers = this.sectionsMap["sections"][this.sectionIndex]["containers"];
+            var defaultContainer = containers[defaultCurrentContainerIndex] 
+            if(defaultContainer == undefined){
+                var key = Object.keys(containers)[0];
+                var defaultContainer = containers[key];
+            }
+            var defaultThumbnailContainerId = defaultContainer["container-id"];            
             var thumbnailClass = this.attributeMap["thumbnail-class"];
             var defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
             var defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
@@ -541,7 +551,7 @@
             })
 
             sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
-            sectionsMap["sections"][sectionIndex0]["containers"] = [];
+            sectionsMap["sections"][sectionIndex0]["containers"] = {};
             sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
 
             // Place thumbnail-section into the thumbnail section
@@ -566,8 +576,9 @@
         ready(boxes){
 
             // Add empty container to the container list and create and return thumbnail-container object
-            var ret = this.addNewContainerToSection(this.sectionsMap, this.sectionIndex);
-            var containerIndex = ret["containerIndex"];
+//            var ret = this.addNewContainerToSection(this.sectionsMap, this.sectionIndex);
+            var ret = this.addNewContainerToSection();
+//            var containerIndex = ret["containerIndex"];
             var thumbnailContainer = ret["thumbnailContainer"];
 
             for(var box in boxes){
@@ -579,16 +590,16 @@
                 // lang_orig = record["lang_orig"];
 
                 // Add an empty thumbnail to the thumbnail list
-                var newLength = sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]['thumbnails'].push({});
+                var newLength = sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]['thumbnails'].push({});
                 var thumbnailIndex = newLength - 1;
    
                 // Create thumbnail
                 var thumbnail = $("<div>", {
                     class: attributeMap["thumbnail-class"],
-                    id: attributeMap["thumbnail-id"].format(this.sectionIndex, containerIndex, thumbnailIndex)
+                    id: attributeMap["thumbnail-id"].format(this.sectionIndex, this.containerIndex, thumbnailIndex)
                 });
 
-                sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
+                sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
 
                 // Add Text to image
                 var textWrapper = $("<div>", {
@@ -652,8 +663,8 @@
     }
 
     class AjaxContainer extends Container{
-        constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
-            super(title, sectionsMap, attributeMap, sectionIndex, section);
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, containerIndex, type, url, async){
+            super(title, sectionsMap, attributeMap, sectionIndex, section, containerIndex);
 
             this.type = type;
             this.url = url;
@@ -816,6 +827,7 @@
             var ret = Container.prepareNewOneSectionView();
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
+            var containerIndex = "0";
 
             container = new AjaxChildHierarchyOrCardContainer(
                 title,
@@ -823,14 +835,31 @@
                 attributeMap, 
                 sectionIndex,
                 section,
+                containerIndex,
                 "GET",
                 "/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
                 true                
             );
-            containerHistory.add(this, ret["previous-map"]);
-            containerHistory.showLink($('#history-container'))
-            //$("#history").empty();
-            //$("#history").append(containerHistory.getLink())
+
+
+//--
+
+
+var dramaContainer = new AjaxCardContainer(
+                "Drama",
+                sectionsMap,
+                attributeMap, 
+                sectionIndex,
+                section,
+                "1",
+                "GET",
+                "/collect/standalone/movies/genre/drama/lang/" + languageCode,
+                true
+            );
+
+//--            
+            containerHistory.add(title, [container,dramaContainer]);
+            containerHistory.showLink()
         }
     }
 
@@ -901,6 +930,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             var ret = Container.prepareNewOneSectionView();
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
+            var containerIndex = "0";
 
             container = new AjaxChildHierarchyOrCardContainer(
                 title,
@@ -908,22 +938,25 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
                 attributeMap, 
                 sectionIndex,
                 section,
+                containerIndex,
                 "GET",
                 "/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
                 true,
             );
-            containerHistory.add(this, ret["previous-map"]);
-            // $("#history").empty();
-            // $("#history").append(containerHistory.getLink())
-            containerHistory.showLink($('#history-container'))
+            containerHistory.add(title, [container]);
+            containerHistory.showLink()
         }
     }
 
     class MenuContainer extends Container{
 
-        constructor(title, sectionsMap, attributeMap, sectionIndex, section){
-            super(title, sectionsMap, attributeMap, sectionIndex, section);
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section, containerIndex){
+            super(title, sectionsMap, attributeMap, sectionIndex, section, containerIndex);
 
+            this.showContainer();
+        }
+
+        showContainer(){
             var refToThis = this;
 
             /*
@@ -938,7 +971,30 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         
                 var record = records[i];
 
-                boxes.push(new ContainerBox(
+                // boxes.push(new ContainerBox(
+                //     record["text"],
+                //     record["image"],
+               
+                //     (function(par) {
+                //         return function() {
+                //             //refToThis.openDetails(par);
+                //         };
+                //     })(1),
+
+                //     (function(fn_submenu) {
+                //         return function() {
+                //             fn_submenu();
+                //         };
+                //     })(record["fn_submenu"])
+                // ))
+
+                boxes.push(refToThis.getContainerBox(record));
+            }          
+            this.ready(boxes);
+        }   
+
+        getContainerBox(record){
+            var container = new ContainerBox(
                     record["text"],
                     record["image"],
                
@@ -953,10 +1009,9 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
                             fn_submenu();
                         };
                     })(record["fn_submenu"])
-                ))
-            }          
-            this.ready(boxes);
-        }   
+            )
+            return container;
+        }
 
         getRecords(){
             throw new Error('You have to implement the method getRecords()!');
@@ -1002,50 +1057,72 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         }
     }
 
-    function backInHistory(container, map){
-        console.log(container.title);
-        console.log(container.sectionsMap);
-        console.log(map);
-        console.log();
-    }
-
     class History{
-        constructor(){
+        constructor(historyContainer){
+            this.historyContainer = historyContainer;
+            this.index = -1;
             this.history = [];
         }
 
-        add(container, sectionsMap){
-            this.history.push({"container": container, "map": sectionsMap})
+        add(title, containerList){
+            this.index++;
+            this.history.push({"index": this.index, "title": title, "container-list": containerList});
         }
 
-        showLink(container){
-           
+        showLink(){
+            var refToThis = this;
+
             // remove child elements
-            container.empty();
-            for (var i=0; i < this.history.length; i++) {
-                var title = this.history[i]["container"].title;
+            this.historyContainer.empty();
+
+            for (var i=0; i < this.history.length-1; i++) {
+                var title = this.history[i]["title"];
 
                 var link = $('<div class="link">');
                 // This special mechanism needed, otherwise the Function On Select always on the LATEST boxes[box] would be executed
                 // thumbnail.click(function(){
                 //     boxes[box].getFunctionOnSelect()();
                 // });
-                link.click((function(container, map){
+                link.click((function(index){
                     return function(event){
-                        backInHistory(container, map)
+                        refToThis.backInHistory(index)
                     }
-                })(this.history[i]["container"], this.history[i]["map"]));
+                })(i));
 
                 link.text(title);
                 if(i>0)
-                    container.append(" > ");
-                container.append(link);
+                    this.historyContainer.append(" > ");
+                this.historyContainer.append(link);
+            }
+        }
+
+
+        backInHistory(index){
+
+            var containerList = this.history[index]["container-list"]
+
+            this.history.length = index+1;
+            this.showLink();
+
+            for(var i=0; i<containerList.length; i++){
+                console.log(containerList[i].sectionsMap['sections'][0]['containers'][0]['current-thumbnail-index']);
+            }
+
+            var ret = Container.prepareNewOneSectionView();
+            var sectionIndex = ret["section-index"];
+            var section = ret["section"];
+
+            for(var i=0; i<containerList.length; i++){
+                containerList[i].sectionIndex = sectionIndex;
+                containerList[i].section = section
+                containerList[i].sectionsMap = sectionsMap;
+                containerList[i].showContainer();
             }
         }
     }
 
-    // TODO: add it the menu
-    let containerHistory = new History();
+    // TODO: add it to the the menu
+    let containerHistory;
 
 
 // ---
@@ -1058,13 +1135,17 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
 
 
     class MainMenuLevel extends MenuContainer{
-        constructor(sectionsMap, attributeMap){
+        constructor(sectionsMap, attributeMap, containerIndex){
             var ret = Container.prepareNewOneSectionView();
             var title = "Categories";
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
 //            var mainMenuContainer = new MenuContainer(title, sectionsMap, attributeMap, sectionIndex, section, records)
-            super(title, sectionsMap, attributeMap, sectionIndex, section)
+            super(title, sectionsMap, attributeMap, sectionIndex, section, containerIndex);
+            
+            containerHistory.add(title, [this]);
+            containerHistory.showLink()
+
         }
 
         getRecords(){
@@ -1086,6 +1167,8 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             var ret = Container.prepareNewOneSectionView();
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
+            var dramaContainerIndex = "0";
+            var actionContainerIndex = "1";
 
             var dramaContainer = new AjaxCardContainer(
                 "Drama",
@@ -1093,6 +1176,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
                 attributeMap, 
                 sectionIndex,
                 section,
+                dramaContainerIndex,
                 "GET",
                 "/collect/standalone/movies/genre/drama/lang/" + languageCode,
                 true
@@ -1104,15 +1188,14 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
                 attributeMap, 
                 sectionIndex,
                 section,
+                actionContainerIndex,
                 "GET",
                 "/collect/standalone/movies/genre/action/lang/" + languageCode,
                 true
             );
 
-            containerHistory.add(this, ret["previous-map"]);
-            // $("#history").empty();
-            // $("#history").append(containerHistory.getLink())
-            containerHistory.showLink($('#history-container'))
+            containerHistory.add("Movie", [dramaContainer, actionContainer]);
+            containerHistory.showLink()
         }
 
         /*
@@ -1123,6 +1206,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             var ret = Container.prepareNewOneSectionView();
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
+            var seriesContainerIndex = "0";
 
             var seriesContainer = new AjaxHierarchyContainer(
                 "Series",
@@ -1130,15 +1214,14 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
                 attributeMap, 
                 sectionIndex,
                 section,
+                seriesContainerIndex,
                 "GET",
                 "/collect/all/series/movies/lang/" + languageCode,
                 true
             );
 
-            containerHistory.add(this, ret["previous-map"]);
-            //$("#history").empty();
-            //$("#history").append(containerHistory.getLink())
-            containerHistory.showLink($('#history-container'))
+            containerHistory.add("Series", [seriesContainer]);
+            containerHistory.showLink()
         } 
     }
     
@@ -1152,7 +1235,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
 
 
     var defaultCurrentSectionIndex = 0;
-    var defaultCurrentContainerIndex = 0;
+    var defaultCurrentContainerIndex = "0";
     var defaultCurrentThumbnailIndex = 0;
 
     var languageCode = 'hu';
@@ -1166,9 +1249,10 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
     // ================================================
     $(document).ready(function(){
 
-        
-        mainContainer = new MainMenuLevel(sectionsMap, attributeMap)
+        // TODO: add it to the the menu
+        containerHistory = new History($('#history-container'));
 
+        mainContainer = new MainMenuLevel(sectionsMap, attributeMap, "0")
     })
 
     </script>
