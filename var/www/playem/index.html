@@ -144,6 +144,26 @@
             text-align: center;              /* Needed to centralized the wrapped text */
         }        
 
+        #history-container{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+
+            font-family: Arial, sans-serif;
+            font-weight: normal;
+            font-size: 30px;
+            cursor:grab;
+            min-height: 30px; 
+            max-height: 30px;
+        }
+
+        .link{
+        }
+        .link:hover {
+            text-decoration: underline;
+            color: rgb(0, 9, 129);
+        }
+
     </style>
     
     <!-- JQuery -->
@@ -457,6 +477,7 @@
     */
     class Container{
         constructor(title, sectionsMap, attributeMap, sectionIndex, section){
+            //this.history = history;
             this.title = title;
             this.sectionsMap = sectionsMap;
             this.attributeMap = attributeMap;
@@ -493,6 +514,44 @@
             selectThumbnail(defaultThumbnail);                                
 
             // Turn back listeners
+        }
+
+        static prepareNewOneSectionView(){
+        
+            var previousMap =  {
+                "current-section-index": sectionsMap["current-section-index"],
+                "sections": sectionsMap["sections"]
+            }
+
+            // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
+            // sectionsMap["sections"] = []
+            $("#thumbnail-sections").empty();
+            $("#detail-text-title").empty();
+            $("#detail-image-div").empty();
+            sectionsMap["sections"] = [];
+
+            // Create a new thumbnail-section
+            var sectionLength = sectionsMap["sections"].push({});
+            var sectionIndex0 = sectionLength - 1;
+            sectionsMap["current-section-index"] = sectionIndex0;
+
+            var thumbnailSection_0 = $('<div>', {
+                id: attributeMap["section-id"].format(sectionIndex0),
+                class: attributeMap["section-class"],
+            })
+
+            sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
+            sectionsMap["sections"][sectionIndex0]["containers"] = [];
+            sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
+
+            // Place thumbnail-section into the thumbnail section
+            $('#thumbnail-sections').append(thumbnailSection_0);
+
+            return {"previous-map": previousMap, "section": thumbnailSection_0, "section-index": sectionIndex0}
+        }
+
+        showContainer(){
+            throw new Error('You have to implement the method showContainer()!');
         }
 
         /*
@@ -592,19 +651,24 @@
         }
     }
 
-
-
     class AjaxContainer extends Container{
-
         constructor(title, sectionsMap, attributeMap, sectionIndex, section, type, url, async){
             super(title, sectionsMap, attributeMap, sectionIndex, section);
 
+            this.type = type;
+            this.url = url;
+            this.async = async;
+
+            this.showContainer();
+        }
+
+        showContainer(){
             var refToThis = this;
 
             /*
             Fetches the records
             */
-            $.ajax({type: type, url: url, async: async,
+            $.ajax({type: refToThis.type, url: refToThis.url, async: refToThis.async,
             success: function(result){
 
                 var boxes = [];
@@ -642,7 +706,6 @@
         }
     }
 
-
     /*
     Collects records through the get_standalone_movies_by_genre() method
     Typically used:
@@ -663,6 +726,7 @@
             var title = "";
             var title_orig = "";
             var lang_orig = "";
+            var card_id = record["id"];
             if ( record["title_req"] != null ){
                 title = record["title_req"];
             }
@@ -674,13 +738,15 @@
             var container = new ContainerBox(
                 "",
                 source_path + '/image.jpg',
-                        
+                  
+                // In focus
                 (function(card_id, source, title, title_orig, lang_orig) {
                     return function() {
                         refToThis.showBigPicture(card_id, source, title, title_orig, lang_orig);
                     };
                 })(card_id, source_path + '/image.jpg', title, title_orig, lang_orig),
                         
+                // Select
                 (function(card_id, source, title, title_orig, lang_orig) {
                     return function() {
 //                               selectThumbnail(nextThumbnail)
@@ -726,13 +792,15 @@
             var container = new ContainerBox(
                 "",                             /*series title on thumbnail, not necessary*/
                 source_path + '/image.jpg',
-                        
+                     
+                // In focus
                 (function(id, source, title, title_orig, lang_orig) {
                     return function() {
                         refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
                     };
                 })(id, source_path + '/image.jpg', box_title, box_title_orig, lang_orig),
                         
+                // Select
                 (function(id, title) {
                     return function() {
                         refToThis.openChildHierarchyOrCardMenu(id, title);
@@ -742,22 +810,27 @@
             return container;
         }           
 
+        // Selected
         openChildHierarchyOrCardMenu(id, title){
             
-            var ret = prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView();
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
 
-            new AjaxChildHierarchyOrCardContainer(
+            container = new AjaxChildHierarchyOrCardContainer(
                 title,
                 sectionsMap,
                 attributeMap, 
                 sectionIndex,
                 section,
-                type="GET",
-                url="/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
-                async=true
-            );            
+                "GET",
+                "/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
+                true                
+            );
+            containerHistory.add(this, ret["previous-map"]);
+            containerHistory.showLink($('#history-container'))
+            //$("#history").empty();
+            //$("#history").append(containerHistory.getLink())
         }
     }
 
@@ -801,47 +874,54 @@
                 level==null?sequence: box_title,   // if no level, than it is an episode
                 source_path + '/image.jpg',
                         
+                // Focus
                 (function(id, source, title, title_orig, lang_orig) {
                     return function() {
                         refToThis.showBigPicture(id, source, title, title_orig, lang_orig);
                     };
 // TODO: must fix the title: add to the right language
                 })(id, source_path + '/image.jpg', refToThis.title + "-" + box_title, refToThis.title + "-" + box_title_orig, lang_orig),
-                        
+                   
+                // Select
                 (function(id, level, title) {
                     return function() {
 console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
-                    if(level != null){
-                        refToThis.openChildHierarchyOrCardMenu(id, level, refToThis.title + "-" + title)
-                    }
-                };
+                        if(level != null){
+                            refToThis.openChildHierarchyOrCardMenu(id, level, refToThis.title + "-" + title)
+                        }
+                    };
                 })(id, level, box_title),
             );
             return container;
         }
 
+        // Go deeper
         openChildHierarchyOrCardMenu(id, level, title){
             
-            var ret = prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView();
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
 
-            new AjaxChildHierarchyOrCardContainer(
+            container = new AjaxChildHierarchyOrCardContainer(
                 title,
                 sectionsMap,
                 attributeMap, 
                 sectionIndex,
                 section,
-                type="GET",
-                url="/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
-                async=true
-            );            
+                "GET",
+                "/collect/child_hierarchy_or_card/id/" + id + "/lang/" + languageCode,
+                true,
+            );
+            containerHistory.add(this, ret["previous-map"]);
+            // $("#history").empty();
+            // $("#history").append(containerHistory.getLink())
+            containerHistory.showLink($('#history-container'))
         }
     }
 
     class MenuContainer extends Container{
 
-        constructor(title, sectionsMap, attributeMap, sectionIndex, section, records){
+        constructor(title, sectionsMap, attributeMap, sectionIndex, section){
             super(title, sectionsMap, attributeMap, sectionIndex, section);
 
             var refToThis = this;
@@ -853,7 +933,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             "image"
             */
             var boxes = [];
-
+            var records = refToThis.getRecords();
             for (var i=0; i < records.length; i++) {
         
                 var record = records[i];
@@ -877,7 +957,11 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             }          
             this.ready(boxes);
         }   
-    
+
+        getRecords(){
+            throw new Error('You have to implement the method getRecords()!');
+        }
+
         openDetails(id, src, title, title_orig, lang_orig){
 
             // For an unknown reason only this solution works
@@ -918,96 +1002,146 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         }
     }
 
+    function backInHistory(container, map){
+        console.log(container.title);
+        console.log(container.sectionsMap);
+        console.log(map);
+        console.log();
+    }
 
+    class History{
+        constructor(){
+            this.history = [];
+        }
+
+        add(container, sectionsMap){
+            this.history.push({"container": container, "map": sectionsMap})
+        }
+
+        showLink(container){
+           
+            // remove child elements
+            container.empty();
+            for (var i=0; i < this.history.length; i++) {
+                var title = this.history[i]["container"].title;
+
+                var link = $('<div class="link">');
+                // This special mechanism needed, otherwise the Function On Select always on the LATEST boxes[box] would be executed
+                // thumbnail.click(function(){
+                //     boxes[box].getFunctionOnSelect()();
+                // });
+                link.click((function(container, map){
+                    return function(event){
+                        backInHistory(container, map)
+                    }
+                })(this.history[i]["container"], this.history[i]["map"]));
+
+                link.text(title);
+                if(i>0)
+                    container.append(" > ");
+                container.append(link);
+            }
+        }
+    }
+
+    // TODO: add it the menu
+    let containerHistory = new History();
 
 
 // ---
 
-    function prepareNewOneSectionView(){
+
+
+
+
+
+
+
+    class MainMenuLevel extends MenuContainer{
+        constructor(sectionsMap, attributeMap){
+            var ret = Container.prepareNewOneSectionView();
+            var title = "Categories";
+            var sectionIndex = ret["section-index"];
+            var section = ret["section"];
+//            var mainMenuContainer = new MenuContainer(title, sectionsMap, attributeMap, sectionIndex, section, records)
+            super(title, sectionsMap, attributeMap, sectionIndex, section)
+        }
+
+        getRecords(){
+            var refToThis = this;
+            var records = [
+                {text: "Movies", image: "images/categories/movie.jpg", fn_submenu: function(){refToThis.viewMovie()}},
+                {text: "Movie Series", image: "images/categories/series.jpg", fn_submenu: function(){refToThis.viewMovieSeries()}},
+                {text: "Music Video", image: "images/categories/music_video.jpg", fn_submenu: function(){}},
+                {text: "Music Audio", image: "images/categories/music_audio.jpg", fn_submenu: function(){}},
+            ]
+            return records;
+        }
+
+        /*
+        Shows the Movie selection View
+        */
+        viewMovie(){
         
-        // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
-        // sectionsMap["sections"] = []
-        $("#thumbnail-sections").empty();
-        $("#detail-text-title").empty();
-        $("#detail-image-div").empty();
-        sectionsMap["sections"] = [];
+            var ret = Container.prepareNewOneSectionView();
+            var sectionIndex = ret["section-index"];
+            var section = ret["section"];
 
-        // Create a new thumbnail-section
-        sectionLength = sectionsMap["sections"].push({});
-        sectionIndex0 = sectionLength - 1;
-        sectionsMap["current-section-index"] = sectionIndex0;
+            var dramaContainer = new AjaxCardContainer(
+                "Drama",
+                sectionsMap,
+                attributeMap, 
+                sectionIndex,
+                section,
+                "GET",
+                "/collect/standalone/movies/genre/drama/lang/" + languageCode,
+                true
+            );
 
-        thumbnailSection_0 = $('<div>', {
-            id: attributeMap["section-id"].format(sectionIndex0),
-            class: attributeMap["section-class"],
-        })
+            var actionContainer = new AjaxCardContainer(
+                "Action",
+                sectionsMap,
+                attributeMap, 
+                sectionIndex,
+                section,
+                "GET",
+                "/collect/standalone/movies/genre/action/lang/" + languageCode,
+                true
+            );
 
-        sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
-        sectionsMap["sections"][sectionIndex0]["containers"] = [];
-        sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
+            containerHistory.add(this, ret["previous-map"]);
+            // $("#history").empty();
+            // $("#history").append(containerHistory.getLink())
+            containerHistory.showLink($('#history-container'))
+        }
 
-        // Place thumbnail-section into the thumbnail section
-        $('#thumbnail-sections').append(thumbnailSection_0);
-
-        return {"section": thumbnailSection_0, "section-index": sectionIndex0}
-    }
-
-
-    /*
-    Shows the Movie selection View
-    */
-    function viewMovie(){
+        /*
+        Shows the Movie Series selection View
+        */
+        viewMovieSeries(){
         
-       ret = prepareNewOneSectionView();
-       sectionIndex = ret["section-index"];
-       section = ret["section"];
+            var ret = Container.prepareNewOneSectionView();
+            var sectionIndex = ret["section-index"];
+            var section = ret["section"];
 
-        dramaContainer = new AjaxCardContainer(
-            "Drama",
-            sectionsMap,
-            attributeMap, 
-            sectionIndex,
-            section,
-            type="GET",
-            url="/collect/standalone/movies/genre/drama/lang/" + languageCode,
-            async=true
-        );
+            var seriesContainer = new AjaxHierarchyContainer(
+                "Series",
+                sectionsMap,
+                attributeMap, 
+                sectionIndex,
+                section,
+                "GET",
+                "/collect/all/series/movies/lang/" + languageCode,
+                true
+            );
 
-        actionContainer = new AjaxCardContainer(
-            "Action",
-            sectionsMap,
-            attributeMap, 
-            sectionIndex,
-            section,
-            type="GET",
-            url="/collect/standalone/movies/genre/action/lang/" + languageCode,
-            async=true
-        );
+            containerHistory.add(this, ret["previous-map"]);
+            //$("#history").empty();
+            //$("#history").append(containerHistory.getLink())
+            containerHistory.showLink($('#history-container'))
+        } 
     }
-
-    /*
-    Shows the Movie Series selection View
-    */
-    function viewMovieSeries(){
-        
-        ret = prepareNewOneSectionView();
-        sectionIndex = ret["section-index"];
-        section = ret["section"];
-
-        series = new AjaxHierarchyContainer(
-            "Series",
-            sectionsMap,
-            attributeMap, 
-            sectionIndex,
-            section,
-            type="GET",
-            url="/collect/all/series/movies/lang/" + languageCode,
-            async=true
-        );
-    }
-
-
-
+    
 
 
     
@@ -1032,25 +1166,9 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
     // ================================================
     $(document).ready(function(){
 
-        ret = prepareNewOneSectionView();
-        sectionIndex = ret["section-index"];
-        section = ret["section"];
-       
-        categoryMenu = new MenuContainer(
-            "Categories",
-            sectionsMap,
-            attributeMap, 
-            sectionIndex,
-            section,
-            [
-                {text: "Movies", image: "images/categories/movie.jpg", fn_submenu: function(){viewMovie()}},
-                {text: "Movie Series", image: "images/categories/series.jpg", fn_submenu: function(){viewMovieSeries()}},
-                {text: "Music Video", image: "images/categories/music_video.jpg", fn_submenu: function(){}},
-                {text: "Music Audio", image: "images/categories/music_audio.jpg", fn_submenu: function(){}},
-            ]
-        );
-// ---
-       
+        
+        mainContainer = new MainMenuLevel(sectionsMap, attributeMap)
+
     })
 
     </script>
@@ -1069,7 +1187,9 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
     </div>
 
 
-    <div id="thumbnail-sections" tabindex="0"></div>
+    <div id="history-container"></div>
+    <div id="thumbnail-sections" tabindex="0">
+    </div>
 
     <div id="message"></div>
     <div id="errormessage"></div>
