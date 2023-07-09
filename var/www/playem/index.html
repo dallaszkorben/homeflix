@@ -238,8 +238,8 @@
     //         {
     //             "section-id": "section-0",
     //             "current-container-index": 0,
-    //             "containers": {
-    //                 "0": {                    
+    //             "containers": [
+    //                 {                    
     //                     "container-id": "section-0_container-0",
     //                     "current-thumbnail-index": 0,
     //                     "thumbnails": [
@@ -247,7 +247,7 @@
     //                              "thumbnail-id": "section-0_container-0_thumbnail-0"
     //                          }
     //                     ]
-    //                 },
+    //                 ],
     //             }
     //         }
     //     ]
@@ -483,7 +483,7 @@
             this.attributeMap = attributeMap;
             this.sectionIndex = sectionIndex;
             this.section = section;
-            this.containerIndex = containerIndex
+            this.containerIndex = containerIndex;
         }
 
         addNewContainerToSection(){
@@ -496,10 +496,11 @@
             var thumbnailContainer = $('<div>', {
                 class: this.attributeMap["container-class"],
                 id: this.attributeMap["container-id"].format(this.sectionIndex, this.containerIndex)
+//                id: this.attributeMap["container-id"].format(this.sectionIndex, this.containerIndex)
             })
-//            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["container-id"] = thumbnailContainer.attr('id');
-            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex] = {};
-            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["container-id"] = thumbnailContainer.attr('id')
+            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["container-id"] = thumbnailContainer.attr('id');
+//            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex] = {};
+//            this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["container-id"] = thumbnailContainer.attr('id')
             this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["current-thumbnail-index"] = 0;
             this.sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["thumbnails"] = [];
 
@@ -510,23 +511,27 @@
         selectDefaultThumbnail(){
             var containers = this.sectionsMap["sections"][this.sectionIndex]["containers"];
             var defaultContainer = containers[defaultCurrentContainerIndex] 
-            if(defaultContainer == undefined){
-                var key = Object.keys(containers)[0];
-                var defaultContainer = containers[key];
-            }
-            var defaultThumbnailContainerId = defaultContainer["container-id"];            
-            var thumbnailClass = this.attributeMap["thumbnail-class"];
-            var defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
-            var defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
+            if(defaultContainer !== undefined){
+            //     var key = Object.keys(containers)[0];
+            //     var defaultContainer = containers[key];
+            // }
+            // var defaultThumbnailContainerId = defaultContainer["container-id"];            
+  
+
+
+                var defaultThumbnailContainerId = this.sectionsMap["sections"][this.sectionIndex]["containers"][defaultCurrentContainerIndex]["container-id"];           
+                var thumbnailClass = this.attributeMap["thumbnail-class"];
+                var defaultThumbnails = $("#" + defaultThumbnailContainerId + " ." + thumbnailClass);
+                var defaultThumbnail = defaultThumbnails.eq(defaultCurrentThumbnailIndex);
 
             // Turn off listeners
 
-            selectThumbnail(defaultThumbnail);                                
-
+                selectThumbnail(defaultThumbnail);                                
+            }
             // Turn back listeners
         }
 
-        static prepareNewOneSectionView(){
+        static prepareNewOneSectionView(numberOfContainers){
         
             var previousMap =  {
                 "current-section-index": sectionsMap["current-section-index"],
@@ -551,7 +556,12 @@
             })
 
             sectionsMap["sections"][sectionIndex0]["section-id"] = thumbnailSection_0.attr('id');
-            sectionsMap["sections"][sectionIndex0]["containers"] = {};
+            sectionsMap["sections"][sectionIndex0]["containers"] = [];
+
+            for(var i=0; i<numberOfContainers; i++){
+                sectionsMap["sections"][sectionIndex0]["containers"].push({});
+            }
+            
             sectionsMap["sections"][sectionIndex0]["current-container-index"] = 0;
 
             // Place thumbnail-section into the thumbnail section
@@ -577,6 +587,7 @@
 
             // Add empty container to the container list and create and return thumbnail-container object
 //            var ret = this.addNewContainerToSection(this.sectionsMap, this.sectionIndex);
+
             var ret = this.addNewContainerToSection();
 //            var containerIndex = ret["containerIndex"];
             var thumbnailContainer = ret["thumbnailContainer"];
@@ -591,15 +602,18 @@
 
                 // Add an empty thumbnail to the thumbnail list
                 var newLength = sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]['thumbnails'].push({});
+//                var newLength = sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]['thumbnails'].push({});
                 var thumbnailIndex = newLength - 1;
    
                 // Create thumbnail
                 var thumbnail = $("<div>", {
                     class: attributeMap["thumbnail-class"],
                     id: attributeMap["thumbnail-id"].format(this.sectionIndex, this.containerIndex, thumbnailIndex)
+//                    id: attributeMap["thumbnail-id"].format(this.sectionIndex, containerIndex, thumbnailIndex)
                 });
 
                 sectionsMap["sections"][this.sectionIndex]["containers"][this.containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
+//                sectionsMap["sections"][this.sectionIndex]["containers"][containerIndex]["thumbnails"][thumbnailIndex]["thumbnail-id"] = thumbnail.attr('id');
 
                 // Add Text to image
                 var textWrapper = $("<div>", {
@@ -824,10 +838,10 @@
         // Selected
         openChildHierarchyOrCardMenu(id, title){
             
-            var ret = Container.prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView(2);
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
-            var containerIndex = "0";
+            var containerIndex = 0;
 
             container = new AjaxChildHierarchyOrCardContainer(
                 title,
@@ -851,7 +865,7 @@ var dramaContainer = new AjaxCardContainer(
                 attributeMap, 
                 sectionIndex,
                 section,
-                "1",
+                1,
                 "GET",
                 "/collect/standalone/movies/genre/drama/lang/" + languageCode,
                 true
@@ -927,10 +941,10 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         // Go deeper
         openChildHierarchyOrCardMenu(id, level, title){
             
-            var ret = Container.prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView(1);
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
-            var containerIndex = "0";
+            var containerIndex = 0;
 
             container = new AjaxChildHierarchyOrCardContainer(
                 title,
@@ -970,23 +984,6 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             for (var i=0; i < records.length; i++) {
         
                 var record = records[i];
-
-                // boxes.push(new ContainerBox(
-                //     record["text"],
-                //     record["image"],
-               
-                //     (function(par) {
-                //         return function() {
-                //             //refToThis.openDetails(par);
-                //         };
-                //     })(1),
-
-                //     (function(fn_submenu) {
-                //         return function() {
-                //             fn_submenu();
-                //         };
-                //     })(record["fn_submenu"])
-                // ))
 
                 boxes.push(refToThis.getContainerBox(record));
             }          
@@ -1104,11 +1101,11 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
             this.history.length = index+1;
             this.showLink();
 
-            for(var i=0; i<containerList.length; i++){
-                console.log(containerList[i].sectionsMap['sections'][0]['containers'][0]['current-thumbnail-index']);
-            }
+//            for(var i=0; i<containerList.length; i++){
+//                console.log(containerList[i].sectionsMap['sections'][0]['containers'][0]['current-thumbnail-index']);
+//            }
 
-            var ret = Container.prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView(containerList.length);
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
 
@@ -1136,7 +1133,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
 
     class MainMenuLevel extends MenuContainer{
         constructor(sectionsMap, attributeMap, containerIndex){
-            var ret = Container.prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView(1);
             var title = "Categories";
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
@@ -1164,11 +1161,11 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         */
         viewMovie(){
         
-            var ret = Container.prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView(2);
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
-            var dramaContainerIndex = "0";
-            var actionContainerIndex = "1";
+            var dramaContainerIndex = 0;
+            var actionContainerIndex = 1;
 
             var dramaContainer = new AjaxCardContainer(
                 "Drama",
@@ -1203,10 +1200,10 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         */
         viewMovieSeries(){
         
-            var ret = Container.prepareNewOneSectionView();
+            var ret = Container.prepareNewOneSectionView(1);
             var sectionIndex = ret["section-index"];
             var section = ret["section"];
-            var seriesContainerIndex = "0";
+            var seriesContainerIndex = 0;
 
             var seriesContainer = new AjaxHierarchyContainer(
                 "Series",
@@ -1235,7 +1232,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
 
 
     var defaultCurrentSectionIndex = 0;
-    var defaultCurrentContainerIndex = "0";
+    var defaultCurrentContainerIndex = 0;
     var defaultCurrentThumbnailIndex = 0;
 
     var languageCode = 'hu';
@@ -1252,7 +1249,7 @@ console.log(id + " - " + level + " - " + refToThis.title + " - " + title);
         // TODO: add it to the the menu
         containerHistory = new History($('#history-container'));
 
-        mainContainer = new MainMenuLevel(sectionsMap, attributeMap, "0")
+        mainContainer = new MainMenuLevel(sectionsMap, attributeMap, 0)
     })
 
     </script>
