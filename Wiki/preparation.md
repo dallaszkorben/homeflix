@@ -109,7 +109,21 @@ The critical part is this
 ```
 If you do not do that, the os.listdir() in the code will fail in case of UTF-8 characters in the file name
 
-
+### Mount the media
+Mount your playem media folder to the /var/www/playem/MEDIA folder
+1. connect the device
+2. mount the device:
+```sh
+$ sudo mount /dev/sda1 /media/akoel
+```
+3. mount the media folder to the MEDIA folder
+```sh
+$ sudo mount -o bind  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
+```
+### Umount the media
+```sh
+$ sudo umount /var/www/playem/MEDIA
+```
 
 
 
