@@ -12,6 +12,8 @@ from playem.restserver.endpoints.ep_collect_all_series_movies import EPCollectAl
 from playem.restserver.endpoints.ep_collect_standalone_movies_all import EPCollectStandaloneMoviesAll
 from playem.restserver.endpoints.ep_collect_standalone_movies_by_genre import EPCollectStandaloneMoviesByGenre
 from playem.restserver.endpoints.ep_collect_child_hierarchy_or_card import EPCollectChildHierarchyOrCard
+from playem.restserver.endpoints.ep_collect_medium_by_card_id import EPCollectMediumByCardId
+
 
 # -----------------------------------
 #
@@ -32,6 +34,7 @@ class CollectView(FlaskView):
         self.epCollectStandaloneMoviesAll = EPCollectStandaloneMoviesAll(web_gadget)
         self.epCollectStandaloneMoviesByGenre = EPCollectStandaloneMoviesByGenre(web_gadget)
         self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
+        self.epCollectMediumByCardId = EPCollectMediumByCardId(web_gadget)
 
     #
     # GET http://localhost:5000/collect/
@@ -128,5 +131,20 @@ class CollectView(FlaskView):
         return out
 
 
+# ===
+
+    #
+    # Gives back the medium list of the given Card.
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/medium/card_id/33
+    #
+    # GET http://localhost:80/collect/medium/card_id/33
+    #
+    #@route('/medium/card_id/<card_id>')
+    @route(EPCollectMediumByCardId.PATH_PAR_URL, methods=[EPCollectMediumByCardId.METHOD])
+    def collectMediumByCardId(self, card_id):
+
+        out = self.epCollectMediumByCardId.executeByParameters(card_id=card_id)
+        return out
 
 

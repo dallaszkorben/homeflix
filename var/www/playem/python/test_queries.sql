@@ -750,3 +750,25 @@ GROUP BY id
 
 ''', {'hierarchy_id': 2, 'lang': 'hu'}).fetchall()
 
+
+
+
+===================================
+                                
+--- get medium of a card id  ---
+                               
+===================================
+
+con.execute('''
+            SELECT 
+                card.id card_id, 
+                medium.name file_name
+            FROM 
+                Card card, 
+                 Medium medium
+            WHERE
+                card.id = :card_id AND
+                card.id=medium.id_card
+            ORDER BY file_name
+            LIMIT :limit;
+''', {'card_id': '33', 'limit': 100}).fetchall()

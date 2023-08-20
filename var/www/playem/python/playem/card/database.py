@@ -667,7 +667,7 @@ class SqlDatabase:
                     VALUES (?, ?);
                 '''
                 cur.execute(query, (medium, card_id))   
-        
+
         except sqlite3.Error as e:
             logging.error("To append media failed with: '{0}' while inserting record".format(e))
             cur.execute("rollback")
@@ -1214,6 +1214,44 @@ class SqlDatabase:
             return records
 
 
+    def get_medium_by_card_id(self, card_id, limit=100, json=True):
+        """
+        It returns a list of medium by the card id.
+        Return fields:
+            card_id:    card ID
+            file_name:  name of the media file
+        Example:
+            records=db.get_mediaum_path_list(card_id=33, limit=100)
+        Output:
+            [{"card_id": 33, "file_name": "PsycheEsNarcisz-1-1980.m4v"}] 
+        """
+        with self.lock:
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+                SELECT 
+                    card.id card_id, 
+                    medium.name file_name
+                FROM 
+                    Card card, 
+                    Medium medium
+                WHERE
+                    card.id = :card_id AND
+                    card.id=medium.id_card
+                ORDER BY file_name
+                LIMIT :limit;
+            '''
+            records=cur.execute(query, {'card_id': card_id, 'limit':limit}).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
+
+            return records
 
 
 
