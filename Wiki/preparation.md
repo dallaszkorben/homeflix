@@ -118,11 +118,13 @@ $ sudo mount /dev/sda1 /media/akoel
 ```
 3. mount the media folder to the MEDIA folder
 ```sh
+$ sudo mount -o bind /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
 $ sudo mount -o bind  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
 ```
 ### Umount the media
 ```sh
 $ sudo umount /var/www/playem/MEDIA
+$ sudo umount /var/www/playem
 ```
 
 
