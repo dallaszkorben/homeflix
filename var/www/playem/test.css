@@ -65,18 +65,23 @@ body {
     display: inline-block;
     position: relative;
     flex-grow: 100;                 /* That works instead of width: 100%. I do not know why */
-    text-shadow: 
-        0px 0px 20px black;
+    text-shadow: 0px 0px 20px black;
     font-weight: bold;
-    font-size: 70px;
+    font-size: 80px;
     color: white;
     white-space: wrap;
     border: 10px solid transparent;  /* Needed to make margin to the text */
 }
 
+
+
+
+
+
 #description-text-extra{
     display: block;
     position: relative;
+    flex-grow: 100;
     text-shadow: 0px 0px 10px rgb(187, 189, 255);
     font-weight: bold;
     font-size: var(--description-text-extra-font-size);
@@ -84,13 +89,23 @@ body {
     border: 10px solid transparent;  /* Needed to make margin to the text */
 }
 
+#description-text-extra-table{
+    width: 100%;
+    text-shadow: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    color: inherit;
+}
+
+
+
 #description-text-storyline{
     display: inline-block;
     position: relative;
     flex-wrap: wrap;
     width: 40%;
-    top:10px;
-    left: 10px;
+    /* top:10px;
+    left: 10px; */
     text-shadow: 0px 0px 10px rgb(190, 253, 250);
     font-weight: bold;
     font-size: var(--description-text-storyline-font-size);
@@ -101,7 +116,7 @@ body {
     height: var(--description-text-storyline-height);
     overflow: hidden; 
     text-align: justify;
-    border: 0px black solid;
+    border-left: 10px solid transparent;
     overflow-y: auto;               /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
 }
 
@@ -121,7 +136,7 @@ body {
     height: var(--description-text-credentials-height);
     overflow: hidden; 
     text-align: justify;
-    border: 0px black solid;
+    border-left: 20px solid transparent;
     overflow-y: auto;               /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
 }
 

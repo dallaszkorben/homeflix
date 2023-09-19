@@ -101,37 +101,64 @@ function refreshDescription(root, fileName, title, storyline, credentials, extra
         // -----------------
 
         // --- extra ---
-        let descTextExtra = $("#description-text-extra");
-        descTextExtra.empty();
 
-
-        let textExtra = "";
+        // --- extra - year ---
+        let descTextExtraYear = $("#description-text-extra-table-year");
+        descTextExtraYear.empty();
+        let textExtraYear = "";
         if ("year" in extra){
-            textExtra += "•" + extra["year"] + "•";
+            textExtraYear += "•" + extra["year"] + "•";
         }
+        descTextExtraYear.html(textExtraYear);
+
+        // --- extra - length ---
+        let descTextExtraLength = $("#description-text-extra-table-length");
+        descTextExtraLength.empty();
+        let textExtraLength = "";
         if ("length" in extra){
-            textExtra += "   ";
-            textExtra += extra["length"];
+            textExtraLength += "   ";
+            textExtraLength += extra["length"];
         }
+        descTextExtraLength.html(textExtraLength);
+
+        // --- extra - origin ---
+        let descTextExtraOrigin = $("#description-text-extra-table-origin");
+        descTextExtraOrigin.empty();
+        let textExtraOrigin = "";
         if ("origin" in extra){
-            textExtra += "   •";
             let originList = extra["origin"];
+            let first = true;
             for (let item of originList) {
-                textExtra += item + " ";
+                if(first){
+                    first = false;
+                }else{
+                    textExtraOrigin += "•";
+                }
+                textExtraOrigin += item;
             }
-            textExtra += "•";        
         }
+        descTextExtraOrigin.html(textExtraOrigin);
+
+        // --- extra - genre ---
+        let descTextExtraGenre = $("#description-text-extra-table-genre");
+        descTextExtraGenre.empty();
+        let textExtraGenre = "";
         if ("genre" in extra){
-            textExtra += "   ";
             let genreList = extra["genre"];
+            let first = true;
             for (let item of genreList) {
-                textExtra += "•" + item + "•";
+                if(first){
+                    first = false;
+                }else{
+                    textExtraGenre += "•";
+                }
+                textExtraGenre += item;
             }
-            // textExtra += ;        
         }
+        descTextExtraGenre.html(textExtraGenre);
 
         
-        descTextExtra.html(textExtra)
+        
 
         // let extraTable = $("<table>",{
         //     border: 1,
