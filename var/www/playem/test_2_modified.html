@@ -6,9 +6,10 @@
         </style>
 
         <script src="script/jquery/jquery-3.6.0.min.js"></script>
-        <script src="test.js"></script>
+        <script src="test_description.js"></script>
+        <script src="test_thumbnail.js"></script>
 
-        <link rel="stylesheet" href="test_2.css">
+        <link rel="stylesheet" href="test.css">
         <link rel="icon" href="favicon.ico">
 
         <script>
@@ -40,7 +41,7 @@
             const description_text_wrapper_top = thumbnail_section_border_width;
             const description_text_wrapper_left = thumbnail_section_border_width;
 
-            let t = document.querySelector(':root');
+            t = document.querySelector(':root');
 
             // Default set of the CSS
             t.style.setProperty('--description-section-height-portion', description_section_height_portion + '%');
@@ -59,103 +60,25 @@
             t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
             t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
 
- 
             $(document).ready(function() {                
-                var currentContainerIndex = 0;
-                var currentThumbnailIndex = 0;
-                var containerNumbers = 3;
-                var indexList = [0, 0, 0];
+
+                //
+                // Default thumbnail control
+                //
+                currentContainerIndex = 0;
+                currentThumbnailIndex = 0;
+                containerNumbers = 3;
+                indexList = [0, 0, 0];
           
-                var thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
-                var thumbnailContainerBlocks = $('#section .thumbnail-container-block');
+                domThumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+                thumbnailContainerBlocks = $('#section .thumbnail-container-block');
 
                 // first thumbnail is selected by default
-                thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-          
-                function arrowRight(){
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-                    currentThumbnailIndex = (currentThumbnailIndex + 1) % thumbnails.length;
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-                    scrollThumbnails();
-                    indexList[currentContainerIndex] = currentThumbnailIndex;
-                }
-          
-                function arrowLeft() {
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-                    currentThumbnailIndex = (currentThumbnailIndex - 1 + thumbnails.length) % thumbnails.length;
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-                    scrollThumbnails();
-                    indexList[currentContainerIndex] = currentThumbnailIndex;
-                }
-          
-                function arrowDown() {
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+                domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
 
-                    currentContainerIndex = (currentContainerIndex + 1) % containerNumbers;
-                    thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
-
-                    currentThumbnailIndex = indexList[currentContainerIndex];
-
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-                    scrollThumbnails();
-                };
-
-                function arrowUp() {
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-
-                    currentContainerIndex = (currentContainerIndex - 1 + containerNumbers) % containerNumbers;
-                    thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
-
-                    // currentThumbnailIndex = 0;
-                    currentThumbnailIndex = indexList[currentContainerIndex];
-
-                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-                    scrollThumbnails();
-                };
-
-                function clickOnThumbnail() {
-                }
-
-                function scrollThumbnails() {
-
-                    // Vertical scroll                    
-                    var section = $('#section');
-                    var sectionHeight = section.height();
-                    var thumbnailContainerBlockHeight = thumbnailContainerBlocks.eq(0).outerHeight(true);
-
-                    var sectionScrollTop = section.scrollTop();
-                    var visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
-
-                    console.log(sectionHeight +"/" +thumbnailContainerBlockHeight + "=" + visibleContainers)
-
-                    if (currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
-                        section.animate({ scrollTop: thumbnailContainerBlockHeight * (currentContainerIndex - visibleContainers + 1) }, 200);
-                    } else if (currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
-                        section.animate({ scrollTop: thumbnailContainerBlockHeight * currentContainerIndex }, 200);
-                    }                    
-
-                    // Horizontal scroll
-                    var container = $('#container-' + currentContainerIndex);
-                    var containerWidth = container.width();
-                    var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
-
-                    var containerScrollLeft = container.scrollLeft();
-                    var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
-          
-                    if (currentThumbnailIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
-                        container.animate({ scrollLeft: thumbnailWidth * (currentThumbnailIndex - visibleThumbnails + 1) }, 200);
-                    } else if (currentThumbnailIndex < containerScrollLeft / thumbnailWidth) {
-                        container.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
-                    }
-                }
-
-                $(document).on('keydown',function(e){
-                    var act={13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
-
-                    if(act[e.which]) 
-                        var a=new act[e.which];
-                });
-
+                //
+                // Show Description
+                //
                 let title = "This is a pretty long title. Hopefully it becames 2 or more lines long";
                 let storyline = "This is the storyline of the movie. It can be short or long text.<br>\
                 If it is short, no scrollbar can be seen.<br>\
@@ -176,27 +99,54 @@
                 refreshDescription(t, "test_screenshot.jpg", title, storyline, credentials, extra);
 
                 //
-                // Change the size of the description Image to be aligned
-                // Triggered if the size of the description image DIV changed
+                // Listener configuration
                 //
+
+                // Triggered if the size of the description image DIV changed
                 const resizeObserver = new ResizeObserver(entries => {
+
+                    // Change the size of the description Image to be aligned
                     resizeDescriptionSection(t);
                 });
                 const descSectElement = document.querySelector("#description-section");
                 resizeObserver.observe(descSectElement);
 
+                //
+                // Arrow keyboard event listener
+                //
+
+                $(document).on('keydown',function(e){
+                    var act={13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
+
+                    if(act[e.which]) 
+                        var a=new act[e.which];
+                });
             });
 
         </script>
     </head>
     <body>
 
-
         <div id="description-section">
             <div id="description-text-div">
                 <div id="description-text-wrapper">
                     <div id="description-text-title"></div>
-                    <div id="description-text-extra">hello</div>
+                    <div id="description-text-extra">
+                        <table border="0" id="description-text-extra-table">
+                            <tr>
+                                <td id="description-text-extra-table-year"></td>
+                                <td id="description-text-extra-table-length"></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td id="description-text-extra-table-origin"></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td id="description-text-extra-table-genre"></td>
+                            </tr>
+                        </table>
+                    </div>
                     <div id="description-text-storyline"></div>
                     <div id="description-text-credentials"></div>
                 </div>
@@ -204,7 +154,7 @@
             <div id="description-image"></div>
         </div>
     
-            <div id="section" class="thumbnail-section">
+            <div id="thumbnail-section" class="thumbnail-section">
                 <div class="thumbnail-container-block" id="container-block-0">
                     <div class="thumbnail-container-title">Drama</div>
                     <div class="thumbnail-container" id="container-0">

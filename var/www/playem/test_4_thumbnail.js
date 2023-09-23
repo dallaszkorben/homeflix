@@ -3,47 +3,47 @@ let currentThumbnailIndex;
 let containerNumbers;
 let indexList;
 
-let thumbnails;
-let thumbnailContainerBlocks;
+let domThumbnails;
+let domThumbnailContainerBlocks;
 
 function arrowRight(){
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-    currentThumbnailIndex = (currentThumbnailIndex + 1) % thumbnails.length;
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+    currentThumbnailIndex = (currentThumbnailIndex + 1) % domThumbnails.length;
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
     scrollThumbnails();
     indexList[currentContainerIndex] = currentThumbnailIndex;
 }
 
 function arrowLeft() {
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
-    currentThumbnailIndex = (currentThumbnailIndex - 1 + thumbnails.length) % thumbnails.length;
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+    currentThumbnailIndex = (currentThumbnailIndex - 1 + domThumbnails.length) % domThumbnails.length;
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
     scrollThumbnails();
     indexList[currentContainerIndex] = currentThumbnailIndex;
 }
 
 function arrowDown() {
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
 
     currentContainerIndex = (currentContainerIndex + 1) % containerNumbers;
-    thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+    domThumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
 
     currentThumbnailIndex = indexList[currentContainerIndex];
 
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
     scrollThumbnails();
 };
 
 function arrowUp() {
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
 
     currentContainerIndex = (currentContainerIndex - 1 + containerNumbers) % containerNumbers;
-    thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+    domThumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
 
     // currentThumbnailIndex = 0;
     currentThumbnailIndex = indexList[currentContainerIndex];
 
-    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+    domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
     scrollThumbnails();
 };
 
@@ -55,7 +55,8 @@ function scrollThumbnails() {
     // Vertical scroll                    
     var section = $('#section');
     var sectionHeight = section.height();
-    var thumbnailContainerBlockHeight = thumbnailContainerBlocks.eq(0).outerHeight(true);
+    var domThumbnailContainerBlocks = $('#section .thumbnail-container-block');
+    var thumbnailContainerBlockHeight = domThumbnailContainerBlocks.eq(0).outerHeight(true);
 
     var sectionScrollTop = section.scrollTop();
     var visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
@@ -71,7 +72,7 @@ function scrollThumbnails() {
     // Horizontal scroll
     var container = $('#container-' + currentContainerIndex);
     var containerWidth = container.width();
-    var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
+    var thumbnailWidth = domThumbnails.eq(0).outerWidth(true);
 
     var containerScrollLeft = container.scrollLeft();
     var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
