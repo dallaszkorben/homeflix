@@ -70,11 +70,11 @@
                 containerNumbers = 3;
                 indexList = [0, 0, 0];
           
-                thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+                domThumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
                 thumbnailContainerBlocks = $('#section .thumbnail-container-block');
 
                 // first thumbnail is selected by default
-                thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+                domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
 
                 //
                 // Show Description

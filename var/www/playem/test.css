@@ -158,7 +158,8 @@ body {
 }
 
 
-.thumbnail-section {
+ 
+#thumbnail-section {
     box-sizing: border-box;     /* element and padding and border are included in the width and height */
     height: var(--thumbnail-section-height-portion); /* occupies the upper 40% of the browser's screen. if you chnage the browser's height, it changes */
     width: 100%;                /* occupies the whole browser sceen horizontally */
@@ -168,7 +169,26 @@ body {
     overflow: hidden;           /* flex items which does not fit, will be hidden */
     border: var(--thumbnail-section-border-width) rgb(255, 247, 0) solid;
     background-color: rgb(255, 248, 189);
+} 
+
+
+#thumbnail-section-history{
+    box-sizing:border-box;      /* element and padding and border are included in the width and height */
+    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+    display: flex;              /* flex box layout model */
+    
+    font-family: 'Brush Script MT', cursive;
+    font-weight: bold;
+    font-size: var(--description-text-storyline-font-size);
+    color: black;
+
+    border: 4px rgb(255, 14, 14) solid;
+    background-color: rgb(255, 243, 175);
 }
+
+
+
+
 
 .thumbnail-container-block {
     box-sizing:border-box;      /* element and padding and border are included in the width and height */

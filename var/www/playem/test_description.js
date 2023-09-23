@@ -89,18 +89,24 @@ function refreshDescription(root, fileName, title, storyline, credentials, extra
         // Resizes the description section according to the size of the description image
         resizeDescriptionSection(root);
 
+        // -------------
+        // --- title ---        
+        // -------------
         let descTextTitle = $("#description-text-title");
         descTextTitle.empty();                
         descTextTitle.html(title);
 
-
-        // --- storyline ---
+        // -----------------
+        // --- storyline ---        
+        // -----------------
         let descTextStoryline = $("#description-text-storyline");
         descTextStoryline.empty();                
         descTextStoryline.html(storyline);
         // -----------------
 
+        // -------------
         // --- extra ---
+        // -------------
 
         // --- extra - year ---
         let descTextExtraYear = $("#description-text-extra-table-year");
@@ -157,9 +163,6 @@ function refreshDescription(root, fileName, title, storyline, credentials, extra
         }
         descTextExtraGenre.html(textExtraGenre);
 
-        
-        
-
         // let extraTable = $("<table>",{
         //     border: 1,
         //     id: "description-text-extra-table"
@@ -167,9 +170,10 @@ function refreshDescription(root, fileName, title, storyline, credentials, extra
         // descTextExtra.append(extraTable);
         // printExtra(extraTable, extra)
 
-        // -------------
-
+        // -------------------
         // --- credentials ---
+        // -------------------
+
         let descTextCredentials = $("#description-text-credentials");                
         descTextCredentials.empty();
 
