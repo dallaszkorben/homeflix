@@ -36,19 +36,16 @@ class ObjThumbnailSection{
         this.thumbnailContainerList = [];
         this.thumbnailIndexList = [];
 
-//TODO #section change to thumbnail-section        
-        this.domThumbnailContainerBlocks = $('#section .thumbnail-container-block');
-
         // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
-        this.thumbnailSection = $("#thumbnail-section");
-        this.thumbnailSection.empty();
+        this.domThumbnailSection = $("#thumbnail-section");
+        this.domThumbnailSection.empty();
         
         let domThumbnailSectionHistory = $("<div>",{
             id: "thumbnail-section-history",
             text: "> "
         });
 
-        this.thumbnailSection.append(domThumbnailSectionHistory);
+        this.domThumbnailSection.append(domThumbnailSectionHistory);
      
         this.oDescriptionContainer = new ObjDescriptionContainer();
     }
@@ -97,7 +94,10 @@ class ObjThumbnailSection{
         domThumbnailContainerBlock.append(domThumbnailContainerTitle);
         domThumbnailContainerBlock.append(domThumbnailContainer);
         domThumbnailContainerBlock.append(domThumbnailContainerSpace);
-        this.thumbnailSection.append(domThumbnailContainerBlock);
+        this.domThumbnailSection.append(domThumbnailContainerBlock);
+
+        // this variable should be refreshed every time when a new thumbnail is added
+        this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
     }
 
     selectDefault(){
@@ -122,21 +122,10 @@ class ObjThumbnailSection{
         let credentials = thumbnail.getCredentials();
         let extra = thumbnail.getExtras();
 
-        // TODO: temporary solution
+        // Shows the actual Description
         this.oDescriptionContainer.refreshDescription(image, title, storyline, credentials, extra);
     }
     
-//---------------    
-
-
-// let currentContainerIndex;
-// let currentThumbnailIndex;
-// let containerNumbers;
-// let indexList;
-
-// let domThumbnails;
-// let domThumbnailContainerBlocks;
-
     arrowRight(){
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
         let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
@@ -146,6 +135,8 @@ class ObjThumbnailSection{
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this.scrollThumbnails();
         this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+
+        this.showDetails();
     }
 
     arrowLeft() {
@@ -157,6 +148,7 @@ class ObjThumbnailSection{
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this.scrollThumbnails();
         this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+        this.showDetails();
     }
 
     arrowDown() {
@@ -171,6 +163,7 @@ class ObjThumbnailSection{
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this.scrollThumbnails();
+        this.showDetails();
     };
 
     arrowUp() {
@@ -187,6 +180,7 @@ class ObjThumbnailSection{
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this. scrollThumbnails();
+        this.showDetails();
     };
 
     clickOnThumbnail() {
@@ -194,21 +188,21 @@ class ObjThumbnailSection{
 
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail'); 
+        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+
         // Vertical scroll 
-//TODO #section change to thumbnail-section                              
-        let section = $('#section');
-        let sectionHeight = section.height();
+        let sectionHeight = this.domThumbnailSection.height();
         let thumbnailContainerBlockHeight = this.domThumbnailContainerBlocks.eq(0).outerHeight(true);
 
-        let sectionScrollTop = section.scrollTop();
+        let sectionScrollTop = this.domThumbnailSection.scrollTop();
         let visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
 
         //console.log(sectionHeight +"/" +thumbnailContainerBlockHeight + "=" + visibleContainers)
 
         if (this.currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
-            section.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
+            this.domThumbnailSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
         } else if (this.currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
-            section.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
+            this.domThumbnailSection.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
         }                    
 
         // Horizontal scroll
@@ -225,7 +219,6 @@ class ObjThumbnailSection{
             domContainer.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
         }
     }
-
 }
    
 

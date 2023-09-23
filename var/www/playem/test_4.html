@@ -6,7 +6,6 @@
         </style>
 
         <script src="script/jquery/jquery-3.6.0.min.js"></script>
-        <script src="test_4_thumbnail.js"></script>
         <script src="test_4_container.js"></script>
 
         <link rel="stylesheet" href="test_4.css">
@@ -112,6 +111,33 @@
                 oContainer0.addThumbnail(2, thumbnail_0_1);
 
                 oThumbnailSection.addThumbnailContainerObject("Drama", oContainer0)
+
+                // ---
+
+                // Create Container 1
+                let oContainer1 = new ObjThumbnailContainer();
+
+                // Create descriptions for Container 0
+                let thumbnail_1_0 = new Thumbnail();
+                thumbnail_1_0.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="test_screenshot.jpg");
+                thumbnail_1_0.setTitles(lang="hu", original="This is the third original title", translated="This is the third given language title", thumb="thumble 3 title");
+                thumbnail_1_0.setStoryline("This is the first story<br> with multiple lines<br>divided by '<br>' tags")
+                thumbnail_1_0.setCredentials(directors=["David Linch"], writers=["Philip K. Dick"], stars=["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"]);
+                thumbnail_1_0.setExtras(length="03:13:23", year=2013, origin=["Germany", "Sweden"], genre=["Drama"], theme=["Friendship"]);
+                oContainer1.addThumbnail(3, thumbnail_1_0);
+
+                let thumbnail_1_1 = new Thumbnail();
+                thumbnail_1_1.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
+                thumbnail_1_1.setTitles("hu", original="This is the fourth original title", translated="This is the fourth given language title", thumb="thumbnail 4 title");
+                thumbnail_1_1.setStoryline("This is the second story<br> with multiple lines<br>divided by '<br>' tags")
+                thumbnail_1_1.setCredentials(directors=["Ruben Fleischer"], writers=["Rhett Reese", "Paul Wernick"], stars=["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"]);
+                thumbnail_1_1.setExtras(length="01:47:57", year=1989, origin=["Hungary", "Germany", "Australia"], genre=["Action", "Sci-fi"], theme=["War", "AI", "Life"]);
+                oContainer1.addThumbnail(4, thumbnail_1_1);
+
+                oThumbnailSection.addThumbnailContainerObject("Comedy", oContainer1)
+
+                // ---
+
                 oThumbnailSection.selectDefault();
 
                 // -----------------------
