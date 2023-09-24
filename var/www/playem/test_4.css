@@ -181,14 +181,31 @@ body {
     font-weight: bold;
     font-size: var(--description-text-storyline-font-size);
     color: black;
+    min-height: 1.5em;
 
     border: 4px rgb(255, 14, 14) solid;
-    background-color: rgb(255, 243, 175);
+    background-color: rgb(255, 243, 175);  
 }
 
+#thumbnail-section-history-text{
+    display: inline-block; 
+    
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    color: inherit;
+}
 
+#thumbnail-section-history-link{
+    display: inline-block; 
 
-
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    color: blue;
+    cursor: pointer;
+    text-decoration: underline;
+}
 
 .thumbnail-container-block {
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
@@ -238,7 +255,7 @@ body {
     border: var(--thumbnail-border-width) solid transparent; /* for the focus frame */
     background-color: rgb(35, 140, 135);
 
-    display: flex;              /* flex box layout model */
+    display: flex;               /* flex box layout model */
     position: relative;          /* This made the animation with text work. I do not know how */
 }
 

@@ -10,7 +10,7 @@ class ObjThumbnailSection{
      * Delete the existing Containers and create a given number of Containers
      * 
      * <div id="thumbnail-section">
-     *   <div id="thumbnail-section-history"> > </div>
+     *   <div id="thumbnail-section-history"> </div>
      *
      *   <div class="thumbnail-container-block" id="container-block-1">
      *       <div class="thumbnail-container-title">Comedy</div>
@@ -28,10 +28,12 @@ class ObjThumbnailSection{
      * 
      * @param {number} numberOfContainers 
      */
-    constructor(defaultContainerIndex=0){
+    constructor(history={text:"", link:""}){
+        this.defaultContainerIndex = 0
+        this.historyDict = history;
+
         this.oDescriptionContainer;
         this.numberOfContainers = 0;
-        this.defaultContainerIndex = defaultContainerIndex;
         this.currentContainerIndex = -1;
         this.thumbnailContainerList = [];
         this.thumbnailIndexList = [];  
@@ -41,15 +43,30 @@ class ObjThumbnailSection{
         this.resetDom();
     }
 
-    resetDom(){
+     resetDom(){
         // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
         this.domThumbnailSection = $("#thumbnail-section");
         this.domThumbnailSection.empty();
         
         let domThumbnailSectionHistory = $("<div>",{
             id: "thumbnail-section-history",
-            text: "> "
         });
+        let domThumbnailSectionHistoryText = $("<div>",{
+            id: "thumbnail-section-history-text",
+            html: this.historyDict["text"]
+        });
+        let domThumbnailSectionHistoryLink = $("<div>",{
+            id: "thumbnail-section-history-link",
+            html: this.historyDict["link"]
+        });
+
+        domThumbnailSectionHistoryLink.click(function() {
+            let esc = $.Event("keydown", { keyCode: 27 });
+            $(document).trigger(esc); // c
+        });
+
+        domThumbnailSectionHistory.append(domThumbnailSectionHistoryText);
+        domThumbnailSectionHistory.append(domThumbnailSectionHistoryLink);
 
         this.domThumbnailSection.append(domThumbnailSectionHistory);
     }
@@ -98,6 +115,7 @@ class ObjThumbnailSection{
         
         this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
 
+        this.focus();
     }
 
     getDescriptionContainer(){
@@ -152,15 +170,24 @@ class ObjThumbnailSection{
         this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
     }
 
-    selectDefault(){
+    focusDefault(){
         this.currentContainerIndex = 0;
+        this.focus();
+    }
+
+    focus(){
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
         let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
 
+        this.scrollThumbnails();
         this.showDetails();
     }
+
+   
+   
+
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
     showDetails(){
@@ -185,9 +212,8 @@ class ObjThumbnailSection{
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         currentThumbnailIndex = (currentThumbnailIndex + 1) % domThumbnails.length;
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-        this.scrollThumbnails();
         this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
-
+        this.scrollThumbnails();
         this.showDetails();
     }
 
@@ -198,8 +224,8 @@ class ObjThumbnailSection{
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         currentThumbnailIndex = (currentThumbnailIndex - 1 + domThumbnails.length) % domThumbnails.length;
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-        this.scrollThumbnails();
         this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+        this.scrollThumbnails();
         this.showDetails();
     }
 
@@ -241,6 +267,8 @@ class ObjThumbnailSection{
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail'); 
         let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+
+        console.log("previousIndes: " + currentThumbnailIndex);
 
         // Vertical scroll 
         let sectionHeight = this.domThumbnailSection.height();
@@ -577,6 +605,33 @@ class ObjDescriptionContainer{
     * When the image loaded, this function will calculate the size of the elements in the description and
     * it will show the details
     * 
+    * <div id="description-section">
+    *   <div id="description-text-div">
+    *       <div id="description-text-wrapper">
+    *           <div id="description-text-title"></div>
+    *           <div id="description-text-extra">
+    *               <table border="0" id="description-text-extra-table">
+    *                   <tr>
+    *                       <td id="description-text-extra-table-year"></td>
+    *                       <td id="description-text-extra-table-length"></td>
+    *                   </tr>
+    *                   <tr>
+    *                       <td></td>
+    *                       <td id="description-text-extra-table-origin"></td>
+    *                   </tr>
+    *                   <tr>
+    *                       <td></td>
+    *                       <td id="description-text-extra-table-genre"></td>
+    *                   </tr>
+    *               </table>
+    *           </div>
+    *           <div id="description-text-storyline"></div>
+    *           <div id="description-text-credentials"></div>
+    *       </div>
+    *   </div>
+    *   <div id="description-image"></div>
+    *<div>
+    * 
     * @param {*} fileName 
     * @param {*} storyline 
     * @param {*} credential 
@@ -753,6 +808,37 @@ class ObjDescriptionContainer{
                 table.append(line);
             }
         }
+    }    
+}
+
+class History{
+    constructor(){
+        this.levelList = [];
     }
-    
+
+    addNewLevel(text, obj){
+        this.levelList.push({"text": text, "obj": obj});
+    }
+
+    getLevels(){
+        let text = "";
+        let link = "";
+
+        for(let i=0; i<this.levelList.length-1; i++){
+            text += this.levelList[i]["text"] + " >&nbsp;";
+        }
+        
+        link = this.levelList.length ? " " + this.levelList[this.levelList.length - 1]["text"] : "";
+
+        return {"text": text, "link": link};
+    }
+
+    popLevel(){
+        if(this.levelList.length){
+            let level = this.levelList.pop();
+            return level["obj"];
+        }else{
+            return undefined;
+        }
+    }
 }

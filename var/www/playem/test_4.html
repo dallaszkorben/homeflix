@@ -102,7 +102,13 @@
                 return rand;
             }
 
-            function generateNewThumbnailSection(containerNumber, startString){
+            let history = new History();
+            let oThumbnailSection = undefined;
+            let thumbnailSectionList = [];
+            let startStringList = ["Begin", "Second","Third", "Fourth", "Fifth"];
+            let startStringIndex = 0
+
+            function generateNewThumbnailSection(containerNumber, startString, historyDict){
 
                 let titleList = ['Drama', 'Comedy', 'Scifi', 'Documentary', 'Musical', 'Concert', 'Thriller', 'Mystery', 'Satire', 'Biographyt', 'Portrait', 'Tail', 'Romance', 'Parody', 'War', 'Horror', 'Fantasy', 'Adventure', 'Crime', 'Western', 'Action']
                 let themeList = ['Revenge', 'Love', 'Devil', 'Drog', 'State power', 'Media', 'Lie', 'Moral', 'Betrayal', 'Fear', 'Heroism', 'Robot', 'Clone', 'Money', 'Greed', 'Envy', ]
@@ -110,9 +116,8 @@
                 let actorList = ['Woody Harrelson', 'Jesse Eisenberg', 'Emma Stone', 'Denzel Washington', 'Tom Hanks', 'Marlon Brando', 'Leonardo DiCaprio', 'Johnny Depp', 'Al Pacino', 'Jack Nicholson', 'Henry Fonda', 'Harrison Ford', 'Sigourney Weaver']
                 let countryList = ['Germany', 'Sweden', 'Hungary', 'Australia', 'USA', 'Mexico', 'Brasilia', 'France', 'Romania', 'Russia', 'Norvegia']
 
-
                 // Create the Thumbnail Selection Object
-                oThumbnailSection = new ObjThumbnailSection()
+                oThumbnailSection = new ObjThumbnailSection(historyDict)
 
                 for(let containerIndex=0; containerIndex<containerNumber; containerIndex++){
 
@@ -135,12 +140,12 @@
                     }
                     oThumbnailSection.addThumbnailContainerObject(oContainer)
                 }
-                oThumbnailSection.selectDefault();
+                oThumbnailSection.focusDefault();
             }
 
             $(document).ready(function() {                
 
-                generateNewThumbnailSection(3, "Begin")
+                generateNewThumbnailSection(3, startStringList[startStringIndex])
 
                 // -----------------------
                 // Listener configurations
@@ -165,8 +170,24 @@
 
                 $(document).on('keydown',function(e){
                     function clickOnThumbnail(){
-                        oThumbnailSection.buildUpDom();
+
+                        history.addNewLevel(startStringList[startStringIndex], oThumbnailSection);                        
+                        startStringIndex++;
+                        generateNewThumbnailSection(3, startStringList[startStringIndex], history.getLevels());
+
+
+                        //oThumbnailSection.buildUpDom();
                         //oThumbnailSection.clickOnThumbnail();
+                    }
+                    function clickOnEscape(){
+
+                        let oT = history.popLevel();
+                        if (oT){
+                            oThumbnailSection = oT;
+                            startStringIndex--;
+                            oThumbnailSection.buildUpDom();
+                        }
+
                     }
                     function arrowLeft(){                        
                         oThumbnailSection.arrowLeft();
@@ -182,10 +203,13 @@
                     }
 
 
-                    var act={13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
+                    var act={27:clickOnEscape, 13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
 
-                    if(act[e.which]) 
-                        var a=new act[e.which];
+//                    if(act[e.which]) 
+//                        var a=new act[e.which];
+                    if(act[e.keyCode])
+                        var a=new act[e.keyCode];
+
                 });
             });
 
