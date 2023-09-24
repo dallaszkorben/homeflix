@@ -34,8 +34,14 @@ class ObjThumbnailSection{
         this.defaultContainerIndex = defaultContainerIndex;
         this.currentContainerIndex = -1;
         this.thumbnailContainerList = [];
-        this.thumbnailIndexList = [];
+        this.thumbnailIndexList = [];  
 
+        this.oDescriptionContainer = new ObjDescriptionContainer();        
+
+        this.resetDom();
+    }
+
+    resetDom(){
         // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
         this.domThumbnailSection = $("#thumbnail-section");
         this.domThumbnailSection.empty();
@@ -46,15 +52,59 @@ class ObjThumbnailSection{
         });
 
         this.domThumbnailSection.append(domThumbnailSectionHistory);
-     
-        this.oDescriptionContainer = new ObjDescriptionContainer();
+    }
+
+    buildUpDom(){
+        this.resetDom();
+
+        for(let containerIndex=0; containerIndex<this.thumbnailContainerList.length; containerIndex++){
+            let objThumbnailContainer = this.thumbnailContainerList[containerIndex];
+
+            objThumbnailContainer.buildUpDom();
+            let domThumbnailContainer = objThumbnailContainer.getDom();
+            
+            let id = domThumbnailContainer.attr("id");
+            domThumbnailContainer.attr("id", id.format("???", containerIndex));
+            domThumbnailContainer.children('.thumbnail').each(function(){
+                let element = $(this);
+                let id=element.attr("id");
+                element.attr("id",id.format("???", containerIndex));
+            });
+
+
+
+
+            let domThumbnailContainerBlock = $('<div>', {
+                class: "thumbnail-container-block",
+                id: "container-block-" + containerIndex
+            });
+    
+            // Creates the Title JQuery element of the Thumbnail Container
+            let domThumbnailContainerTitle = $("<div>",{
+                class: "thumbnail-container-title",
+                text: objThumbnailContainer.getTitle()
+            });
+
+            let domThumbnailContainerSpace = $("<div>",{
+                class: "thumbnail-container-space",
+                id: "container-space-" + containerIndex
+            });
+    
+            domThumbnailContainerBlock.append(domThumbnailContainerTitle);
+            domThumbnailContainerBlock.append(domThumbnailContainer);
+            domThumbnailContainerBlock.append(domThumbnailContainerSpace);
+            this.domThumbnailSection.append(domThumbnailContainerBlock);
+        }
+        
+        this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
+
     }
 
     getDescriptionContainer(){
         return this.oDescriptionContainer;
     }
 
-    addThumbnailContainerObject(title, thumbnailContainer){
+    addThumbnailContainerObject(thumbnailContainer){
         let containerIndex = this.thumbnailIndexList.length;
 
         let domThumbnailContainerBlock = $('<div>', {
@@ -65,7 +115,7 @@ class ObjThumbnailSection{
         // Creates the Title JQuery element of the Thumbnail Container
         let domThumbnailContainerTitle = $("<div>",{
             class: "thumbnail-container-title",
-            text: title
+            text: thumbnailContainer.getTitle()
         });
 
         // Gets the Thumbnail Container JQuery Element
@@ -95,6 +145,8 @@ class ObjThumbnailSection{
         domThumbnailContainerBlock.append(domThumbnailContainer);
         domThumbnailContainerBlock.append(domThumbnailContainerSpace);
         this.domThumbnailSection.append(domThumbnailContainerBlock);
+
+//        this.thumbnailContainerBlockDomList.push(domThumbnailContainerBlock);
 
         // this variable should be refreshed every time when a new thumbnail is added
         this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
@@ -231,21 +283,63 @@ class ObjThumbnailContainer{
      *   <div class="thumbnail-container-space" id="container-space-1"></div>
      * </div>
      */
-    constructor(defaultThumbnailIndex=0){            
+    constructor(title, defaultThumbnailIndex=0){            
+        this.title = title
         this.numberOfThumbnails = undefined;
         this.defaultThumbnailIndex = defaultThumbnailIndex;
         this.currentThumbnailIndex = undefined;
         this.thumbnailList = [];
         
+        this.resetDom();
+    }
+
+    resetDom(){
         this.domThumbnailContainer = $("<div>",{
             class: "thumbnail-container",
             id: "container-{???}"
         });
+        this.domThumbnailContainer.empty();
+    }
+
+    buildUpDom(){
+        this.resetDom();
+
+        for(let thumbnailIndex=0; thumbnailIndex<this.thumbnailList.length; thumbnailIndex++){
+            let objThumbnail = this.thumbnailList[thumbnailIndex];
+
+            let title_thumb = objThumbnail.getThumbnailTitle(); 
+            let thumbnail_src = objThumbnail.getThumbnailImageSource();
+
+            let domThumbnail = $("<div>",{
+                class: "thumbnail",
+                id: "container-{???}-thumbnail-" + thumbnailIndex
+            });
+            let domThumbnailTextWrapper = $("<div>",{
+                class: "thumbnail-text-wrapper",
+            });
+            let domThumbnailText = $("<div>",{
+                class: "thumbnail-text",
+                text: title_thumb
+            });
+            let domImg = $("<img>",{
+                src: thumbnail_src,
+                alt: "Image"
+            });
+            domThumbnailTextWrapper.append(domThumbnailText);
+            domThumbnail.append(domThumbnailTextWrapper);
+            domThumbnail.append(domImg);
+    
+            this.domThumbnailContainer.append(domThumbnail);
+        }
     }
 
     getDom(){
         return this.domThumbnailContainer;
     }        
+
+    getTitle(){
+        return this.title;
+    }
 
     getDefaultThumbnailIndex(){
         return this.defaultThumbnailIndex;
@@ -299,6 +393,7 @@ class ObjThumbnailContainer{
 
         let thumbnailIndex = this.thumbnailList.length;
         this.thumbnailList.push(thumbnail);
+
         let domThumbnail = $("<div>",{
             class: "thumbnail",
             id: "container-{???}-thumbnail-" + thumbnailIndex
@@ -317,7 +412,10 @@ class ObjThumbnailContainer{
         domThumbnailTextWrapper.append(domThumbnailText);
         domThumbnail.append(domThumbnailTextWrapper);
         domThumbnail.append(domImg);
+
         this.domThumbnailContainer.append(domThumbnail);
+
+//        this.thumbnailDomList.push(domThumbnail);
     }
 }
 

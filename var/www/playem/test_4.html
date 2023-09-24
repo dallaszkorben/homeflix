@@ -85,60 +85,62 @@
             t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
             t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
 
-            $(document).ready(function() {                
+            function generateRandom(min = 0, max = 100) {
+
+                // find diff
+                let difference = max - min;
+
+                // generate random number 
+                let rand = Math.random();
+
+                // multiply with difference 
+                rand = Math.floor( rand * difference);
+
+                // add with min value 
+                rand = rand + min;
+
+                return rand;
+            }
+
+            function generateNewThumbnailSection(containerNumber, startString){
+
+                let titleList = ['Drama', 'Comedy', 'Scifi', 'Documentary', 'Musical', 'Concert', 'Thriller', 'Mystery', 'Satire', 'Biographyt', 'Portrait', 'Tail', 'Romance', 'Parody', 'War', 'Horror', 'Fantasy', 'Adventure', 'Crime', 'Western', 'Action']
+                let themeList = ['Revenge', 'Love', 'Devil', 'Drog', 'State power', 'Media', 'Lie', 'Moral', 'Betrayal', 'Fear', 'Heroism', 'Robot', 'Clone', 'Money', 'Greed', 'Envy', ]
+                let directorList = ['David Linch', , 'Alfred Hitchcock', 'Martin Scorsese', 'Quentin Tarantino', 'Francis Ford Coppola', 'Christopher Nolan', 'Stanley Kubrick', 'David Fincher', 'Tim Burton', 'Woody Allen', 'Terry Gilliam', 'Darren Aronofsky', 'Lars von Trier', 'Ridley Scott']
+                let actorList = ['Woody Harrelson', 'Jesse Eisenberg', 'Emma Stone', 'Denzel Washington', 'Tom Hanks', 'Marlon Brando', 'Leonardo DiCaprio', 'Johnny Depp', 'Al Pacino', 'Jack Nicholson', 'Henry Fonda', 'Harrison Ford', 'Sigourney Weaver']
+                let countryList = ['Germany', 'Sweden', 'Hungary', 'Australia', 'USA', 'Mexico', 'Brasilia', 'France', 'Romania', 'Russia', 'Norvegia']
+
 
                 // Create the Thumbnail Selection Object
                 oThumbnailSection = new ObjThumbnailSection()
 
-                // Create Container 0
-                let oContainer0 = new ObjThumbnailContainer();
+                for(let containerIndex=0; containerIndex<containerNumber; containerIndex++){
 
-                // Create descriptions for Container 0
-                let thumbnail_0_0 = new Thumbnail();
-                thumbnail_0_0.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="test_screenshot.jpg");
-                thumbnail_0_0.setTitles(lang="hu", original="This is the first original title", translated="This is the first given language title", thumb="thumble 1 title");
-                thumbnail_0_0.setStoryline("This is the first story<br> with multiple lines<br>divided by '<br>' tags")
-                thumbnail_0_0.setCredentials(directors=["David Linch"], writers=["Philip K. Dick"], stars=["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"]);
-                thumbnail_0_0.setExtras(length="03:13:23", year=2013, origin=["Germany", "Sweden"], genre=["Drama"], theme=["Friendship"]);
-                oContainer0.addThumbnail(1, thumbnail_0_0);
+                    // Create Container
+                    let oContainer = new ObjThumbnailContainer(titleList[Math.floor(Math.random() * titleList.length)]);
 
-                let thumbnail_0_1 = new Thumbnail();
-                thumbnail_0_1.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
-                thumbnail_0_1.setTitles("hu", original="This is the second original title", translated="This is the second given language title", thumb="thumbnail 2 title");
-                thumbnail_0_1.setStoryline("This is the second story<br> with multiple lines<br>divided by '<br>' tags")
-                thumbnail_0_1.setCredentials(directors=["Ruben Fleischer"], writers=["Rhett Reese", "Paul Wernick"], stars=["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"]);
-                thumbnail_0_1.setExtras(length="01:47:57", year=1989, origin=["Hungary", "Germany", "Australia"], genre=["Action", "Sci-fi"], theme=["War", "AI", "Life"]);
-                oContainer0.addThumbnail(2, thumbnail_0_1);
+                    let thumbnailNumber = generateRandom(2,10);
+                    for(let thumbnailIndex=0; thumbnailIndex<thumbnailNumber; thumbnailIndex++){
 
-                oThumbnailSection.addThumbnailContainerObject("Drama", oContainer0)
+                        let id = startString + "_" + containerIndex + "." + thumbnailIndex
 
-                // ---
-
-                // Create Container 1
-                let oContainer1 = new ObjThumbnailContainer();
-
-                // Create descriptions for Container 0
-                let thumbnail_1_0 = new Thumbnail();
-                thumbnail_1_0.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="test_screenshot.jpg");
-                thumbnail_1_0.setTitles(lang="hu", original="This is the third original title", translated="This is the third given language title", thumb="thumble 3 title");
-                thumbnail_1_0.setStoryline("This is the first story<br> with multiple lines<br>divided by '<br>' tags")
-                thumbnail_1_0.setCredentials(directors=["David Linch"], writers=["Philip K. Dick"], stars=["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"]);
-                thumbnail_1_0.setExtras(length="03:13:23", year=2013, origin=["Germany", "Sweden"], genre=["Drama"], theme=["Friendship"]);
-                oContainer1.addThumbnail(3, thumbnail_1_0);
-
-                let thumbnail_1_1 = new Thumbnail();
-                thumbnail_1_1.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
-                thumbnail_1_1.setTitles("hu", original="This is the fourth original title", translated="This is the fourth given language title", thumb="thumbnail 4 title");
-                thumbnail_1_1.setStoryline("This is the second story<br> with multiple lines<br>divided by '<br>' tags")
-                thumbnail_1_1.setCredentials(directors=["Ruben Fleischer"], writers=["Rhett Reese", "Paul Wernick"], stars=["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"]);
-                thumbnail_1_1.setExtras(length="01:47:57", year=1989, origin=["Hungary", "Germany", "Australia"], genre=["Action", "Sci-fi"], theme=["War", "AI", "Life"]);
-                oContainer1.addThumbnail(4, thumbnail_1_1);
-
-                oThumbnailSection.addThumbnailContainerObject("Comedy", oContainer1)
-
-                // ---
-
+                        // Create descriptions for Container
+                        let thumbnail = new Thumbnail();
+                        thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="test_screenshot.jpg");
+                        thumbnail.setTitles(lang="hu", original="This is the " + id + " original title", translated="This is the " + id + " given language title", thumb="thumble " + id + " title");
+                        thumbnail.setStoryline("This is the first story of " + id + " with multiple lines<br>divided by '<br>' tags")
+                        thumbnail.setCredentials(directors=[directorList[Math.floor(Math.random() * directorList.length)]], writers=[directorList[Math.floor(Math.random() * directorList.length)]], stars=[actorList[Math.floor(Math.random() * actorList.length)]]);
+                        thumbnail.setExtras(length="03:13:23", year=2013, origin=[countryList[Math.floor(Math.random() * countryList.length)]], genre=[titleList[Math.floor(Math.random() * titleList.length)]], theme=[themeList[Math.floor(Math.random() * themeList.length)]]);
+                        oContainer.addThumbnail(1, thumbnail);
+                    }
+                    oThumbnailSection.addThumbnailContainerObject(oContainer)
+                }
                 oThumbnailSection.selectDefault();
+            }
+
+            $(document).ready(function() {                
+
+                generateNewThumbnailSection(3, "Begin")
 
                 // -----------------------
                 // Listener configurations
@@ -163,12 +165,10 @@
 
                 $(document).on('keydown',function(e){
                     function clickOnThumbnail(){
-                        oThumbnailSection.clickOnThumbnail();
+                        oThumbnailSection.buildUpDom();
+                        //oThumbnailSection.clickOnThumbnail();
                     }
-                    function clickOnThumbnail(){
-                        oThumbnailSection.clickOnThumbnail();
-                    }
-                    function arrowLeft(){
+                    function arrowLeft(){                        
                         oThumbnailSection.arrowLeft();
                     }
                     function arrowUp(){
