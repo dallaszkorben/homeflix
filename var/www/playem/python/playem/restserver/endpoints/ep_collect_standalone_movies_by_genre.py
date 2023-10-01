@@ -27,7 +27,7 @@ class EPCollectStandaloneMoviesByGenre(EP):
         payload = {}
         payload[EPCollectStandaloneMoviesByGenre.ATTR_GENRE] = genre
         payload[EPCollectStandaloneMoviesByGenre.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -45,5 +45,5 @@ class EPCollectStandaloneMoviesByGenre(EP):
         )
 
         output = self.web_gadget.db.get_standalone_movies_by_genre(genre=genre, lang=lang, limit=100)
-        
+
         return output_json(output, EP.CODE_OK)

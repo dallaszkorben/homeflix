@@ -172,11 +172,10 @@ body {
     background-color: rgb(255, 248, 189);
 } 
 
-
 #thumbnail-section-history{
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
-    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
-    display: flex;              /* flex box layout model */
+/*    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+    display: block;              /* new line */
     
     font-family: 'Brush Script MT', cursive;
     font-weight: bold;

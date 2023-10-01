@@ -10,7 +10,7 @@ class ObjThumbnailSection{
      * Delete the existing Containers and create a given number of Containers
      * 
      * <div id="thumbnail-section">
-     *   <div id="thumbnail-section-history"> </div>
+//     *   <div id="thumbnail-section-history"> </div>
      *
      *   <div class="thumbnail-container-block" id="container-block-1">
      *       <div class="thumbnail-container-title">Comedy</div>
@@ -28,10 +28,13 @@ class ObjThumbnailSection{
      * 
      * @param {number} numberOfContainers 
      */
-    constructor(objGenerator, history={text:"", link:""}){
-        this.defaultContainerIndex = 0
+    // TODO: change current to focused
+    // TODO: rename thumbnailIndexList to focusedThumbnailList
+    constructor(generator, history={text:"", link:""}){
+        this.generator = generator;
         this.historyDict = history;
 
+        this.defaultContainerIndex = 0
         this.oDescriptionContainer;
         this.numberOfContainers = 0;
         this.currentContainerIndex = -1;
@@ -41,34 +44,29 @@ class ObjThumbnailSection{
         this.oDescriptionContainer = new ObjDescriptionContainer();        
 
         this.resetDom();
+
+        let containerList = this.generator.getContainerList();
+        containerList.forEach(oContainer => {
+            this.addThumbnailContainerObject(oContainer);
+        });
     }
 
-     resetDom(){
+    resetDom(){
         // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
         this.domThumbnailSection = $("#thumbnail-section");
         this.domThumbnailSection.empty();
-        
-        let domThumbnailSectionHistory = $("<div>",{
-            id: "thumbnail-section-history",
-        });
-        let domThumbnailSectionHistoryText = $("<div>",{
-            id: "thumbnail-section-history-text",
-            html: this.historyDict["text"]
-        });
-        let domThumbnailSectionHistoryLink = $("<div>",{
-            id: "thumbnail-section-history-link",
-            html: this.historyDict["link"]
-        });
 
-        domThumbnailSectionHistoryLink.click(function() {
-            let esc = $.Event("keydown", { keyCode: 27 });
-            $(document).trigger(esc); // c
-        });
+        let tsht = $("#thumbnail-section-history-text");
+        tsht.html(this.historyDict["text"]);
 
-        domThumbnailSectionHistory.append(domThumbnailSectionHistoryText);
-        domThumbnailSectionHistory.append(domThumbnailSectionHistoryLink);
+        let tshl = $("#thumbnail-section-history-link");
+        tshl.html(this.historyDict["link"]);
 
-        this.domThumbnailSection.append(domThumbnailSectionHistory);
+
+
+
+
+
     }
 
     buildUpDom(){
@@ -185,9 +183,20 @@ class ObjThumbnailSection{
         this.showDetails();
     }
 
-   
-   
+    getFocusedHistoryTitle(){
+        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
+        let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
+        return thumbnail.getHistoryTitle();
+    } 
 
+    getSelectedGeneratorFunction(){
+        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
+        let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
+        let gf = thumbnail.getGenaratorFunction();
+        return gf;    
+    }
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
     showDetails(){
@@ -267,8 +276,6 @@ class ObjThumbnailSection{
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail'); 
         let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
-
-        console.log("previousIndes: " + currentThumbnailIndex);
 
         // Vertical scroll 
         let sectionHeight = this.domThumbnailSection.height();
@@ -454,6 +461,7 @@ class Thumbnail{
     *    "record_id": 123,
     *    "thumbnail_src": "images/categories/movie1.jpg",
     *    "description_src": "images/categories/movie.jpg",
+    *    "title_history": "history title",
     *    "title_thumb": "short title",
     *    "title": "translated title",
     *    "title_orig": "original title",
@@ -475,12 +483,25 @@ class Thumbnail{
     * };
     */
     
-    constructor(){            
+    constructor(){
+        this.selection_fn = undefined;
         this.thumbnailDict = {
         };    
     }
 
-    setImageSources(thumbnail_src=undefined, descriptionSrc=undefined){
+    setGenaratorFunction(generator_fn){
+        this.generator_fn = generator_fn;
+    }
+    
+    getGenaratorFunction(){
+        if(this.generator_fn){
+            return this.generator_fn;
+        }else{
+            return undefined;
+        }
+    }
+
+    setImageSources(thumbnail_src=undefined, description_src=undefined){
         if(thumbnail_src != undefined){
             this.thumbnailDict["thumbnail_src"] = thumbnail_src;
         }
@@ -489,7 +510,7 @@ class Thumbnail{
         }
     }
 
-    setTitles(lang_orig, original=undefined, translated=undefined, thumb=undefined){
+    setTitles(lang_orig, original=undefined, translated=undefined, thumb=undefined, history=undefined){
         this.thumbnailDict["lang_orig"] = lang_orig;
 
         if(translated != undefined){
@@ -500,6 +521,10 @@ class Thumbnail{
 
         if(thumb != undefined){
             this.thumbnailDict["title_thumb"] = thumb;
+        }
+
+        if(history != undefined){
+            this.thumbnailDict["title_history"] = history;
         }
     }
     
@@ -527,21 +552,21 @@ class Thumbnail{
 
     setExtras(length=undefined, year=undefined, origin=undefined, genre=undefined, theme=undefined){
         this.thumbnailDict["extras"] = {}
-        if(length != undefined){
+//        if(length != undefined){
             this.thumbnailDict["extras"]["length"] = length;            
-        }
-        if(year != undefined){
+//        }
+//        if(year != undefined){
             this.thumbnailDict["extras"]["year"] = year;
-        }
-        if(origin != undefined && Array.isArray(origin)){
+//        }
+//        if(origin != undefined && Array.isArray(origin)){
             this.thumbnailDict["extras"]["origin"] = origin;            
-        }
-        if(genre != undefined && Array.isArray(genre)){
+//        }
+//        if(genre != undefined && Array.isArray(genre)){
             this.thumbnailDict["extras"]["genre"] = genre;            
-        }
-        if(theme != undefined && Array.isArray(theme)){
+//        }
+//        if(theme != undefined && Array.isArray(theme)){
             this.thumbnailDict["extras"]["theme"] = theme;            
-        }
+//        }
     }
 
     getThumbnailDict(){
@@ -568,6 +593,12 @@ class Thumbnail{
     getThumbnailTitle(){
         if("title_thumb" in this.thumbnailDict)
             return this.thumbnailDict["title_thumb"];
+        return "";
+    }
+
+    getHistoryTitle(){
+        if("title_history" in this.thumbnailDict)
+            return this.thumbnailDict["title_history"];
         return "";
     }
 
@@ -674,7 +705,7 @@ class ObjDescriptionContainer{
             let descTextExtraYear = $("#description-text-extra-table-year");
             descTextExtraYear.empty();
             let textExtraYear = "";
-            if ("year" in extra){
+            if ("year" in extra && extra["year"]){
                 textExtraYear += "•" + extra["year"] + "•";
             }
             descTextExtraYear.html(textExtraYear);
@@ -683,7 +714,7 @@ class ObjDescriptionContainer{
             let descTextExtraLength = $("#description-text-extra-table-length");
             descTextExtraLength.empty();
             let textExtraLength = "";
-            if ("length" in extra){
+            if ("length" in extra && extra["length"]){
                 textExtraLength += "   ";
                 textExtraLength += extra["length"];
             }
@@ -693,7 +724,7 @@ class ObjDescriptionContainer{
             let descTextExtraOrigin = $("#description-text-extra-table-origin");
             descTextExtraOrigin.empty();
             let textExtraOrigin = "";
-            if ("origin" in extra){
+            if ("origin" in extra && extra["origin"]){
                 let originList = extra["origin"];
                 let first = true;
                 for (let item of originList) {
@@ -711,7 +742,7 @@ class ObjDescriptionContainer{
             let descTextExtraGenre = $("#description-text-extra-table-genre");
             descTextExtraGenre.empty();
             let textExtraGenre = "";
-            if ("genre" in extra){
+            if ("genre" in extra && extra["genre"]){
                 let genreList = extra["genre"];
                 let first = true;
                 for (let item of genreList) {
@@ -811,13 +842,15 @@ class ObjDescriptionContainer{
     }    
 }
 
+
 class History{
     constructor(){
         this.levelList = [];
     }
 
-    addNewLevel(text, obj){
-        this.levelList.push({"text": text, "obj": obj});
+    addNewLevel(objThumbnailSection){
+        let text = objThumbnailSection.getFocusedHistoryTitle();
+        this.levelList.push({"text": text, "obj": objThumbnailSection});
     }
 
     getLevels(){
@@ -829,8 +862,8 @@ class History{
         }
         
         link = this.levelList.length ? " " + this.levelList[this.levelList.length - 1]["text"] : "";
-
         return {"text": text, "link": link};
+
     }
 
     popLevel(){
@@ -840,5 +873,60 @@ class History{
         }else{
             return undefined;
         }
+    }
+}
+
+
+class ThumbnailController{
+    constructor(objThumbnailSection){
+        this.history = new History();
+        this.objThumbnailSection = objThumbnailSection;
+
+        let tshl = $("#thumbnail-section-history-link");
+        tshl.click(function() {
+            let esc = $.Event("keydown", { keyCode: 27 });
+            $(document).trigger(esc);
+        });
+    }
+
+    enter(){
+
+        let mapGenerator = this.objThumbnailSection.getSelectedGeneratorFunction();       
+        if("menu" in mapGenerator){
+            this.history.addNewLevel(this.objThumbnailSection);        
+
+            let getGeneratorFunction = mapGenerator["menu"];
+            let oGenerator = getGeneratorFunction();
+
+            this.objThumbnailSection = oGenerator.generateThumbnailSection(this.history.getLevels());
+
+
+            // this.objThumbnailSection = new ObjThumbnailSection(oGenerator, this.history.getLevels());
+            // this.objThumbnailSection.focusDefault();
+        }
+    }
+
+    escape(){
+        let oT = this.history.popLevel();
+        if (oT){
+            this.objThumbnailSection = oT;
+            this.objThumbnailSection.buildUpDom();
+        }
+    }
+
+    arrowLeft(){
+        this.objThumbnailSection.arrowLeft();
+    }
+
+    arrowUp(){
+        this.objThumbnailSection.arrowUp();
+    }
+
+    arrowRight(){
+        this.objThumbnailSection.arrowRight();
+    }
+
+    arrowDown(){
+        this.objThumbnailSection.arrowDown();
     }
 }

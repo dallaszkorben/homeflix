@@ -6,9 +6,10 @@
         </style>
 
         <script src="script/jquery/jquery-3.6.0.min.js"></script>
-        <script src="test_4_container.js"></script>
+        <script src="test_6_container.js"></script>
+        <script src="test_6_generator.js"></script>
 
-        <link rel="stylesheet" href="test_4.css">
+        <link rel="stylesheet" href="test_6.css">
         <link rel="icon" href="favicon.ico">
 
         <script>
@@ -105,50 +106,15 @@
                 return rand;
             }
 
-            let history = new History();
-            let oThumbnailSection = undefined;
-            let thumbnailSectionList = [];
             let startStringList = ["Begin", "Second","Third", "Fourth", "Fifth"];
             let startStringIndex = 0
 
-            function generateNewThumbnailSection(containerNumber, startString, historyDict){
-
-                let titleList = ['Drama', 'Comedy', 'Scifi', 'Documentary', 'Musical', 'Concert', 'Thriller', 'Mystery', 'Satire', 'Biographyt', 'Portrait', 'Tail', 'Romance', 'Parody', 'War', 'Horror', 'Fantasy', 'Adventure', 'Crime', 'Western', 'Action']
-                let themeList = ['Revenge', 'Love', 'Devil', 'Drog', 'State power', 'Media', 'Lie', 'Moral', 'Betrayal', 'Fear', 'Heroism', 'Robot', 'Clone', 'Money', 'Greed', 'Envy', ]
-                let directorList = ['David Linch', , 'Alfred Hitchcock', 'Martin Scorsese', 'Quentin Tarantino', 'Francis Ford Coppola', 'Christopher Nolan', 'Stanley Kubrick', 'David Fincher', 'Tim Burton', 'Woody Allen', 'Terry Gilliam', 'Darren Aronofsky', 'Lars von Trier', 'Ridley Scott']
-                let actorList = ['Woody Harrelson', 'Jesse Eisenberg', 'Emma Stone', 'Denzel Washington', 'Tom Hanks', 'Marlon Brando', 'Leonardo DiCaprio', 'Johnny Depp', 'Al Pacino', 'Jack Nicholson', 'Henry Fonda', 'Harrison Ford', 'Sigourney Weaver']
-                let countryList = ['Germany', 'Sweden', 'Hungary', 'Australia', 'USA', 'Mexico', 'Brasilia', 'France', 'Romania', 'Russia', 'Norvegia']
-
-                // Create the Thumbnail Selection Object
-                oThumbnailSection = new ObjThumbnailSection(historyDict)
-
-                for(let containerIndex=0; containerIndex<containerNumber; containerIndex++){
-
-                    // Create Container
-                    let oContainer = new ObjThumbnailContainer(titleList[Math.floor(Math.random() * titleList.length)]);
-
-                    let thumbnailNumber = generateRandom(2,10);
-                    for(let thumbnailIndex=0; thumbnailIndex<thumbnailNumber; thumbnailIndex++){
-
-                        let id = startString + "_" + containerIndex + "." + thumbnailIndex
-
-                        // Create descriptions for Container
-                        let thumbnail = new Thumbnail();
-                        thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="test_screenshot.jpg");
-                        thumbnail.setTitles(lang="hu", original="This is the " + id + " original title", translated="This is the " + id + " given language title", thumb="thumble " + id + " title");
-                        thumbnail.setStoryline("This is the first story of " + id + " with multiple lines<br>divided by '<br>' tags")
-                        thumbnail.setCredentials(directors=[directorList[Math.floor(Math.random() * directorList.length)]], writers=[directorList[Math.floor(Math.random() * directorList.length)]], stars=[actorList[Math.floor(Math.random() * actorList.length)]]);
-                        thumbnail.setExtras(length="03:13:23", year=2013, origin=[countryList[Math.floor(Math.random() * countryList.length)]], genre=[titleList[Math.floor(Math.random() * titleList.length)]], theme=[themeList[Math.floor(Math.random() * themeList.length)]]);
-                        oContainer.addThumbnail(1, thumbnail);
-                    }
-                    oThumbnailSection.addThumbnailContainerObject(oContainer)
-                }
-                oThumbnailSection.focusDefault();
-            }
-
             $(document).ready(function() {                
 
-                generateNewThumbnailSection(3, startStringList[startStringIndex])
+                let mainMenuGenerator = new MainMenuGenerator();
+                let oThumbnailSection = new ObjThumbnailSection(mainMenuGenerator);
+                let oThumbnailController = new ThumbnailController(oThumbnailSection);
+                oThumbnailSection.focusDefault();
 
                 // -----------------------
                 // Listener configurations
@@ -173,46 +139,27 @@
 
                 $(document).on('keydown',function(e){
                     function clickOnThumbnail(){
-
-                        history.addNewLevel(startStringList[startStringIndex], oThumbnailSection);                        
-                        startStringIndex++;
-                        generateNewThumbnailSection(3, startStringList[startStringIndex], history.getLevels());
-
-
-                        //oThumbnailSection.buildUpDom();
-                        //oThumbnailSection.clickOnThumbnail();
+                        oThumbnailController.enter();
                     }
                     function clickOnEscape(){
-
-                        let oT = history.popLevel();
-                        if (oT){
-                            oThumbnailSection = oT;
-                            startStringIndex--;
-                            oThumbnailSection.buildUpDom();
-                        }
-
+                        oThumbnailController.escape();
                     }
-                    function arrowLeft(){                        
-                        oThumbnailSection.arrowLeft();
+                    function arrowLeft(){
+                        oThumbnailController.arrowLeft();
                     }
                     function arrowUp(){
-                        oThumbnailSection.arrowUp();
+                        oThumbnailController.arrowUp();
                     }
                     function arrowRight(){
-                        oThumbnailSection.arrowRight();
+                        oThumbnailController.arrowRight();
                     }
                     function arrowDown(){
-                        oThumbnailSection.arrowDown();
+                        oThumbnailController.arrowDown();
                     }
 
-
                     var act={27:clickOnEscape, 13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
-
-//                    if(act[e.which]) 
-//                        var a=new act[e.which];
                     if(act[e.keyCode])
                         var a=new act[e.keyCode];
-
                 });
             });
 
@@ -246,9 +193,11 @@
             </div>
             <div id="description-image"></div>
         </div>
-    
-        <div id="thumbnail-section">
-            <div id="thumbnail-section-history"> > </div>           
+        <div id="thumbnail-section-history">
+            <div id="thumbnail-section-history-text"></div>
+            <div id="thumbnail-section-history-link"></div>
         </div>
+    
+        <div id="thumbnail-section"></div>
     </body
 </html>
