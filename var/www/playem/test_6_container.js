@@ -3,15 +3,13 @@ Collects data for Container Boxes and when it is done, it shows them in the Cont
 
 Parameters
 sectionMap : A map where the thumbnail hierarchy is stored
-sectionIndex : The index of the HTML's thumbnail-section <div> (inside the thumbnal-sections <div>) where the new Container should go
+sectionIndex : The index of the HTML's scroll-section <div> (inside the thumbnal-sections <div>) where the new Container should go
 */
-class ObjThumbnailSection{
+class ObjScrollSection{
     /**
      * Delete the existing Containers and create a given number of Containers
      * 
-     * <div id="thumbnail-section">
-//     *   <div id="thumbnail-section-history"> </div>
-     *
+     * <div id="scroll-section">
      *   <div class="thumbnail-container-block" id="container-block-1">
      *       <div class="thumbnail-container-title">Comedy</div>
      *       <div class="thumbnail-container" id="container-1">
@@ -52,14 +50,14 @@ class ObjThumbnailSection{
     }
 
     resetDom(){
-        // Remove all elements from the <div id=thumbnail-sections> and <div id=detail-text-title> and <div id=detail-image-div>
-        this.domThumbnailSection = $("#thumbnail-section");
-        this.domThumbnailSection.empty();
+        // Remove all elements from the <div id=scroll-section> and <div id=detail-text-title> and <div id=detail-image-div>
+        this.domScrollSection = $("#scroll-section");
+        this.domScrollSection.empty();
 
-        let tsht = $("#thumbnail-section-history-text");
+        let tsht = $("#history-section-text");
         tsht.html(this.historyDict["text"]);
 
-        let tshl = $("#thumbnail-section-history-link");
+        let tshl = $("#history-section-link");
         tshl.html(this.historyDict["link"]);
 
 
@@ -108,10 +106,10 @@ class ObjThumbnailSection{
             domThumbnailContainerBlock.append(domThumbnailContainerTitle);
             domThumbnailContainerBlock.append(domThumbnailContainer);
             domThumbnailContainerBlock.append(domThumbnailContainerSpace);
-            this.domThumbnailSection.append(domThumbnailContainerBlock);
+            this.domScrollSection.append(domThumbnailContainerBlock);
         }
         
-        this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
+        this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
 
         this.focus();
     }
@@ -137,7 +135,7 @@ class ObjThumbnailSection{
         // Gets the Thumbnail Container JQuery Element
         let domThumbnailContainer = thumbnailContainer.getDom();
 
-        // The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjThumbnailSection)
+        // The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjScrollSection)
         let currentThumbnailIndex = thumbnailContainer.getDefaultThumbnailIndex();
         this.thumbnailIndexList.push(currentThumbnailIndex);
         this.thumbnailContainerList.push(thumbnailContainer);
@@ -160,12 +158,12 @@ class ObjThumbnailSection{
         domThumbnailContainerBlock.append(domThumbnailContainerTitle);
         domThumbnailContainerBlock.append(domThumbnailContainer);
         domThumbnailContainerBlock.append(domThumbnailContainerSpace);
-        this.domThumbnailSection.append(domThumbnailContainerBlock);
+        this.domScrollSection.append(domThumbnailContainerBlock);
 
 //        this.thumbnailContainerBlockDomList.push(domThumbnailContainerBlock);
 
         // this variable should be refreshed every time when a new thumbnail is added
-        this.domThumbnailContainerBlocks = $('#thumbnail-section .thumbnail-container-block');
+        this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
     }
 
     focusDefault(){
@@ -278,18 +276,18 @@ class ObjThumbnailSection{
         let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
 
         // Vertical scroll 
-        let sectionHeight = this.domThumbnailSection.height();
+        let sectionHeight = this.domScrollSection.height();
         let thumbnailContainerBlockHeight = this.domThumbnailContainerBlocks.eq(0).outerHeight(true);
 
-        let sectionScrollTop = this.domThumbnailSection.scrollTop();
+        let sectionScrollTop = this.domScrollSection.scrollTop();
         let visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
 
         //console.log(sectionHeight +"/" +thumbnailContainerBlockHeight + "=" + visibleContainers)
 
         if (this.currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
-            this.domThumbnailSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
+            this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
         } else if (this.currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
-            this.domThumbnailSection.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
+            this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
         }                    
 
         // Horizontal scroll
@@ -848,9 +846,9 @@ class History{
         this.levelList = [];
     }
 
-    addNewLevel(objThumbnailSection){
-        let text = objThumbnailSection.getFocusedHistoryTitle();
-        this.levelList.push({"text": text, "obj": objThumbnailSection});
+    addNewLevel(objScrollSection){
+        let text = objScrollSection.getFocusedHistoryTitle();
+        this.levelList.push({"text": text, "obj": objScrollSection});
     }
 
     getLevels(){
@@ -878,11 +876,11 @@ class History{
 
 
 class ThumbnailController{
-    constructor(objThumbnailSection){
+    constructor(objScrollSection){
         this.history = new History();
-        this.objThumbnailSection = objThumbnailSection;
+        this.objScrollSection = objScrollSection;
 
-        let tshl = $("#thumbnail-section-history-link");
+        let tshl = $("#history-section-link");
         tshl.click(function() {
             let esc = $.Event("keydown", { keyCode: 27 });
             $(document).trigger(esc);
@@ -891,42 +889,42 @@ class ThumbnailController{
 
     enter(){
 
-        let mapGenerator = this.objThumbnailSection.getSelectedGeneratorFunction();       
+        let mapGenerator = this.objScrollSection.getSelectedGeneratorFunction();       
         if("menu" in mapGenerator){
-            this.history.addNewLevel(this.objThumbnailSection);        
+            this.history.addNewLevel(this.objScrollSection);        
 
             let getGeneratorFunction = mapGenerator["menu"];
             let oGenerator = getGeneratorFunction();
 
-            this.objThumbnailSection = oGenerator.generateThumbnailSection(this.history.getLevels());
+            this.objScrollSection = oGenerator.generateScrollSection(this.history.getLevels());
 
 
-            // this.objThumbnailSection = new ObjThumbnailSection(oGenerator, this.history.getLevels());
-            // this.objThumbnailSection.focusDefault();
+            // this.objScrollSection = new ObjScrollSection(oGenerator, this.history.getLevels());
+            // this.objScrollSection.focusDefault();
         }
     }
 
     escape(){
         let oT = this.history.popLevel();
         if (oT){
-            this.objThumbnailSection = oT;
-            this.objThumbnailSection.buildUpDom();
+            this.objScrollSection = oT;
+            this.objScrollSection.buildUpDom();
         }
     }
 
     arrowLeft(){
-        this.objThumbnailSection.arrowLeft();
+        this.objScrollSection.arrowLeft();
     }
 
     arrowUp(){
-        this.objThumbnailSection.arrowUp();
+        this.objScrollSection.arrowUp();
     }
 
     arrowRight(){
-        this.objThumbnailSection.arrowRight();
+        this.objScrollSection.arrowRight();
     }
 
     arrowDown(){
-        this.objThumbnailSection.arrowDown();
+        this.objScrollSection.arrowDown();
     }
 }

@@ -1,7 +1,7 @@
 :root {
-    --description-section-height-portion: 40%;
-    --thumbnail-section-height-portion: 60%;
-    --thumbnail-section-border-width: 0px;
+    --static-section-height-portion: 40%;
+    --scroll-section-height-portion: 60%;
+    --scroll-section-border-width: 0px;
     --thumbnail-container-block-border-width: 0px;
     --thumbnail-container-border-width: 1px;
     --thumbnail-border-width: 0px;
@@ -29,30 +29,35 @@ body {
     margin: 0px;
 }
 
-#description-section{
-    height: var(--description-section-height-portion);
-    width: 100%;
+#static-section{
+    height: var(--static-section-height-portion);               /* to occupy vertically the half part of the screen */
+    display: flex;                                              /* children divs (description-section, history-section)*/
+    flex-direction: column;                                     /* must be in one column */
+}
 
-    display: flex;
-    flex-direction: row;
+#description-section{
+    width: 100%;                                                /* occupy the whole width*/
+    flex-grow: 100;                                             /* grow as big as it can be vertically */
+
+    display: flex;                                              /* children divs (description-text-div, description-image) */
+    flex-direction: row;                                        /* must be in one row */
     flex-wrap: nowrap;
     justify-content: flex-end;
 
     background-color: rgb(171, 253, 176);
-    border: var(--thumbnail-section-border-width) green solid;
+    border: var(--scroll-section-border-width) green solid;
     box-sizing:border-box;            
 }
 
 #description-text-div{
-    height: 100%;
-    flex-grow: 100;     /* grow as wide as it can. On right side the description image lays*/
+    flex-grow: 100;                                             /* grow as wide as it can. On right side the description image lays*/
     display:inline;
     font-family: 'Brush Script MT', cursive;
     background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
 }
 
 #description-text-wrapper{
-    box-sizing: border-box; /* element and padding and border are included in the width and height */
+    box-sizing: border-box;                                     /* element and padding and border are included in the width and height */
     position: absolute;
     top: var(--description-text-wrapper-top);
     left: var(--description-text-wrapper-left);
@@ -65,18 +70,14 @@ body {
 #description-text-title{
     display: inline-block;
     position: relative;
-    flex-grow: 100;                 /* That works instead of width: 100%. I do not know why */
+    flex-grow: 100;                                             /* That works instead of width: 100%. I do not know why */
     text-shadow: 0px 0px 20px black;
     font-weight: bold;
     font-size: 80px;
     color: white;
     white-space: wrap;
-    border: 10px solid transparent;  /* Needed to make margin to the text */
+    border: 10px solid transparent;                             /* Needed to make margin to the text */
 }
-
-
-
-
 
 
 #description-text-extra{
@@ -158,23 +159,9 @@ body {
     background-size: contain;
 }
 
-
- 
-#thumbnail-section {
-    box-sizing: border-box;     /* element and padding and border are included in the width and height */
-    height: var(--thumbnail-section-height-portion); /* occupies the upper 40% of the browser's screen. if you chnage the browser's height, it changes */
-    width: 100%;                /* occupies the whole browser sceen horizontally */
-    display: flex;              /* flex box layout model */
-    flex-direction: column;     /* stacks the flex items vertically */
-    flex-wrap: nowrap;          /* the flex items will not wrap */
-    overflow: hidden;           /* flex items which does not fit, will be hidden */
-    border: var(--thumbnail-section-border-width) rgb(255, 247, 0) solid;
-    background-color: rgb(255, 248, 189);
-} 
-
-#thumbnail-section-history{
+#history-section{
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
-/*    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+/*    width: 100%;                /* it occupies the whole .scroll-section horizontally */
     display: block;              /* new line */
     
     font-family: 'Brush Script MT', cursive;
@@ -187,7 +174,7 @@ body {
     background-color: rgb(255, 243, 175);  
 }
 
-#thumbnail-section-history-text{
+#history-section-text{
     display: inline-block; 
     
     font-family: inherit;
@@ -196,7 +183,7 @@ body {
     color: inherit;
 }
 
-#thumbnail-section-history-link{
+#history-section-link{
     display: inline-block; 
 
     font-family: inherit;
@@ -207,9 +194,27 @@ body {
     text-decoration: underline;
 }
 
+
+
+
+ 
+#scroll-section {
+    box-sizing: border-box;     /* element and padding and border are included in the width and height */
+    height: var(--scroll-section-height-portion); /* occupies the upper 40% of the browser's screen. if you chnage the browser's height, it changes */
+    width: 100%;                /* occupies the whole browser sceen horizontally */
+    display: flex;              /* flex box layout model */
+    flex-direction: column;     /* stacks the flex items vertically */
+    flex-wrap: nowrap;          /* the flex items will not wrap */
+    overflow: hidden;           /* flex items which does not fit, will be hidden */
+    border: var(--scroll-section-border-width) rgb(255, 247, 0) solid;
+    background-color: rgb(255, 248, 189);
+} 
+
+
+
 .thumbnail-container-block {
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
-    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+    width: 100%;                /* it occupies the whole .scroll-section horizontally */
     display: flex;              /* flex box layout model */
     flex-direction: column;     /* stacks the flex items vertically */
     flex-wrap: nowrap;          /* the flex items will not wrap */
@@ -229,7 +234,7 @@ body {
 
     height: var(--thumbnail-container-height); 
     min-height: var(--thumbnail-container-height); 
-    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+    width: 100%;                /* it occupies the whole .scroll-section horizontally */
     display: flex;              /* flex box layout model */
     flex-direction: row;        /* stacks the flex items vertically */
     flex-wrap: nowrap;          /* the flex items will not wrap */
@@ -242,7 +247,7 @@ body {
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
     height: 40px;               /* fix height of the container */
     min-height: 40px;           /* it must be set. ??? */
-    width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+    width: 100%;                /* it occupies the whole .scroll-section horizontally */
     display: block;             /* flex box layout model */
 }
 

@@ -47,10 +47,11 @@
             var desc_img_height;
             var desc_img_width;
 
-            const description_section_height_portion = 50;
-            const thumbnail_section_height_portion = 50;
+            const static_section_height_portion = 50;
+            
+            const scroll_section_height_portion = 50;
+            const scroll_section_border_width = 4;
 
-            const thumbnail_section_border_width = 4;
             const thumbnail_container_block_border_width = 4;
             const thumbnail_container_border_width = 4
             const thumbnail_border_width = 7;
@@ -66,15 +67,15 @@
 
             const thumbnail_container_height = thumbnail_image_height + (2*thumbnail_border_width) + (2*thumbnail_container_border_width)
 
-            const description_text_wrapper_top = thumbnail_section_border_width;
-            const description_text_wrapper_left = thumbnail_section_border_width;
+            const description_text_wrapper_top = scroll_section_border_width;
+            const description_text_wrapper_left = scroll_section_border_width;
 
             t = document.querySelector(':root');
 
             // Default set of the CSS
-            t.style.setProperty('--description-section-height-portion', description_section_height_portion + '%');
-            t.style.setProperty('--thumbnail-section-height-portion', thumbnail_section_height_portion + '%');
-            t.style.setProperty('--thumbnail-section-border-width', thumbnail_section_border_width + 'px');
+            t.style.setProperty('--static-section-height-portion', static_section_height_portion + '%');
+            t.style.setProperty('--scroll-section-height-portion', scroll_section_height_portion + '%');
+            t.style.setProperty('--scroll-section-border-width', scroll_section_border_width + 'px');
             t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
             t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
             t.style.setProperty('--thumbnail-border-width', thumbnail_border_width + 'px');
@@ -106,15 +107,12 @@
                 return rand;
             }
 
-            let startStringList = ["Begin", "Second","Third", "Fourth", "Fifth"];
-            let startStringIndex = 0
-
             $(document).ready(function() {                
 
                 let mainMenuGenerator = new MainMenuGenerator();
-                let oThumbnailSection = new ObjThumbnailSection(mainMenuGenerator);
-                let oThumbnailController = new ThumbnailController(oThumbnailSection);
-                oThumbnailSection.focusDefault();
+                let oScrollSection = new ObjScrollSection(mainMenuGenerator);
+                let oThumbnailController = new ThumbnailController(oScrollSection);
+                oScrollSection.focusDefault();
 
                 // -----------------------
                 // Listener configurations
@@ -128,7 +126,7 @@
                 const resizeObserver = new ResizeObserver(entries => {
 
                     // Change the size of the description Image to be aligned
-                    oThumbnailSection.getDescriptionContainer().resizeDescriptionSection();
+                    oScrollSection.getDescriptionContainer().resizeDescriptionSection();
                 });
                 const domDescSectSection = document.querySelector("#description-section");
                 resizeObserver.observe(domDescSectSection);
@@ -167,37 +165,44 @@
     </head>
     <body>
 
-        <div id="description-section">
-            <div id="description-text-div">
-                <div id="description-text-wrapper">
-                    <div id="description-text-title"></div>
-                    <div id="description-text-extra">
-                        <table border="0" id="description-text-extra-table">
-                            <tr>
-                                <td id="description-text-extra-table-length"></td>
-                                <td id="description-text-extra-table-year"></td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td id="description-text-extra-table-origin"></td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td id="description-text-extra-table-genre"></td>
-                            </tr>
-                        </table>
+        <div id="static-section">
+            <div id="description-section">
+                <div id="description-text-div">
+                    <div id="description-text-wrapper">
+                        <div id="description-text-title"></div>
+                        <div id="description-text-extra">
+                            <table border="0" id="description-text-extra-table">
+                                <tr>
+                                    <td id="description-text-extra-table-length"></td>
+                                    <td id="description-text-extra-table-year"></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td id="description-text-extra-table-origin"></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td id="description-text-extra-table-genre"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div id="description-text-storyline"></div>
+                        <div id="description-text-credentials"></div>
                     </div>
-                    <div id="description-text-storyline"></div>
-                    <div id="description-text-credentials"></div>
                 </div>
+                <div id="description-image"></div>
             </div>
-            <div id="description-image"></div>
+            <div id="history-section">
+                <div id="history-section-text"></div>
+                <div id="history-section-link"></div>
+            </div>
+
         </div>
-        <div id="thumbnail-section-history">
-            <div id="thumbnail-section-history-text"></div>
-            <div id="thumbnail-section-history-link"></div>
+  
+        <!-- </div>     -->
+        <div>
+            <div id="scroll-section">                
+            </div>
         </div>
-    
-        <div id="thumbnail-section"></div>
     </body
 </html>

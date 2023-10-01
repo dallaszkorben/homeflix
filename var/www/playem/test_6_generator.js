@@ -3,10 +3,10 @@ class Generator{
     //     this.historyDict = historyDict;
     // }
 
-    generateThumbnailSection(history={text:"", link:""}){
-        let oThumbnailSection = new ObjThumbnailSection(this, history);
-        oThumbnailSection.focusDefault();
-        return oThumbnailSection;
+    generateScrollSection(history={text:"", link:""}){
+        let oScrollSection = new ObjScrollSection(this, history);
+        oScrollSection.focusDefault();
+        return oScrollSection;
     }
 
     sendRestRequest(rq_type, rq_url){
