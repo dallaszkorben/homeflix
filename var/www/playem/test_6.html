@@ -6,6 +6,7 @@
         </style>
 
         <script src="script/jquery/jquery-3.6.0.min.js"></script>
+        <script src="script/js-jaml/js-yaml.js"></script>
         <script src="test_6_container.js"></script>
         <script src="test_6_generator.js"></script>
 
@@ -109,7 +110,9 @@
 
             $(document).ready(function() {                
 
-                let mainMenuGenerator = new MainMenuGenerator();
+                let languageCode = "hu";
+
+                let mainMenuGenerator = new MainMenuGenerator(languageCode);
                 let oScrollSection = new ObjScrollSection(mainMenuGenerator);
                 let oThumbnailController = new ThumbnailController(oScrollSection);
                 oScrollSection.focusDefault();
@@ -186,8 +189,10 @@
                                 </tr>
                             </table>
                         </div>
-                        <div id="description-text-storyline"></div>
-                        <div id="description-text-credentials"></div>
+                        <div id="description-text-area-div">
+                            <div id="description-text-storyline"></div>
+                            <div id="description-text-credentials"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="description-image"></div>

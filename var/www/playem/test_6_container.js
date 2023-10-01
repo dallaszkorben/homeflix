@@ -677,9 +677,6 @@ class ObjDescriptionContainer{
             mainObject.description_img.height = descImg.height;
             mainObject.description_img.width = descImg.width;
         
-            // Resizes the description section according to the size of the description image
-            mainObject.resizeDescriptionSection();
-
             // -------------
             // --- title ---        
             // -------------
@@ -779,6 +776,8 @@ class ObjDescriptionContainer{
             mainObject.printCredentals(credTable, credentials, "stars", "Stars:");
             // -------------------
     
+            // Resizes the description section according to the size of the description image
+            mainObject.resizeDescriptionSection();
         }
 
         // Loads the new image, which will trigger the onload event
@@ -795,6 +794,7 @@ class ObjDescriptionContainer{
     */
     resizeDescriptionSection(){
         let domDescriptionSectionDiv = $("#description-section");
+
         let sectionHeight = domDescriptionSectionDiv.height();
 
         let wrapperHeight = domDescriptionSectionDiv.innerHeight();
@@ -809,12 +809,21 @@ class ObjDescriptionContainer{
         t.style.setProperty('--description-text-wrapper-height', wrapperHeight + 'px');
         t.style.setProperty('--description-text-wrapper-width', wrapperWidth + 'px');
 
-        let domDescTextStoryline = $("#description-text-storyline");
-    
-        let posStoryline = domDescTextStoryline.position().top;
-        let storylineWidth = wrapperHeight - posStoryline - 2;
-        t.style.setProperty('--description-text-storyline-height', storylineWidth + 'px');
-        t.style.setProperty('--description-text-credentials-height', storylineWidth + 'px');  
+        // Set the description-text-area-div height => here are the storyline and credentials, next to each other
+        let domDescriptionTextWrapper = $("#description-text-wrapper");
+        let textWrapperHeight = domDescriptionTextWrapper.innerHeight();
+        let domDescriptionTextTitle = $("#description-text-title");
+        let titleHeight = domDescriptionTextTitle.outerHeight();
+        let domDescriptionTextExtra = $("#description-text-extra");
+        let extraHeight = domDescriptionTextExtra.outerHeight();
+        let domDescriptionTextArea = $("#description-text-area-div");
+        let areaOuterHeight = domDescriptionTextArea.outerHeight();
+        let areaInnerHeight = domDescriptionTextArea.innerHeight()
+        let areaHeightBorder = areaOuterHeight - areaInnerHeight;
+        let storylineHeight = textWrapperHeight - titleHeight - extraHeight - areaHeightBorder;
+
+        t.style.setProperty('--description-text-storyline-height', storylineHeight + 'px');
+        t.style.setProperty('--description-text-credentials-height', storylineHeight + 'px');  
     }
 
     printCredentals(table, dict, id, title){
@@ -896,6 +905,7 @@ class ThumbnailController{
             let getGeneratorFunction = mapGenerator["menu"];
             let oGenerator = getGeneratorFunction();
 
+            // TODO: why the Generater generates this. Change it
             this.objScrollSection = oGenerator.generateScrollSection(this.history.getLevels());
 
 
