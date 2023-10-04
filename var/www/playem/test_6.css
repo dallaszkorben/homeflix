@@ -22,6 +22,8 @@
     --description-text-credentials-height: 0px;
     --description-text-credentials-font-size: 0px;
 
+    --description-text-storyline-width:50%;
+
     --description-image: "";
 }
 
@@ -72,9 +74,6 @@ body {
 }
 
 #description-text-title{
-    /*    display: inline-block;                                /* Contents will sit next to eacy other, margins/paddings are counted. This is not necessary */
-    /*    position: relative;
-        /*flex-grow: 100;                                       /* That works instead of width: 100%. I do not know why */
         text-shadow: 0px 0px 20px black;
         font-weight: bold;
         font-size: 80px;
@@ -84,23 +83,33 @@ body {
 }
 
 #description-text-extra{
-/*    display: inline-block;
-    position: relative;
-    /*flex-wrap: nowrap;*/
-    /*flex-grow: 100;*/
+    display: inline-flex;                                       /* children divs (description-text-extra-length, description-text-extra-date, description-text-extra-block) */
+    flex-direction: row;                                        /* must be in one row */
+    justify-content: space-between;
+
+    width: var(--description-text-storyline-width);
     text-shadow: 0px 0px 10px rgb(187, 189, 255);
     font-weight: bold;
     font-size: var(--description-text-extra-font-size);
     color: rgb(187, 189, 255);
-    border: 10px solid yellow transparent;                             /* Needed to make margin to the text */
+    border: 10px solid transparent;                             /* Needed to make margin to the text */
 }
 
-#description-text-extra-table{
-    width: 100%;
-    text-shadow: inherit;
-    font-weight: inherit;
-    font-size: inherit;
-    color: inherit;
+#description-text-extra-block-origin{
+    text-align: right;
+}
+#description-text-extra-block-genre{
+    text-align: right;
+}
+#description-text-extra-block-theme{
+    text-align: right;
+}
+
+
+
+#description-text-extra-block{
+    display: inline-flex;                                       /* children divs (description-text-extra-block-genre, description-text-extra-block-theme, description-text-extra-block-origin) */
+    flex-direction: column;                                     /* must be in one column */
 }
 
 #description-text-area-div{
@@ -113,22 +122,20 @@ body {
     display: inline-block;
     position: relative;
     flex-wrap: wrap;
-    /* width: 40%; */
-    /* top:10px;
-    left: 10px; */
     text-shadow: 0px 0px 10px rgb(190, 253, 250);
     font-weight: bold;
     font-size: var(--description-text-storyline-font-size);
     color: rgb(190, 253, 250);
-    white-space: wrap;
+    white-space: wrap;                                          /* the new line (\n) will take effect */
     word-break: break-word;
 
     height: var(--description-text-storyline-height);
-    width: 30%;
+    width: var(--description-text-storyline-width);
     overflow: hidden; 
     text-align: justify;
     border-left: 10px solid transparent;
     overflow-y: auto;                                           /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
+    white-space: pre-wrap;
 }
 
 #description-text-credentials{
@@ -136,7 +143,7 @@ body {
     position: relative;
  
     left: 10px;
-    text-shadow: 0px 0px 10px rgb(255, 255, 188);
+    text-shadow: 0px 0px 10px rgb(57, 57, 49);
     font-weight: bold;
     font-size: var(--description-text-credentials-font-size);
     color: rgb(255, 255, 188);
@@ -286,10 +293,6 @@ body {
 
 .thumbnail-text-wrapper{            
     position: absolute;                                         /* relative to the nearestx positioned ancestor: .thumbnail. That is the reason the .thumbnail has position: relative */
-/*    max-width: 200px;           /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
-/*    width: 200px;               /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
-/*    height: 238px;              /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
-/*    max-height: 238px;          /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
 
     font-family: 'Brush Script MT', cursive;
     font-weight: bold;

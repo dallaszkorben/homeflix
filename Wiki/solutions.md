@@ -256,7 +256,19 @@ jQuery:
     t.style.setProperty('--background-image', "url(" + src + ")");
 ```
 
-## 4. Fade image to white
+## 4. Ajax call uses cache
+When I send the same ajax call, it well not connect and send request but it takes the result from the cache.
+If you want to avoid this case, you have to tell explicitly this in the ajax request.
+
+jQuery
+```javascript
+    let rawText = $.ajax({url: path, async: false, cache: false}).responseText;
+```
+
+
+
+
+## 5. Fade image to white
 
 CSS:
 ```javascript

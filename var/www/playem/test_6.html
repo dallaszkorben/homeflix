@@ -57,14 +57,16 @@
             const thumbnail_container_border_width = 4
             const thumbnail_border_width = 7;
 
-            const thumbnail_image_width = 200;
-            const thumbnail_image_height = 300;
+            const thumbnail_image_width = 160;  //200;
+            const thumbnail_image_height = 208; //261;
 
             const thumbnail_text_font_size = 30;
 
-            const description_text_extra_font_size = 30;
-            const description_text_storyline_font_size = 30;
-            const description_text_credentials_font_size = 30;
+            const description_text_extra_font_size = 25;
+            const description_text_storyline_font_size = 20;
+            const description_text_credentials_font_size = 20;
+
+            const description_text_storyline_width = 45;
 
             const thumbnail_container_height = thumbnail_image_height + (2*thumbnail_border_width) + (2*thumbnail_container_border_width)
 
@@ -91,6 +93,10 @@
             t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
             t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
 
+            t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
+
+            
+
             function generateRandom(min = 0, max = 100) {
 
                 // find diff
@@ -112,8 +118,8 @@
 
                 let languageCode = "hu";
 
-                let mainMenuGenerator = new MainMenuGenerator(languageCode);
-                let oScrollSection = new ObjScrollSection(mainMenuGenerator);
+                let mainMenuContainerGenerator = new MainMenuContainerGenerator(languageCode);
+                let oScrollSection = new ObjScrollSection(mainMenuContainerGenerator);
                 let oThumbnailController = new ThumbnailController(oScrollSection);
                 oScrollSection.focusDefault();
 
@@ -167,27 +173,19 @@
         </script>
     </head>
     <body>
-
         <div id="static-section">
             <div id="description-section">
                 <div id="description-text-div">
                     <div id="description-text-wrapper">
                         <div id="description-text-title"></div>
                         <div id="description-text-extra">
-                            <table border="0" id="description-text-extra-table">
-                                <tr>
-                                    <td id="description-text-extra-table-length"></td>
-                                    <td id="description-text-extra-table-year"></td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td id="description-text-extra-table-origin"></td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td id="description-text-extra-table-genre"></td>
-                                </tr>
-                            </table>
+                            <div id="description-text-extra-date"></div>
+                            <div id="description-text-extra-length"></div>
+                            <div id="description-text-extra-block">
+                                <div id="description-text-extra-block-origin"></div>
+                                <div id="description-text-extra-block-genre"></div>
+                                <div id="description-text-extra-block-theme"></div>
+                            </div>
                         </div>
                         <div id="description-text-area-div">
                             <div id="description-text-storyline"></div>
@@ -201,7 +199,6 @@
                 <div id="history-section-text"></div>
                 <div id="history-section-link"></div>
             </div>
-
         </div>
   
         <!-- </div>     -->
@@ -209,5 +206,10 @@
             <div id="scroll-section">                
             </div>
         </div>
+
+        <div>
+            <video id="video_player"></video>
+        </div>
+
     </body
 </html>

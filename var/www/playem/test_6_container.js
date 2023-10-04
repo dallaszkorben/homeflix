@@ -28,8 +28,8 @@ class ObjScrollSection{
      */
     // TODO: change current to focused
     // TODO: rename thumbnailIndexList to focusedThumbnailList
-    constructor(generator, history={text:"", link:""}){
-        this.generator = generator;
+    constructor(oContainerGenerator, history={text:"", link:""}){
+        this.oContainerGenerator = oContainerGenerator;
         this.historyDict = history;
 
         this.defaultContainerIndex = 0
@@ -43,10 +43,11 @@ class ObjScrollSection{
 
         this.resetDom();
 
-        let containerList = this.generator.getContainerList();
-        containerList.forEach(oContainer => {
-            this.addThumbnailContainerObject(oContainer);
-        });
+        this.oContainerGenerator.showContainers(this);
+        // let containerList = this.containerGenerator.getContainerList();
+        // containerList.forEach(oContainer => {
+        //     this.addThumbnailContainerObject(oContainer);
+        // });
     }
 
     resetDom(){
@@ -59,12 +60,6 @@ class ObjScrollSection{
 
         let tshl = $("#history-section-link");
         tshl.html(this.historyDict["link"]);
-
-
-
-
-
-
     }
 
     buildUpDom(){
@@ -188,12 +183,12 @@ class ObjScrollSection{
         return thumbnail.getHistoryTitle();
     } 
 
-    getSelectedGeneratorFunction(){
+    getSelectedThumbnalFunctionForSelection(){
         let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
-        let gf = thumbnail.getGenaratorFunction();
-        return gf;    
+        let function_for_selection = thumbnail.getFunctionForSelection();
+        return function_for_selection;
     }
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
@@ -487,13 +482,13 @@ class Thumbnail{
         };    
     }
 
-    setGenaratorFunction(generator_fn){
-        this.generator_fn = generator_fn;
+    setFunctionForSelection(function_for_selection){
+        this.function_for_selection = function_for_selection;
     }
     
-    getGenaratorFunction(){
-        if(this.generator_fn){
-            return this.generator_fn;
+    getFunctionForSelection(){
+        if(this.function_for_selection){
+            return this.function_for_selection;
         }else{
             return undefined;
         }
@@ -548,22 +543,22 @@ class Thumbnail{
         }
     }
 
-    setExtras(length=undefined, year=undefined, origin=undefined, genre=undefined, theme=undefined){
+    setExtras(length=undefined, date=undefined, origins=undefined, genres=undefined, themes=undefined){
         this.thumbnailDict["extras"] = {}
 //        if(length != undefined){
             this.thumbnailDict["extras"]["length"] = length;            
 //        }
 //        if(year != undefined){
-            this.thumbnailDict["extras"]["year"] = year;
+            this.thumbnailDict["extras"]["date"] = date;
 //        }
 //        if(origin != undefined && Array.isArray(origin)){
-            this.thumbnailDict["extras"]["origin"] = origin;            
+            this.thumbnailDict["extras"]["origins"] = origins;            
 //        }
 //        if(genre != undefined && Array.isArray(genre)){
-            this.thumbnailDict["extras"]["genre"] = genre;            
+            this.thumbnailDict["extras"]["genres"] = genres;            
 //        }
 //        if(theme != undefined && Array.isArray(theme)){
-            this.thumbnailDict["extras"]["theme"] = theme;            
+            this.thumbnailDict["extras"]["themes"] = themes;            
 //        }
     }
 
@@ -697,16 +692,16 @@ class ObjDescriptionContainer{
             // -------------
 
             // --- extra - year ---
-            let descTextExtraYear = $("#description-text-extra-table-year");
-            descTextExtraYear.empty();
-            let textExtraYear = "";
-            if ("year" in extra && extra["year"]){
-                textExtraYear += "•" + extra["year"] + "•";
+            let descTextExtraDate = $("#description-text-extra-date");
+            descTextExtraDate.empty();
+            let textExtraDate = "";
+            if ("date" in extra && extra["date"]){
+                textExtraDate += "" + extra["date"] + "";
             }
-            descTextExtraYear.html(textExtraYear);
+            descTextExtraDate.html(textExtraDate);
 
             // --- extra - length ---
-            let descTextExtraLength = $("#description-text-extra-table-length");
+            let descTextExtraLength = $("#description-text-extra-length");
             descTextExtraLength.empty();
             let textExtraLength = "";
             if ("length" in extra && extra["length"]){
@@ -716,17 +711,17 @@ class ObjDescriptionContainer{
             descTextExtraLength.html(textExtraLength);
 
             // --- extra - origin ---
-            let descTextExtraOrigin = $("#description-text-extra-table-origin");
+            let descTextExtraOrigin = $("#description-text-extra-block-origin");
             descTextExtraOrigin.empty();
             let textExtraOrigin = "";
-            if ("origin" in extra && extra["origin"]){
-                let originList = extra["origin"];
+            if ("origins" in extra && extra["origins"]){
+                let originList = extra["origins"];
                 let first = true;
                 for (let item of originList) {
                     if(first){
                         first = false;
                     }else{
-                        textExtraOrigin += "•";
+                        textExtraOrigin += " • ";
                     }
                     textExtraOrigin += item;
                 }
@@ -734,22 +729,40 @@ class ObjDescriptionContainer{
             descTextExtraOrigin.html(textExtraOrigin);
 
             // --- extra - genre ---
-            let descTextExtraGenre = $("#description-text-extra-table-genre");
+            let descTextExtraGenre = $("#description-text-extra-block-genre");
             descTextExtraGenre.empty();
             let textExtraGenre = "";
-            if ("genre" in extra && extra["genre"]){
-                let genreList = extra["genre"];
+            if ("genres" in extra && extra["genres"]){
+                let genreList = extra["genres"];
                 let first = true;
                 for (let item of genreList) {
                     if(first){
                         first = false;
                     }else{
-                        textExtraGenre += "•";
+                        textExtraGenre += " • ";
                     }
                     textExtraGenre += item;
                 }
             }
             descTextExtraGenre.html(textExtraGenre);
+
+           // --- extra - theme ---
+           let descTextExtraTheme = $("#description-text-extra-block-theme");
+           descTextExtraTheme.empty();
+           let textExtraTheme = "";
+           if ("themes" in extra && extra["themes"]){
+               let themeList = extra["themes"];
+               let first = true;
+               for (let item of themeList) {
+                   if(first){
+                       first = false;
+                   }else{
+                       textExtraTheme += " • ";
+                   }
+                   textExtraTheme += item;
+               }
+           }
+           descTextExtraTheme.html(textExtraTheme);
 
             // let extraTable = $("<table>",{
             //     border: 1,
@@ -896,21 +909,123 @@ class ThumbnailController{
         });
     }
 
+    generateScrollSection(oContainerGenerator, history={text:"", link:""}){
+        let oScrollSection = new ObjScrollSection(oContainerGenerator, history);
+        oScrollSection.focusDefault();
+        return oScrollSection;
+    }
+
     enter(){
 
-        let mapGenerator = this.objScrollSection.getSelectedGeneratorFunction();       
-        if("menu" in mapGenerator){
+        // fetch the generator function of the thumbnail in the focus
+        let functionForSelection = this.objScrollSection.getSelectedThumbnalFunctionForSelection();       
+
+        // If the selected thumbnail will produce a sub-menu
+        if("menu" in functionForSelection){
+
+            // We get one level deeper in the history
             this.history.addNewLevel(this.objScrollSection);        
 
-            let getGeneratorFunction = mapGenerator["menu"];
-            let oGenerator = getGeneratorFunction();
+            // take the generator's function
+            let getGeneratorFunction = functionForSelection["menu"];
 
-            // TODO: why the Generater generates this. Change it
-            this.objScrollSection = oGenerator.generateScrollSection(this.history.getLevels());
+            // and call the generator's function to produce a new Container Generator
+            let oContainerGenerator = getGeneratorFunction();
+            
+            // Shows the new ScrollSection generated by the Container Generator
+            this.objScrollSection = this.generateScrollSection(oContainerGenerator, this.history.getLevels());
+        }else if("play" in functionForSelection){
+                        
+            // take the getCardId function
+            let getCardIdFunction = functionForSelection["play"];
+            let cardId = getCardIdFunction();
+            let medium_path = undefined;
 
+            $.ajax({type: "GET", url: "/collect/medium/card_id/" + cardId, async: false,
+                success: function(result){
 
-            // this.objScrollSection = new ObjScrollSection(oGenerator, this.history.getLevels());
-            // this.objScrollSection.focusDefault();
+                    var boxes = [];
+
+                    // TODO: handle when more than 1 record we have in the result (Medium)                                    
+
+                    for (var i in result) {
+                        var record=result[i];
+                        medium_path = pathJoin([record["source_path"], record["file_name"]])
+                    }
+                },
+                error: function(xhr,status,error){
+                    $("#message").html("");
+                    $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
+                    //$("#spinner").hide();
+                }            
+            })
+            
+            if (medium_path != null){
+                var player = $("#video_player")[0];
+
+                var sourceElement = $('#video_player').find('source');
+                if (sourceElement.length > 0) {
+                    sourceElement.remove();
+                }
+
+                var newSourceElement = $('<source>');
+                newSourceElement.attr('src', medium_path);
+                // newSourceElement.attr('type', 'video/mkv');
+                $('#video_player').append(newSourceElement);
+                                
+                if (player.requestFullscreen) {
+                    player.requestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    player.msRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    player.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    player.webkitRequestFullscreen();
+                }
+
+                                // video.addEventListener('keydown', function(event) {
+                                //     console.log(event);
+                                //     if (event.key === 'ArrowLeft') {
+                                //         console.log('Arrow Left key pressed');
+                                //     } else if (event.key === 'ArrowRight') {
+                                //         console.log('Arrow Right key pressed');
+                                //     } else if (event.key === 'Tab') {
+                                //         console.log('Tab key pressed');
+                                //         $('#video_player').focus();
+                                //     }
+                                // });
+
+                player.load();
+                player.controls = true; 
+                player.autoplay = true;                               
+                player.play();
+
+                $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function(e) {
+                    var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+
+                    // If exited of full screen
+                    if(!state){
+                        this.style.display = 'none';
+                        this.pause();
+                        var sourceElement = $('#video_player').find('source');
+                        if (sourceElement.length > 0) {
+                            sourceElement.remove();
+                        }
+                        // Ez nem mukodik
+                        $("#section-0_container-0").focus();
+
+//$("#section-0_container-0").focus();
+//$("#section-0_container-0").trigger('focus')
+
+                    }
+                });
+                player.style.display = 'block';
+                
+                // It is important to have this line, otherwise you can not control the voice level
+                $('#video_player').focus();
+
+            }
+
         }
     }
 

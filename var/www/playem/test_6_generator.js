@@ -1,32 +1,71 @@
-class Generator{
+class ContainerGenerator{
     constructor(language_code="en"){
-         this.language_code = language_code;
+        this.language_code = language_code;
     }
 
-    // TODO: why the Generater generates this. Change it
-    generateScrollSection(history={text:"", link:""}){
-        let oScrollSection = new ObjScrollSection(this, history);
-        oScrollSection.focusDefault();
-        return oScrollSection;
+    showContainers(objScrollSection){
+        let containerList = this.getContainerList();
+        containerList.forEach(oContainer => {
+            objScrollSection.addThumbnailContainerObject(oContainer);
+        });
     }
 
+    getContainerList(){
+        throw new Error("Implement getContainerList() method in the descendant class of ContainerGenerator!");
+    }
+}
+
+
+class MainMenuContainerGenerator extends ContainerGenerator{  
+    getContainerList(){
+        let refToThis = this;
+        let containerList = [];
+
+        let oContainer = new ObjThumbnailContainer("Categories");
+
+        let thumbnail = new Thumbnail();
+        let thumbnail_src, description_src,lang,original,translated,thumb,history,directors,writers,stars,length,year,origin,genre,theme
+        thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
+        thumbnail.setTitles(lang=this.language_code, original="Movies", translated="Movies", thumb="Movies", history="Movies");
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(movie_type) {
+                return function() {
+                    return new MovieMenuContainerGenerator(refToThis.languageCode)
+                };
+            })("movies")});
+        oContainer.addThumbnail(1, thumbnail);
+
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources(thumbnail_src="images/categories/series.jpg", description_src="images/categories/series.jpg");
+        thumbnail.setTitles(lang=this.language_code, original="Movie Series", translated="Movie Series", thumb="Movie Series", history="Movie Series");
+        thumbnail.setFunctionForSelection(function(){refToThis.viewMovie()});
+        oContainer.addThumbnail(2, thumbnail);
+
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources(thumbnail_src="images/categories/music_video.jpg", description_src="images/categories/music_video.jpg");
+        thumbnail.setTitles(lang=this.language_code, original="Music Video", translated="Music Video", thumb="Music Video", history="Music Video");
+        thumbnail.setFunctionForSelection(function(){refToThis.viewMovie()});
+        oContainer.addThumbnail(3, thumbnail);
+
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources(thumbnail_src="images/categories/music_audio.jpg", description_src="images/categories/music_audio.jpg");
+        thumbnail.setTitles(lang=this.language_code, original="Music Audio", translated="Music Audio", thumb="Music Audio", history="Music Audio");
+        thumbnail.setFunctionForSelection(function(){refToThis.viewMovie()});
+        oContainer.addThumbnail(4, thumbnail);
+
+        containerList.push(oContainer);
+ 
+        return containerList;
+    }  
+}
+
+class AjaxContainerGenerator extends ContainerGenerator{
     sendRestRequest(rq_method, rq_url){
         let rq_assync = false;
         let result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
         return result.responseJSON;
     }
 
-/*        $.ajax({ method: rq_type, url: rq_url, async: rq_assync,
-            success: function(result){
-                alert(result);
-            },
-            error: function(xhr,status,error){
-                alert(status);
-            }
-        });
-
-        return undefined;
-*/
     getRandomFileFromDirectory(path, filter){
         let file_list = [];
         let rawText = $.ajax({url: path, async: false}).responseText;
@@ -57,6 +96,10 @@ class Generator{
         for(let request of requestList){
     
             let oContainer = new ObjThumbnailContainer(request["title"]);
+            
+            // !!!
+            // TODO: create request to response card translated
+            // !!!
             let request_result = this.sendRestRequest(request["rq_method"], request["rq_url"]);
 
             for(let line of request_result){
@@ -75,78 +118,35 @@ class Generator{
                 let thumbnail_file = this.getRandomFileFromDirectory(line["source_path"] + "/thumbnails", /\.jpg$/);
                 let screenshot_file = this.getRandomFileFromDirectory(line["source_path"] + "/screenshots", /\.jpg$/);
 
-
                 let path = line["source_path"] + "/card.yaml";                                
-                let rawText = $.ajax({url: path, async: false}).responseText;
+                let rawText = $.ajax({url: path, async: false, cache: false}).responseText;
                 let yaml_card = jsyaml.load(rawText);
 
-
                 let thumbnail = new Thumbnail();
-                let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,length,year,origin,genre,theme
+                let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,length,date,origins,genres,themes
                 thumbnail.setImageSources(thumbnail_src=line["source_path"] + "/thumbnails/" + thumbnail_file, description_src=line["source_path"] + "/screenshots/" + screenshot_file);
                 thumbnail.setTitles(lang=line["lang_orig"], original=line["title_orig"], translated=line["title_req"], thumb=short_title);
-thumbnail.setStoryline(yaml_card["storylines"]["hu"]);
+                thumbnail.setStoryline(yaml_card["storylines"]["hu"]);
                 thumbnail.setCredentials(directors=yaml_card["directors"], writers=yaml_card["writers"], stars=yaml_card["stars"]);
-                thumbnail.setExtras(length=yaml_card["length"], year=yaml_card["year"], origin=yaml_card["origin"], genre=yaml_card["genre"], theme=yaml_card["theme"]);
-                thumbnail.setGenaratorFunction();
+                thumbnail.setExtras(length=yaml_card["length"], date=yaml_card["date"], origins=yaml_card["origins"], genres=yaml_card["genres"], themes=yaml_card["themes"]);
+
+                thumbnail.setFunctionForSelection({"play": 
+                    (function(card_id) {
+                        return function() {
+                            return card_id
+                        };
+                    })(line["id"])});
+
                 oContainer.addThumbnail(line["id"], thumbnail);
             }
             container_list.push(oContainer);
         }
-
         return container_list;
     }
 }
 
-class MainMenuGenerator extends Generator{
-
+class MovieMenuContainerGenerator extends AjaxContainerGenerator{  
     getContainerList(){
-        let refToThis = this;
-        let containerList = [];
-
-        let oContainer = new ObjThumbnailContainer("Categories");
-
-        let thumbnail = new Thumbnail();
-        let thumbnail_src, description_src,lang,original,translated,thumb,history,directors,writers,stars,length,year,origin,genre,theme
-        thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
-        thumbnail.setTitles(lang="hu", original="Movies", translated="Movies", thumb="Movies", history="Movies");
-        thumbnail.setGenaratorFunction({"menu": 
-            (function(movie_type) {
-                return function() {
-                    return new MovieMenuGenerator(refToThis.languageCode)
-                };
-            })("movies")});
-        oContainer.addThumbnail(1, thumbnail);
-
-        thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/series.jpg", description_src="images/categories/series.jpg");
-        thumbnail.setTitles(lang="hu", original="Movie Series", translated="Movie Series", thumb="Movie Series", history="Movie Series");
-        thumbnail.setGenaratorFunction(function(){refToThis.viewMovie()});
-        oContainer.addThumbnail(2, thumbnail);
-
-        thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/music_video.jpg", description_src="images/categories/music_video.jpg");
-        thumbnail.setTitles(lang="hu", original="Music Video", translated="Music Video", thumb="Music Video", history="Music Video");
-        thumbnail.setGenaratorFunction(function(){refToThis.viewMovie()});
-        oContainer.addThumbnail(3, thumbnail);
-
-        thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/music_audio.jpg", description_src="images/categories/music_audio.jpg");
-        thumbnail.setTitles(lang="hu", original="Music Audio", translated="Music Audio", thumb="Music Audio", history="Music Audio");
-        thumbnail.setGenaratorFunction(function(){refToThis.viewMovie()});
-        oContainer.addThumbnail(3, thumbnail);
-
-        containerList.push(oContainer);
- 
-        return containerList;
-    }
-}
-
-
-class MovieMenuGenerator extends Generator{
- 
-    getContainerList(){
-
         let refToThis = this;
         let containerList = [];
 
@@ -160,5 +160,5 @@ class MovieMenuGenerator extends Generator{
         containerList = this.generateContainers(requestList);
 
         return containerList;
-    } 
-}
+    }    
+}    

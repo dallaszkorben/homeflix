@@ -1218,12 +1218,13 @@ class SqlDatabase:
         """
         It returns a list of medium by the card id.
         Return fields:
-            card_id:    card ID
-            file_name:  name of the media file
+            card_id:     card ID
+            file_name:   name of the media file
+            source_path: source path of the media file
         Example:
             records=db.get_mediaum_path_list(card_id=33, limit=100)
         Output:
-            [{"card_id": 33, "file_name": "PsycheEsNarcisz-1-1980.m4v"}] 
+            [{"card_id": 33, "file_name": "PsycheEsNarcisz-1-1980.m4v", source_path: "MEDIA/01.Movie/01.Standalone/Amerikai.Pszicho-2000"}] 
         """
         with self.lock:
 
@@ -1234,7 +1235,8 @@ class SqlDatabase:
 
             query = '''
                 SELECT 
-                    card.id card_id, 
+                    card.id card_id,
+                    card.source_path,
                     medium.name file_name
                 FROM 
                     Card card, 
