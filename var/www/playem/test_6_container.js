@@ -75,9 +75,6 @@ class ObjScrollSection{
                 element.attr("id",id.format("???", containerIndex));
             });
 
-
-
-
             let domThumbnailContainerBlock = $('<div>', {
                 class: "thumbnail-container-block",
                 id: "container-block-" + containerIndex
@@ -155,8 +152,6 @@ class ObjScrollSection{
         domThumbnailContainerBlock.append(domThumbnailContainerSpace);
         this.domScrollSection.append(domThumbnailContainerBlock);
 
-//        this.thumbnailContainerBlockDomList.push(domThumbnailContainerBlock);
-
         // this variable should be refreshed every time when a new thumbnail is added
         this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
     }
@@ -208,7 +203,38 @@ class ObjScrollSection{
     }
     
     clickedOnThumbnail(id){
-        console.log(id);
+        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+
+        const re = /\d+/g
+        let match = id.match(re);
+        let clickedContainerIndex = match[0];
+        let clickedThumbnailIndex = match[1];
+
+        // Enter needed
+        if(this.currentContainerIndex==clickedContainerIndex && currentThumbnailIndex==clickedThumbnailIndex){
+
+            // Simulate an Enter press on the "document"
+            let e = jQuery.Event("keydown");
+            e.which = 13;  //Enter
+            e.keyCode = 13;
+            $(document).trigger(e);
+
+        // Focus needed
+        }else{
+
+            // Hide the current focus
+            let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
+            domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+            this.currentContainerIndex = clickedContainerIndex;
+            domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
+            currentThumbnailIndex = clickedThumbnailIndex;
+
+            // Show the current focus
+            domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+            this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+            this.scrollThumbnails();
+            this.showDetails();
+        }
     }
 
     arrowRight(){
@@ -259,16 +285,12 @@ class ObjScrollSection{
         this.currentContainerIndex = (this.currentContainerIndex - 1 + this.numberOfContainers) % this.numberOfContainers;
         domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
-        // currentThumbnailIndex = 0;
         currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this. scrollThumbnails();
         this.showDetails();
     };
-
-    clickOnThumbnail() {
-    }
 
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail'); 
@@ -280,8 +302,6 @@ class ObjScrollSection{
 
         let sectionScrollTop = this.domScrollSection.scrollTop();
         let visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
-
-        //console.log(sectionHeight +"/" +thumbnailContainerBlockHeight + "=" + visibleContainers)
 
         if (this.currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
             this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
@@ -750,30 +770,23 @@ class ObjDescriptionContainer{
             }
             descTextExtraGenre.html(textExtraGenre);
 
-           // --- extra - theme ---
-           let descTextExtraTheme = $("#description-text-extra-block-theme");
-           descTextExtraTheme.empty();
-           let textExtraTheme = "";
-           if ("themes" in extra && extra["themes"]){
-               let themeList = extra["themes"];
-               let first = true;
-               for (let item of themeList) {
-                   if(first){
-                       first = false;
-                   }else{
-                       textExtraTheme += " • ";
-                   }
-                   textExtraTheme += item;
-               }
-           }
-           descTextExtraTheme.html(textExtraTheme);
-
-            // let extraTable = $("<table>",{
-            //     border: 1,
-            //     id: "description-text-extra-table"
-            // });
-            // descTextExtra.append(extraTable);
-            // printExtra(extraTable, extra)
+            // --- extra - theme ---
+            let descTextExtraTheme = $("#description-text-extra-block-theme");
+            descTextExtraTheme.empty();
+            let textExtraTheme = "";
+            if ("themes" in extra && extra["themes"]){
+                let themeList = extra["themes"];
+                let first = true;
+                for (let item of themeList) {
+                    if(first){
+                        first = false;
+                    }else{
+                        textExtraTheme += " • ";
+                    }
+                    textExtraTheme += item;
+                }
+            }
+            descTextExtraTheme.html(textExtraTheme);
 
             // -------------------
             // --- credentials ---
@@ -812,12 +825,18 @@ class ObjDescriptionContainer{
     resizeDescriptionSection(){
         let domDescriptionSectionDiv = $("#description-section");
 
-        let sectionHeight = domDescriptionSectionDiv.height();
+        let domDescriptionImageDiv = $("#description-image");
+        let description_image_border_sum_width = domDescriptionImageDiv.outerWidth()-domDescriptionImageDiv.innerWidth();
+        let description_image_border_sum_height = domDescriptionImageDiv.outerHeight()-domDescriptionImageDiv.innerHeight();
+        
+        let description_image_outer_width = this.description_img.width + description_image_border_sum_width;
+        let description_image_outer_height = this.description_img.height + description_image_border_sum_height;
 
         let wrapperHeight = domDescriptionSectionDiv.innerHeight();
         let wrapperWidth = domDescriptionSectionDiv.innerWidth();
 
-        let newDescImgWidth = sectionHeight * this.description_img.width / this.description_img.height;
+        let imageInnerHeight = wrapperHeight - description_image_border_sum_height;
+        let newDescImgWidth = imageInnerHeight * description_image_outer_width / description_image_outer_height;
 
         // Set the width of the image accordingto its aspect ration and the available height
         t.style.setProperty('--description-image-width', newDescImgWidth + 'px');
@@ -920,6 +939,16 @@ class ThumbnailController{
             let esc = $.Event("keydown", { keyCode: 27 });
             $(document).trigger(esc);
         });
+    }
+
+    /*
+    After the size of the description-section changed, the description-image size recalculation is needed.
+
+    */
+    resizeDescriptionSection(){
+        //this.objScrollSection.focus();
+        this.objScrollSection.getDescriptionContainer().resizeDescriptionSection();
+
     }
 
     generateScrollSection(oContainerGenerator, history={text:"", link:""}){
@@ -1059,7 +1088,6 @@ class ThumbnailController{
 
                 }
             }
-
         }
     }
 

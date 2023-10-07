@@ -131,11 +131,11 @@
                 // Description section resize observer
                 //
 
-                // Triggered if the size of the description image DIV changed
+                // Triggered if the size of the description section changed - I have to resize the Description Image
                 const resizeObserver = new ResizeObserver(entries => {
 
-                    // Change the size of the description Image to be aligned
-                    oScrollSection.getDescriptionContainer().resizeDescriptionSection();
+                    // I do the refresh through the ThumbnailController
+                    oThumbnailController.resizeDescriptionSection();
                 });
                 const domDescSectSection = document.querySelector("#description-section");
                 resizeObserver.observe(domDescSectSection);
