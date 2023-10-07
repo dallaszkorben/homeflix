@@ -27,7 +27,6 @@ class ObjScrollSection{
      * @param {number} numberOfContainers 
      */
     // TODO: change current to focused
-    // TODO: rename thumbnailIndexList to focusedThumbnailList
     constructor(oContainerGenerator, history={text:"", link:""}){
         this.oContainerGenerator = oContainerGenerator;
         this.historyDict = history;
@@ -37,7 +36,7 @@ class ObjScrollSection{
         this.numberOfContainers = 0;
         this.currentContainerIndex = -1;
         this.thumbnailContainerList = [];
-        this.thumbnailIndexList = [];  
+        this.focusedThumbnailList = [];  
 
         this.oDescriptionContainer = new ObjDescriptionContainer();        
 
@@ -58,6 +57,9 @@ class ObjScrollSection{
         tshl.html(this.historyDict["link"]);
     }
 
+    /**
+     * Builds up new DOM for ControllerSection after it was taken out from the history
+     */
     buildUpDom(){
         this.resetDom();
 
@@ -108,7 +110,7 @@ class ObjScrollSection{
 
     addThumbnailContainerObject(thumbnailContainer){
         let refToThis = this;
-        let containerIndex = this.thumbnailIndexList.length;
+        let containerIndex = this.focusedThumbnailList.length;
 
         let domThumbnailContainerBlock = $('<div>', {
             class: "thumbnail-container-block",
@@ -126,7 +128,7 @@ class ObjScrollSection{
 
         // The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjScrollSection)
         let currentThumbnailIndex = thumbnailContainer.getDefaultThumbnailIndex();
-        this.thumbnailIndexList.push(currentThumbnailIndex);
+        this.focusedThumbnailList.push(currentThumbnailIndex);
         this.thumbnailContainerList.push(thumbnailContainer);
         this.numberOfContainers++;
 
@@ -164,7 +166,7 @@ class ObjScrollSection{
     focus(){
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
 
         this.scrollThumbnails();
@@ -172,14 +174,14 @@ class ObjScrollSection{
     }
 
     getFocusedHistoryTitle(){
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
         return thumbnail.getHistoryTitle();
     } 
 
     getSelectedThumbnalFunctionForSelection(){
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
         let function_for_selection = thumbnail.getFunctionForSelection();
@@ -188,7 +190,7 @@ class ObjScrollSection{
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
     showDetails(){
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex]
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
 
@@ -203,12 +205,12 @@ class ObjScrollSection{
     }
     
     clickedOnThumbnail(id){
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         const re = /\d+/g
         let match = id.match(re);
-        let clickedContainerIndex = match[0];
-        let clickedThumbnailIndex = match[1];
+        let clickedContainerIndex = parseInt(match[0]);
+        let clickedThumbnailIndex = parseInt(match[1]);
 
         // Enter needed
         if(this.currentContainerIndex==clickedContainerIndex && currentThumbnailIndex==clickedThumbnailIndex){
@@ -231,7 +233,7 @@ class ObjScrollSection{
 
             // Show the current focus
             domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-            this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+            this.focusedThumbnailList[this.currentContainerIndex] = currentThumbnailIndex;
             this.scrollThumbnails();
             this.showDetails();
         }
@@ -239,37 +241,37 @@ class ObjScrollSection{
 
     arrowRight(){
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         currentThumbnailIndex = (currentThumbnailIndex + 1) % domThumbnails.length;
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-        this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+        this.focusedThumbnailList[this.currentContainerIndex] = currentThumbnailIndex;
         this.scrollThumbnails();
         this.showDetails();
     }
 
     arrowLeft() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         currentThumbnailIndex = (currentThumbnailIndex - 1 + domThumbnails.length) % domThumbnails.length;
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
-        this.thumbnailIndexList[this.currentContainerIndex] = currentThumbnailIndex;
+        this.focusedThumbnailList[this.currentContainerIndex] = currentThumbnailIndex;
         this.scrollThumbnails();
         this.showDetails();
     }
 
     arrowDown() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         this.currentContainerIndex = (this.currentContainerIndex + 1) % this.numberOfContainers;
         domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
-        currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this.scrollThumbnails();
@@ -278,14 +280,14 @@ class ObjScrollSection{
 
     arrowUp() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
 
         this.currentContainerIndex = (this.currentContainerIndex - 1 + this.numberOfContainers) % this.numberOfContainers;
         domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
-        currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
         this. scrollThumbnails();
@@ -294,7 +296,7 @@ class ObjScrollSection{
 
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail'); 
-        let currentThumbnailIndex = this.thumbnailIndexList[this.currentContainerIndex];
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         // Vertical scroll 
         let sectionHeight = this.domScrollSection.height();
@@ -353,6 +355,10 @@ class ObjThumbnailContainer{
         this.domThumbnailContainer.empty();
     }
 
+    /**
+     * Builds up new DOM for ThumbnailContainer
+     * Called from the ScrollSection after it was taken out from the history
+     */
     buildUpDom(){
         this.resetDom();
 
