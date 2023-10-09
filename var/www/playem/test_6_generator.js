@@ -30,7 +30,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
-                    return new MovieMenuContainerGenerator(refToThis.languageCode)
+                    return new MovieMenuContainerGenerator(refToThis.language_code)
                 };
             })("movies")});
         oContainer.addThumbnail(1, thumbnail);
@@ -104,6 +104,10 @@ class AjaxContainerGenerator extends ContainerGenerator{
 
             for(let line of request_result){
 
+
+
+
+
                 if(!line["lang_orig"]){
                     line["lang_orig"] = "";
                 }
@@ -118,7 +122,15 @@ class AjaxContainerGenerator extends ContainerGenerator{
                 let thumbnail_file = this.getRandomFileFromDirectory(line["source_path"] + "/thumbnails", /\.jpg$/);
                 let screenshot_file = this.getRandomFileFromDirectory(line["source_path"] + "/screenshots", /\.jpg$/);
 
-                let path = line["source_path"] + "/card.yaml";                                
+                let path = line["source_path"] + "/card.yaml";
+                
+                
+//
+
+
+
+
+
                 let rawText = $.ajax({url: path, async: false, cache: false}).responseText;
                 let yaml_card = jsyaml.load(rawText);
 

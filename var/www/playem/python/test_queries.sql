@@ -17,7 +17,9 @@ version 1:
 ----------
 
 
---- show original title of all standalone media except if the requested language is the original ---
+--- The original title of the movies will be shown, if the original title is NOT on the requested language
+--- "title_req" field is EMPTY
+--- "title_orig" field contains the original title
 con.execute('''
                 SELECT 
                     card.id id, 
@@ -42,8 +44,10 @@ con.execute('''
 ''', {'category': 'movie', 'lang': 'hu'}).fetchall()
 
 
---- show requested title of all standalone films if there is ---
-
+--- The movies with the title on the requested language will be shown - even if it is the original language
+--- It will NOT show the movie if there is NO title on the requested language
+--- "title_req" field contains the title
+--- "title_orig" field is EMPTY
 con.execute('''
                 SELECT 
                     card.id id, 
@@ -72,11 +76,11 @@ con.execute('''
 
 con.execute('''
 SELECT 
-id, 
-MAX(text_req) title_req, 
-MAX(text_orig) title_orig, 
-MAX(lang_orig) lang_orig,
-source_path
+    id, 
+    MAX(text_req) title_req, 
+    MAX(text_orig) title_orig, 
+    MAX(lang_orig) lang_orig,
+    source_path
 
 FROM
 
@@ -218,6 +222,260 @@ GROUP BY id
 ORDER BY CASE WHEN title_req IS NULL THEN title_orig ELSE title_req END
 
 ''', {'genre': 'action', 'lang': 'hu', 'category': 'movie'}).fetchall()
+
+
+
+=================================================
+
+--- get all standalon movies with genre=drama ---
+--- with extended data: all from card ---
+
+=================================================
+
+con.execute('''
+SELECT 
+    id, 
+    MAX(title_req) title_req, 
+    MAX(title_orig) title_orig, 
+    MAX(lang_orig) lang_orig,
+    MAX(lang_req) lang_req,
+    MAX(storyline) storyline,
+    source_path
+FROM 
+(
+                SELECT 
+                    card.id id, 
+                    NULL title_req, 
+                    NULL lang_req, 
+                    tcl_title.text title_orig, 
+                    title_lang.name lang_orig,
+                    card.source_path source_path,
+                    (SELECT tcl_storyline.text
+                        FROM
+                            Text_Card_Lang tcl_storyline,
+                            Language storyline_language
+                           
+                        WHERE 
+                            tcl_storyline.id_language=storyline_language.id AND
+                            tcl_storyline.id_card=id AND
+                            tcl_storyline.type="S" AND
+                            storyline_language.name = :lang
+                    ) storyline
+                FROM 
+                    Card card, 
+                    Genre genre,
+                    Card_Genre cg,
+
+                    Text_Card_Lang tcl_title, 
+                    Text_Card_Lang tcl_storyline,
+                    Category cat,
+                    Language title_lang
+                    
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl_title.id_card=card.id AND
+                    tcl_title.id_language=title_lang.id AND
+                    tcl_title.type="T" AND
+
+                    cg.id_card=card.id AND
+                    cg.id_genre=genre.id AND
+                    genre.name=:genre AND
+
+                    card.id_title_orig=title_lang.id AND
+                    cat.name = :category AND
+                    title_lang.name <> :lang                   
+UNION
+                SELECT 
+                    card.id id, 
+                    tcl_title.text title_req, 
+                    title_lang.name lang_req, 
+                    NULL title_orig, 
+                    NULL lang_orig,
+                    card.source_path source_path,
+                    (SELECT tcl_storyline.text
+                        FROM
+                            Text_Card_Lang tcl_storyline,
+                            Language storyline_language
+                           
+                        WHERE 
+                            tcl_storyline.id_language=storyline_language.id AND
+                            tcl_storyline.id_card=id AND
+                            tcl_storyline.type="S" AND
+                            storyline_language.name = :lang
+                    ) storyline
+                    
+                FROM 
+                    Card card, 
+                    Genre genre,
+                    Card_Genre cg,
+
+                    Text_Card_Lang tcl_title,
+                    
+                    Category cat,
+                    Language title_lang                    
+
+                WHERE
+                    card.id_higher_hierarchy IS NULL AND
+                    tcl_title.id_card=card.id AND
+                    tcl_title.id_language=title_lang.id AND
+                    tcl_title.type="T" AND
+                   
+                    cg.id_card=card.id AND
+                    cg.id_genre=genre.id AND
+                    genre.name=:genre AND
+
+                    --card.id_title_orig=title_lang.id AND
+                    card.id_category=cat.id AND
+                    cat.name = :category AND
+                    title_lang.name=:lang
+)
+GROUP BY id
+ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+
+''', {'lang': 'hu', 'category': 'movie', 'genre': 'drama'}).fetchall()
+
+
+======================================================
+
+--- get all data from a Card ---
+--- multiple hits in one field, separated by comma ---
+
+======================================================
+con.execute('''
+                SELECT 
+                    card.id as id,
+                    card.date as date,
+                    card.length as length,
+                    card.source_path as source_path,
+                    medium,
+                    storyline,
+                    sound,
+                    sub,
+                    origins,
+                    genres,
+                    themes,
+                    directors,
+                    writers,
+                    voices,
+                    stars,
+                    actors
+                FROM
+                    (SELECT group_concat("{'" || mt.name || "': '" || m.name || "'}") medium
+                        FROM 
+                            Medium m,
+                            MediaType mt
+                        WHERE
+                            m.id_card= :card_id AND
+                            m.id_mediatype = mt.id
+                    ),
+                
+                    (SELECT group_concat(tcl.text) storyline
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language
+                        WHERE 
+                            tcl.type = "S" AND
+                            tcl.id_card = :card_id AND
+                            tcl.id_language = language.id AND
+                            language.name = :lang
+                    ),                        
+
+                    (SELECT group_concat(language.name) sound
+                        FROM 
+                            Language language,
+                            Card_Sound card_sound
+                        WHERE 
+                            card_sound.id_sound=language.id AND
+                            card_sound.id_card = :card_id
+                    ),
+
+                    (SELECT group_concat(language.name) sub
+                        FROM 
+                            Language language,
+                            Card_Sub card_sub
+                        WHERE 
+                            card_sub.id_sub=language.id AND
+                            card_sub.id_card = :card_id
+                    ),
+                    
+                    (SELECT group_concat(country.name) origins
+                        FROM 
+                            Country country,
+                            Card_Origin card_origin
+                        WHERE 
+                            card_origin.id_card = :card_id AND
+                            country.id = card_origin.id_origin
+                    ),                        
+
+                    (SELECT group_concat(genre.name) genres
+                        FROM 
+                            Genre genre,
+                            Card_Genre card_genre
+                        WHERE 
+                            card_genre.id_card = :card_id AND
+                            genre.id = card_genre.id_genre
+                    ),
+                       
+                    (SELECT group_concat(theme.name) themes
+                        FROM 
+                            Theme theme,
+                            Card_Theme card_theme
+                        WHERE 
+                            card_theme.id_card = :card_id AND
+                            theme.id = card_theme.id_theme
+                    ),
+
+                    (SELECT group_concat(person.name) directors
+                        FROM 
+                            Person person,
+                            Card_Director cd
+                        WHERE 
+                            cd.id_director = person.id AND
+                            cd.id_card = :card_id
+                    ),
+
+                    (SELECT group_concat(person.name) writers
+                        FROM 
+                            Person person,
+                            Card_Writer cv                            
+                        WHERE 
+                            cv.id_writer = person.id AND
+                            cv.id_card = :card_id
+                    ),
+
+                    (SELECT group_concat(person.name) voices
+                        FROM 
+                            Person person,
+                            Card_Voice cv
+                        WHERE 
+                            cv.id_voice = person.id AND
+                            cv.id_card = :card_id
+                    ),
+
+                    (SELECT group_concat(person.name) stars
+                        FROM 
+                            Person person,
+                            Card_Star cs
+                        WHERE 
+                            cs.id_star = person.id AND
+                            cs.id_card = :card_id
+                    ),
+
+                    (SELECT group_concat(person.name) actors
+                        FROM 
+                            Person person,
+                            Card_Actor ca
+                        WHERE 
+                            ca.id_actor = person.id AND
+                            ca.id_card = :card_id
+                    ),
+
+                    Card card
+                WHERE
+                    card.id = :card_id                    
+''', {'card_id': 4, 'lang': 'hu'}).fetchone()
+
+
 
 
 

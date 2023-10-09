@@ -11,6 +11,7 @@ from playem.restserver.representations import output_json
 from playem.restserver.endpoints.ep_collect_all_series_movies import EPCollectAllSeriesMovies
 from playem.restserver.endpoints.ep_collect_standalone_movies_all import EPCollectStandaloneMoviesAll
 from playem.restserver.endpoints.ep_collect_standalone_movies_by_genre import EPCollectStandaloneMoviesByGenre
+from playem.restserver.endpoints.ep_collect_standalone_movie_by_card_id import EPCollectStandaloneMovieByCardId
 from playem.restserver.endpoints.ep_collect_child_hierarchy_or_card import EPCollectChildHierarchyOrCard
 from playem.restserver.endpoints.ep_collect_medium_by_card_id import EPCollectMediumByCardId
 
@@ -33,6 +34,7 @@ class CollectView(FlaskView):
         self.epCollectAllSeriesMovies = EPCollectAllSeriesMovies(web_gadget)
         self.epCollectStandaloneMoviesAll = EPCollectStandaloneMoviesAll(web_gadget)
         self.epCollectStandaloneMoviesByGenre = EPCollectStandaloneMoviesByGenre(web_gadget)
+        self.epCollectStandaloneMovieByCardId = EPCollectStandaloneMovieByCardId(web_gadget)
         self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
         self.epCollectMediumByCardId = EPCollectMediumByCardId(web_gadget)
 
@@ -102,7 +104,7 @@ class CollectView(FlaskView):
     #
     # Gives back list of records of standalone movies with genre with parameters
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/genre/dramalang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/genre/drama/lang/en
     #
     # GET http://localhost:80/collect/standalone/movies/genre/drama/lang/en
     #
@@ -111,6 +113,22 @@ class CollectView(FlaskView):
     def collectStandaloneMoviesByGenreWithParameter(self, genre, lang):
 
         out = self.epCollectStandaloneMoviesByGenre.executeByParameters(genre=genre, lang=lang)
+        return out
+
+# ===
+
+    #
+    # Gives back list of records of standalone movies with genre with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movie/card_id/123/lang/en
+    #
+    # GET http://localhost:80/collect/standalone/movie/card_id/123/lang/en
+    #
+    #@route('/standalone/movie/card_id/<card_id>/lang/<lang>')
+    @route(EPCollectStandaloneMovieByCardId.PATH_PAR_URL, methods=[EPCollectStandaloneMovieByCardId.METHOD])
+    def collectStandaloneMovieByCardIdWithParameter(self, card_id, lang):
+
+        out = self.epCollectStandaloneMovieByCardId.executeByParameters(card_id=card_id, lang=lang)
         return out
 
 # ===

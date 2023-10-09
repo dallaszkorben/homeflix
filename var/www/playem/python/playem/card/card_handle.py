@@ -13,19 +13,14 @@ class CardHandle:
         self.web_base = web_base
         self.media_absolute_path = Path(web_base.mediaAbsolutePath)
         self.media_relative = Path(web_base.mediaRelativePath)
-        self.media_type_dict = {
-            'video': {'mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'},
-            'audio': {'mp3', 'ogg', 'm4a'}, 
-            'text':  {'doc', 'odt', 'pdf', 'epub', 'mobi', 'azw', 'azw3', 'iba', 'txt','rtf'}, 
-            'image': {'jpg', 'jpeg', 'png'}, 
-        }
 
-    def getPatternMedia(self, mediatypes):
-        extension_list = []
-        for mediatype in mediatypes:
-            extension_list += self.media_type_dict[mediatype]
-        compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
-        return re.compile(compile_string)
+        # this keys must be in the dictionary.yaml file 'mediatype' section
+        self.media_type_dict = {
+            'video': ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
+            'audio': ['mp3', 'ogg', 'm4a'], 
+            'text':  ['doc', 'odt', 'pdf', 'epub', 'mobi', 'azw', 'azw3', 'iba', 'txt','rtf'], 
+            'picture': ['jpg', 'jpeg', 'png'], 
+        }
 
     def getPatternImage(self):
         return re.compile( '^image[.](jp(eg|g)|png)$' )
@@ -56,6 +51,9 @@ class CardHandle:
         image_file_name = None
 
         hierarchy_id = None
+
+#
+# TODO: image_file_name does not matter
 
         for file_name in file_list:
         
@@ -112,6 +110,14 @@ class CardHandle:
                 actors = data['actors']
             except:
                 actors = []
+            try:       
+                stars = data['stars']
+            except:
+                stars = []                
+            try:       
+                voices = data['voices']
+            except:
+                voices = []                
             try:
                 host = data['host']
             except:
@@ -122,9 +128,18 @@ class CardHandle:
                 sounds = data['sounds']
             except:
                 sounds = []
-            subs = data['subs']
-            genres = data['genres']
-            themes = data['themes']
+            try:
+                subs = data['subs']
+            except:
+                sub = []
+            try:
+                genres = data['genres']
+            except:
+                genres = []
+            try:
+                themes = data['themes']
+            except:
+                thmens = []
             try:
                 origins = data['origins']
             except:
@@ -136,17 +151,19 @@ class CardHandle:
             except:
                 sequence = None
 
-
-
             # collect media files now, because at this point the category is known
-            media = []
+            media_dict = {}
             for file_name in file_list:
+                for mediatype_key in mediatypes:
 
-                # find media
-                if self.getPatternMedia(mediatypes).match( file_name ):
-                    media.append(file_name)
-
-
+                    # If this media type exists
+                    if mediatype_key in self.media_type_dict:
+                        extension_list = self.media_type_dict[mediatype_key]
+                        compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
+                        if re.compile(compile_string).match(file_name):
+                            if not mediatype_key in media_dict:
+                                media_dict[mediatype_key] = []
+                            media_dict[mediatype_key].append(file_name)
 
             # filter out empty titles
             titles=dict((language, title) for language, title in titles.items() if title)
@@ -176,8 +193,9 @@ class CardHandle:
                 logging.error( "CARD - There is NO mediatype nor level configured in in {0}. At least one of them should be there".format(card_path))
                 card_error = True
 
-            if mediatypes and not media:
-                logging.error( "CARD - There is mediatype configured {1} for the card in {0}. But there was NO media ({2}) found in the folder".format(card_path, mediatypes, [media_type_dict[mediatype] for mediatype in mediatypes]  ))
+            #if mediatypes and not media:
+            if mediatypes and not media_dict:
+                logging.error( "CARD - There is mediatype configured {1} for the card in {0}. But there was NO media ({2}) found in the folder".format(card_path, mediatypes, [self.media_type_dict[mediatype] for mediatype in mediatypes]  ))
                 card_error = True
 
             if not mediatypes and level and not dir_list:
@@ -187,7 +205,8 @@ class CardHandle:
  # ---
 
             # this is a level in the hierarchy / not a media
-            if not media and not card_error:
+            #if not media and not card_error:
+            if not media_dict and not card_error:                
 
                 # create a new Level record + get back the id
                 hierarchy_id=db.append_hierarchy(
@@ -248,10 +267,9 @@ class CardHandle:
                         card_error = True
 
                 if not card_error:
-         
+
                     db.append_card_movie(
                         category=category,
-                        mediatypes=mediatypes,
                         title_orig=title_orig, 
                         titles=titles, 
                         storylines=storylines,
@@ -262,8 +280,13 @@ class CardHandle:
                         genres=genres, 
                         themes=themes, 
                         origins=origins,
+                        writers=writers,
+                        directors=directors,
+                        actors=actors,
+                        stars=stars,
+                        voices=voices,
 
-                        media=media,
+                        media=media_dict,
 
                         basename=basename,
                         source_path=source_path,

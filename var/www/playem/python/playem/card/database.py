@@ -24,11 +24,12 @@ class SqlDatabase:
 
     TABLE_CARD_GENRE = "Card_Genre"
     TABLE_CARD_THEME = "Card_Theme"
-    TABLE_CARD_MEDIATYPE = "Card_MediaType"
+#    TABLE_CARD_MEDIATYPE = "Card_MediaType"
     TABLE_CARD_SOUND = "Card_Sound"
     TABLE_CARD_SUB = "Card_Sub"
     TABLE_CARD_ORIGIN = "Card_Origin"
     TABLE_CARD_ACTOR = "Card_Actor"
+    TABLE_CARD_STAR = "Card_Star"
     TABLE_CARD_WRITER = "Card_Writer"
     TABLE_CARD_DIRECTOR = "Card_Director"
     TABLE_CARD_VOICE = "Card_Voice"
@@ -50,12 +51,13 @@ class SqlDatabase:
                 SqlDatabase.TABLE_CARD_WRITER,
                 SqlDatabase.TABLE_CARD_DIRECTOR,
                 SqlDatabase.TABLE_CARD_ACTOR,
+                SqlDatabase.TABLE_CARD_STAR,
                 SqlDatabase.TABLE_CARD_ORIGIN,
                 SqlDatabase.TABLE_CARD_GENRE,
                 SqlDatabase.TABLE_CARD_THEME,
                 SqlDatabase.TABLE_CARD_SOUND,
                 SqlDatabase.TABLE_CARD_SUB,
-                SqlDatabase.TABLE_CARD_MEDIATYPE,
+#                SqlDatabase.TABLE_CARD_MEDIATYPE,
 
                 SqlDatabase.TABLE_CARD,
 
@@ -76,7 +78,7 @@ class SqlDatabase:
         # create connection
         self.conn = None
         try:
-            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=20)
             logging.debug( "Connection to {0} SQLite was successful".format(self.db_path))
             self.conn.row_factory = sqlite3.Row 
         except Error as e:
@@ -259,15 +261,15 @@ class SqlDatabase:
             );
         ''' )
 
-        self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + '''(
-                id_card INTEGER      NOT NULL,
-                id_mediatype INTEGER      NOT NULL,
-                FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
-                FOREIGN KEY (id_mediatype) REFERENCES ''' + SqlDatabase.TABLE_MEDIATYPE + ''' (id),
-                PRIMARY KEY (id_card, id_mediatype) 
-            );
-        ''' )
+        # self.conn.execute('''
+        #     CREATE TABLE ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + '''(
+        #         id_card INTEGER      NOT NULL,
+        #         id_mediatype INTEGER      NOT NULL,
+        #         FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+        #         FOREIGN KEY (id_mediatype) REFERENCES ''' + SqlDatabase.TABLE_MEDIATYPE + ''' (id),
+        #         PRIMARY KEY (id_card, id_mediatype) 
+        #     );
+        # ''' )
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_SOUND + '''(
@@ -306,6 +308,16 @@ class SqlDatabase:
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_actor) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
                 PRIMARY KEY (id_card, id_actor) 
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_STAR + '''(
+                id_card  INTEGER       NOT NULL,
+                id_star INTEGER       NOT NULL,
+                FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_star) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_star) 
             );
         ''')
 
@@ -368,8 +380,10 @@ class SqlDatabase:
             CREATE TABLE ''' + SqlDatabase.TABLE_MEDIUM + '''(
                 name         TEXT     NOT NULL,
                 id_card      INTEGER  NOT NULL,
+                id_mediatype INTEGER  NOT NULL,
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id), 
-                PRIMARY KEY (id_card, name)
+                FOREIGN KEY (id_mediatype) REFERENCES ''' + SqlDatabase.TABLE_MEDIATYPE + ''' (id),
+                PRIMARY KEY (id_card, id_mediatype, name)
             );
         ''' )
 
@@ -548,7 +562,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, mediatypes={}, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], media=[], basename=None, source_path=None, sequence=None, higher_hierarchy_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[],  media={}, basename=None, source_path=None, sequence=None, higher_hierarchy_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -577,6 +591,127 @@ class SqlDatabase:
                 cur.execute(query, (title_orig_id, category_id, date, length, basename, source_path))
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
+
+            #
+            # INSERT into TABLE_CARD_WRITER
+            #
+            for writer in writers:
+
+                if writer:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': writer}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': writer})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_WRITER + ''' 
+                            (id_writer, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_ACTOR
+            #
+            for actor in actors:
+
+                if actor:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': actor}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': actor})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_ACTOR + ''' 
+                            (id_actor, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_STARS
+            #
+            for star in stars:
+
+                if star:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': star}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': star})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_STAR + ''' 
+                            (id_star, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_DIRECTOR
+            #
+            for director in directors:
+
+                if director:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': director}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': director})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_DIRECTOR + ''' 
+                            (id_director, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_VOICE
+            #
+            for voice in voices:
+
+                if voice:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': voice}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': voice})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_VOICE + ''' 
+                            (id_voice, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
 
             #
             # INSERT into TABLE_CARD_SOUND
@@ -619,16 +754,6 @@ class SqlDatabase:
                 cur.execute(query, (self.theme_name_id_dict[theme], card_id))
             
             #
-            # INSERT into TABLE_CARD_MEDIATYPE
-            #
-            for mediatype in mediatypes:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_MEDIATYPE + '''
-                    (id_mediatype, id_card)
-                    VALUES (?, ?);
-                '''
-                cur.execute(query, (self.mediatype_name_id_dict[mediatype], card_id))
-
-            #
             # INSERT into TABLE_CARD_ORIGIN
             #
             for origin in origins:
@@ -661,12 +786,19 @@ class SqlDatabase:
             #
             # INSERT into TABLE_MEDIUM
             #
-            for medium in media:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_MEDIUM + '''
-                    (name, id_card)
-                    VALUES (?, ?);
-                '''
-                cur.execute(query, (medium, card_id))   
+
+            for media_type in media:
+                media_list = media[media_type]
+                for medium in media_list:                   
+
+                    if media_type in self.mediatype_name_id_dict:
+                        mediatype_id = self.mediatype_name_id_dict[media_type]
+                    
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_MEDIUM + '''
+                            (name, id_card, id_mediatype)
+                            VALUES (:medium, :card_id, :mediatype_id);
+                        '''
+                        cur.execute(query, (medium, card_id, mediatype_id))   
 
         except sqlite3.Error as e:
             logging.error("To append media failed with: '{0}' while inserting record".format(e))
@@ -1010,13 +1142,9 @@ class SqlDatabase:
             return records
 
 
-#    def get_card_
-
-
 
 
     def get_standalone_movies_by_genre(self, genre, lang, limit=100, json=True):
-
         with self.lock:
 
             cur = self.conn.cursor()
@@ -1028,16 +1156,18 @@ class SqlDatabase:
             query = '''
             SELECT 
                 id, 
-                MAX(text_req) title_req, 
-                MAX(text_orig) title_orig, 
+                MAX(title_req) title_req, 
+                MAX(title_orig) title_orig, 
                 MAX(lang_orig) lang_orig,
+                --MAX(lang_req) lang_req,
                 source_path
-            FROM (
+            FROM 
+            (
                 SELECT 
                     card.id id, 
-                    NULL text_req, 
-                    -- NULL lang_req, 
-                    tcl.text text_orig, 
+                    NULL title_req, 
+                    --NULL lang_req, 
+                    tcl.text title_orig, 
                     lang.name lang_orig,
                     card.source_path source_path
                 FROM 
@@ -1066,9 +1196,9 @@ class SqlDatabase:
 
                 SELECT 
                     card.id id, 
-                    tcl.text text_req, 
-                    -- lang.name lang_req, 
-                    NULL text_orig, 
+                    tcl.text title_req, 
+                    --lang.name lang_req, 
+                    NULL title_orig, 
                     NULL lang_orig,
                     card.source_path source_path
                 FROM 
@@ -1092,7 +1222,8 @@ class SqlDatabase:
                     --card.id_title_orig=lang.id AND
                     card.id_category=cat.id AND
                     cat.name = :category AND
-                    lang.name=:lang)
+                    lang.name=:lang
+            )
             GROUP BY id
             ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
@@ -1104,6 +1235,253 @@ class SqlDatabase:
                 records = [{key: record[key] for key in record.keys()} for record in records]
 
             return records
+
+
+
+
+    def get_standalone_movie_by_card_id(self, card_id, lang, limit=100, json=True):
+        with self.lock:
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            # Get Card list
+            query = '''
+            SELECT             
+                card.id as id,
+                category.name as category,
+                card.date as date,
+                card.length as length,
+                card.source_path as source_path,
+                medium,
+                storyline,
+                sounds,
+                subs,
+                origins,
+                genres,
+                themes,
+                directors,
+                writers,
+                voices,
+                stars,
+                actors
+            FROM
+--                (SELECT group_concat("{'" || mt.name || "': '" || m.name || "'}") medium
+                (SELECT group_concat( mt.name || "=" || m.name) medium
+
+                    FROM 
+                        Medium m,
+                        MediaType mt
+                    WHERE
+                        m.id_card= :card_id AND
+                        m.id_mediatype = mt.id
+                ),
+            
+                (SELECT group_concat(tcl.text) storyline
+                    FROM 
+                        Text_Card_Lang tcl,
+                        Language language
+                    WHERE 
+                        tcl.type = "S" AND
+                        tcl.id_card = :card_id AND
+                        tcl.id_language = language.id AND
+                        language.name = :lang
+                ),                        
+                (SELECT group_concat(language.name) sounds
+                    FROM 
+                        Language language,
+                        Card_Sound card_sound
+                    WHERE 
+                        card_sound.id_sound=language.id AND
+                        card_sound.id_card = :card_id
+                ),
+                (SELECT group_concat(language.name) subs
+                    FROM 
+                        Language language,
+                        Card_Sub card_sub
+                    WHERE 
+                        card_sub.id_sub=language.id AND
+                        card_sub.id_card = :card_id
+                ),
+                
+                (SELECT group_concat(country.name) origins
+                    FROM 
+                        Country country,
+                        Card_Origin card_origin
+                    WHERE 
+                        card_origin.id_card = :card_id AND
+                        country.id = card_origin.id_origin
+                ),                        
+                (SELECT group_concat(genre.name) genres
+                    FROM 
+                        Genre genre,
+                        Card_Genre card_genre
+                    WHERE 
+                        card_genre.id_card = :card_id AND
+                        genre.id = card_genre.id_genre
+                ),
+                   
+                (SELECT group_concat(theme.name) themes
+                    FROM 
+                        Theme theme,
+                        Card_Theme card_theme
+                    WHERE 
+                        card_theme.id_card = :card_id AND
+                        theme.id = card_theme.id_theme
+                ),
+                (SELECT group_concat(person.name) directors
+                    FROM 
+                        Person person,
+                        Card_Director cd
+                    WHERE 
+                        cd.id_director = person.id AND
+                        cd.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) writers
+                    FROM 
+                        Person person,
+                        Card_Writer cv                            
+                    WHERE 
+                        cv.id_writer = person.id AND
+                        cv.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) voices
+                    FROM 
+                        Person person,
+                        Card_Voice cv
+                    WHERE 
+                        cv.id_voice = person.id AND
+                        cv.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) stars
+                    FROM 
+                        Person person,
+                        Card_Star cs
+                    WHERE 
+                        cs.id_star = person.id AND
+                        cs.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) actors
+                    FROM 
+                        Person person,
+                        Card_Actor ca
+                    WHERE 
+                        ca.id_actor = person.id AND
+                        ca.id_card = :card_id
+                ),
+                Card card,
+                Category category
+            WHERE
+                card.id = :card_id  AND
+                card.id_category = category.id
+
+            LIMIT :limit;
+            '''
+            records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                category = records[0]["category"]
+                trans = Translator.getInstance(lang)
+        
+                # Writers
+                writers_string = records[0]["writers"]
+                writers_list = []
+                if writers_string:
+                    writers_list = writers_string.split(',')
+                records[0]["writers"] = writers_list
+
+                # Directors
+                directors_string = records[0]["directors"]
+                directors_list = []
+                if directors_string:
+                    directors_list = directors_string.split(',')
+                records[0]["directors"] = directors_list
+
+                # Stars
+                stars_string = records[0]["stars"]
+                stars_list = []
+                if stars_string:
+                    stars_list = stars_string.split(',')
+                records[0]["stars"] = stars_list
+
+                # Actors
+                actors_string = records[0]["actors"]
+                actors_list = []
+                if actors_string:
+                    actors_list = actors_string.split(',')
+                records[0]["actors"] = actors_list
+
+                # Voices
+                voices_string = records[0]["voices"]
+                voices_list = []
+                if voices_string:
+                    voices_list = voices_string.split(',')
+                records[0]["voices"] = voices_list
+
+                # Genre
+                genres_string = records[0]["genres"]
+                genres_list = []
+                if genres_string:
+                    genres_list = genres_string.split(',')
+                    genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+                records[0]["genres"] = genres_list
+
+                # Theme
+                themes_string = records[0]["themes"]
+                themes_list = []
+                if themes_string:
+                    themes_list = themes_string.split(',')
+                    themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+                records[0]["themes"] = themes_list
+
+                # Origin
+                origins_string = records[0]["origins"]
+                origins_list = []
+                if origins_string:
+                    origins_list = origins_string.split(',')
+                    origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+                records[0]["origins"] = origins_list
+
+                # Sub
+                subs_string = records[0]["subs"]
+                subs_list = []
+                if subs_string:
+                    subs_list = subs_string.split(',')
+                    subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+                records[0]["subs"] = subs_list
+
+                # Sounds
+                sounds_string = records[0]["sounds"]
+                sounds_list = []
+                if sounds_string:
+                    sounds_list = sounds_string.split(',')
+                    sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+                records[0]["sounds"] = sounds_list
+
+                # Media
+                medium_string = records[0]["medium"]
+                media_dict = {}
+                if medium_string:
+                    medium_string_list = medium_string.split(',')
+                    for medium_string in medium_string_list:
+                        (media_type, media) = medium_string.split("=")
+                        if not media_type in media_dict:
+                            media_dict[media_type] = []
+                        media_dict[media_type].append(media)
+                records[0]["medium"] = media_dict
+
+            return records
+
+
 
 
     def get_all_standalone_movies(self, lang, limit=100, json=True):
@@ -1255,7 +1633,52 @@ class SqlDatabase:
 
             return records
 
+    def getCard(self, lang, card_id, limit=100, json=True):
+        """
+        It returns all Card data by the given card id
+        The data which needed translation, will be translated on the "lang" language
 
+        Return fields:
+            card_id:     card ID
+ 
+        Example:
+            records=db.get_mediaum_path_list(card_id=33, limit=100)
+        Output:
+        """
+        with self.lock:
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+            SELECT 
+                card.id id, 
+            FROM 
+                ''' + SqlDatabase.TABLE_CARD + ''' card, 
+                ''' + SqlDatabase.TABLE_COUNTRY + ''' country, 
+                ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
+                ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
+            WHERE
+                card.id = card_id AND
+                tcl.id_card=card.id AND
+                tcl.id_language=lang.id AND
+                tcl.type="T" AND
+                card.id_title_orig=lang.id AND
+                cat.name = :category AND
+                lang.name <> :lang
+            LIMIT :limit;
+            '''
+            records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
+
+            return records
+
+    
 
 
 

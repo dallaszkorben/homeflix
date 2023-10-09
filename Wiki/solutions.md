@@ -17,8 +17,29 @@ self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
 ```
 
 
+## 2. Collect SQL query rows into one row:
 
-## 2. Media selector:
+The Card table with the given Card.id has an n:m relation to Genre table through the Card_Genre Table.
+That means a query for a Card with Genre will give back as many lines as many Genre the Card has.
+But we want only one hit, and all the Genre should be collected in one field separated with comma
+```python
+>>> import sqlite3
+>>> con = sqlite3.connect("/home/akoel/.playem/playem.db")
+>>> con.execute('''
+...                 SELECT group_concat(genre.name) as genres
+...                 FROM 
+...                     Genre genre,
+...                     Card_Genre card_genre
+...                 WHERE 
+...                     card_genre.id_card = :card_id AND
+...                     genre.id = card_genre.id_genre
+... ''', {'card_id': 4}).fetchone()
+('adventure,drama,horror',)
+```
+
+
+
+## 3. Media selector:
 
 HTML:
 ```javascript
@@ -197,7 +218,7 @@ $(document).ready(function() {
 });
 ```
 
-## 3. Show and fit image to a DIV background while keep the aspect ratio:
+## 4. Show and fit image to a DIV background while keep the aspect ratio:
 The idea was the following:
 
 CSS:
@@ -256,7 +277,7 @@ jQuery:
     t.style.setProperty('--background-image', "url(" + src + ")");
 ```
 
-## 4. Ajax call uses cache
+## 5. Ajax call uses cache
 When I send the same ajax call, it well not connect and send request but it takes the result from the cache.
 If you want to avoid this case, you have to tell explicitly this in the ajax request.
 
@@ -266,9 +287,7 @@ jQuery
 ```
 
 
-
-
-## 5. Fade image to white
+## 6. Fade image to white
 
 CSS:
 ```javascript
