@@ -536,10 +536,16 @@ class Thumbnail{
     setTitles(lang_orig, original=undefined, translated=undefined, thumb=undefined, history=undefined){
         this.thumbnailDict["lang_orig"] = lang_orig;
 
-        if(translated != undefined){
+        //                                                               translated  original
+        // requested ≠ original requested exist,          original exist         ✔        ✔
+        // requested ≠ original requested does not exist, original exist         ❌        ✔
+        // requested = original                                                  ✔        ❌        
+        //
+
+        if(translated == undefined){
+            this.thumbnailDict["title"] = original + " (" + lang_orig + ")";
+        }else if(translated != undefined){
             this.thumbnailDict["title"] = translated;
-        }else if(original != undefined){
-            this.thumbnailDict["title"] = original;
         }
 
         if(thumb != undefined){
@@ -557,7 +563,7 @@ class Thumbnail{
         }
     }
 
-    setCredentials(directors=undefined, writers=undefined, stars=undefined, actors=undefined){
+    setCredentials(directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined){
         this.thumbnailDict["credentials"] = {}
         if(directors != undefined && Array.isArray(directors)){
             this.thumbnailDict["credentials"]["directors"] = directors;
@@ -807,9 +813,11 @@ class ObjDescriptionContainer{
             });
             descTextCredentials.append(credTable);
 
-            mainObject.printCredentals(credTable, credentials, "directors", "Directors:");
-            mainObject.printCredentals(credTable, credentials, "writers", "Writers:");
-            mainObject.printCredentals(credTable, credentials, "stars", "Stars:");
+            mainObject.printCredentals(credTable, credentials, "directors", translated_titles['director'] + ":");
+            mainObject.printCredentals(credTable, credentials, "writers", translated_titles['writer'] + ":");
+            mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":")
+            mainObject.printCredentals(credTable, credentials, "actors", translated_titles['actor'] + ":")
+            mainObject.printCredentals(credTable, credentials, "voices", translated_titles['voice'] + ":")
             // -------------------
     
             // Resizes the description section according to the size of the description image
@@ -993,27 +1001,28 @@ class ThumbnailController{
 
                 // take the getCardId function
                 let getCardIdFunction = functionForSelection["play"];
-                let cardId = getCardIdFunction();
-                let medium_path = undefined;
+                let medium_path = getCardIdFunction();
+                
+                //let medium_path = undefined;
 
-                $.ajax({type: "GET", url: "/collect/medium/card_id/" + cardId, async: false,
-                    success: function(result){
+                // $.ajax({type: "GET", url: "/collect/medium/card_id/" + cardId, async: false,
+                //     success: function(result){
 
-                        var boxes = [];
+                //         var boxes = [];
 
-                        // TODO: handle when more than 1 record we have in the result (Medium)                                    
+                //         // TODO: handle when more than 1 record we have in the result (Medium)                                    
 
-                        for (var i in result) {
-                            var record=result[i];
-                            medium_path = pathJoin([record["source_path"], record["file_name"]])
-                        }
-                    },
-                    error: function(xhr,status,error){
-                        $("#message").html("");
-                        $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
-                        //$("#spinner").hide();
-                    }            
-                });
+                //         for (var i in result) {
+                //             var record=result[i];
+                //             medium_path = pathJoin([record["source_path"], record["file_name"]])
+                //         }
+                //     },
+                //     error: function(xhr,status,error){
+                //         $("#message").html("");
+                //         $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
+                //         //$("#spinner").hide();
+                //     }            
+                // });
             
                 if (medium_path != null){
                     let player = $("#video_player")[0];

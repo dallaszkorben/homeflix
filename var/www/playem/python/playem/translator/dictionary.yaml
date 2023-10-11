@@ -342,16 +342,24 @@ title:
         series: Series
         podcast: Podcast
         category: Category
+        categories: Categories
         genre: Genre
         theme: Theme
         recipetype: Recipe type
 
-        writer: Writer
-        author: Author
-        director: Director
+        movies: Movies
+        movie_series: Movie Series
+        music_video: Music Video
+        music_audio: Music Audio
+
+        writer: Writer(s)
+        author: Author(s)
+        director: Director(s)
+        actor: Actor(s)
+        star: Star(s)
+        voice: Voice(s)
         maker: Maker
 
-        actor: Actor
         performer: Performer
         lecturer: Lecturer
         contributor: Contributor

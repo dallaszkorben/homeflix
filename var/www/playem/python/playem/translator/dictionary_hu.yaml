@@ -1,0 +1,484 @@
+language:
+    short:
+        hu: Hun
+        en: Eng
+        sv: Swe
+        fr: Fre
+        es: Spa
+        it: Ita
+        de: Ger
+        ru: Rus
+        pl: Pol
+        'no': Nor
+        dk: Dan
+        cs: Cze
+        ko: Kor
+
+    long:
+        hu: Magyar
+        en: Angol
+        sv: Svéd
+        fr: Francia
+        es: Spanyol
+        it: Olasz
+        de: Német
+        ru: Orosz
+        pl: Lengyel
+        'no': Norvég
+        dk: Dán
+        cs: Cseh
+        ko: Koreai
+
+country:
+    short:
+        eu: Eu
+        hu: Hun
+        us: USA
+        se: Swe
+        gb: UK
+        uk: UK
+        es: Spa
+        de: Ger
+        it: Ita
+        fr: Fra
+        ca: Can
+        ru: Rus
+        dk: Den
+        ch: CH
+        mx: MX
+        at: AT
+        pl: PL
+        'no': 'NO'
+        au: AU
+        nz: NZ
+        be: BE
+        cz: CZ
+        kr: KR
+        ar: AR
+        jp: JP
+        ie: IE
+
+    long:
+        eu: Europai Unió
+        hu: Magyar
+        us: USA
+        se: Svéd
+        gb: Anglia
+        uk: anglia
+        es: Spanyol
+        de: Német
+        it: Olasz
+        fr: Francia
+        ca: Kanada
+        ru: Orosz
+        dk: Dán
+        ch: Svájc
+        mx: Mexikó
+        at: Austria
+        pl: Lengyel
+        'no': Norvég
+        au: Austrál
+        nz: Újzéland
+        be: Belgium
+        cz: Cseh
+        kr: Korea
+        ar: Argentina
+        jp: Japán
+        ie: Ír
+
+category:
+    movie: Mozi
+    music: Zene
+    radio_play: Radiójáték
+    knowledge: Tudás
+    entertainment: Szórakoztatás
+    dia: Dia
+    recipe: Recept
+    personal: Személyes
+
+mediatype:
+    video: Video
+    audio: Audio
+    text: Text
+    picture: Picture
+
+level:
+    series: Series
+    season: Season
+    band: Band
+    lp: LP
+    episode: Episode
+    record: Record
+
+genre:
+    common:
+        &common
+        tale: Mese
+        scifi: Sci-fi
+        fantasy: Fantasy
+        crime: Krimi
+        drama: Dráma
+        history: Történelem
+        romance: Románc
+
+    movie:
+        <<: *common
+        short: Rövid film
+        film_noir: Film-Noir
+        action: Akció
+        western: Western
+        comedy: Vígjáték
+        adventure: Kaland
+        horror: Horror
+        music: Zene
+        musical: Musical
+        war: Háború
+        parody: Paródia
+        dark_comedy: Feketehumor
+        thriller: Rémregény
+        mystery: Misztika
+        satire: Szatíra
+        biography: Életrajz
+        animation: Animáció
+        documentary: Dokumentum film
+        mockumentary: Mockumentary
+        portrait: Portré
+        science_nature_documentary: Természettudományos dokumentum film
+
+    dia:
+        <<: *common
+
+    radio_play:
+        <<: *common
+
+    book:
+        <<: *common
+        nonfiction: Tényirodalom
+        political_fiction: Politikai fikció
+        document: Dokumentum
+        social_science: Társadalomtudomány
+        study_guide: Oktatási segédlet
+        graphic_novel: Képregényalbum
+        lecture_notes: Egyetemi jegyzet
+
+    music:
+        synth: Szinti
+        new_wave: Új hullám
+        synthpop: Synthpop
+        electropop: Electropop
+        world: Viágzene
+        alternative: Alternatív
+        pop: Pop
+        house: House
+        electronica: Electronica
+        electronic: Electronic
+        rock: Rock
+        disco: Disco
+        soul: Soul
+        funk: Funk
+
+
+    knowledge:
+        lecture: Előadás
+        e-learning: E-learning
+        diy: Barkács
+        datasheet: Datasheet
+        syllabus: Syllabus
+        document: Document
+        tutorial: Tutorial
+
+    recipe:
+        soup: Soup
+        pasta: Pasta
+        rice: Rice
+        bufet: Bufet
+        beef: Beef
+        cookie: Cookie
+        chicken: Chicken
+
+    entertainment:
+        standup: Standup
+        skit: Skit
+        analysis: Analysis
+
+
+    personal:
+        photos: Photos
+        documents: Documents
+        videos: Videos
+
+theme:
+        revenge: Bosszú
+        love: Szerelem
+        evil: Gonosz
+        devil: Ördőg
+        hell: Pokol
+        state_power: Államhatalom
+        drog: Kábítószer
+        new_old_world: Régi és új világ
+        maffia: Maffia
+        self_search: Önmagát kereső ember
+        media: Média
+        conspiracy: Összeesküvés
+        great_reset: Nagy újrakezdés
+        new_world_order: Új világrend
+        truth_search: Igazságkeresés
+        hypocrisy: Képmutatás
+        lie: Hazugság
+        moral: Erkölcs
+        friendship: Barátság
+        robbery: Rablás
+        garbage_person: Legalja
+        schizophrenia: Skizofrénia
+        psychopathy: Pszihopátia
+        social_criticism: Társadalomkritika
+        betrayal: Árulás
+        power_strugle: Hatalmi viszály
+        fear: Félelem
+        heroism: Hősiesség
+        ai: Mesterséges intelligencia
+        robot: Robot
+        clone: Klónozás
+        search_god: Isten keresése
+        faith: Hit
+        commitment: Elkötelezettség
+        loyalty: Hűség
+        cheating: Megcsalás
+        fraud: Csalás
+        antiutopia: Anti-utópia
+        utopia: Utópia
+        dystopia: Disztópia
+        post_apocalypse: Post-apokalipszis
+        apocalypse: Apocalipszis
+        zombie: Zombi
+        money: Pénz
+        greed: Kapzsiság
+        murder: Gyilkosság
+        small_man_rebellion: Kis ember lázadása
+        stupidity: Ostobaság
+        concern_future: Aggódás a jövőért
+        bureaucracy: Bürokrácia
+        meaning_of_life: Élet értelme
+        origin_of_life: Élet eredete
+        destiny: Sors
+        virtual_reality: Virtuális valóság
+        godless_world: Istentelen világ
+        inhumanity: Embertelenség
+        prejudice: Előitélet
+        opportunism: Megalkuvás
+        talent_mediocrity: Tehetség és középszer harca
+        envy: Irigység
+        jealousy: Féltékenysg
+        pc: PC kritika
+        gender: Gender
+        alien: Idegenek
+        careerism: Karrierizmus
+        hopelessness: Kilátástalanság
+        dignity: Méltóság
+        aging: Öregedés
+        life: Élet
+        death: Halál
+        passing: Elmúlás
+        social_media: Social Media
+        safe_space: Safe Space
+        war: Háború
+        ukrain_war: Ukrán háború
+        disaster: Katasztrófa
+        a_bomb: Atombomba
+        movie: Mozi
+        politics: Politika
+        culture: Kultura
+        totalitarianism: Totalitarizmus
+        science: Tudomány
+        astronomy: Csillagászat
+        physics: Fizika
+        math: Matematika
+        quantum_physics: Kvantumfizika
+        quantum_computing: Kvantum számítógép
+        chemistry: Kémia
+        biology: Biologia
+        psychology: Pszihologia
+        health: Egészség
+        cancer: Rák
+        oil: Olaj
+        brain: Agy
+        future: Jövő
+        history_of_science: Tudománytörténet
+        history: Történelem
+        art: Művészet
+        economy: Gazdaság
+        2008_financial_crisis: 2008-as gazdasági válság
+        informatics: Informatika
+        genetics: Genetika
+        global_warming: Globális felmelegedés
+        terrorism: Terrorizmus
+        migration: Népvándorlás
+        corruption: Korrupció
+        covid19: COVID-19
+        virus: Vírus
+        911: 911
+        mobile: Mobil telefon
+        cia: CIA
+        drug: Kábítószer
+        ufo: UFO
+        iot: IoT
+        it: IT
+        light: Fény
+        jewellery: Ékszerek
+        eu: Europai Unió
+        scandal: Botrány
+        cathastroph: Katasztrófa
+        collapse: Összeomlás
+        boat: Hajó
+
+title:
+        title: Cím
+        list: Lista
+        media: Media
+        films: Fiction movies
+        _documentaries: Documetary
+        series: Sorozatok
+        podcast: Podcast
+        category: Categoria
+        categories: Kategoriák
+        genre: Műfaj
+        theme: Téma
+        recipetype: Recept típus
+
+        movies: Mozi
+        movie_series: Sorozatok
+        music_video: Zene-Video
+        music_audio: Zene
+
+        writer: Író
+        author: Szerző
+        director: Rendező
+        actor: Szinész
+        star: Sztár
+        voice: Hang
+        maker: Készítő
+
+        performer: Performer
+        lecturer: Lecturer
+        contributor: Contributor
+        interviewee: Interviewee
+        interviewer: Interviewer
+        anchor: Anchor
+        voice: Voice
+        presenter: Presenter
+
+        date: Date
+        year: Year
+        rate: Rate
+        country: Country
+
+        storyline: Story
+        lyrics: Lyrics
+        topic: Topic
+        ingredient: Ingredients
+        method: Method
+
+        best: Best
+        new: New
+        favorite: Favorite
+        tag: Tags
+        all: All
+
+        sound: Sound
+        language: Language
+        sub: Subtitle
+
+        length: Length
+        selection_by: Selected by
+        show_original_title: Show original title
+        settings: Settings
+        media_path: Media Folder
+        select_media_path: Select Media-Folder
+        media_player_video: Video Player
+        select_media_player_video: Select Video Player
+        media_player_video_param: Video Parameters
+        media_player_audio: Audio Player
+        select_media_player_audio: Select Audio Player
+        media_player_audio_param: Audio Parameters
+        media_player_odt: Document Viewer
+        select_media_player_odt: Select Document Viewer
+        media_player_odt_param: Document Parameters
+        media_player_pdf: PDF Viewer
+        select_media_player_pdf: Select PDF Viewer
+        media_player_pdf_param: PDF Parameters
+
+        part: Part {0}.
+        season: Season {0}
+
+
+
+
+
+
+
+
+
+# genre_radioplay=Radio Play
+# 
+# 
+# genre_analysis=Analysis
+# genre_talk=Talk
+# genre_interview=Interview
+# genre_standup=Stand-up Comedy
+# genre_skit=Skit
+# genre_lecture=Lecture
+# genre_diy=DIY
+# genre_news=News
+# genre_spotnews=Spot News
+# genre_press_conference=Press Conference
+# genre_compilation=Compilation
+# genre_footage=Footage
+# genre_speech=Speech
+# genre_performamnce=Performance
+# genre_demo=Demo
+# genre_demonstration=Demonstration
+# genre_advertisement=Advertisement
+# 
+# 
+# 
+# 
+# media_video: Video
+# media_audio: Audio
+# media_dia: Dia
+# media_ebook: E-Book
+# media_elearn: E-Learn
+# media_picture: Picture
+# 
+# category_talk: Talk
+# category_movie: Movie
+# category_music: Music
+# category_show: Show
+# category_presentation: Presentation
+# category_alternative: Alternative Media
+# category_miscellaneous: Miscellaneous
+# category_radioplay: Radio Play
+# category_recipe: Recipe
+# category_footage: Footage
+# category_news: News
+# category_speech: Speech
+# category_language: Language
+# 
+# 
+# button_ok: Ok
+# button_cancel: Cancel
+# button_filter: Filter
+# button_clear: Clear
+# 
+# media_video: Video
+# media_audio: Audio
+# 
+# 
+# recipetype_soup=Soup
+# recipetype_pasta=Pasta
+# recipetype_rice=Rice
+# recipetype_chicken=Chicken
+# recipetype_beef=Beef
+# recipetype_pork=Pork
+# recipetype_cookie=Cookie
+# recipetype_buffet=Buffet
+

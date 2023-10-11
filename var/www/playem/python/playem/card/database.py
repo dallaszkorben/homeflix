@@ -1234,6 +1234,19 @@ class SqlDatabase:
             if json:
                 records = [{key: record[key] for key in record.keys()} for record in records]
 
+                #
+                # Translate
+                #
+
+                trans = Translator.getInstance(lang)
+
+                for record in records:
+
+                    # Lang Orig
+                    lang_orig = record["lang_orig"]
+                    lang_orig_translated = trans.translate_language_short(lang_orig)
+                    record["lang_orig"] = lang_orig_translated
+
             return records
 
 

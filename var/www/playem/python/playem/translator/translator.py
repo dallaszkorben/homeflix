@@ -48,12 +48,36 @@ class Translator( Property ):
     def get_actual_language_code(self):
         return self.language
 
+    def translate_title(self, title):
+        try:
+            tr = self.actual_dictionary['title'][title]
+        except:
+            tr = title
+        return tr
+
+    def translate_titles(self):
+        output = {}
+        title_list = self.actual_dictionary['title']
+        for title in title_list:
+            output[title] = self.translate_title(title)
+        return output
+
     def translate_genre(self, category, genre):
         try:
             tr = self.actual_dictionary['genre'][category][genre]
         except KeyError:
             tr = genre
         return tr
+
+    def translate_genres(self, category):
+        output = {}
+        try:
+            genre_list = self.actual_dictionary['genre'][category]
+            for genre in genre_list:
+                output[genre] = self.translate_genre(category, genre)
+        except:
+            output = {}
+        return output
 
     def translate_theme(self, theme):
         try:        

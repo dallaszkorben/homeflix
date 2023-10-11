@@ -9,6 +9,8 @@ from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
 from playem.restserver.endpoints.ep_translate_genre import EPTranslateGenre
+from playem.restserver.endpoints.ep_translate_genres import EPTranslateGenres
+from playem.restserver.endpoints.ep_translate_titles import EPTranslateTitles
 
 # -----------------------------------
 #
@@ -24,6 +26,8 @@ class TranslateView(FlaskView):
         self.web_gadget = web_gadget
 
         self.epTranslateGenre = EPTranslateGenre(web_gadget)
+        self.epTranslateGenres = EPTranslateGenres(web_gadget)
+        self.epTranslateTitles = EPTranslateTitles(web_gadget)
 
     #
     # GET http://localhost:5000/translate/
@@ -71,6 +75,32 @@ class TranslateView(FlaskView):
     @route(EPTranslateGenre.PATH_PAR_URL, methods=[EPTranslateGenre.METHOD])
     def translateGenreWithParameter(self, genre, category, lang):        
         out = self.epTranslateGenre.executeByParameters(category=category, genre=genre, lang=lang)
+        return out
+
+    #
+    # Gives back translation of all genre with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/genres/category/movie/lang/en
+    #
+    # GET http://localhost:80/translate/genres/category/movie/lang/en
+    #
+    #@route('/genres/category/<movie>/lang/<lang>')
+    @route(EPTranslateGenres.PATH_PAR_URL, methods=[EPTranslateGenres.METHOD])
+    def translateGenresWithParameter(self, category, lang):        
+        out = self.epTranslateGenres.executeByParameters(category=category, lang=lang)
+        return out
+
+    #
+    # Gives back translation of all titles with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/titles/lang/en
+    #
+    # GET http://localhost:80/translate/titles/lang/en
+    #
+    #@route('/titles/lang/<lang>')
+    @route(EPTranslateTitles.PATH_PAR_URL, methods=[EPTranslateTitles.METHOD])
+    def translateTitlesWithParameter(self, lang):        
+        out = self.epTranslateTitles.executeByParameters(lang=lang)
         return out
 
 # ===
