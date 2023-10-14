@@ -26,7 +26,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
         let oContainer = new ObjThumbnailContainer(translated_titles['categories']);
 
         let thumbnail = new Thumbnail();
-        let thumbnail_src, description_src,lang,original,translated,thumb,history,directors,writers,stars,length,year,origin,genre,theme
+        let thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
         thumbnail.setTitles(lang=this.language_code, original=translated_titles['movies'], translated=translated_titles['movies'], thumb=translated_titles['movies'], history=translated_titles['movies']);
         thumbnail.setFunctionForSelection({"menu": 
@@ -43,7 +43,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
         thumbnail.setFunctionForSelection({"menu":
             (function(movie_type) {
                 return function() {
-                    return new MovieSeriesContainerGenerator(refToThis.language_code)
+                    return new MovieSeriesContainerGenerator(refToThis.language_code, translated_titles['series'])
                 };
             })("movie_series")});
         oContainer.addThumbnail(2, thumbnail);
@@ -71,14 +71,6 @@ class MainMenuContainerGenerator extends ContainerGenerator{
 
 
 class AjaxContainerGenerator extends  ContainerGenerator{
-
-    // fetchDetails(id){
-    //     throw new Error("Implement fetchDetails() method in the descendant class of AjaxContainerGenerator!");
-    // }
-
-    // generateThumbnails(thumbnail, details){
-    //     throw new Error("Implement generateThumbnails() method in the descendant class of AjaxContainerGenerator!");
-    // }
 
     generateThumbnail(hit){
         throw new Error("Implement generateThumbnails() method in the descendant class of AjaxContainerGenerator!");
@@ -195,8 +187,9 @@ class MovieCardContainerGenerator extends  AjaxContainerGenerator{
 }
 
 class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator{
-    constructor(language_code, hierarchy_id){
+    constructor(language_code, container_title, hierarchy_id){
         super(language_code);
+        this.container_title = container_title;
         this.hierarchy_id = hierarchy_id;
     }
 
@@ -204,7 +197,7 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
         let containerList = [];
 
         let requestList = [
-            {title: translated_titles['series'],  rq_method: "GET", rq_url: "http://192.168.0.21//collect/child_hierarchy_or_card/id/" + this.hierarchy_id+ "/lang/" +  this.language_code},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://192.168.0.21//collect/child_hierarchy_or_card/id/" + this.hierarchy_id+ "/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -243,7 +236,7 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
             thumbnail.setFunctionForSelection({"menu": 
                 (function(hierarchy_id) {
                     return function() {
-                        return new MovieSeriesCardHierarchyContainerGenerator(refToThis.language_code, hierarchy_id);
+                        return new MovieSeriesCardHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
                     };
                 })(hit["id"])
             });
@@ -254,18 +247,6 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
             let card_request_url = "http://192.168.0.21/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
             let card = this.sendRestRequest("GET", card_request_url)[0];
     
-            // if(!card["lang_orig"]){
-            //     card["lang_orig"] = "";
-            // }
-            // let short_title = "";
-            // if ( card["title_req"] != null ){
-            //     short_title = card["title_req"];
-            // }else if ( card["title_orig"] != null ){
-            //     short_title = card["title_orig"];
-            // }
-    
-            // short_title = this.getTruncatedTitle(short_title, max_length);
-            
             let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
             let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
@@ -287,16 +268,20 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
         }
         return thumbnail;
     }    
-
 }
 
 
 class MovieSeriesContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
     getContainerList(){
          let containerList = [];
 
          let requestList = [
-             {title: translated_titles['series'],  rq_method: "GET", rq_url: "http://192.168.0.21/collect/all/series/movies/lang/" +  this.language_code},
+             {title: this.container_title,  rq_method: "GET", rq_url: "http://192.168.0.21/collect/all/series/movies/lang/" +  this.language_code},
          ];
 
          containerList = this.generateContainers(requestList);
@@ -331,37 +316,14 @@ class MovieSeriesContainerGenerator extends  AjaxContainerGenerator{
 //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
 //        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
 
-
-
         thumbnail.setFunctionForSelection({"menu": 
             (function(hierarchy_id) {
                 return function() {
-                    return new MovieSeriesCardHierarchyContainerGenerator(refToThis.language_code, hierarchy_id);
+                    return new MovieSeriesCardHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
                 };
             })(hit["id"])
         });
 
-
-/*
-        thumbnail.setFunctionForSelection({"menu": 
-            (function(movie_type) {
-                return function() {
-                    return new MovieCardContainerGenerator(refToThis.language_code);
-                };
-            })("movies")
-        });
-
-
-
-
-        thumbnail.setFunctionForSelection({"play": 
-            (function(medium_path) {
-                return function() {
-                    return medium_path
-                };
-            })(medium_path)
-        });
-*/
         return thumbnail;
     }    
 }

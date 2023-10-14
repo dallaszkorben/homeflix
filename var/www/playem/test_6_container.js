@@ -173,12 +173,17 @@ class ObjScrollSection{
         this.showDetails();
     }
 
-    getFocusedHistoryTitle(){
-        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
-        let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
-        let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
-        return thumbnail.getHistoryTitle();
-    } 
+    // getFocusedHistoryTitle(){
+    //     let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
+    //     let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
+    //     let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
+    //     return thumbnail.getHistoryTitle();
+    // } 
+
+    getFocusedThubnailContainerTitle(){
+        let oThumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
+        return oThumbnailContainer.title;
+    }
 
     getSelectedThumbnalFunctionForSelection(){
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -906,7 +911,7 @@ class History{
     }
 
     addNewLevel(objScrollSection){
-        let text = objScrollSection.getFocusedHistoryTitle();
+        let text = objScrollSection.getFocusedThubnailContainerTitle();
         this.levelList.push({"text": text, "obj": objScrollSection});
     }
 
