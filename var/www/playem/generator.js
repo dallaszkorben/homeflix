@@ -105,7 +105,6 @@ class AjaxContainerGenerator extends  ContainerGenerator{
 
     generateContainers(requestList){
 
-//        let max_length = 20;
         let container_list = [];
 
         for(let request of requestList){
