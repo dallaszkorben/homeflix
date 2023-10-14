@@ -1002,28 +1002,7 @@ class ThumbnailController{
                 // take the getCardId function
                 let getCardIdFunction = functionForSelection["play"];
                 let medium_path = getCardIdFunction();
-                
-                //let medium_path = undefined;
-
-                // $.ajax({type: "GET", url: "/collect/medium/card_id/" + cardId, async: false,
-                //     success: function(result){
-
-                //         var boxes = [];
-
-                //         // TODO: handle when more than 1 record we have in the result (Medium)                                    
-
-                //         for (var i in result) {
-                //             var record=result[i];
-                //             medium_path = pathJoin([record["source_path"], record["file_name"]])
-                //         }
-                //     },
-                //     error: function(xhr,status,error){
-                //         $("#message").html("");
-                //         $("#errormessage").html(xhr.statusText + " " + xhr.responseText);
-                //         //$("#spinner").hide();
-                //     }            
-                // });
-            
+        
                 if (medium_path != null){
                     let player = $("#video_player")[0];
                     let domPlayer = $("#video_player");
