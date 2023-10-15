@@ -43,7 +43,7 @@ class EPCollectChildHierarchyOrCard(EP):
                 )
         )
 
-        output = self.web_gadget.db.get_child_hierarchy_or_card(hierarchy_id=id, lang=lang)
+        output = self.web_gadget.db.get_child_hierarchy_or_card(higher_card_id=id, lang=lang)
 
 
         return output_json(output, EP.CODE_OK)

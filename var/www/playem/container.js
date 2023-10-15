@@ -77,7 +77,7 @@ class ObjScrollSection{
                 let id=element.attr("id");
                 element.attr("id",id.format("???", containerIndex));
 
-                // Add click listener on thumbnail
+                // Add click listener on thumbnail. It must be set on the buildUpDome again
                 element.click(function(){
                     refToThis.clickedOnThumbnail($(this).attr('id'));
                 });

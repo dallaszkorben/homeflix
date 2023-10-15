@@ -34,7 +34,7 @@ class CardHandle:
     def getPatternLength(self):
         return re.compile( r'^(\d{1,2}:\d{2}:\d{2})?$' )
 
-    def collectCardsFromFileSystem(self, actualDir, db, higher_hierarchy_id=None ):
+    def collectCardsFromFileSystem(self, actualDir, db, higher_card_id=None ):
         """ _________________________________________________________________
             Recursive analysis on the the file system
             _________________________________________________________________
@@ -50,7 +50,7 @@ class CardHandle:
         card_file_name = None    
         image_file_name = None
 
-        hierarchy_id = None
+        card_id = None
 
 #
 # TODO: image_file_name does not matter
@@ -95,7 +95,7 @@ class CardHandle:
             try:
                 storylines = data['storylines']
             except:
-                storylines = []
+                storylines = {}
 
             date = data['date']
             try:
@@ -139,7 +139,7 @@ class CardHandle:
             try:
                 themes = data['themes']
             except:
-                thmens = []
+                themes = []
             try:
                 origins = data['origins']
             except:
@@ -169,7 +169,7 @@ class CardHandle:
             titles=dict((language, title) for language, title in titles.items() if title)
 
             # filter out empty storylines
-            storylines=dict((language, storyline) for language, storyline in storylines.items() if storyline)
+            storylines=dict((language, storyline) for language, storyline in storylines.items() if storylines)
 
             card_error = False
 
@@ -193,10 +193,10 @@ class CardHandle:
                 logging.error( "CARD - There is NO mediatype nor level configured in in {0}. At least one of them should be there".format(card_path))
                 card_error = True
 
-            #if mediatypes and not media:
-            if mediatypes and not media_dict:
-                logging.error( "CARD - There is mediatype configured {1} for the card in {0}. But there was NO media ({2}) found in the folder".format(card_path, mediatypes, [self.media_type_dict[mediatype] for mediatype in mediatypes]  ))
-                card_error = True
+#            #if mediatypes and not media:
+#            if mediatypes and not media_dict:
+#                logging.error( "CARD - There is mediatype configured {1} for the card in {0}. But there was NO media ({2}) found in the folder".format(card_path, mediatypes, [self.media_type_dict[mediatype] for mediatype in mediatypes]  ))
+#                card_error = True
 
             if not mediatypes and level and not dir_list:
                 logging.error( "CARD - There is level ({1}) and no mediatype configured for the card in {0} which means, it should be in the higher hierarchy. But there are NO subdirectories in the folder".format(card_path, level ))
@@ -205,11 +205,14 @@ class CardHandle:
  # ---
 
             # this is a level in the hierarchy / not a media
-            #if not media and not card_error:
+            # if not media and not card_error:
             if not media_dict and not card_error:                
 
+#                logging.error( "TEST: {0} - {1} - {2} - {3}".format(titles, category, level, source_path))
+#                logging.error( "TEST - higher_card: {0} for the {1}".format(higher_card_id, titles))
+
                 # create a new Level record + get back the id
-                hierarchy_id=db.append_hierarchy(
+                card_id=db.append_hierarchy(
                     title_orig=title_orig,
                     titles=titles,
                     category=category,
@@ -217,7 +220,7 @@ class CardHandle:
                     basename=basename,
                     source_path=source_path,
                     sequence=sequence,
-                    higher_hierarchy_id=higher_hierarchy_id                
+                    higher_card_id=higher_card_id                
                 )
 
 
@@ -292,11 +295,13 @@ class CardHandle:
                         source_path=source_path,
 
                         sequence=sequence,
-                        higher_hierarchy_id=higher_hierarchy_id,
+                        higher_card_id=higher_card_id,
                     )        
+
+#        logging.error( "TEST - higher_card: {0} for the {1}. dir_list: {2}".format(higher_card_id, card_path, dir_list))
 
         for name in dir_list:
             subfolder_path_os = os.path.join(actualDir, name)
-            val = self.collectCardsFromFileSystem( subfolder_path_os, db, higher_hierarchy_id=hierarchy_id )
+            val = self.collectCardsFromFileSystem( subfolder_path_os, db, higher_card_id=card_id )
 
         return
