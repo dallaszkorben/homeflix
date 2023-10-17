@@ -88,7 +88,8 @@ country:
 
 category:
     movie: Movie
-    music: Music
+    music_video: Music (video)
+    music_audio: Music
     radio_play: Radio Play
     knowledge: Knowledge
     entertainment: Entertainment
@@ -106,6 +107,7 @@ level:
     series: Series
     season: Season
     band: Band
+    concert: Concert
     lp: LP
     episode: Episode
     record: Record
@@ -121,6 +123,22 @@ genre:
         history: History
         romance: Romance
 
+    music:
+        &music
+        synth: Synth
+        new_wave: New Wave
+        synthpop: Synthpop
+        electropop: Electropop
+        world: World
+        alternative: Alternative
+        pop: Pop
+        house: House
+        electronica: Electronica
+        electronic: Electronic
+        rock: Rock
+        disco: Disco
+        soul: Soul
+        funk: Funk
     movie:
         <<: *common
         short: Short
@@ -161,22 +179,11 @@ genre:
         graphic_novel: Graphic Novel
         lecture_notes: Lecture Notes
 
-    music:
-        synth: Synth
-        new_wave: New Wave
-        synthpop: Synthpop
-        electropop: Electropop
-        world: World
-        alternative: Alternative
-        pop: Pop
-        house: House
-        electronica: Electronica
-        electronic: Electronic
-        rock: Rock
-        disco: Disco
-        soul: Soul
-        funk: Funk
+    music_video:
+        <<: *music
 
+    music_audio:
+        <<: *music
 
     knowledge:
         lecture: Lecture

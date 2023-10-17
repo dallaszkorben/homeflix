@@ -88,7 +88,8 @@ country:
 
 category:
     movie: Mozi
-    music: Zene
+    music_video: Zene (video)
+    music_audio: Zene
     radio_play: Radiójáték
     knowledge: Tudás
     entertainment: Szórakoztatás
@@ -103,12 +104,13 @@ mediatype:
     picture: Picture
 
 level:
-    series: Series
-    season: Season
-    band: Band
-    lp: LP
-    episode: Episode
-    record: Record
+    series: Sorozat
+    season: Évad
+    band: Együttes
+    concert: Koncert
+    lp: Lemez
+    episode: Epizód
+    record: Zeneszám
 
 genre:
     common:

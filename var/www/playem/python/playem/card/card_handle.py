@@ -31,6 +31,9 @@ class CardHandle:
     def getPatternDate(self):
         return re.compile( r'^\d{4}(([-|\.])\d{2}\2\d{2})?$' )
 
+    def getPatternDecade(self):
+        return re.compile( r'^\d{2}(\d{2})*s$' )
+
     def getPatternLength(self):
         return re.compile( r'^(\d{1,2}:\d{2}:\d{2})?$' )
 
@@ -97,7 +100,18 @@ class CardHandle:
             except:
                 storylines = {}
 
-            date = data['date']
+            try:
+                performer = data['performer']
+            except:
+                performer = None
+            try:
+                decade = data['decade']
+            except:
+                decade = None
+            try:
+                date = data['date']
+            except:
+                date = None
             try:
                 directors = data['directors']
             except:
@@ -122,7 +136,10 @@ class CardHandle:
                 host = data['host']
             except:
                 host = []
-            length = data['length']
+            try:
+                length = data['length']
+            except:
+                length = None
 
             try:
                 sounds = data['sounds']
@@ -193,13 +210,26 @@ class CardHandle:
                 logging.error( "CARD - There is NO mediatype nor level configured in in {0}. At least one of them should be there".format(card_path))
                 card_error = True
 
-#            #if mediatypes and not media:
-#            if mediatypes and not media_dict:
-#                logging.error( "CARD - There is mediatype configured {1} for the card in {0}. But there was NO media ({2}) found in the folder".format(card_path, mediatypes, [self.media_type_dict[mediatype] for mediatype in mediatypes]  ))
-#                card_error = True
-
             if not mediatypes and level and not dir_list:
                 logging.error( "CARD - There is level ({1}) and no mediatype configured for the card in {0} which means, it should be in the higher hierarchy. But there are NO subdirectories in the folder".format(card_path, level ))
+                card_error = True
+
+            if category not in db.category_name_id_dict:
+                logging.error( "CARD - Category ({1}) is unknown in {0}".format(card_path, category))
+                card_error = True
+
+            for genre in genres:
+                if genre not in db.genre_name_id_dict:
+                    logging.error( "CARD - Genre ({1}) is unknown in {0}".format(card_path, genre))
+                    card_error = True
+
+            for origin in origins:
+                if origin not in db.country_name_id_dict:
+                    logging.error( "CARD - Origin ({1}) is unknown in {0}".format(card_path, origin))
+                    card_error = True
+
+            if decade and not self.getPatternDecade().match( decade ):
+                logging.error( "CARD - Decade ({1}) is in unknown form in {0}".format(card_path, decade))
                 card_error = True
 
  # ---
@@ -208,15 +238,16 @@ class CardHandle:
             # if not media and not card_error:
             if not media_dict and not card_error:                
 
-#                logging.error( "TEST: {0} - {1} - {2} - {3}".format(titles, category, level, source_path))
-#                logging.error( "TEST - higher_card: {0} for the {1}".format(higher_card_id, titles))
-
                 # create a new Level record + get back the id
                 card_id=db.append_hierarchy(
                     title_orig=title_orig,
                     titles=titles,
+                    decade=decade,
                     category=category,
                     level=level,
+                    genres=genres, 
+                    themes=themes, 
+                    origins=origins,
                     basename=basename,
                     source_path=source_path,
                     sequence=sequence,
@@ -227,10 +258,6 @@ class CardHandle:
             # this must be the lowest level or a simple card
             else:
        
-                if category not in db.category_name_id_dict:
-                    logging.error( "CARD - Category ({1}) is unknown in {0}".format(card_path, category))
-                    card_error = True
-
                 for lang, text in storylines.items():
                     if lang not in db.language_name_id_dict:
                         logging.error( "CARD - Storyline language ({1}) is unknown in {0}".format(card_path, lang))
@@ -254,19 +281,9 @@ class CardHandle:
                         logging.error( "CARD - Sound language ({1}) is unknown in {0}".format(card_path, lang))
                         card_error = True
 
-                for genre in genres:
-                    if genre not in db.genre_name_id_dict:
-                        logging.error( "CARD - Genre ({1}) is unknown in {0}".format(card_path, genre))
-                        card_error = True
-
                 for theme in themes:
                     if theme not in db.theme_name_id_dict:
                         logging.error( "CARD - Theme ({1}) is unknown in {0}".format(card_path, theme))
-                        card_error = True
-
-                for origin in origins:
-                    if origin not in db.country_name_id_dict:
-                        logging.error( "CARD - Origin ({1}) is unknown in {0}".format(card_path, origin))
                         card_error = True
 
                 if not card_error:
@@ -276,6 +293,7 @@ class CardHandle:
                         title_orig=title_orig, 
                         titles=titles, 
                         storylines=storylines,
+                        decade=decade,
                         date=date, 
                         length=length,
                         sounds=sounds, 

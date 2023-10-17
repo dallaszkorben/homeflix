@@ -1030,3 +1030,116 @@ con.execute('''
             ORDER BY file_name
             LIMIT :limit;
 ''', {'card_id': '33', 'limit': 100}).fetchall()
+
+
+
+
+==============================================
+---        specific level of Cards         ---
+---   filtered by level, category, genre   ---
+---                                        ---
+--- List example:                          ---
+---              Bands New Wave Video      ---
+
+---              Synth collection Video
+===============================================
+
+con.execute('''   
+           SELECT 
+                merged.id, 
+               
+                MAX(title_req) title_req, 
+                MAX(lang_req) lang_req, 
+                MAX(title_orig) title_orig, 
+                MAX(lang_orig) lang_orig,
+                source_path
+            FROM (
+                SELECT 
+                    card.id id,
+                    card.id_category id_category,
+                    NULL title_req, 
+                    NULL lang_req, 
+                    htl.text title_orig, 
+                    lang.name lang_orig,
+                    card.source_path source_path,
+                    card.sequence sequence,
+                    card.basename
+                FROM 
+                        CARD card, 
+                        TEXT_CARD_LANG htl, 
+                        LANGUAGE lang
+                WHERE
+                    card.level=:level AND
+                    htl.id_card=card.id AND
+                    htl.id_language=lang.id AND
+                    card.id_title_orig=lang.id AND
+                    lang.name <> :lang 
+
+                UNION
+
+                SELECT 
+                    card.id id,
+                    card.id_category id_category,
+                    htl.text title_req, 
+                    lang.name lang_req, 
+                    NULL title_orig, 
+                    NULL lang_orig,
+                    card.source_path source_path,
+                    card.sequence sequence,
+                    card.basename
+                FROM 
+                        CARD card, 
+                        TEXT_CARD_LANG htl, 
+                        LANGUAGE lang
+                WHERE
+                    card.level=:level AND
+                    htl.id_card=card.id AND
+                    htl.id_language=lang.id AND
+                    lang.name = :lang
+            ) merged,
+
+---            Country country,
+---            Card_Origin co,
+
+---            Genre genre,
+---            Card_Genre cg,
+
+                Theme theme,
+                Card_Theme ct,
+
+            Category cat
+
+            WHERE
+                merged.id_category=cat.id
+                AND cat.name=:category
+                
+                --- genre ---
+---                AND cg.id_genre = genre.id
+---                AND cg.id_card = merged.id 
+---                AND genre.name =:genre
+                -------------
+
+                --- theme ---
+                AND ct.id_theme = theme.id
+                AND ct.id_card = merged.id 
+                AND theme.name = :theme
+                -------------
+                
+                
+                --- origin ---
+---                AND co.id_card = merged.id
+---                AND co.id_origin = country.id
+---                AND country.name = :origin
+---                AND country.name != :not_origin
+                --------------
+            GROUP BY merged.id
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+
+''', {'level': 'series', 'category': 'movie', 'genre': 'drama', 'theme': 'it', 'origin': 'hu', 'not_origin': 'hu', 'lang': 'en'}).fetchall()
+
+''', {'level': 'band', 'category': 'music_video', 'genre': 'pop', 'origin': 'hu', 'not_origin': 'hu', 'lang': 'en'}).fetchall()
