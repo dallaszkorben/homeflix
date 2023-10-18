@@ -41,8 +41,5 @@ class EPCollectAllSeriesMovies(EP):
         )
 
         output = self.web_gadget.db.get_all_series_of_movies(lang=lang, limit=100)
-        
-#        for record in output:
-#            print("DECODE: ".format(urlencode(record["title_req"])))
 
         return output_json(output, EP.CODE_OK)

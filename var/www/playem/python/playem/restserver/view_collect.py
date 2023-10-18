@@ -14,6 +14,7 @@ from playem.restserver.endpoints.ep_collect_standalone_movies_by_genre import EP
 from playem.restserver.endpoints.ep_collect_standalone_movie_by_card_id import EPCollectStandaloneMovieByCardId
 from playem.restserver.endpoints.ep_collect_child_hierarchy_or_card import EPCollectChildHierarchyOrCard
 from playem.restserver.endpoints.ep_collect_medium_by_card_id import EPCollectMediumByCardId
+from playem.restserver.endpoints.ep_collect_general_level import EPCollectGeneralLevel
 
 
 # -----------------------------------
@@ -37,6 +38,7 @@ class CollectView(FlaskView):
         self.epCollectStandaloneMovieByCardId = EPCollectStandaloneMovieByCardId(web_gadget)
         self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
         self.epCollectMediumByCardId = EPCollectMediumByCardId(web_gadget)
+        self.epCollectGeneralLevel = EPCollectGeneralLevel(web_gadget)
 
     #
     # GET http://localhost:5000/collect/
@@ -44,30 +46,33 @@ class CollectView(FlaskView):
     def index(self):
         return {}
 
-    #
-    # Gives back list of records of all series of movies with payload
-    #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/all/series/movies
-    #
-    # GET http://localhost:80/collect/all/series/movies
-    #
-    #@route('/all/series/movies', methods=['GET'])
-    @route(EPCollectAllSeriesMovies.PATH_PAR_PAYLOAD, methods=[EPCollectAllSeriesMovies.METHOD])
-    def collectAllSeriesMoviesWithPayload(self):
+    # #
+    # # Gives back list of records of all series of movies with payload
+    # #
+    # # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/all/series/movies
+    # #
+    # # GET http://localhost:80/collect/all/series/movies
+    # #
+    # #@route('/all/series/movies', methods=['GET'])
+    # @route(EPCollectAllSeriesMovies.PATH_PAR_PAYLOAD, methods=[EPCollectAllSeriesMovies.METHOD])
+    # def collectAllSeriesMoviesWithPayload(self):
 
-        # WEB
-        if request.form:
-            json_data = request.form
+    #     # WEB
+    #     if request.form:
+    #         json_data = request.form
 
-        # CURL
-        elif request.json:
-            json_data = request.json
+    #     # CURL
+    #     elif request.json:
+    #         json_data = request.json
 
-        else:
-            return "Not valid request", EP.CODE_BAD_REQUEST
+    #     else:
+    #         return "Not valid request", EP.CODE_BAD_REQUEST
 
-        out = self.epCollectAllSeriesMovies.executeByPayload(json_data)
-        return out
+    #     out = self.epCollectAllSeriesMovies.executeByPayload(json_data)
+    #     return out
+
+
+# === all series of movies ===
 
     #
     # Gives back list of records of all series of movies with parameters
@@ -83,7 +88,44 @@ class CollectView(FlaskView):
         out = self.epCollectAllSeriesMovies.executeByParameters(lang=lang)
         return out
 
-# ===
+# === all series of movies filtered by not_origin ===
+
+# === series movies filtered by genre             ===
+
+# === series movies filtered by theme             ===
+
+# === series movies filtered by origin            ===
+
+
+
+# === collect with general filter ===
+    #
+    # Gives back list of records of all series of movies with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/band/category/music_video/genre/new_wave/theme/*/origin/*/not_origin/*/decade/80s/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/series/category/movie/genre/drama/theme/life/origin/*/not_origin/hu/decade/*/lang/en
+    #
+    # GET http://localhost:80/collect/all/series/movies
+    #
+    #@route('/all/series/movies/lang/<lang>')
+    @route(EPCollectGeneralLevel.PATH_PAR_URL, methods=[EPCollectGeneralLevel.METHOD])
+    def collectAllSeriesMoviesWithParameter(self, level, category, genre, theme, origin, not_origin, decade, lang):
+
+        out = self.epCollectGeneralLevel.executeByParameters(level, category, genre=genre, theme=theme, origin=origin, not_origin=not_origin, decade=decade, lang=lang)
+        return out
+
+
+
+
+
+
+
+
+
+
+
+
+# === all standalone movies ===
 
     #
     # Gives back list of records of all standalone movies with parameters
@@ -99,7 +141,8 @@ class CollectView(FlaskView):
         out = self.epCollectStandaloneMoviesAll.executeByParameters(lang=lang)
         return out
 
-# ===
+
+# === standalone movies filtered by genre ===
 
     #
     # Gives back list of records of standalone movies with genre with parameters
@@ -115,7 +158,24 @@ class CollectView(FlaskView):
         out = self.epCollectStandaloneMoviesByGenre.executeByParameters(genre=genre, lang=lang)
         return out
 
-# ===
+
+# === standalone movie filtered by theme ===
+# ????????????
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === standalone movie with a specific id ===
 
     #
     # Gives back list of records of standalone movies with genre with parameters
@@ -131,7 +191,7 @@ class CollectView(FlaskView):
         out = self.epCollectStandaloneMovieByCardId.executeByParameters(card_id=card_id, lang=lang)
         return out
 
-# ===
+# === all child card of a specific hirarchy card ===
 
     #
     # Gives back child Hiearchy of the given hierarchy id. If the child hierarchy is Card
@@ -149,7 +209,7 @@ class CollectView(FlaskView):
         return out
 
 
-# ===
+# === medium list of a specific card ===
 
     #
     # Gives back the medium list of the given Card.
@@ -157,7 +217,6 @@ class CollectView(FlaskView):
     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/medium/card_id/33
     #
     # GET http://localhost:80/collect/medium/card_id/33
-    #
     #@route('/medium/card_id/<card_id>')
     @route(EPCollectMediumByCardId.PATH_PAR_URL, methods=[EPCollectMediumByCardId.METHOD])
     def collectMediumByCardId(self, card_id):

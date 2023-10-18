@@ -886,17 +886,18 @@ class SqlDatabase:
         return self.get_all_level(level='series', category='movie', genre='comedy', lang=lang, limit=limit, json=json)
 
     #
-    # --- Video Bands queries ---
+    # --- Video Music queries ---
     #
 
     def get_all_new_wave_bands_of_music_video(self, lang, limit=100, json=True):
         return self.get_general_level(level='band', category='music_video', genre='new_wave', lang=lang, limit=limit, json=json)
 
+    def get_all_bands_of_music_video_from_decade(self, decade, lang, limit=100, json=True):
+        return self.get_general_level(level='band', category='music_video', decade=decade, lang=lang, limit=limit, json=json)
 
-
-    def get_general_level(self, level, category, genre=None, theme=None, origin=None, not_origin=None, lang='en', limit=100, json=True):
+    def get_general_level(self, level, category, genre=None, theme=None, origin=None, not_origin=None, decade=None, lang='en', limit=100, json=True):
         """
-
+        It returns a list of the given level cards in the given category, optionally filtered by genre/theme/origin/decade
         """
         with self.lock:
 
@@ -919,6 +920,7 @@ class SqlDatabase:
                     SELECT 
                         card.id id,
                         card.id_category id_category,
+                        card.decade decade,
                         NULL title_req, 
                         NULL lang_req, 
                         htl.text title_orig, 
@@ -942,6 +944,7 @@ class SqlDatabase:
                     SELECT 
                         card.id id,
                         card.id_category id_category,
+                        card.decade decade,
                         htl.text title_req, 
                         lang.name lang_req, 
                         NULL title_orig, 
@@ -1001,7 +1004,11 @@ class SqlDatabase:
             ''' if origin else '') + ('''
 
                     AND country.name != :not_origin
-            ''' if not_origin else '') +  '''
+            ''' if not_origin else '') +  ('''
+
+                    --- decade ---
+                    AND merged.decade != :decade
+            ''' if decade else '') +  '''
 
                 GROUP BY merged.id
                 ORDER BY CASE 
@@ -1016,7 +1023,7 @@ class SqlDatabase:
             logging.error("TEST query: '{0}'".format(query))
 
 
-            records=cur.execute(query, {'level': level, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit':limit}).fetchall()
+            records=cur.execute(query, {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit':limit}).fetchall()
             cur.execute("commit")
 
             if json:
