@@ -15,9 +15,10 @@ class ContainerGenerator{
     }
 }
 
-/**
- * MAIN MENU
- */
+// =========
+// MAIN MENU
+// =========
+//
 class MainMenuContainerGenerator extends ContainerGenerator{  
     getContainerList(){
         let refToThis = this;
@@ -43,7 +44,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
         thumbnail.setFunctionForSelection({"menu":
             (function(movie_type) {
                 return function() {
-                    return new MovieSeriesContainerGenerator(refToThis.language_code, translated_titles['series'])
+                    return new MovieSeriesContainerGenerator(refToThis.language_code, translated_titles['series']);
                 };
             })("movie_series")});
         oContainer.addThumbnail(2, thumbnail);
@@ -51,13 +52,23 @@ class MainMenuContainerGenerator extends ContainerGenerator{
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/music_video.jpg", description_src="images/categories/music_video.jpg");
         thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_video'], translated=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
-        thumbnail.setFunctionForSelection(function(){refToThis.viewMovie()});
+        thumbnail.setFunctionForSelection({"menu":
+            (function(blabla){
+                return function(){
+                    return new MusicVideoContainerGenerator(refToThis.language_code, translated_titles['music_video']);
+                }
+            })("blabla")});
         oContainer.addThumbnail(3, thumbnail);
 
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/music_audio.jpg", description_src="images/categories/music_audio.jpg");
         thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_audio'], translated=translated_titles['music_audio'], thumb=translated_titles['music_audio'], history=translated_titles['music_audio']);
-        thumbnail.setFunctionForSelection(function(){refToThis.viewMovie()});
+        thumbnail.setFunctionForSelection({"menu":
+            (function(){
+                return function(){
+                    return new MusicAudioContainerGenerator(refToThis.language_code, translated_titles['music_audio']);
+                }
+            })()});
         oContainer.addThumbnail(4, thumbnail);
 
         containerList.push(oContainer);
@@ -72,6 +83,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
 
 class AjaxContainerGenerator extends  ContainerGenerator{
 
+    
     generateThumbnail(hit){
         throw new Error("Implement generateThumbnails() method in the descendant class of AjaxContainerGenerator!");
     }
@@ -128,6 +140,10 @@ class AjaxContainerGenerator extends  ContainerGenerator{
 }
 
 
+// ==========
+// Movie Card
+// ==========
+//
 class MovieCardContainerGenerator extends  AjaxContainerGenerator{
     getContainerList(){
         let containerList = [];
@@ -135,7 +151,9 @@ class MovieCardContainerGenerator extends  AjaxContainerGenerator{
         let requestList = [
             {title: translated_genre_movie['drama'],  rq_method: "GET", rq_url: "http://192.168.0.21/collect/standalone/movies/genre/drama/lang/" +  this.language_code},
             {title: translated_genre_movie['comedy'], rq_url:    "GET", rq_url: "http://192.168.0.21/collect/standalone/movies/genre/comedy/lang/" + this.language_code},
-            {title: translated_genre_movie['scifi'],  rq_url:    "GET", rq_url: "http://192.168.0.21/collect/standalone/movies/genre/scifi/lang/" +  this.language_code}
+            {title: translated_genre_movie['scifi'],  rq_url:    "GET", rq_url: "http://192.168.0.21/collect/standalone/movies/genre/scifi/lang/" +  this.language_code},
+            {title: "60s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/60s/lang/" +  this.language_code},
+
         ];
 
         containerList = this.generateContainers(requestList);
@@ -185,6 +203,11 @@ class MovieCardContainerGenerator extends  AjaxContainerGenerator{
     }    
 }
 
+
+// ===========================
+// Movie Series Card Hierarchy
+// ===========================
+//
 class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator{
     constructor(language_code, container_title, hierarchy_id){
         super(language_code);
@@ -214,7 +237,7 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
         let short_title = "";
         if ( hit["title_req"] != null ){
             short_title = hit["title_req"];
-        }else if ( card["title_orig"] != null ){
+        }else if ( hit["title_orig"] != null ){
             short_title = hit["title_orig"];
         }
 
@@ -270,6 +293,10 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
 }
 
 
+// ============
+// Movie Series
+// ============
+//
 class MovieSeriesContainerGenerator extends  AjaxContainerGenerator{
     constructor(language_code, container_title){
         super(language_code);
@@ -323,6 +350,222 @@ class MovieSeriesContainerGenerator extends  AjaxContainerGenerator{
             })(hit["id"])
         });
 
+        return thumbnail;
+    }    
+}
+
+
+// ============
+// Music Video
+// ============
+//
+class MusicVideoContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+         let containerList = [];
+
+         let requestList = [
+             {title: "70s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/*/decade/70s/lang/" +  this.language_code},
+             {title: "80s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/*/decade/80s/lang/" +  this.language_code},
+             {title: "90s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/*/decade/90s/lang/" +  this.language_code},
+             {title: "2000s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/*/decade/2000s/lang/" +  this.language_code},
+             {title: "2010s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/*/decade/2010s/lang/" +  this.language_code},
+         ];
+
+         containerList = this.generateContainers(requestList);
+         return containerList;
+    }
+
+    generateThumbnail(hit){
+        let refToThis = this;
+        let thumbnail = new Thumbnail();
+        let max_length = 20;
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        let short_title = "";
+        if ( hit["title_req"] != null ){
+            short_title = hit["title_req"];
+        }else if ( hit["title_orig"] != null ){
+            short_title = hit["title_orig"];
+        }
+
+        short_title = this.getTruncatedTitle(short_title, max_length);
+
+//        let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+        let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+        let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+        let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+        thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
+        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(hierarchy_id) {
+                return function() {
+                    return new MovieSeriesCardHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                };
+            })(hit["id"])
+        });
+
+        return thumbnail;
+    }    
+}
+
+
+// ============
+// Music Audio
+// ============
+//
+class MusicAudioContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+         let containerList = [];
+
+         let requestList = [
+             {title: "80s",  rq_method: "GET", rq_url: "http://192.168.0.21/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/80s/lang/" +  this.language_code},
+         ];
+
+         containerList = this.generateContainers(requestList);
+         return containerList;
+    }
+
+    generateThumbnail(hit){
+        let refToThis = this;
+        let thumbnail = new Thumbnail();
+        let max_length = 20;
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        let short_title = "";
+        if ( hit["title_req"] != null ){
+            short_title = hit["title_req"];
+        }else if ( hit["title_orig"] != null ){
+            short_title = hit["title_orig"];
+        }
+
+        short_title = this.getTruncatedTitle(short_title, max_length);
+
+//        let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+        let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+        let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+        let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+        thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
+        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(hierarchy_id) {
+                return function() {
+                    return new MusicAudioHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                };
+            })(hit["id"])
+        });
+
+        return thumbnail;
+    }    
+}
+
+
+//----
+
+
+class MusicAudioHierarchyContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title, hierarchy_id){
+        super(language_code);
+        this.container_title = container_title;
+        this.hierarchy_id = hierarchy_id;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let requestList = [
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://192.168.0.21//collect/child_hierarchy_or_card/id/" + this.hierarchy_id+ "/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+   
+    generateThumbnail(hit){
+        let refToThis = this;
+        let thumbnail = new Thumbnail();
+        let max_length = 20;
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        let short_title = "";
+        if ( hit["title_req"] != null ){
+            short_title = hit["title_req"];
+        }else if ( hit["title_orig"] != null ){
+            short_title = hit["title_orig"];
+        }
+
+        short_title = this.getTruncatedTitle(short_title, max_length);
+
+        if(hit["level"]){
+//        let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+            let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+            let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
+            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+
+            thumbnail.setFunctionForSelection({"menu": 
+                (function(hierarchy_id) {
+                    return function() {
+                        return new MusicAudioHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                    };
+                })(hit["id"])
+            });
+
+        }else{
+
+            let card_id = hit["id"];
+            let card_request_url = "http://192.168.0.21/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
+            let card = this.sendRestRequest("GET", card_request_url)[0];
+    
+            let medium_path = pathJoin([card["source_path"], card["medium"]["audio"][0]])
+            let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
+    
+            let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            thumbnail.setImageSources(thumbnail_src=card["source_path"] + "/thumbnails/" + thumbnail_file, description_src=card["source_path"] + "/screenshots/" + screenshot_file);
+            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+            thumbnail.setStoryline(card["storyline"]);
+            thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+            thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+    
+            thumbnail.setFunctionForSelection({"play": 
+                (function(medium_path) {
+                    return function() {
+                        return medium_path
+                    };
+                })(medium_path)
+            });
+        }
         return thumbnail;
     }    
 }

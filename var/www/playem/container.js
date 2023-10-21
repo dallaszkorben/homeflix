@@ -986,6 +986,8 @@ class ThumbnailController{
 
     enter(){
         let refToThis = this;
+        let newSourceElement
+        
         if(this.focusTask === FocusTask.Menu){
 
             // fetch the generator function of the thumbnail in the focus
@@ -1022,10 +1024,11 @@ class ThumbnailController{
 
                     var sourceElement = $('#video_player').find('source');
                     if (sourceElement.length > 0) {
-                        sourceElement.remove();
+                         sourceElement.remove();
                     }
 
-                    var newSourceElement = $('<source>');
+                    // Creates a new source element
+                    newSourceElement = $('<source>');
                     newSourceElement.attr('src', medium_path);
                     // newSourceElement.attr('type', 'video/mkv');
                     $('#video_player').append(newSourceElement);
@@ -1075,11 +1078,25 @@ class ThumbnailController{
                             domPlayer.hide();
                             player.pause();
                             player.height = 0;
-                            newSourceElement.attr('src', "");
-                            let sourceElement = domPlayer.find('source');
-                            if (sourceElement.length > 0) {
-                                sourceElement.remove();
+
+                            if(newSourceElement != undefined){
+                                newSourceElement.attr('src', '');
+                                let player = $("#video_player")[0];
+                                player.load();
+ 
+                                newSourceElement.remove();
+                                newSourceElement = undefined;
                             }
+
+
+//                            var newSourceElement = $('<source>');
+//                            newSourceElement.attr('src', "");
+//                            let sourceElement = domPlayer.find('source');
+//                            if (sourceElement.length > 0) {
+//                                sourceElement.remove();
+//                                var newSourceElement = $('<source>');
+//                                //newSourceElement.attr('src', "blabla");
+//                            }
 
                             refToThis.focusTask = FocusTask.Menu;
 
