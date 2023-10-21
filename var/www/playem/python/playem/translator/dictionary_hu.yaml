@@ -123,6 +123,23 @@ genre:
         history: Történelem
         romance: Románc
 
+    music:
+        &music
+        synth: Szinti
+        new_wave: Új hullám
+        synthpop: Synthpop
+        electropop: Electropop
+        world: Viágzene
+        alternative: Alternatív
+        pop: Pop
+        house: House
+        electronica: Electronica
+        electronic: Electronic
+        rock: Rock
+        disco: Disco
+        soul: Soul
+        funk: Funk
+
     movie:
         <<: *common
         short: Rövid film
@@ -163,22 +180,11 @@ genre:
         graphic_novel: Képregényalbum
         lecture_notes: Egyetemi jegyzet
 
-    music:
-        synth: Szinti
-        new_wave: Új hullám
-        synthpop: Synthpop
-        electropop: Electropop
-        world: Viágzene
-        alternative: Alternatív
-        pop: Pop
-        house: House
-        electronica: Electronica
-        electronic: Electronic
-        rock: Rock
-        disco: Disco
-        soul: Soul
-        funk: Funk
+    music_video:
+        <<: *music
 
+    music_audio:
+        <<: *music
 
     knowledge:
         lecture: Előadás

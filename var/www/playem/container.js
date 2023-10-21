@@ -210,11 +210,12 @@ class ObjScrollSection{
         let image = thumbnail.getDescriptionImageSource();
         let title = thumbnail.getTitle();
         let storyline = thumbnail.getStoryline();
+        let lyrics = thumbnail.getLyrics();
         let credentials = thumbnail.getCredentials();
         let extra = thumbnail.getExtras();
 
         // Shows the actual Description
-        this.oDescriptionContainer.refreshDescription(image, title, storyline, credentials, extra);
+        this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra);
     }
     
     clickedOnThumbnail(id){
@@ -576,6 +577,12 @@ class Thumbnail{
         }
     }
 
+    setLyrics(lyrics){
+        if(lyrics != undefined){
+            this.thumbnailDict["lyrics"] = lyrics;
+        }
+    }
+
     setCredentials(directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined){
         this.thumbnailDict["credentials"] = {}
         if(directors != undefined && Array.isArray(directors)){
@@ -650,6 +657,12 @@ class Thumbnail{
         return ""
     }
 
+    getLyrics(){
+        if("lyrics" in this.thumbnailDict)
+            return this.thumbnailDict["lyrics"];
+        return ""
+    }
+
     getCredentials(){
         if("credentials" in this.thumbnailDict)
             return this.thumbnailDict["credentials"];
@@ -709,7 +722,7 @@ class ObjDescriptionContainer{
     * @param {*} storyline 
     * @param {*} credential 
     */
-    refreshDescription(fileName, title, storyline, credentials, extra){
+    refreshDescription(fileName, title, storyline, lyrics, credentials, extra){
         let mainObject = this;
         let descImg = new Image();
         descImg.src = fileName;
@@ -734,6 +747,14 @@ class ObjDescriptionContainer{
             let descTextStoryline = $("#description-text-storyline");
             descTextStoryline.empty();                
             descTextStoryline.html(storyline);
+
+            // --------------
+            // --- lyrics ---        
+            // --------------
+            let descTextLyrics = $("#description-text-storyline");
+            descTextLyrics.empty();                
+            descTextLyrics.html(lyrics);
+            
             // -----------------
 
             // -------------

@@ -18,6 +18,10 @@ from playem.restserver.endpoints.ep_collect_medium_by_card_id import EPCollectMe
 from playem.restserver.endpoints.ep_collect_general_level import EPCollectGeneralLevel
 from playem.restserver.endpoints.ep_collect_general_standalone import EPCollectGeneralStandalone
 
+from playem.restserver.endpoints.ep_collect_standalone_music_audio_by_card_id import EPCollectStandaloneMusicAudioByCardId
+from playem.restserver.endpoints.ep_collect_standalone_music_video_by_card_id import EPCollectStandaloneMusicVideoByCardId
+
+
 # -----------------------------------
 #
 # GET info
@@ -33,15 +37,20 @@ class CollectView(FlaskView):
 
         self.web_gadget = web_gadget
 
-        self.epCollectAllSeriesMovies = EPCollectAllSeriesMovies(web_gadget)
-        self.epCollectStandaloneMoviesAll = EPCollectStandaloneMoviesAll(web_gadget)
         self.epCollectStandaloneMoviesByGenre = EPCollectStandaloneMoviesByGenre(web_gadget)
-        self.epCollectStandaloneMovieByCardId = EPCollectStandaloneMovieByCardId(web_gadget)
-        self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
         self.epCollectMediumByCardId = EPCollectMediumByCardId(web_gadget)
 
         self.epCollectGeneralLevel = EPCollectGeneralLevel(web_gadget)
         self.epCollectGeneralStandalone = EPCollectGeneralStandalone(web_gadget)
+
+        self.epCollectStandaloneMovieByCardId = EPCollectStandaloneMovieByCardId(web_gadget)
+        self.epCollectStandaloneMusicVideoByCardId = EPCollectStandaloneMusicVideoByCardId(web_gadget)
+        self.epCollectStandaloneMusicAudioByCardId = EPCollectStandaloneMusicAudioByCardId(web_gadget)
+
+        # --- to delete ---
+        self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)   #ep_collect_child_hierarchy_or_card.py / view_collection.py
+        self.epCollectAllSeriesMovies = EPCollectAllSeriesMovies(web_gadget)             #ep_collect_all_series_movies.py / view_collection
+        self.epCollectStandaloneMoviesAll = EPCollectStandaloneMoviesAll(web_gadget)     #pe_collect_standalone_movies_all.py  
 
     #
     # GET http://localhost:5000/collect/
@@ -146,21 +155,21 @@ class CollectView(FlaskView):
 
 
 
-# === all standalone movies ===
+# # === all standalone movies ===
 
-    #
-    # Gives back list of records of all standalone movies with parameters
-    #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/lang/en
-    #
-    # GET http://localhost:80/collect/standalone/movies/lang/en
-    #
-    #@route('/all/standalone/movies/lang/<lang>')
-    @route(EPCollectStandaloneMoviesAll.PATH_PAR_URL, methods=[EPCollectStandaloneMoviesAll.METHOD])
-    def collectStandaloneMoviesAllWithParameter(self, lang):
+#     #
+#     # Gives back list of records of all standalone movies with parameters
+#     #
+#     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/lang/en
+#     #
+#     # GET http://localhost:80/collect/standalone/movies/lang/en
+#     #
+#     #@route('/all/standalone/movies/lang/<lang>')
+#     @route(EPCollectStandaloneMoviesAll.PATH_PAR_URL, methods=[EPCollectStandaloneMoviesAll.METHOD])
+#     def collectStandaloneMoviesAllWithParameter(self, lang):
 
-        out = self.epCollectStandaloneMoviesAll.executeByParameters(lang=lang)
-        return out
+#         out = self.epCollectStandaloneMoviesAll.executeByParameters(lang=lang)
+#         return out
 
 
 # === standalone movies filtered by genre ===
@@ -196,10 +205,10 @@ class CollectView(FlaskView):
 
 
 
-# === standalone movie with a specific id ===
+# === standalone media with a specific id ===
 
     #
-    # Gives back list of records of standalone movies with genre with parameters
+    # Gives back a standalone movie with a specific card id
     #
     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movie/card_id/123/lang/en
     #
@@ -211,6 +220,42 @@ class CollectView(FlaskView):
 
         out = self.epCollectStandaloneMovieByCardId.executeByParameters(card_id=card_id, lang=lang)
         return out
+
+
+    #
+    # Gives back a video music with a specific card id
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/music_video/card_id/123/lang/en
+    #
+    # GET http://localhost:80/collect/standalone/music_video/card_id/123/lang/en
+    #
+    #@route('/standalone/music_video/card_id/<card_id>/lang/<lang>')
+    @route(EPCollectStandaloneMusicVideoByCardId.PATH_PAR_URL, methods=[EPCollectStandaloneMusicVideoByCardId.METHOD])
+    def collectStandaloneMusicVideoByCardIdWithParameter(self, card_id, lang):
+
+        out = self.epCollectStandaloneMusicVideoByCardId.executeByParameters(card_id=card_id, lang=lang)
+        return out
+
+    #
+    # Gives back a audio music with a specific card id
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/music_audio/card_id/123/lang/en
+    #
+    # GET http://localhost:80/collect/standalone/music_audio/card_id/123/lang/en
+    #
+    #@route('/standalone/music_audio/card_id/<card_id>/lang/<lang>')
+    @route(EPCollectStandaloneMusicAudioByCardId.PATH_PAR_URL, methods=[EPCollectStandaloneMusicAudioByCardId.METHOD])
+    def collectStandaloneMusicAudioByCardIdWithParameter(self, card_id, lang):
+
+        out = self.epCollectStandaloneMusicAudioByCardId.executeByParameters(card_id=card_id, lang=lang)
+        return out
+
+
+
+
+
+
+
 
 # === all child card of a specific hirarchy card ===
 

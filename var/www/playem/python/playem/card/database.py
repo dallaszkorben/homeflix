@@ -521,7 +521,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[],  media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[],  media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -742,7 +742,17 @@ class SqlDatabase:
                     (id_language, id_card, text, type)
                     VALUES (?, ?, ?, "S");
                 '''
-                cur.execute(query, (self.language_name_id_dict[lang], card_id, storyline))    
+                cur.execute(query, (self.language_name_id_dict[lang], card_id, storyline))
+
+            #
+            # INSERT into TABLE_TEXT_CARD_LANG Lyrics
+            #
+            for lang, lyrics in lyrics.items():
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''
+                    (id_language, id_card, text, type)
+                    VALUES (?, ?, ?, "L");
+                '''
+                cur.execute(query, (self.language_name_id_dict[lang], card_id, lyrics))    
 
             #
             # INSERT into TABLE_CARD_MEDIA
@@ -768,7 +778,7 @@ class SqlDatabase:
         # close the insert transaction
         cur.execute("commit")
 
-    def append_hierarchy(self, title_orig, titles, decade, category, level, genres, themes, origins, basename, source_path, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, title_orig, titles, date, decade, category, level, genres, themes, origins, basename, source_path, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -785,11 +795,11 @@ class SqlDatabase:
             # if higher_card_id:
 
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (level, id_title_orig, decade, id_category, basename, source_path, id_higher_card, sequence)
-                    VALUES (:level, :id_title_orig, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+                    (level, id_title_orig, date, decade, id_category, basename, source_path, id_higher_card, sequence)
+                    VALUES (:level, :id_title_orig, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'level': level, 'id_title_orig': title_orig_id, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'level': level, 'id_title_orig': title_orig_id, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             # else:
             #     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
             #         (level, id_title_orig, decade, id_category, basename, source_path, sequence)
@@ -1060,10 +1070,10 @@ class SqlDatabase:
 
             # Get Card list
             query = '''
-            SELECT id, level, title_req, title_orig, lang_req, lang_orig, sequence, source_path
+            SELECT id, level, title_req, title_orig, lang_req, lang_orig, sequence, source_path, date
             FROM (
                 --- all cards connected to higher card ---
-                SELECT id, level level, MAX(title_req) title_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig, MAX(lang_req) lang_req, sequence, basename, source_path
+                SELECT id, level level, MAX(title_req) title_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig, MAX(lang_req) lang_req, sequence, basename, source_path, date
                 FROM (
 
                     --- requested language not the original ---
@@ -1076,7 +1086,8 @@ class SqlDatabase:
                         tcl.text title_orig, 
                         sequence, 
                         basename, 
-                        source_path
+                        source_path,
+                        date
                     FROM
                         ''' + SqlDatabase.TABLE_CARD + ''' card, 
                         ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
@@ -1101,7 +1112,8 @@ class SqlDatabase:
                         NULL lang_orig,
                         sequence, 
                         basename, 
-                        source_path
+                        source_path,
+                        date
                     FROM 
                         ''' + SqlDatabase.TABLE_CARD + ''' card, 
                         ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
@@ -1303,7 +1315,7 @@ class SqlDatabase:
     #
 
     # TODO: DB name should be replaced by variables
-    # TODO: make same mathod for music
+    # TODO: make same method for music
 
     def get_standalone_movie_by_card_id(self, card_id, lang, limit=100, json=True):
         with self.lock:
@@ -1545,6 +1557,473 @@ class SqlDatabase:
                 records[0]["medium"] = media_dict
 
             return records
+
+
+    # 
+    #
+    #
+    # Detailed Card for any audio music with card id
+    #
+    #
+
+    def get_standalone_music_audio_by_card_id(self, card_id, lang, limit=100, json=True):
+        with self.lock:
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            # Get Card list
+            query = '''
+            SELECT             
+                card.id as id,
+                category.name as category,
+                card.date as date,
+                card.length as length,
+                card.source_path as source_path,
+                medium,
+                lyrics,
+                sounds,
+                subs,
+                origins,
+                genres,                
+---                themes,
+---                directors,
+                writers
+---                voices,
+---                stars,
+---                actors
+--                performer
+            FROM
+                (SELECT group_concat( mt.name || "=" || m.name) medium
+
+                    FROM 
+                        Card_Media m,
+                        MediaType mt
+                    WHERE
+                        m.id_card= :card_id AND
+                        m.id_mediatype = mt.id
+                ),
+            
+                (SELECT group_concat(tcl.text) lyrics
+                    FROM 
+                        Text_Card_Lang tcl,
+                        Language language
+                    WHERE 
+                        tcl.type = "L" AND
+                        tcl.id_card = :card_id AND
+                        tcl.id_language = language.id AND
+                        language.name = :lang
+                ),                        
+                (SELECT group_concat(language.name) sounds
+                    FROM 
+                        Language language,
+                        Card_Sound card_sound
+                    WHERE 
+                        card_sound.id_sound=language.id AND
+                        card_sound.id_card = :card_id
+                ),
+                (SELECT group_concat(language.name) subs
+                    FROM 
+                        Language language,
+                        Card_Sub card_sub
+                    WHERE 
+                        card_sub.id_sub=language.id AND
+                        card_sub.id_card = :card_id
+                ),
+                
+                (SELECT group_concat(country.name) origins
+                    FROM 
+                        Country country,
+                        Card_Origin card_origin
+                    WHERE 
+                        card_origin.id_card = :card_id AND
+                        country.id = card_origin.id_origin
+                ),                        
+                (SELECT group_concat(genre.name) genres
+                    FROM 
+                        Genre genre,
+                        Card_Genre card_genre
+                    WHERE 
+                        card_genre.id_card = :card_id AND
+                        genre.id = card_genre.id_genre
+                ),
+                   
+---                (SELECT group_concat(person.name) directors
+---                    FROM 
+---                        Person person,
+---                        Card_Director cd
+---                    WHERE 
+---                        cd.id_director = person.id AND
+---                        cd.id_card = :card_id
+---                ),
+                (SELECT group_concat(person.name) writers
+                    FROM 
+                        Person person,
+                        Card_Writer cv                            
+                    WHERE 
+                        cv.id_writer = person.id AND
+                        cv.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) voices
+                    FROM 
+                        Person person,
+                        Card_Voice cv
+                    WHERE 
+                        cv.id_voice = person.id AND
+                        cv.id_card = :card_id
+                ),
+                Card card,
+                Category category
+            WHERE
+                card.id = :card_id  AND
+                card.id_category = category.id
+
+            LIMIT :limit;
+            '''
+            records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                category = records[0]["category"]
+                trans = Translator.getInstance(lang)
+        
+                # Writers
+                writers_string = records[0]["writers"]
+                writers_list = []
+                if writers_string:
+                    writers_list = writers_string.split(',')
+                records[0]["writers"] = writers_list
+
+                # # Directors
+                # directors_string = records[0]["directors"]
+                # directors_list = []
+                # if directors_string:
+                #     directors_list = directors_string.split(',')
+                # records[0]["directors"] = directors_list
+
+                # # Stars
+                # stars_string = records[0]["stars"]
+                # stars_list = []
+                # if stars_string:
+                #     stars_list = stars_string.split(',')
+                # records[0]["stars"] = stars_list
+
+                # # Actors
+                # actors_string = records[0]["actors"]
+                # actors_list = []
+                # if actors_string:
+                #     actors_list = actors_string.split(',')
+                # records[0]["actors"] = actors_list
+
+                # # Voices
+                # voices_string = records[0]["voices"]
+                # voices_list = []
+                # if voices_string:
+                #     voices_list = voices_string.split(',')
+                # records[0]["voices"] = voices_list
+
+                # Genre
+                genres_string = records[0]["genres"]
+                genres_list = []
+                if genres_string:
+                    genres_list = genres_string.split(',')
+                    genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+                records[0]["genres"] = genres_list
+
+                # # Theme
+                # themes_string = records[0]["themes"]
+                # themes_list = []
+                # if themes_string:
+                #     themes_list = themes_string.split(',')
+                #     themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+                # records[0]["themes"] = themes_list
+
+                # Origin
+                origins_string = records[0]["origins"]
+                origins_list = []
+                if origins_string:
+                    origins_list = origins_string.split(',')
+                    origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+                records[0]["origins"] = origins_list
+
+                # Sub
+                subs_string = records[0]["subs"]
+                subs_list = []
+                if subs_string:
+                    subs_list = subs_string.split(',')
+                    subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+                records[0]["subs"] = subs_list
+
+                # Sounds
+                sounds_string = records[0]["sounds"]
+                sounds_list = []
+                if sounds_string:
+                    sounds_list = sounds_string.split(',')
+                    sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+                records[0]["sounds"] = sounds_list
+
+                # Media
+                medium_string = records[0]["medium"]
+                media_dict = {}
+                if medium_string:
+                    medium_string_list = medium_string.split(',')
+                    for medium_string in medium_string_list:
+                        (media_type, media) = medium_string.split("=")
+                        if not media_type in media_dict:
+                            media_dict[media_type] = []
+                        media_dict[media_type].append(media)
+                records[0]["medium"] = media_dict
+
+            return records
+
+
+    # 
+    #
+    #
+    # Detailed Card for any video music with card id
+    #
+    #
+
+    def get_standalone_music_video_by_card_id(self, card_id, lang, limit=100, json=True):
+        with self.lock:
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            # Get Card list
+            query = '''
+            SELECT             
+                card.id as id,
+                category.name as category,
+                card.date as date,
+                card.length as length,
+                card.source_path as source_path,
+                medium,
+                lyrics,
+                sounds,
+                subs,
+                origins,
+                genres,                
+---                themes,
+                directors,
+                writers
+---                voices,
+---                stars,
+---                actors
+---                performer
+            FROM
+                (SELECT group_concat( mt.name || "=" || m.name) medium
+
+                    FROM 
+                        Card_Media m,
+                        MediaType mt
+                    WHERE
+                        m.id_card= :card_id AND
+                        m.id_mediatype = mt.id
+                ),
+            
+                (SELECT group_concat(tcl.text) lyrics
+                    FROM 
+                        Text_Card_Lang tcl,
+                        Language language
+                    WHERE 
+                        tcl.type = "L" AND
+                        tcl.id_card = :card_id AND
+                        tcl.id_language = language.id AND
+                        language.name = :lang
+                ),                        
+                (SELECT group_concat(language.name) sounds
+                    FROM 
+                        Language language,
+                        Card_Sound card_sound
+                    WHERE 
+                        card_sound.id_sound=language.id AND
+                        card_sound.id_card = :card_id
+                ),
+                (SELECT group_concat(language.name) subs
+                    FROM 
+                        Language language,
+                        Card_Sub card_sub
+                    WHERE 
+                        card_sub.id_sub=language.id AND
+                        card_sub.id_card = :card_id
+                ),
+                
+                (SELECT group_concat(country.name) origins
+                    FROM 
+                        Country country,
+                        Card_Origin card_origin
+                    WHERE 
+                        card_origin.id_card = :card_id AND
+                        country.id = card_origin.id_origin
+                ),                        
+                (SELECT group_concat(genre.name) genres
+                    FROM 
+                        Genre genre,
+                        Card_Genre card_genre
+                    WHERE 
+                        card_genre.id_card = :card_id AND
+                        genre.id = card_genre.id_genre
+                ),
+                   
+                (SELECT group_concat(person.name) directors
+                    FROM 
+                        Person person,
+                        Card_Director cd
+                    WHERE 
+                        cd.id_director = person.id AND
+                        cd.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) writers
+                    FROM 
+                        Person person,
+                        Card_Writer cv                            
+                    WHERE 
+                        cv.id_writer = person.id AND
+                        cv.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) voices
+                    FROM 
+                        Person person,
+                        Card_Voice cv
+                    WHERE 
+                        cv.id_voice = person.id AND
+                        cv.id_card = :card_id
+                ),
+                Card card,
+                Category category
+            WHERE
+                card.id = :card_id  AND
+                card.id_category = category.id
+
+            LIMIT :limit;
+            '''
+            records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                category = records[0]["category"]
+                trans = Translator.getInstance(lang)
+        
+                # Writers
+                writers_string = records[0]["writers"]
+                writers_list = []
+                if writers_string:
+                    writers_list = writers_string.split(',')
+                records[0]["writers"] = writers_list
+
+                # # Directors
+                # directors_string = records[0]["directors"]
+                # directors_list = []
+                # if directors_string:
+                #     directors_list = directors_string.split(',')
+                # records[0]["directors"] = directors_list
+
+                # # Stars
+                # stars_string = records[0]["stars"]
+                # stars_list = []
+                # if stars_string:
+                #     stars_list = stars_string.split(',')
+                # records[0]["stars"] = stars_list
+
+                # # Actors
+                # actors_string = records[0]["actors"]
+                # actors_list = []
+                # if actors_string:
+                #     actors_list = actors_string.split(',')
+                # records[0]["actors"] = actors_list
+
+                # Voices
+                # voices_string = records[0]["voices"]
+                # voices_list = []
+                # if voices_string:
+                #     voices_list = voices_string.split(',')
+                # records[0]["voices"] = voices_list
+
+                # Genre
+                genres_string = records[0]["genres"]
+                genres_list = []
+                if genres_string:
+                    genres_list = genres_string.split(',')
+                    genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+                records[0]["genres"] = genres_list
+
+                # # Theme
+                # themes_string = records[0]["themes"]
+                # themes_list = []
+                # if themes_string:
+                #     themes_list = themes_string.split(',')
+                #     themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+                # records[0]["themes"] = themes_list
+
+                # Origin
+                origins_string = records[0]["origins"]
+                origins_list = []
+                if origins_string:
+                    origins_list = origins_string.split(',')
+                    origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+                records[0]["origins"] = origins_list
+
+                # Sub
+                subs_string = records[0]["subs"]
+                subs_list = []
+                if subs_string:
+                    subs_list = subs_string.split(',')
+                    subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+                records[0]["subs"] = subs_list
+
+                # Sounds
+                sounds_string = records[0]["sounds"]
+                sounds_list = []
+                if sounds_string:
+                    sounds_list = sounds_string.split(',')
+                    sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+                records[0]["sounds"] = sounds_list
+
+                # Media
+                medium_string = records[0]["medium"]
+                media_dict = {}
+                if medium_string:
+                    medium_string_list = medium_string.split(',')
+                    for medium_string in medium_string_list:
+                        (media_type, media) = medium_string.split("=")
+                        if not media_type in media_dict:
+                            media_dict[media_type] = []
+                        media_dict[media_type].append(media)
+                records[0]["medium"] = media_dict
+
+            return records
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

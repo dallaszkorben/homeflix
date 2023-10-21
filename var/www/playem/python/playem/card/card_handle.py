@@ -99,7 +99,10 @@ class CardHandle:
                 storylines = data['storylines']
             except:
                 storylines = {}
-
+            try:
+                lyrics = data['lyrics']
+            except:
+                lyrics = {}
             try:
                 performer = data['performer']
             except:
@@ -242,6 +245,7 @@ class CardHandle:
                 card_id=db.append_hierarchy(
                     title_orig=title_orig,
                     titles=titles,
+                    date=date,
                     decade=decade,
                     category=category,
                     level=level,
@@ -293,6 +297,7 @@ class CardHandle:
                         title_orig=title_orig, 
                         titles=titles, 
                         storylines=storylines,
+                        lyrics=lyrics,
                         decade=decade,
                         date=date, 
                         length=length,

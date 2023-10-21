@@ -411,11 +411,97 @@ class MusicVideoContainerGenerator extends  AjaxContainerGenerator{
         thumbnail.setFunctionForSelection({"menu": 
             (function(hierarchy_id) {
                 return function() {
-                    return new MovieSeriesCardHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                    return new MusicVideoHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
                 };
             })(hit["id"])
         });
 
+        return thumbnail;
+    }    
+}
+
+class MusicVideoHierarchyContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title, hierarchy_id){
+        super(language_code);
+        this.container_title = container_title;
+        this.hierarchy_id = hierarchy_id;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let requestList = [
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://192.168.0.21//collect/child_hierarchy_or_card/id/" + this.hierarchy_id+ "/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+   
+    generateThumbnail(hit){
+        let refToThis = this;
+        let thumbnail = new Thumbnail();
+        let max_length = 20;
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        let short_title = "";
+        if ( hit["title_req"] != null ){
+            short_title = hit["title_req"];
+        }else if ( hit["title_orig"] != null ){
+            short_title = hit["title_orig"];
+        }
+
+        short_title = this.getTruncatedTitle(short_title, max_length);
+
+        if(hit["level"]){
+//        let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+            let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+            let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
+            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+            thumbnail.setExtras(length="", date=hit["date"]);
+
+            thumbnail.setFunctionForSelection({"menu": 
+                (function(hierarchy_id) {
+                    return function() {
+                        return new MusicVideoHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                    };
+                })(hit["id"])
+            });
+
+        }else{
+
+            let card_id = hit["id"];
+            let card_request_url = "http://192.168.0.21/collect/standalone/music_video/card_id/" + card_id + "/lang/" + this.language_code
+            let card = this.sendRestRequest("GET", card_request_url)[0];
+    
+            let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+            let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
+    
+            let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            thumbnail.setImageSources(thumbnail_src=card["source_path"] + "/thumbnails/" + thumbnail_file, description_src=card["source_path"] + "/screenshots/" + screenshot_file);
+            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+            thumbnail.setLyrics(card["lyrics"]);
+            // thumbnail.setStoryline(card["storyline"]);
+            // thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+            thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+    
+            thumbnail.setFunctionForSelection({"play": 
+                (function(medium_path) {
+                    return function() {
+                        return medium_path
+                    };
+                })(medium_path)
+            });
+        }
         return thumbnail;
     }    
 }
@@ -483,9 +569,6 @@ class MusicAudioContainerGenerator extends  AjaxContainerGenerator{
 }
 
 
-//----
-
-
 class MusicAudioHierarchyContainerGenerator extends  AjaxContainerGenerator{
     constructor(language_code, container_title, hierarchy_id){
         super(language_code);
@@ -526,12 +609,15 @@ class MusicAudioHierarchyContainerGenerator extends  AjaxContainerGenerator{
             let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-            let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            let thumbnail_src, description_src,lang,original,translated,thumb,date; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
             thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
             thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
 //        thumbnail.setStoryline(card["storyline"]);
 //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
-//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+//        thumbnail.setExtras(length=hit["length"], date=hit["date"], origins=hit["origins"], genres=hit["genres"], themes=hit["themes"]);
+
+//            thumbnail.setExtras(date=hit["date"], origins=hit["origins"], genres=hit["genres"]);
+            thumbnail.setExtras(length="", date=hit["date"]);
 
             thumbnail.setFunctionForSelection({"menu": 
                 (function(hierarchy_id) {
@@ -544,7 +630,8 @@ class MusicAudioHierarchyContainerGenerator extends  AjaxContainerGenerator{
         }else{
 
             let card_id = hit["id"];
-            let card_request_url = "http://192.168.0.21/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
+            let card_request_url = "http://192.168.0.21/collect/standalone/music_audio/card_id/" + card_id + "/lang/" + this.language_code
+            
             let card = this.sendRestRequest("GET", card_request_url)[0];
     
             let medium_path = pathJoin([card["source_path"], card["medium"]["audio"][0]])
@@ -554,9 +641,9 @@ class MusicAudioHierarchyContainerGenerator extends  AjaxContainerGenerator{
             let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,actors,voices,length,date,origins,genres,themes
             thumbnail.setImageSources(thumbnail_src=card["source_path"] + "/thumbnails/" + thumbnail_file, description_src=card["source_path"] + "/screenshots/" + screenshot_file);
             thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
-            thumbnail.setStoryline(card["storyline"]);
-            thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
-            thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+            thumbnail.setLyrics(card["lyrics"]);
+//            thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+            thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"]);
     
             thumbnail.setFunctionForSelection({"play": 
                 (function(medium_path) {
