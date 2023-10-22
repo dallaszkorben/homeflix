@@ -308,5 +308,6 @@ body {
 
 .thumbnail-text{                                                /* needed to centralize horizontally the text*/
     position: relative;
-    text-align: center;                                         /* the .thumbail-text-wrapper has position:absolute, so it is not possible to align to center */
+    text-align: center;                                         /* the .thumbail-text-wrapper has position:absolute, so it is not possible to align to center*/
+    overflow-wrap: anywhere;                                    /* It is needed to break a word if it does not fit to the tubnnail */
 }

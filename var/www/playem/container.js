@@ -583,7 +583,7 @@ class Thumbnail{
         }
     }
 
-    setCredentials(directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined){
+    setCredentials(directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined, hosts=undefined, guests=undefined, interviewers=undefined, interviewees=undefined){
         this.thumbnailDict["credentials"] = {}
         if(directors != undefined && Array.isArray(directors)){
             this.thumbnailDict["credentials"]["directors"] = directors;
@@ -596,6 +596,21 @@ class Thumbnail{
         }
         if(actors != undefined && Array.isArray(actors)){
             this.thumbnailDict["credentials"]["actors"] = actors;
+        }
+        if(voices != undefined && Array.isArray(voices)){
+            this.thumbnailDict["credentials"]["voices"] = voices;
+        }
+        if(hosts != undefined && Array.isArray(hosts)){
+            this.thumbnailDict["credentials"]["hosts"] = hosts;
+        }
+        if(guests != undefined && Array.isArray(guests)){
+            this.thumbnailDict["credentials"]["guests"] = guests;
+        }
+        if(interviewers != undefined && Array.isArray(interviewers)){
+            this.thumbnailDict["credentials"]["interviewers"] = interviewers;
+        }
+        if(interviewees != undefined && Array.isArray(interviewees)){
+            this.thumbnailDict["credentials"]["interviewees"] = interviewees;
         }
     }
 
@@ -741,20 +756,22 @@ class ObjDescriptionContainer{
             descTextTitle.empty();                
             descTextTitle.html(title);
 
-            // -----------------
-            // --- storyline ---        
-            // -----------------
             let descTextStoryline = $("#description-text-storyline");
             descTextStoryline.empty();                
-            descTextStoryline.html(storyline);
 
-            // --------------
-            // --- lyrics ---        
-            // --------------
-            let descTextLyrics = $("#description-text-storyline");
-            descTextLyrics.empty();                
-            descTextLyrics.html(lyrics);
+            if(storyline){
             
+                // -----------------
+                // --- storyline ---        
+                // -----------------
+                descTextStoryline.html(storyline);
+            }else if (lyrics){
+                // --------------
+                // --- lyrics ---        
+                // --------------
+                descTextLyrics.html(lyrics);
+            }
+
             // -----------------
 
             // -------------
@@ -849,9 +866,14 @@ class ObjDescriptionContainer{
 
             mainObject.printCredentals(credTable, credentials, "directors", translated_titles['director'] + ":");
             mainObject.printCredentals(credTable, credentials, "writers", translated_titles['writer'] + ":");
-            mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":")
-            mainObject.printCredentals(credTable, credentials, "actors", translated_titles['actor'] + ":")
-            mainObject.printCredentals(credTable, credentials, "voices", translated_titles['voice'] + ":")
+            mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":");
+            mainObject.printCredentals(credTable, credentials, "actors", translated_titles['actor'] + ":");
+            mainObject.printCredentals(credTable, credentials, "voices", translated_titles['voice'] + ":");
+            mainObject.printCredentals(credTable, credentials, "hosts", translated_titles['host'] + ":");
+            mainObject.printCredentals(credTable, credentials, "guests", translated_titles['guest'] + ":");
+            mainObject.printCredentals(credTable, credentials, "interviewers", translated_titles['interviewer'] + ":");
+            mainObject.printCredentals(credTable, credentials, "interviewees", translated_titles['interviewee'] + ":");
+
             // -------------------
     
             // Resizes the description section according to the size of the description image

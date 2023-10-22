@@ -97,6 +97,7 @@
 
             let translated_titles;
             let translated_genre_movie;
+            let translated_categories;
 
             function generateRandom(min = 0, max = 100) {
 
@@ -117,7 +118,7 @@
 
             $(document).ready(function() {                
 
-                let languageCode = "en";
+                let languageCode = "hu";
 
                 // Load Translated Titles
                 let rq_method = "GET";
@@ -132,6 +133,13 @@
                 rq_assync = false;
                 result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_genre_movie = result.responseJSON;
+
+                // Load Translated Categories
+                rq_method = "GET";
+                rq_url = "http://192.168.0.21:80/translate/categories/lang/" + languageCode;
+                rq_assync = false;
+                result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
+                translated_categories = result.responseJSON;                
 
                 let mainMenuContainerGenerator = new MainMenuContainerGenerator(languageCode);
                 let oScrollSection = new ObjScrollSection(mainMenuContainerGenerator);

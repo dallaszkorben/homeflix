@@ -55,12 +55,26 @@ class Translator( Property ):
             tr = title
         return tr
 
+    def translate_category(self, category):
+        try:
+            tr = self.actual_dictionary['category'][category]
+        except:
+            tr = category
+        return tr
+
     def translate_titles(self):
         output = {}
         title_list = self.actual_dictionary['title']
         for title in title_list:
             output[title] = self.translate_title(title)
         return output
+
+    def translate_categories(self):
+        output = {}
+        category_list = self.actual_dictionary['category']
+        for category in category_list:
+            output[title] = self.translate_category(category)
+        return output        
 
     def translate_genre(self, category, genre):
         try:

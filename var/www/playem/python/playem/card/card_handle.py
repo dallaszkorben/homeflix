@@ -136,14 +136,26 @@ class CardHandle:
             except:
                 voices = []                
             try:
-                host = data['host']
+                hosts = data['hosts']
             except:
-                host = []
+                hosts = []
+            try:
+                guests = data['guests']
+            except:
+                guests = []
+            try:
+                interviewers = data['interviewers']
+            except:
+                interviewers = []
+            try:
+                interviewees = data['interviewees']
+            except:
+                interviewees = []
+
             try:
                 length = data['length']
             except:
                 length = None
-
             try:
                 sounds = data['sounds']
             except:
@@ -311,6 +323,10 @@ class CardHandle:
                         actors=actors,
                         stars=stars,
                         voices=voices,
+                        hosts=hosts,
+                        guests=guests,
+                        interviewers=interviewers,
+                        interviewees=interviewees,
 
                         media=media_dict,
 

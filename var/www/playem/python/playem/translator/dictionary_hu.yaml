@@ -208,7 +208,7 @@ genre:
         standup: Standup
         skit: Skit
         analysis: Analysis
-
+        talk: Beszélgetés
 
     personal:
         photos: Photos
@@ -294,6 +294,7 @@ theme:
         disaster: Katasztrófa
         a_bomb: Atombomba
         movie: Mozi
+        film: Film
         politics: Politika
         culture: Kultura
         totalitarianism: Totalitarizmus
@@ -338,6 +339,8 @@ theme:
         cathastroph: Katasztrófa
         collapse: Összeomlás
         boat: Hajó
+        apocalipse: Apokalipszis
+        zombi: Zombi
 
 title:
         title: Cím
@@ -357,6 +360,8 @@ title:
         movie_series: Sorozatok
         music_video: Zene-Video
         music_audio: Zene
+        entertainment: Szórakoztatás
+        entertainments: Szórakoztatás
 
         writer: Író
         author: Szerző
@@ -364,13 +369,16 @@ title:
         actor: Szinész
         star: Sztár
         voice: Hang
-        maker: Készítő
 
+        host: Házigazda
+        guest: Vendég
+        interviewee: Válaszoló
+        interviewer: Kérdező
+
+        maker: Készítő
         performer: Performer
         lecturer: Lecturer
         contributor: Contributor
-        interviewee: Interviewee
-        interviewer: Interviewer
         anchor: Anchor
         voice: Voice
         presenter: Presenter

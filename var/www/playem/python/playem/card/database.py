@@ -32,6 +32,10 @@ class SqlDatabase:
     TABLE_CARD_WRITER = "Card_Writer"
     TABLE_CARD_DIRECTOR = "Card_Director"
     TABLE_CARD_VOICE = "Card_Voice"
+    TABLE_CARD_HOST = "Card_Host"
+    TABLE_CARD_GUEST = "Card_Guest"
+    TABLE_CARD_INTERVIEWER = "Card_Interviewer"
+    TABLE_CARD_INTERVIEWEE = "Card_Interviewee"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
 
     def __init__(self):
@@ -49,6 +53,11 @@ class SqlDatabase:
                 SqlDatabase.TABLE_CARD_DIRECTOR,
                 SqlDatabase.TABLE_CARD_ACTOR,
                 SqlDatabase.TABLE_CARD_STAR,
+                SqlDatabase.TABLE_CARD_HOST,
+                SqlDatabase.TABLE_CARD_GUEST,
+                SqlDatabase.TABLE_CARD_INTERVIEWER,
+                SqlDatabase.TABLE_CARD_INTERVIEWEE,
+
                 SqlDatabase.TABLE_CARD_ORIGIN,
                 SqlDatabase.TABLE_CARD_GENRE,
                 SqlDatabase.TABLE_CARD_THEME,
@@ -321,6 +330,45 @@ class SqlDatabase:
             );
         ''')
 
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_HOST + '''(
+                id_card   INTEGER        NOT NULL,
+                id_host INTEGER          NOT NULL,
+                FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_host)    REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_host) 
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_GUEST + '''(
+                id_card   INTEGER        NOT NULL,
+                id_guest INTEGER         NOT NULL,
+                FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_guest)   REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_guest) 
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_INTERVIEWER + '''(
+                id_card   INTEGER            NOT NULL,
+                id_interviewer INTEGER       NOT NULL,
+                FOREIGN KEY (id_card)        REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_interviewer) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_interviewer) 
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_INTERVIEWEE + '''(
+                id_card   INTEGER            NOT NULL,
+                id_interviewee INTEGER       NOT NULL,
+                FOREIGN KEY (id_card)        REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_interviewee) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_interviewee) 
+            );
+        ''')
 
 
         self.conn.execute('''
@@ -521,7 +569,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[],  media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -673,6 +721,102 @@ class SqlDatabase:
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
+            #
+            # INSERT into TABLE_CARD_HOST
+            #
+            for host in hosts:
+
+                if host:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': host}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': host})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_HOST + ''' 
+                            (id_host, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+
+            #
+            # INSERT into TABLE_CARD_GUEST
+            #
+            for guest in guests:
+
+                if guest:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': guest}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': guest})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_GUEST + ''' 
+                            (id_guest, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_INTERVIEWER
+            #
+            for interviewer in interviewers:
+
+                if interviewer:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': interviewer}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': interviewer})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWER + ''' 
+                            (id_interviewer, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_INTERVIEWEE
+            #
+            for interviewee in interviewees:
+
+                if interviewee:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': interviewee}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': interviewee})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWEE + ''' 
+                            (id_interviewee, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
             #
             # INSERT into TABLE_CARD_SOUND
@@ -1315,7 +1459,6 @@ class SqlDatabase:
     #
 
     # TODO: DB name should be replaced by variables
-    # TODO: make same method for music
 
     def get_standalone_movie_by_card_id(self, card_id, lang, limit=100, json=True):
         with self.lock:
@@ -1344,7 +1487,11 @@ class SqlDatabase:
                 writers,
                 voices,
                 stars,
-                actors
+                actors,
+                hosts,
+                guests,
+                interviewers,
+                interviewees
             FROM
                 (SELECT group_concat( mt.name || "=" || m.name) medium
 
@@ -1448,6 +1595,38 @@ class SqlDatabase:
                         ca.id_actor = person.id AND
                         ca.id_card = :card_id
                 ),
+                (SELECT group_concat(person.name) hosts
+                    FROM 
+                        Person person,
+                        Card_Host ch
+                    WHERE 
+                        ch.id_host = person.id AND
+                        ch.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) guests
+                    FROM 
+                        Person person,
+                        Card_Guest cg
+                    WHERE 
+                        cg.id_guest = person.id AND
+                        cg.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) interviewers
+                    FROM 
+                        Person person,
+                        Card_Interviewer ci
+                    WHERE 
+                        ci.id_interviewer = person.id AND
+                        ci.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) interviewees
+                    FROM 
+                        Person person,
+                        Card_Interviewee ci
+                    WHERE 
+                        ci.id_interviewee = person.id AND
+                        ci.id_card = :card_id
+                ),
                 Card card,
                 Category category
             WHERE
@@ -1503,6 +1682,34 @@ class SqlDatabase:
                 if voices_string:
                     voices_list = voices_string.split(',')
                 records[0]["voices"] = voices_list
+
+                # Host
+                hosts_string = records[0]["hosts"]
+                hosts_list = []
+                if hosts_string:
+                    hosts_list = hosts_string.split(',')
+                records[0]["hosts"] = hosts_list
+
+                # Guests
+                guests_string = records[0]["guests"]
+                guests_list = []
+                if guests_string:
+                    guests_list = guests_string.split(',')
+                records[0]["guests"] = guests_list
+
+                # Interviewers
+                interviewers_string = records[0]["interviewers"]
+                interviewers_list = []
+                if interviewers_string:
+                    interviewers_list = interviewers_string.split(',')
+                records[0]["interviewers"] = interviewers_list
+
+                # Interviewees
+                interviewees_string = records[0]["interviewees"]
+                interviewees_list = []
+                if interviewees_string:
+                    interviewees_list = interviewees_string.split(',')
+                records[0]["interviewees"] = interviewees_list
 
                 # Genre
                 genres_string = records[0]["genres"]
@@ -2180,53 +2387,7 @@ class SqlDatabase:
                 records = [{key: record[key] for key in record.keys()} for record in records]
 
             return records
-
-    # def getCard(self, lang, card_id, limit=100, json=True):
-    #     """
-    #     It returns all Card data by the given card id
-    #     The data which needed translation, will be translated on the "lang" language
-
-    #     Return fields:
-    #         card_id:     card ID
- 
-    #     Example:
-    #         records=db.get_mediaum_path_list(card_id=33, limit=100)
-    #     Output:
-    #     """
-    #     with self.lock:
-
-    #         cur = self.conn.cursor()
-    #         cur.execute("begin")
-
-    #         records = {}
-
-    #         query = '''
-    #         SELECT 
-    #             card.id id, 
-    #         FROM 
-    #             ''' + SqlDatabase.TABLE_CARD + ''' card, 
-    #             ''' + SqlDatabase.TABLE_COUNTRY + ''' country, 
-    #             ''' + SqlDatabase.TABLE_CATEGORY + ''' cat,
-    #             ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
-    #         WHERE
-    #             card.id = card_id AND
-    #             tcl.id_card=card.id AND
-    #             tcl.id_language=lang.id AND
-    #             tcl.type="T" AND
-    #             card.id_title_orig=lang.id AND
-    #             cat.name = :category AND
-    #             lang.name <> :lang
-    #         LIMIT :limit;
-    #         '''
-    #         records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
-    #         cur.execute("commit")
-
-    #         if json:
-    #             records = [{key: record[key] for key in record.keys()} for record in records]
-
-    #         return records
-
-    
+  
 
 
 

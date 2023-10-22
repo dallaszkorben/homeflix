@@ -208,7 +208,7 @@ genre:
         standup: Standup
         skit: Skit
         analysis: Analysis
-
+        talk: Talk
 
     personal:
         photos: Photos
@@ -294,6 +294,7 @@ theme:
         disaster: Disaster
         a_bomb: A-bomb
         movie: Movie
+        film: Film
         politics: Politics
         culture: Culture
         totalitarianism: Totalitarianism
@@ -359,20 +360,25 @@ title:
         movie_series: Movie Series
         music_video: Music Video
         music_audio: Music Audio
+        entertainment: Entertainment
+        entertainments: Entertainments
 
         writer: Writer(s)
         author: Author(s)
         director: Director(s)
         actor: Actor(s)
         star: Star(s)
-        voice: Voice(s)
-        maker: Maker
+        voices: Voice(s)
 
+        host: Host
+        guest: Guest
+        interviewee: Interviewee
+        interviewer: Interviewer
+
+        maker: Maker
         performer: Performer
         lecturer: Lecturer
         contributor: Contributor
-        interviewee: Interviewee
-        interviewer: Interviewer
         anchor: Anchor
         voice: Voice
         presenter: Presenter

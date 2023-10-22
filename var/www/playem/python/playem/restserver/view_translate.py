@@ -11,6 +11,9 @@ from playem.restserver.representations import output_json
 from playem.restserver.endpoints.ep_translate_genre import EPTranslateGenre
 from playem.restserver.endpoints.ep_translate_genres import EPTranslateGenres
 from playem.restserver.endpoints.ep_translate_titles import EPTranslateTitles
+from playem.restserver.endpoints.ep_translate_categories import EPTranslateCategories
+
+
 
 # -----------------------------------
 #
@@ -28,6 +31,8 @@ class TranslateView(FlaskView):
         self.epTranslateGenre = EPTranslateGenre(web_gadget)
         self.epTranslateGenres = EPTranslateGenres(web_gadget)
         self.epTranslateTitles = EPTranslateTitles(web_gadget)
+        self.epTranslateCategories = EPTranslateCategories(web_gadget)
+
 
     #
     # GET http://localhost:5000/translate/
@@ -101,6 +106,19 @@ class TranslateView(FlaskView):
     @route(EPTranslateTitles.PATH_PAR_URL, methods=[EPTranslateTitles.METHOD])
     def translateTitlesWithParameter(self, lang):        
         out = self.epTranslateTitles.executeByParameters(lang=lang)
+        return out
+
+    #
+    # Gives back translation of all categories with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/categories/lang/en
+    #
+    # GET http://localhost:80/translate/categories/lang/en
+    #
+    #@route('/categories/lang/<lang>')
+    @route(EPTranslateCategories.PATH_PAR_URL, methods=[EPTranslateCategories.METHOD])
+    def translateCategoriesWithParameter(self, lang):        
+        out = self.epTranslateCategories.executeByParameters(lang=lang)
         return out
 
 # ===
