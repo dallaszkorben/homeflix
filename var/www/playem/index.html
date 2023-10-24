@@ -15,6 +15,9 @@
 
         <script>
 
+            //let host = "192.168.0.21"
+            let host = "localhost"
+
             /*
             Substitute substrings, similar to "Hello {0}".format("world") mechanizm
             Usage: "hello {123}".format("123", world")
@@ -122,21 +125,21 @@
 
                 // Load Translated Titles
                 let rq_method = "GET";
-                let rq_url = "http://192.168.0.21:80/translate/titles/lang/" + languageCode;
+                let rq_url = "http://" + host + ":80/translate/titles/lang/" + languageCode;
                 let rq_assync = false;
                 let result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_titles = result.responseJSON;
 
                 // Load Translated Genre: Movie
                 rq_method = "GET";
-                rq_url = "http://192.168.0.21:80/translate/genres/category/movie/lang/" + languageCode;
+                rq_url = "http://" + host + ":80/translate/genres/category/movie/lang/" + languageCode;
                 rq_assync = false;
                 result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_genre_movie = result.responseJSON;
 
                 // Load Translated Categories
                 rq_method = "GET";
-                rq_url = "http://192.168.0.21:80/translate/categories/lang/" + languageCode;
+                rq_url = "http://" + host + ":80/translate/categories/lang/" + languageCode;
                 rq_assync = false;
                 result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_categories = result.responseJSON;                

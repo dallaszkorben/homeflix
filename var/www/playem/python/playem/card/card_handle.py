@@ -151,6 +151,14 @@ class CardHandle:
                 interviewees = data['interviewees']
             except:
                 interviewees = []
+            try:
+                presenters = data['presenters']
+            except:
+                presenters = []
+            try:
+                lecturers = data['lecturers']
+            except:
+                lecturers = []
 
             try:
                 length = data['length']
@@ -327,6 +335,8 @@ class CardHandle:
                         guests=guests,
                         interviewers=interviewers,
                         interviewees=interviewees,
+                        presenters=presenters,
+                        lecturers=lecturers,
 
                         media=media_dict,
 

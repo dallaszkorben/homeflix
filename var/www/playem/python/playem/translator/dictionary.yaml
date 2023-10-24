@@ -362,6 +362,7 @@ title:
         music_audio: Music Audio
         entertainment: Entertainment
         entertainments: Entertainments
+        knowledge: Knowledge
 
         writer: Writer(s)
         author: Author(s)
@@ -377,11 +378,11 @@ title:
 
         maker: Maker
         performer: Performer
-        lecturer: Lecturer
         contributor: Contributor
         anchor: Anchor
         voice: Voice
         presenter: Presenter
+        lecturer: Lecturer
 
         date: Date
         year: Year

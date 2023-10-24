@@ -36,6 +36,8 @@ class SqlDatabase:
     TABLE_CARD_GUEST = "Card_Guest"
     TABLE_CARD_INTERVIEWER = "Card_Interviewer"
     TABLE_CARD_INTERVIEWEE = "Card_Interviewee"
+    TABLE_CARD_PRESENTER = "Card_Presenter"
+    TABLE_CARD_LECTURER = "Card_Lecturer"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
 
     def __init__(self):
@@ -57,6 +59,8 @@ class SqlDatabase:
                 SqlDatabase.TABLE_CARD_GUEST,
                 SqlDatabase.TABLE_CARD_INTERVIEWER,
                 SqlDatabase.TABLE_CARD_INTERVIEWEE,
+                SqlDatabase.TABLE_CARD_PRESENTER,
+                SqlDatabase.TABLE_CARD_LECTURER,
 
                 SqlDatabase.TABLE_CARD_ORIGIN,
                 SqlDatabase.TABLE_CARD_GENRE,
@@ -282,7 +286,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_ACTOR + '''(
-                id_card  INTEGER       NOT NULL,
+                id_card INTEGER        NOT NULL,
                 id_actor INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_actor) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -292,7 +296,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_STAR + '''(
-                id_card  INTEGER       NOT NULL,
+                id_card INTEGER        NOT NULL,
                 id_star INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_star) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -302,7 +306,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_VOICE + '''(
-                id_card  INTEGER       NOT NULL,
+                id_card INTEGER        NOT NULL,
                 id_voice INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_voice) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -312,7 +316,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_DIRECTOR + '''(
-                id_card  INTEGER          NOT NULL,
+                id_card INTEGER           NOT NULL,
                 id_director INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)     REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_director) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -322,7 +326,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_WRITER + '''(
-                id_card   INTEGER        NOT NULL,
+                id_card INTEGER          NOT NULL,
                 id_writer INTEGER        NOT NULL,
                 FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_writer)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -332,7 +336,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_HOST + '''(
-                id_card   INTEGER        NOT NULL,
+                id_card INTEGER          NOT NULL,
                 id_host INTEGER          NOT NULL,
                 FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_host)    REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -342,7 +346,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_GUEST + '''(
-                id_card   INTEGER        NOT NULL,
+                id_card INTEGER          NOT NULL,
                 id_guest INTEGER         NOT NULL,
                 FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_guest)   REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -352,7 +356,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_INTERVIEWER + '''(
-                id_card   INTEGER            NOT NULL,
+                id_card INTEGER              NOT NULL,
                 id_interviewer INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)        REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_interviewer) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -362,7 +366,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_INTERVIEWEE + '''(
-                id_card   INTEGER            NOT NULL,
+                id_card INTEGER              NOT NULL,
                 id_interviewee INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)        REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_interviewee) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
@@ -370,6 +374,25 @@ class SqlDatabase:
             );
         ''')
 
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_PRESENTER + '''(
+                id_card INTEGER            NOT NULL,
+                id_presenter INTEGER       NOT NULL,
+                FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_presenter) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_presenter) 
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_LECTURER + '''(
+                id_card INTEGER            NOT NULL,
+                id_lecturer INTEGER       NOT NULL,
+                FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_lecturer) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_lecturer) 
+            );
+        ''')
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''(
@@ -569,7 +592,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -815,6 +838,54 @@ class SqlDatabase:
 
                     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWEE + ''' 
                             (id_interviewee, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_PRESENTER
+            #
+            for presenter in presenters:
+
+                if presenter:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': presenter}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': presenter})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PRESENTER + ''' 
+                            (id_presenter, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_LECTURER
+            #
+            for lecturer in lecturers:
+
+                if lecturer:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': lecturer}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': lecturer})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_LECTURER + ''' 
+                            (id_lecturer, id_card) 
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1183,7 +1254,7 @@ class SqlDatabase:
                 LIMIT :limit;
             '''
 
-            logging.debug("TEST query: '{0}'".format(query))
+            logging.debug("get_general_level query: '{0}'".format(query))
 
             records=cur.execute(query, {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit':limit}).fetchall()
             cur.execute("commit")
@@ -1279,7 +1350,7 @@ class SqlDatabase:
             END
             '''
 
-            logging.debug("TEST query: '{0}'".format(query))
+            logging.debug("child_hierarchy_or_card query: '{0}'".format(query))
 
             records=cur.execute(query, {'higher_card_id': higher_card_id, 'lang':lang}).fetchall()
             cur.execute("commit")
@@ -1426,7 +1497,7 @@ class SqlDatabase:
             LIMIT :limit;
             '''
             
-            logging.debug("TEST query: '{0}'".format(query))
+            logging.debug("get_general_standalone query: '{0}'".format(query))
 
             records=cur.execute(query, {'category': category, 'decade': decade, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit': limit}).fetchall()
             cur.execute("commit")
@@ -1491,7 +1562,9 @@ class SqlDatabase:
                 hosts,
                 guests,
                 interviewers,
-                interviewees
+                interviewees,
+                presenters,
+                lecturers
             FROM
                 (SELECT group_concat( mt.name || "=" || m.name) medium
 
@@ -1627,6 +1700,22 @@ class SqlDatabase:
                         ci.id_interviewee = person.id AND
                         ci.id_card = :card_id
                 ),
+                (SELECT group_concat(person.name) presenters
+                    FROM 
+                        Person person,
+                        Card_Presenter ci
+                    WHERE 
+                        ci.id_presenter = person.id AND
+                        ci.id_card = :card_id
+                ),
+                (SELECT group_concat(person.name) lecturers
+                    FROM 
+                        Person person,
+                        Card_Lecturer ci
+                    WHERE 
+                        ci.id_lecturer = person.id AND
+                        ci.id_card = :card_id
+                ),                
                 Card card,
                 Category category
             WHERE
@@ -1635,6 +1724,9 @@ class SqlDatabase:
 
             LIMIT :limit;
             '''
+            
+            logging.debug("detailed query: '{0}'".format(query))
+
             records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
             cur.execute("commit")
 
@@ -1710,6 +1802,20 @@ class SqlDatabase:
                 if interviewees_string:
                     interviewees_list = interviewees_string.split(',')
                 records[0]["interviewees"] = interviewees_list
+
+                # Presenters
+                presenters_string = records[0]["presenters"]
+                presenters_list = []
+                if presenters_string:
+                    presenters_list = presenters_string.split(',')
+                records[0]["presenters"] = presenters_list
+
+                # Lecturers
+                lecturers_string = records[0]["lecturers"]
+                lecturers_list = []
+                if lecturers_string:
+                    lecturers_list = lecturers_string.split(',')
+                records[0]["lecturers"] = lecturers_list
 
                 # Genre
                 genres_string = records[0]["genres"]

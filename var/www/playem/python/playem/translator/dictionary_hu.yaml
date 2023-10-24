@@ -362,6 +362,7 @@ title:
         music_audio: Zene
         entertainment: Szórakoztatás
         entertainments: Szórakoztatás
+        knowledge: Ismeretek
 
         writer: Író
         author: Szerző
@@ -376,15 +377,15 @@ title:
         interviewer: Kérdező
 
         maker: Készítő
-        performer: Performer
-        lecturer: Lecturer
-        contributor: Contributor
+        performer: Előadó
+        contributor: Munkatárs
         anchor: Anchor
-        voice: Voice
-        presenter: Presenter
+        voice: Hang
+        presenter: Előadó
+        lecturer: Előadó
 
-        date: Date
-        year: Year
+        date: Dátum
+        year: Év
         rate: Rate
         country: Country
 
