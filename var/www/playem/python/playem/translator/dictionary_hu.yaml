@@ -159,16 +159,18 @@ genre:
         satire: Szatíra
         biography: Életrajz
         animation: Animáció
-        documentary: Dokumentum film
+        documentary: Dokumentumfilm
         mockumentary: Mockumentary
         portrait: Portré
         science_nature_documentary: Természettudományos dokumentum film
+        puppet: Bábfilm
 
     dia:
         <<: *common
 
     radio_play:
         <<: *common
+        radio_play: Radiójáték
 
     book:
         <<: *common
@@ -348,7 +350,6 @@ title:
         media: Media
         films: Fiction movies
         _documentaries: Documetary
-        series: Sorozatok
         podcast: Podcast
         category: Categoria
         categories: Kategoriák
@@ -358,8 +359,16 @@ title:
 
         movies: Mozi
         movie_series: Sorozatok
+        series: Sorozatok
+        movie_sequels: Folytatásos filmek
+        movie_individual: Filmek
+        movie_documentaries: Dokumentumfilmek
+        movie_hungarian: Magyar
+        music: Zene
         music_video: Zene-Video
-        music_audio: Zene
+        music_audio: Zene-Audio
+        music_hungarian: Magyar
+        radioplay: Rádiójáték
         entertainment: Szórakoztatás
         entertainments: Szórakoztatás
         knowledge: Ismeretek
@@ -424,8 +433,8 @@ title:
         select_media_player_pdf: Select PDF Viewer
         media_player_pdf_param: PDF Parameters
 
-        part: Part {0}.
-        season: Season {0}
+        part: '{0}. rész'
+        season: '{0}. sorozat'
 
 
 

@@ -8,7 +8,7 @@
         <script src="script/jquery/jquery-3.6.0.min.js"></script>
         <script src="script/js-jaml/js-yaml.js"></script>
         <script src="container.js"></script>
-        <script src="generator.js"></script>
+        <script src="generators.js"></script>
 
         <link rel="stylesheet" href="stylesheet.css">
         <link rel="icon" href="favicon.ico">
@@ -145,8 +145,8 @@
                 result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_categories = result.responseJSON;                
 
-                let mainMenuContainerGenerator = new MainMenuContainerGenerator(languageCode);
-                let oScrollSection = new ObjScrollSection(mainMenuContainerGenerator);
+                let mainMenuGenerator = new MainMenuGenerator(languageCode);
+                let oScrollSection = new ObjScrollSection(mainMenuGenerator);
                 let oThumbnailController = new ThumbnailController(oScrollSection);
                 oScrollSection.focusDefault();
 
@@ -195,6 +195,65 @@
                     if(act[e.keyCode])
                         var a=new act[e.keyCode];
                 });
+
+                let touchXPos;
+                let touchYPos;
+
+                // store the touching position at the start of each touch
+                $(document).on('touchstart', function(e){
+                    touchXPos = e.changedTouches[0].clientX;
+                    touchYPos = e.changedTouches[0].clientY;
+                });
+
+                $(document).on('touchmove', function(e){
+                    let newTouchYPos = e.changedTouches[0].clientY;
+                    let newTouchXPos = e.changedTouches[0].clientX;
+
+                    let minDiffX = 100;
+                    let minDiffY = 100;
+                    let diffX = Math.abs(newTouchXPos-touchXPos);
+                    let diffY = Math.abs(newTouchYPos-touchYPos);
+
+                    if( diffX > minDiffX ){
+                        if(newTouchXPos > touchXPos) {
+                            oThumbnailController.arrowRight();
+                        } else
+                        if(newTouchXPos < touchXPos) {
+                            oThumbnailController.arrowLeft();
+                        }
+                        touchXPos = newTouchXPos;
+
+                    } else if(diffY > minDiffY){
+                        if(newTouchYPos > touchYPos) {
+                            oThumbnailController.arrowDown();
+                        } else
+                        if(newTouchYPos < touchYPos) {
+                            oThumbnailController.arrowUp();
+                        }
+                        touchYPos = newTouchYPos;                    
+                    }
+                });
+
+                // let touchStartPosX = 0;
+                // $(document).on('touchmove', (e) => {
+
+                //     // Different devices give different values with different decimal percentages.
+                //     const currentPageX = Math.round(e.originalEvent.touches[0].screenY);
+
+                //     if (touchStartPosX === currentPageX) return;
+
+                //     if (touchStartPosX - currentPageX > 0) {
+                //         console.log("down");
+                //         oThumbnailController.arrowDown();
+                //     } else {
+                //         console.log("up");
+                //         oThumbnailController.arrowUp();
+                //     }
+                //     touchStartPosX = currentPageX;
+                // });
+
+
+
             });
 
         </script>

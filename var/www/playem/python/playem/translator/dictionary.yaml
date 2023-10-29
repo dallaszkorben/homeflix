@@ -163,12 +163,14 @@ genre:
         mockumentary: Mockumentary
         portrait: Portrait
         science_nature_documentary: Science and Nature Documentary
+        puppet: Puppet
 
     dia:
         <<: *common
 
     radio_play:
         <<: *common
+        radio_play: Radioplay
 
     book:
         <<: *common
@@ -348,7 +350,6 @@ title:
         media: Media
         films: Fiction movies
         _documentaries: Documetary
-        series: Series
         podcast: Podcast
         category: Category
         categories: Categories
@@ -358,8 +359,16 @@ title:
 
         movies: Movies
         movie_series: Movie Series
+        series: Series
+        movie_sequels: Movie Sequels
+        movie_individual: Movie Individual
+        movie_documentaries: Documentaries
+        movie_hungarian: Hungarian
+        music: Music
         music_video: Music Video
         music_audio: Music Audio
+        music_hungarian: Hungarian
+        radioplay: Radioplay
         entertainment: Entertainment
         entertainments: Entertainments
         knowledge: Knowledge

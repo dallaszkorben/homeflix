@@ -1139,21 +1139,8 @@ class ThumbnailController{
                                 newSourceElement = undefined;
                             }
 
-
-//                            var newSourceElement = $('<source>');
-//                            newSourceElement.attr('src', "");
-//                            let sourceElement = domPlayer.find('source');
-//                            if (sourceElement.length > 0) {
-//                                sourceElement.remove();
-//                                var newSourceElement = $('<source>');
-//                                //newSourceElement.attr('src', "blabla");
-//                            }
-
                             refToThis.focusTask = FocusTask.Menu;
 
-//                            $(document).trigger('focus');
-//                            $(document).focus();
-//                            refToThis.objScrollSection.focus();
                         }
                     });
                     player.style.display = 'block';

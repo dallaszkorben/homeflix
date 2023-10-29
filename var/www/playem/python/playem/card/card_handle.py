@@ -7,6 +7,9 @@ from pathlib import Path
 class CardHandle:
 
     CARD_FILE_NAME = "card.yaml"
+    MEDIA_FOLDER = "media"
+    SCREENSHOT_FOLDER = "screenshots"
+    THUMBNAIL_FOLDER = "thumbnails"
 
     def __init__(self, web_base):
 
@@ -43,8 +46,14 @@ class CardHandle:
             _________________________________________________________________
         """
         # Collect files and and dirs in the current directory
-        file_list = [f for f in os.listdir(actualDir) if os.path.isfile(os.path.join(actualDir, f))] if os.path.exists(actualDir) else []
-        dir_list = [d for d in os.listdir(actualDir) if os.path.isdir(os.path.join(actualDir, d))] if os.path.exists(actualDir) else []
+        file_list = [f for f in os.listdir(actualDir) if os.path.isfile(os.path.join(actualDir, f)) and self.getPatternCard().match( f )] if os.path.exists(actualDir) else []
+        dir_list = [d for d in os.listdir(actualDir) if os.path.isdir(os.path.join(actualDir, d)) and d != CardHandle.MEDIA_FOLDER and d != CardHandle.SCREENSHOT_FOLDER and d != CardHandle.THUMBNAIL_FOLDER] if os.path.exists(actualDir) else []
+        
+        media_dir = os.path.join(actualDir, CardHandle.MEDIA_FOLDER)        
+        media_list = [f for f in os.listdir(media_dir) if os.path.isfile(os.path.join(media_dir, f))] if os.path.exists(media_dir) else []
+
+        logging.debug("\n\n\n\n dir_list: '{0}'".format(dir_list))
+        logging.debug("media_list: '{0}'".format(media_list))
 
         basename = os.path.basename(actualDir)
 
@@ -55,22 +64,20 @@ class CardHandle:
 
         card_id = None
 
-#
-# TODO: image_file_name does not matter
-
         for file_name in file_list:
         
             # find the Card
             if self.getPatternCard().match( file_name ):
                 card_path = os.path.join(actualDir, file_name)
                 card_file_name = file_name
-                #source_path = actualDir
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
 
-            # find the Image
-            if self.getPatternImage().match( file_name ):
-                image_path = os.path.join(actualDir, file_name)
-                #image_file_name = file_name
+            # # find the Image
+            # if self.getPatternImage().match( file_name ):
+            #     image_path = os.path.join(actualDir, file_name)
+            #     #image_file_name = file_name
+
+            logging.debug("SOURCE path: '{0}'".format(source_path))
 
         # If there is CARD in the actual directory
         if card_path:
@@ -193,7 +200,7 @@ class CardHandle:
 
             # collect media files now, because at this point the category is known
             media_dict = {}
-            for file_name in file_list:
+            for file_name in media_list:
                 for mediatype_key in mediatypes:
 
                     # If this media type exists
@@ -212,6 +219,9 @@ class CardHandle:
             storylines=dict((language, storyline) for language, storyline in storylines.items() if storylines)
 
             card_error = False
+
+            # logging.debug("\n\n\n\n: media_dict: '{0}'".format(media_dict))
+            # logging.debug(": media_list: '{0}'".format(media_list))
 
 # ---
             # ---------------------------------------

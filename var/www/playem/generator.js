@@ -73,10 +73,6 @@ class AjaxContainerGenerator extends  ContainerGenerator{
 }
 
 
-
-
-
-
 // =========
 // MAIN MENU
 // =========
@@ -112,6 +108,17 @@ class MainMenuContainerGenerator extends ContainerGenerator{
         oContainer.addThumbnail(2, thumbnail);
 
         thumbnail = new Thumbnail();
+        thumbnail.setImageSources(thumbnail_src="images/categories/sequels.jpg", description_src="images/categories/sequels.jpg");
+        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_sequels'], translated=translated_titles['movie_sequels'], thumb=translated_titles['movie_sequels'], history=translated_titles['movie_sequels']);
+        thumbnail.setFunctionForSelection({"menu":
+            (function(movie_type) {
+                return function() {
+                    return new MovieSequelContainerGenerator(refToThis.language_code, translated_titles['movie_sequels']);
+                };
+            })("movie_sequels")});
+        oContainer.addThumbnail(3, thumbnail);
+
+        thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/music_video.jpg", description_src="images/categories/music_video.jpg");
         thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_video'], translated=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
         thumbnail.setFunctionForSelection({"menu":
@@ -120,7 +127,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
                     return new MusicVideoContainerGenerator(refToThis.language_code, translated_titles['music_video']);
                 }
             })("blabla")});
-        oContainer.addThumbnail(3, thumbnail);
+        oContainer.addThumbnail(4, thumbnail);
 
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/music_audio.jpg", description_src="images/categories/music_audio.jpg");
@@ -131,7 +138,7 @@ class MainMenuContainerGenerator extends ContainerGenerator{
                     return new MusicAudioContainerGenerator(refToThis.language_code, translated_titles['music_audio']);
                 }
             })()});
-        oContainer.addThumbnail(4, thumbnail);
+        oContainer.addThumbnail(5, thumbnail);
 
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/entertainment.jpg", description_src="images/categories/entertainment.jpg");
@@ -512,10 +519,11 @@ class MovieCardContainerGenerator extends  AjaxContainerGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: translated_genre_movie['drama'],   rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/drama/lang/" +  this.language_code},
-            {title: translated_genre_movie['comedy'],  rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/comedy/lang/" + this.language_code},
-            {title: translated_genre_movie['scifi'],   rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/scifi/lang/" +  this.language_code},
-            {title: translated_genre_movie['western'], rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/western/lang/" +  this.language_code},
+            {title: translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/drama/lang/" +  this.language_code},
+            {title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/comedy/lang/" + this.language_code},
+            {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/scifi/lang/" +  this.language_code},
+            {title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/western/lang/" +  this.language_code},
+            {title: translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + "/collect/standalone/movies/genre/documentary/lang/" +  this.language_code},
             {title: "60s",  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/60s/lang/" +  this.language_code},
 
         ];
@@ -719,6 +727,152 @@ class MovieSeriesCardHierarchyContainerGenerator extends  AjaxContainerGenerator
 }
 
 
+// ============
+// Movie Sequel
+// ============
+//
+class MovieSequelContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+         let containerList = [];
+
+         let requestList = [
+//             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + "/collect/all/series/movies/lang/" +  this.language_code},
+             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + "/collect/general/level/sequel/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+         ];
+
+         containerList = this.generateContainers(requestList);
+         return containerList;
+    }
+
+    generateThumbnail(hit){
+        let refToThis = this;
+        let thumbnail = new Thumbnail();
+        let max_length = 20;
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        let short_title = "";
+        if ( hit["title_req"] != null ){
+            short_title = hit["title_req"];
+        }else if ( card["title_orig"] != null ){
+            short_title = hit["title_orig"];
+        }
+
+        short_title = this.getTruncatedTitle(short_title, max_length);
+
+//        let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+        let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+        let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+        let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+        thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
+        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(hierarchy_id) {
+                return function() {
+                    return new MovieSequelCardHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                };
+            })(hit["id"])
+        });
+
+        return thumbnail;
+    }    
+}
+
+
+class MovieSequelCardHierarchyContainerGenerator extends  AjaxContainerGenerator{
+    constructor(language_code, container_title, hierarchy_id){
+        super(language_code);
+        this.container_title = container_title;
+        this.hierarchy_id = hierarchy_id;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let requestList = [
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + "/collect/child_hierarchy_or_card/id/" + this.hierarchy_id+ "/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+   
+    generateThumbnail(hit){
+        let refToThis = this;
+        let thumbnail = new Thumbnail();
+        let max_length = 20;
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        let short_title = "";
+        if ( hit["title_req"] != null ){
+            short_title = hit["title_req"];
+        }else if ( hit["title_orig"] != null ){
+            short_title = hit["title_orig"];
+        }
+
+        short_title = this.getTruncatedTitle(short_title, max_length);
+
+        if(hit["level"]){
+//        let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+            let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+            let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
+            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+
+            thumbnail.setFunctionForSelection({"menu": 
+                (function(hierarchy_id) {
+                    return function() {
+                        return new MovieSequelCardHierarchyContainerGenerator(refToThis.language_code, short_title, hierarchy_id);
+                    };
+                })(hit["id"])
+            });
+
+        }else{
+
+            let card_id = hit["id"];
+            let card_request_url = "http://" + host + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
+            let card = this.sendRestRequest("GET", card_request_url)[0];
+    
+            let medium_path = pathJoin([card["source_path"], card["medium"]["video"][0]])
+            let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
+    
+            let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            thumbnail.setImageSources(thumbnail_src=card["source_path"] + "/thumbnails/" + thumbnail_file, description_src=card["source_path"] + "/screenshots/" + screenshot_file);
+            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+            thumbnail.setStoryline(card["storyline"]);
+            thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+            thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+    
+            thumbnail.setFunctionForSelection({"play": 
+                (function(medium_path) {
+                    return function() {
+                        return medium_path
+                    };
+                })(medium_path)
+            });
+        }
+        return thumbnail;
+    }    
+}
 
 
 

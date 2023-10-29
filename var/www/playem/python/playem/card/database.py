@@ -659,6 +659,9 @@ class SqlDatabase:
                     '''
                     record=cur.execute(query, {'name': actor}).fetchone()
                     (person_id, ) = record if record else (None,)
+
+#                    logging.error( "TEST - there is actor: '{0}'. From select query: {1}. Person Id: {2}".format(actor, record, person_id))
+
                     if not person_id:
 
                         query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
@@ -1075,6 +1078,11 @@ class SqlDatabase:
         return hierarchy_id
 
 
+
+
+
+
+
     # ================
     #
     # === requests ===
@@ -1254,9 +1262,11 @@ class SqlDatabase:
                 LIMIT :limit;
             '''
 
-            logging.debug("get_general_level query: '{0}'".format(query))
+            query_parameters = {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit':limit}
 
-            records=cur.execute(query, {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit':limit}).fetchall()
+            logging.debug("get_general_level query: '{0} / {1}'".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
             cur.execute("commit")
 
             if json:
@@ -1496,10 +1506,12 @@ class SqlDatabase:
             ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
             LIMIT :limit;
             '''
-            
-            logging.debug("get_general_standalone query: '{0}'".format(query))
 
-            records=cur.execute(query, {'category': category, 'decade': decade, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit': limit}).fetchall()
+            query_parameters = {'category': category, 'decade': decade, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit': limit}            
+
+            logging.debug("get_general_standalone query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
             cur.execute("commit")
 
             if json:
@@ -1725,9 +1737,11 @@ class SqlDatabase:
             LIMIT :limit;
             '''
             
-            logging.debug("detailed query: '{0}'".format(query))
+            query_parameters = {'card_id': card_id, 'lang':lang, 'limit':limit}
 
-            records=cur.execute(query, {'card_id': card_id, 'lang':lang, 'limit':limit}).fetchall()
+            logging.debug("detailed query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
             cur.execute("commit")
 
             if json:

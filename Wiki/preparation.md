@@ -53,6 +53,53 @@ sudo ln -s /usr/local/bin/python3.10 /usr/bin/python3
 ```
 
 
+## Update sqlite3 version 2.27.2 to 3.36.0
+at least sqlite3 version 3.35.0 needed 
+```sh
+pi@raspberrypi:~ $ source /var/www/playem/python/env/bin/activate
+(env) pi@raspberrypi:~/.playem $ python3
+>>> import sqlite3
+>>> sqlite3.sqlite_version
+'3.27.2'
+```
+
+```sh
+(env) pi@raspberrypi:~/tmp $ wget https://sqlite.org/2021/sqlite-autoconf-3360000.tar.gz
+(env) pi@raspberrypi:~/tmp $ tar -xvf sqlite-autoconf-3360000.tar.gz
+(env) pi@raspberrypi:~/tmp $ cd sqlite-autoconf-3360000
+(env) pi@raspberrypi:~/tmp/sqlite-autoconf-3360000 $ ./configure
+(env) pi@raspberrypi:~/tmp/sqlite-autoconf-3360000 $ make
+(env) pi@raspberrypi:~/tmp/sqlite-autoconf-3360000 $ sudo make install
+```
+
+unfortunatelly the *make install* command fails with the following:
+```sh
+make[1]: Leaving directory '/home/pi/tmp/sqlite-autoconf-3360000'
+```
+
+Fix it by running the following
+```sh
+sudo cp /usr/local/lib/*sql* /usr/lib/arm-linux-gnueabihf/
+sudo chmod a+x /usr/lib/arm-linux-gnueabihf/*sql*
+```
+
+Check the version now
+```sh
+(env) pi@raspberrypi:~/tmp/sqlite-autoconf-3360000 $ python
+Python 3.7.3 (default, Oct 31 2022, 14:04:00) 
+[GCC 8.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sqlite3
+>>> sqlite3.sqlite_version
+'3.36.0'
+```
+
+
+
+
+
+
+
 ### Install WSGI module to appache2
 ```sh
 sudo apt-get install libapache2-mod-wsgi-py3 python-dev
