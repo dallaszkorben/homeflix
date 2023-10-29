@@ -7,6 +7,10 @@
 
         <script src="script/jquery/jquery-3.6.0.min.js"></script>
         <script src="script/js-jaml/js-yaml.js"></script>
+
+        <link href="script/fancybox/jquery.fancybox.min.css" rel="stylesheet" />
+        <script src="script/fancybox/jquery.fancybox.min.js"></script>
+
         <script src="container.js"></script>
         <script src="generators.js"></script>
 
@@ -233,27 +237,6 @@
                         touchYPos = newTouchYPos;                    
                     }
                 });
-
-                // let touchStartPosX = 0;
-                // $(document).on('touchmove', (e) => {
-
-                //     // Different devices give different values with different decimal percentages.
-                //     const currentPageX = Math.round(e.originalEvent.touches[0].screenY);
-
-                //     if (touchStartPosX === currentPageX) return;
-
-                //     if (touchStartPosX - currentPageX > 0) {
-                //         console.log("down");
-                //         oThumbnailController.arrowDown();
-                //     } else {
-                //         console.log("up");
-                //         oThumbnailController.arrowUp();
-                //     }
-                //     touchStartPosX = currentPageX;
-                // });
-
-
-
             });
 
         </script>
@@ -295,6 +278,8 @@
 
         <div>
             <video height="0" id="video_player"></video>
+        </div>
+        <div id="dia_player" style="display:none;">
         </div>
 
     </body>

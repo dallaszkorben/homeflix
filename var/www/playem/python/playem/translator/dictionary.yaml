@@ -167,6 +167,7 @@ genre:
 
     dia:
         <<: *common
+        dia: Diafilm
 
     radio_play:
         <<: *common
@@ -369,6 +370,7 @@ title:
         music_audio: Music Audio
         music_hungarian: Hungarian
         radioplay: Radioplay
+        dia: Diafilm
         entertainment: Entertainment
         entertainments: Entertainments
         knowledge: Knowledge

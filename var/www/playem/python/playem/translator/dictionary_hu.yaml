@@ -167,6 +167,7 @@ genre:
 
     dia:
         <<: *common
+        dia: Dia
 
     radio_play:
         <<: *common
@@ -369,6 +370,7 @@ title:
         music_audio: Zene-Audio
         music_hungarian: Magyar
         radioplay: Rádiójáték
+        dia: Dia
         entertainment: Szórakoztatás
         entertainments: Szórakoztatás
         knowledge: Ismeretek

@@ -52,9 +52,6 @@ class CardHandle:
         media_dir = os.path.join(actualDir, CardHandle.MEDIA_FOLDER)        
         media_list = [f for f in os.listdir(media_dir) if os.path.isfile(os.path.join(media_dir, f))] if os.path.exists(media_dir) else []
 
-        logging.debug("\n\n\n\n dir_list: '{0}'".format(dir_list))
-        logging.debug("media_list: '{0}'".format(media_list))
-
         basename = os.path.basename(actualDir)
 
         source_path = None
@@ -219,9 +216,6 @@ class CardHandle:
             storylines=dict((language, storyline) for language, storyline in storylines.items() if storylines)
 
             card_error = False
-
-            # logging.debug("\n\n\n\n: media_dict: '{0}'".format(media_dict))
-            # logging.debug(": media_list: '{0}'".format(media_list))
 
 # ---
             # ---------------------------------------

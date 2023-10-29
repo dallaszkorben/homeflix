@@ -311,3 +311,10 @@ body {
     text-align: center;                                         /* the .thumbail-text-wrapper has position:absolute, so it is not possible to align to center*/
     overflow-wrap: anywhere;                                    /* It is needed to break a word if it does not fit to the tubnnail */
 }
+
+.fancybox-is-open {
+    .fancybox-bg {
+        opacity: 1.0 !important;                                /* background of the fancybox in not transparent */
+        background-color: #000000 !important;                 /* background of the fancybox is black */
+    }
+}

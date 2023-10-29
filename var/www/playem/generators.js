@@ -200,14 +200,27 @@ class SubLevelRestGenerator extends  RestGenerator{
             // 'text'
             // 'picture'
             let media;
+            let mode;
+            let medium_path;
             if("audio" in card["medium"]){
                 media=card["medium"]["audio"][0]
-
+                mode = "play";
+                if(media){
+                    medium_path = pathJoin([card["source_path"], "media", media]);
+                }
             }else if("video" in card["medium"]){
                 media=card["medium"]["video"][0]
-
-            }else{
-
+                mode = "play";
+                if(media){
+                    medium_path = pathJoin([card["source_path"], "media", media]);
+                }
+            }else if("picture"){
+                media=card["medium"]["picture"]
+                mode = "dia";
+                medium_path = [];
+                for(let medium of media){
+                    medium_path.push(pathJoin([card["source_path"], "media", medium]));
+                }
             }
 
             if(hit['sequence'] && hit['sequence'] > 0){
@@ -224,11 +237,7 @@ class SubLevelRestGenerator extends  RestGenerator{
 
             let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
-
-            let medium_path;
-            if(media){
-                medium_path = pathJoin([card["source_path"], "media", media]);
-            }
+           
             let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
             let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
 
@@ -239,7 +248,7 @@ class SubLevelRestGenerator extends  RestGenerator{
             thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"], hosts=card["hosts"], guests=card["guests"], interviewers=card["interviewers"], interviewees=card["interviewees"], presenters=card["presenters"], lecturers=card["lecturers"]);
             thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
     
-            thumbnail.setFunctionForSelection({"play": 
+            thumbnail.setFunctionForSelection({[mode]: 
                 (function(medium_path) {
                     return function() {
                         return medium_path
@@ -289,20 +298,32 @@ class IndividualRestGenerator extends  RestGenerator{
         // 'text'
         // 'picture'
         let media;
+        let mode;
+        let medium_path;
         if("audio" in card["medium"]){
             media=card["medium"]["audio"][0]
+            mode = "play";
+            if(media){
+                medium_path = pathJoin([card["source_path"], "media", media]);
+            }
         }else if("video" in card["medium"]){
             media=card["medium"]["video"][0]
-        }else{
+            mode = "play";
+            if(media){
+                medium_path = pathJoin([card["source_path"], "media", media]);
+            }    
+        }else if("picture"){
+            media=card["medium"]["picture"]
+            mode = "dia";
+            medium_path = [];
+            for(let medium of media){
+                medium_path.push(pathJoin([card["source_path"], "media", medium]));
+            }
         }
 
         let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
         let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
 
-        let medium_path;
-        if(media){
-            medium_path = pathJoin([card["source_path"], "media", media]);
-        }
         let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
         let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
 
@@ -313,7 +334,7 @@ class IndividualRestGenerator extends  RestGenerator{
         thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
         thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
 
-        thumbnail.setFunctionForSelection({"play": 
+        thumbnail.setFunctionForSelection({[mode]: 
             (function(medium_path) {
                 return function() {
                     return medium_path
@@ -373,6 +394,19 @@ class MainMenuGenerator extends Generator{
             (function(movie_type) {
                 return function() {
                     return new RadioplayMenuGenerator(refToThis.language_code);
+                };
+            })("movies")});
+        oContainer.addThumbnail(1, thumbnail);        
+
+        // Dia
+        thumbnail = new Thumbnail();
+        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
+        thumbnail.setImageSources(thumbnail_src="images/categories/dia.jpg", description_src="images/categories/dia.jpg");
+        thumbnail.setTitles(lang=this.language_code, original=translated_titles['dia'], translated=translated_titles['dia'], thumb=translated_titles['dia'], history=translated_titles['dia']);
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(movie_type) {
+                return function() {
+                    return new DiaMenuGenerator(refToThis.language_code);
                 };
             })("movies")});
         oContainer.addThumbnail(1, thumbnail);        
@@ -637,6 +671,24 @@ class RadioplayMenuGenerator extends  IndividualRestGenerator{
         let containerList = [];
         let requestList = [
             {title: translated_titles['radioplay'],  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/radio_play/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
+
+
+// ========
+// Dia MENU
+// ========
+//
+class DiaMenuGenerator extends  IndividualRestGenerator{
+
+    getContainerList(){
+        let containerList = [];
+        let requestList = [
+            {title: translated_titles['dia'],  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/dia/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
