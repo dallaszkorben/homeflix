@@ -175,7 +175,7 @@ class ObjScrollSection{
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
-        domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+        domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
 
         this.scrollThumbnails();
         this.showDetails();
@@ -207,15 +207,17 @@ class ObjScrollSection{
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex]
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
 
-        let image = thumbnail.getDescriptionImageSource();
-        let title = thumbnail.getTitle();
-        let storyline = thumbnail.getStoryline();
-        let lyrics = thumbnail.getLyrics();
-        let credentials = thumbnail.getCredentials();
-        let extra = thumbnail.getExtras();
+        if (thumbnail != undefined){
+            let image = thumbnail.getDescriptionImageSource();
+            let title = thumbnail.getTitle();
+            let storyline = thumbnail.getStoryline();
+            let lyrics = thumbnail.getLyrics();
+            let credentials = thumbnail.getCredentials();
+            let extra = thumbnail.getExtras();
 
-        // Shows the actual Description
-        this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra);
+            // Shows the actual Description
+            this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra);
+        }
     }
     
     clickedOnThumbnail(id){
@@ -246,7 +248,7 @@ class ObjScrollSection{
             currentThumbnailIndex = clickedThumbnailIndex;
 
             // Show the current focus
-            domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+            domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
             this.focusedThumbnailList[this.currentContainerIndex] = currentThumbnailIndex;
             this.scrollThumbnails();
             this.showDetails();
@@ -259,7 +261,7 @@ class ObjScrollSection{
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         currentThumbnailIndex = (currentThumbnailIndex + 1) % domThumbnails.length;
-        domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+        domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
         this.focusedThumbnailList[this.currentContainerIndex] = currentThumbnailIndex;
         this.scrollThumbnails();
         this.showDetails();
@@ -271,7 +273,7 @@ class ObjScrollSection{
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         currentThumbnailIndex = (currentThumbnailIndex - 1 + domThumbnails.length) % domThumbnails.length;
-        domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+        domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
         this.focusedThumbnailList[this.currentContainerIndex] = currentThumbnailIndex;
         this.scrollThumbnails();
         this.showDetails();
@@ -287,7 +289,7 @@ class ObjScrollSection{
 
         currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
-        domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+        domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
         this.scrollThumbnails();
         this.showDetails();
     };
@@ -303,7 +305,7 @@ class ObjScrollSection{
 
         currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
-        domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+        domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
         this. scrollThumbnails();
         this.showDetails();
     };
@@ -1151,10 +1153,10 @@ class ThumbnailController{
                     $('#video_player').focus();
 
                 }
-            }else if("dia" in functionForSelection){
+            }else if("picture" in functionForSelection){
 
                // take the getCardId function
-               let getCardIdFunction = functionForSelection["dia"];
+               let getCardIdFunction = functionForSelection["picture"];
                let medium_path = getCardIdFunction();
        
                if (medium_path != null){

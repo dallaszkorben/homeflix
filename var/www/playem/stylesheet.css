@@ -1,14 +1,39 @@
 :root {
-    --static-section-height-portion: 40%;
-    --scroll-section-height-portion: 60%;
-    --scroll-section-border-width: 0px;
-    --thumbnail-container-block-border-width: 0px;
-    --thumbnail-container-border-width: 1px;
     --thumbnail-border-width: 0px;
     --thumbnail-container-height: 250px;
+    --thumbnail_background: rgb(33, 134, 43);
     --thumbnail-image-width: 100px;
     --thumbnail-image-height: 100px;
     --thumbnail-text-font-size: 30px;
+    --thumbnail-text-font-color: rgb(7, 24, 101);
+    --thumbnail-text-font-shadow-color: rgb(0, 0, 0);
+
+    --thumbnail-container-border-width: 1px;
+    --thumbnail-container-border-color: rgb(48, 53, 13);
+    --thumbnail-container-background: rgb(48, 53, 13);
+
+    --thumbnail-container-block-border-width: 0px;
+    --thumbnail-container-block-border-color: rgb(33, 134, 56);
+    --thumbnail-container-block-background: rgb(33, 134, 56);
+
+    --scroll-section-border-width: 0px;
+    --scroll-section-border-color: rgb(33, 134, 56);
+    --scroll-section-background: rgb(33, 134, 56);
+    --scroll-section-height-portion: 60%;
+
+    --static-section-height-portion: 40%;
+
+    --history-section-background: rgb(13, 30, 53);
+    --history-section-border-width: 0px;
+    --history-section-border-color: rgb(13, 30, 53);
+    --history-section-font-size: 10 px;
+    --history-section-font-color: rgb(0, 0, 0);
+    --history-section-height: 1.5em;    
+
+    --description-section-border-width: 0px;
+    --description-section-border-color: rgb(70, 70, 70);
+    --description-section-background: rgb(70, 70, 70);
+
 
     --description-image-width: 1px;
     --description-text-wrapper-top: 0px;
@@ -46,8 +71,8 @@ body {
     flex-wrap: nowrap;
     justify-content: flex-end;
 
-    background-color: rgb(171, 253, 176);
-    border: var(--scroll-section-border-width) rgb(0, 103, 0) solid;
+    background-color: var(--description-section-border-background);
+    border: var(--description-section-border-width) var(--description-section-border-color) solid;
     box-sizing:border-box;      
 }
 
@@ -187,12 +212,12 @@ body {
     
     font-family: 'Brush Script MT', cursive;
     font-weight: bold;
-    font-size: var(--description-text-storyline-font-size);
-    color: black;
-    min-height: 1.5em;
+    font-size: var(--history-section-font-size);
+    color: var(--history-section-font-color);
+    min-height: var(--history-section-height);
 
-    border: 0px rgb(255, 14, 14) solid;                       /* for test purpose */
-    background-color: rgb(255, 243, 175);  
+    border: var(--history-section-border-width) var(--history-section-border-color) solid;
+    background-color: var(--history-section-background);
 }
 
 #history-section-text{
@@ -227,8 +252,8 @@ body {
     flex-direction: column;                                     /* stacks the flex items vertically */
     flex-wrap: nowrap;                                          /* the flex items will not wrap */
     overflow: hidden;                                           /* flex items which does not fit, will be hidden */
-    border: var(--scroll-section-border-width) rgb(255, 247, 0) solid;
-    background-color: rgb(255, 248, 189);
+    border: var(--scroll-section-border-width) var(--scroll-section-border-color) solid;
+    background-color: var(--scroll-section-background);
 } 
 
 
@@ -240,8 +265,8 @@ body {
     flex-direction: column;                                     /* stacks the flex items vertically */
     flex-wrap: nowrap;                                          /* the flex items will not wrap */
     overflow: visible;           
-    border: var(--thumbnail-container-block-border-width) rgb(0, 255, 13) solid;
-    background-color: rgb(217, 255, 175);
+    border: var(--thumbnail-container-block-border-width) var(--thumbnail-container-block-border-color) solid;
+    background-color: var(--thumbnail-container-block-background);
 }
 
 .thumbnail-container-title{
@@ -260,8 +285,8 @@ body {
     flex-direction: row;                                        /* stacks the flex items vertically */
     flex-wrap: nowrap;                                          /* the flex items will not wrap */
     overflow: hidden;                                           /* flex items which does not fit, will be hidden */
-    border: var(--thumbnail-container-border-width) blue solid;
-    background-color: rgb(148, 192, 249);
+    border: var(--thumbnail-container-border-width) var(--thumbnail-container-border-color) solid;
+    background-color: var(--thumbnail-container-background);
 }
 
 .thumbnail-container-space {
@@ -279,8 +304,7 @@ body {
     margin-left: 5px;
 
     border: var(--thumbnail-border-width) solid transparent;    /* for the focus frame */
-    background-color: rgb(35, 140, 135);
-
+    background-color: var(--thumbnail_background);
     display: flex;                                              /* flex box layout model */
     position: relative;                                         /* This made the animation with text work. I do not know how */
 }
@@ -298,12 +322,12 @@ body {
     font-family: 'Brush Script MT', cursive;
     font-weight: bold;
     font-size: var(--thumbnail-text-font-size);
-    color: rgb(70, 26, 231);
+    color: var(--thumbnail-text-font-color);
     text-shadow: 
-        -1px -1px 0px black,
-        1px -1px 0px black,
-        1px 1px 0px black,
-        -1px 1px 0px black;
+        -1px -1px 0px var(--thumbnail-text-font-shadow-color),
+        1px -1px 0px var(--thumbnail-text-font-shadow-color),
+        1px 1px 0px var(--thumbnail-text-font-shadow-color),
+        -1px 1px 0px var(--thumbnail-text-font-shadow-color);
 }
 
 .thumbnail-text{                                                /* needed to centralize horizontally the text*/
@@ -317,4 +341,9 @@ body {
         opacity: 1.0 !important;                                /* background of the fancybox in not transparent */
         background-color: #000000 !important;                 /* background of the fancybox is black */
     }
+}
+
+.fancybox-bg {
+    opacity: 1.0 !important;                                    /* background of the fancybox in not transparent */
+    background-color: #000000 !important;                     /* background of the fancybox is black */
 }

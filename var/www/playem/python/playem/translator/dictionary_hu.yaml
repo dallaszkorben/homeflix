@@ -64,7 +64,7 @@ country:
         us: USA
         se: Svéd
         gb: Anglia
-        uk: anglia
+        uk: Anglia
         es: Spanyol
         de: Német
         it: Olasz
@@ -139,6 +139,7 @@ genre:
         disco: Disco
         soul: Soul
         funk: Funk
+        folk: Folk
 
     movie:
         <<: *common
@@ -219,6 +220,7 @@ genre:
         videos: Videos
 
 theme:
+        hero: Hős
         revenge: Bosszú
         love: Szerelem
         evil: Gonosz

@@ -22,6 +22,7 @@
             //let host = "192.168.0.21"
             //let host = "localhost"
             let host = location.hostname;
+            let port = ":80";
 
             /*
             Substitute substrings, similar to "Hello {0}".format("world") mechanizm
@@ -56,19 +57,52 @@
             // var desc_img_height;
             // var desc_img_width;
 
-            const static_section_height_portion = 50;
-            
-            const scroll_section_height_portion = 50;
-            const scroll_section_border_width = 4;
-
-            const thumbnail_container_block_border_width = 4;
-            const thumbnail_container_border_width = 4
+            // Thumbnail
             const thumbnail_border_width = 7;
-
+            const thumbnail_border_color = 'white';
             const thumbnail_image_width = 160;
             const thumbnail_image_height = 208;
+            const thumbnail_background = 'rgb(100, 100, 100)';
 
             const thumbnail_text_font_size = 30;
+            const thumbnail_text_font_color = 'rgb(7, 24, 101)'
+            const thumbnail_text_font_shadow_color = 'rgb(255,255,255)'
+
+            // Container
+            const thumbnail_container_border_width = 4
+            const thumbnail_container_border_color = 'rgb(100, 100, 100)';
+            const thumbnail_container_background = 'rgb(100, 100, 100)';
+            const thumbnail_container_height = thumbnail_image_height + (2*thumbnail_border_width) + (2*thumbnail_container_border_width)
+
+            // Container block
+            const thumbnail_container_block_border_width = 1;
+            const thumbnail_container_block_border_color = 'rgb(0, 0, 0)';
+            const thumbnail_container_block_background = 'rgb(40, 40, 40)';
+
+            // Scroll section
+            const scroll_section_border_width = 0;  // Needed to be changed with description_section_border_width. If they are different, then a horizontal slider bar appears in the browser
+            const scroll_section_border_color = 'rgb(30, 30, 30)';
+            const scroll_section_background = 'rgb(30, 30, 30)';
+            const scroll_section_height_portion = 50;
+
+            // Static section
+            const static_section_height_portion = 50;
+
+            // History section
+            const history_section_background = 'rgb(80, 80, 80)';
+            const history_section_border_width = 1
+            const history_section_border_color = 'rgb(0, 0, 0)';
+            const history_section_font_size = 20;
+            const history_section_font_color = 'rgb(0, 0, 0)';
+            const history_section_height = 40;
+
+            // Description section
+            const description_section_border_width = 0; // Needed to be changed with scroll_section_border_width. If they are different, then a horizontal slider bar appears in the browser
+            const description_section_border_color = 'rgb(9, 60, 41)';
+            const description_section_background = 'rgb(171, 253, 176)';
+
+
+
 
             const description_text_extra_font_size = 25;
             const description_text_storyline_font_size = 20;
@@ -76,24 +110,60 @@
 
             const description_text_storyline_width = 45;
 
-            const thumbnail_container_height = thumbnail_image_height + (2*thumbnail_border_width) + (2*thumbnail_container_border_width)
+            
 
             const description_text_wrapper_top = scroll_section_border_width;
             const description_text_wrapper_left = scroll_section_border_width;
 
             t = document.querySelector(':root');
 
-            // Default set of the CSS
-            t.style.setProperty('--static-section-height-portion', static_section_height_portion + '%');
-            t.style.setProperty('--scroll-section-height-portion', scroll_section_height_portion + '%');
-            t.style.setProperty('--scroll-section-border-width', scroll_section_border_width + 'px');
-            t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
-            t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
+            // Thumbnail
             t.style.setProperty('--thumbnail-border-width', thumbnail_border_width + 'px');
-            t.style.setProperty('--thumbnail-container-height', thumbnail_container_height + 'px');
+            t.style.setProperty('--thumbnail-border-color', thumbnail_border_color);
             t.style.setProperty('--thumbnail-image-height', thumbnail_image_height + 'px');
             t.style.setProperty('--thumbnail-image-width', thumbnail_image_width + 'px');
+            t.style.setProperty('--thumbnail_background', thumbnail_background);
+
             t.style.setProperty('--thumbnail-text-font-size', thumbnail_text_font_size + 'px');
+            t.style.setProperty('--thumbnail-text-font-color', thumbnail_text_font_color);
+            t.style.setProperty('--thumbnail-text-font-shadow-color', thumbnail_text_font_shadow_color);
+
+            // Container
+            t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
+            t.style.setProperty('--thumbnail-container-border-color', thumbnail_container_border_color);
+            t.style.setProperty('--thumbnail-container-background', thumbnail_container_background);
+            t.style.setProperty('--thumbnail-container-height', thumbnail_container_height + 'px');
+
+            // Container block
+            t.style.setProperty('--thumbnail-container-block-border-color', thumbnail_container_block_border_color);
+            t.style.setProperty('--thumbnail-container-block-background', thumbnail_container_block_background);
+            t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
+
+            // Scroll section
+            t.style.setProperty('--scroll-section-border-width', scroll_section_border_width + 'px');
+            t.style.setProperty('--scroll-section-border-color', scroll_section_border_color);
+            t.style.setProperty('--scroll-section-background', scroll_section_background);
+            t.style.setProperty('--scroll-section-height-portion', scroll_section_height_portion + '%');
+
+            // Static section
+            t.style.setProperty('--static-section-height-portion', static_section_height_portion + '%');
+
+            // History section
+            t.style.setProperty('--history-section-background', history_section_background);
+            t.style.setProperty('--history-section-border-width', history_section_border_width + 'px');
+            t.style.setProperty('--history-section-border-color', history_section_border_color);
+            t.style.setProperty('--history-section-font-size', history_section_font_size + 'px');
+            t.style.setProperty('--history-section-font-color', history_section_font_color);
+            t.style.setProperty('--history-section-height', history_section_height + 'px');
+
+            // Description section
+            t.style.setProperty('--description-section-border-width', description_section_border_width + 'px');
+            t.style.setProperty('--description-section-border-color', description_section_border_color);
+            t.style.setProperty('--description-section-background', description_section_background);
+
+
+
+
 
             t.style.setProperty('--description-text-wrapper-top', description_text_wrapper_top + 'px');
             t.style.setProperty('--description-text-wrapper-left', description_text_wrapper_left + 'px');
@@ -106,6 +176,7 @@
             let translated_titles;
             let translated_genre_movie;
             let translated_categories;
+            let translated_themes;
 
             function generateRandom(min = 0, max = 100) {
 
@@ -130,21 +201,28 @@
 
                 // Load Translated Titles
                 let rq_method = "GET";
-                let rq_url = "http://" + host + ":80/translate/titles/lang/" + languageCode;
+                let rq_url = "http://" + host + port +"/translate/titles/lang/" + languageCode;
                 let rq_assync = false;
                 let result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_titles = result.responseJSON;
 
                 // Load Translated Genre: Movie
                 rq_method = "GET";
-                rq_url = "http://" + host + ":80/translate/genres/category/movie/lang/" + languageCode;
+                rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + languageCode;
                 rq_assync = false;
                 result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_genre_movie = result.responseJSON;
 
+                // Load Translated Themes
+                rq_method = "GET";
+                rq_url = "http://" + host + port + "/translate/themes/lang/" + languageCode;
+                rq_assync = false;
+                result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
+                translated_themes = result.responseJSON;
+
                 // Load Translated Categories
                 rq_method = "GET";
-                rq_url = "http://" + host + ":80/translate/categories/lang/" + languageCode;
+                rq_url = "http://" + host + port + "/translate/categories/lang/" + languageCode;
                 rq_assync = false;
                 result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
                 translated_categories = result.responseJSON;                

@@ -100,6 +100,13 @@ class Translator( Property ):
             tr = theme
         return tr
 
+    def translate_themes(self):
+        output = {}
+        theme_list = self.actual_dictionary['theme']
+        for theme in theme_list:
+            output[theme] = self.translate_theme(theme)
+        return output
+
     def translate_mediatype(self, mediatype):
         try:        
             tr = self.actual_dictionary['mediatype'][mediatype]

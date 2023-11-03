@@ -139,6 +139,7 @@ genre:
         disco: Disco
         soul: Soul
         funk: Funk
+        folk: Folk
 
     movie:
         <<: *common
@@ -219,6 +220,7 @@ genre:
         videos: Videos
 
 theme:
+        hero: Hero
         revenge: Revenge
         love: Love
         evil: Evil

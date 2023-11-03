@@ -12,6 +12,7 @@ from playem.restserver.endpoints.ep_translate_genre import EPTranslateGenre
 from playem.restserver.endpoints.ep_translate_genres import EPTranslateGenres
 from playem.restserver.endpoints.ep_translate_titles import EPTranslateTitles
 from playem.restserver.endpoints.ep_translate_categories import EPTranslateCategories
+from playem.restserver.endpoints.ep_translate_themes import EPTranslateThemes
 
 
 
@@ -32,7 +33,7 @@ class TranslateView(FlaskView):
         self.epTranslateGenres = EPTranslateGenres(web_gadget)
         self.epTranslateTitles = EPTranslateTitles(web_gadget)
         self.epTranslateCategories = EPTranslateCategories(web_gadget)
-
+        self.epTranslateThemes = EPTranslateThemes(web_gadget)
 
     #
     # GET http://localhost:5000/translate/
@@ -94,6 +95,21 @@ class TranslateView(FlaskView):
     def translateGenresWithParameter(self, category, lang):        
         out = self.epTranslateGenres.executeByParameters(category=category, lang=lang)
         return out
+
+
+    #
+    # Gives back translation of all themes
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/themes/lang/en
+    #
+    # GET http://localhost:80/translate/themes/movie/lang/en
+    #
+    #@route('/themes/lang/<lang>')
+    @route(EPTranslateThemes.PATH_PAR_URL, methods=[EPTranslateThemes.METHOD])
+    def translateThemesWithParameter(self, lang):        
+        out = self.epTranslateThemes.executeByParameters(lang=lang)
+        return out
+    
 
     #
     # Gives back translation of all titles with parameters
