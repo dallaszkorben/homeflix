@@ -1474,13 +1474,14 @@ class SqlDatabase:
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
                 WHERE
                 
-                    card.id_higher_card IS NULL AND
-                    tcl.id_card=card.id AND
-                    tcl.id_language=lang.id AND
-                    tcl.type="T" AND
-                    card.level IS NULL AND
+                    card.id_higher_card IS NULL
+                    AND tcl.id_card=card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND card.id_title_orig=lang.id
+                    AND card.level IS NULL
 
-                    lang.name <> :lang
+                    AND lang.name <> :lang
 
                 UNION
 
@@ -1504,13 +1505,13 @@ class SqlDatabase:
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
                 WHERE
                
-                    card.id_higher_card IS NULL AND
-                    tcl.id_card=card.id AND
-                    tcl.id_language=lang.id AND
-                    tcl.type="T" AND
-                    card.level IS NULL AND
+                    card.id_higher_card IS NULL
+                    AND tcl.id_card=card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND card.level IS NULL
  
-                    lang.name=:lang
+                    AND lang.name=:lang
             ) merged,
             ''' + ('''
                     --- origin or not_origin ---
