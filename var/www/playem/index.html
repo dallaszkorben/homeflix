@@ -24,6 +24,9 @@
             let host = location.hostname;
             let port = ":80";
 
+            let languageCode = "hu";
+            let always_show_origin_title = true;
+
             /*
             Substitute substrings, similar to "Hello {0}".format("world") mechanizm
             Usage: "hello {123}".format("123", world")
@@ -101,16 +104,11 @@
             const description_section_border_color = 'rgb(9, 60, 41)';
             const description_section_background = 'rgb(171, 253, 176)';
 
-
-
-
             const description_text_extra_font_size = 25;
             const description_text_storyline_font_size = 20;
             const description_text_credentials_font_size = 20;
 
             const description_text_storyline_width = 45;
-
-            
 
             const description_text_wrapper_top = scroll_section_border_width;
             const description_text_wrapper_left = scroll_section_border_width;
@@ -197,7 +195,15 @@
 
             $(document).ready(function() {                
 
-                let languageCode = "hu";
+                //
+                // 
+                //
+
+                // let languageCode = "hu";
+                // let always_show_origin_title = true;
+
+                //
+                //
 
                 // Load Translated Titles
                 let rq_method = "GET";

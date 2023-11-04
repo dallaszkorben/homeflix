@@ -20,6 +20,7 @@ class Generator{
     }
 }
 
+
 // --------------
 // REST Generator
 // --------------
@@ -79,6 +80,101 @@ class RestGenerator extends Generator{
         }
         return container_list;
     }
+
+    getThumbnailTitle(hit){
+        let max_length = 20;
+        let title = "";
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+        
+        if(hit["title_on_thumbnail"]){
+
+            // request was not on the original language
+            if ( hit["title_req"] != null ){
+                title = hit["title_req"];
+
+            // request was on the original langueag or the translated title was configured in the card
+            }else if ( hit["title_orig"] != null ){
+                title = hit["title_orig"];
+            }
+
+            title = this.getTruncatedTitle(title, max_length);
+        }
+
+        title = this.getTitleWithPart(hit, title, " ");
+        return title;
+    }
+
+    getHistoryTitle(hit){
+        let max_length = 20;
+        let title = "";
+
+        if(!hit["lang_orig"]){
+            hit["lang_orig"] = "";
+        }
+
+        if ( hit["title_req"] != null ){
+            title = hit["title_req"];
+        }else if ( hit["title_orig"] != null ){
+            title = hit["title_orig"];
+        }
+
+        //title = this.getTruncatedTitle(title, max_length);
+
+        title = this.getTitleWithPart(hit, title, " ");
+        return title;
+
+    }
+
+    getMainTitle(hit){
+        let title;
+
+        //                                                                requested title    original title    original language    requested language
+        // requested = original                                                        ✔               ❌                    ❌                    ✔
+        // requested ≠ original requested exist,          original exist               ✔               ✔                    ✔                    ✔
+        // requested ≠ original requested does not exist, original exist               ❌               ✔                    ✔                    ❌
+        //
+
+        // the requested language is the title's original language => nothing to do
+        if(!hit["title_orig"]){
+            title = hit["title_req"];
+
+        // there is NO title configure on the requested language => show the original title and the language
+        }else if(!hit["title_req"]){
+            title = original + " (" + lang_orig + ")";
+
+        // There IS title configured on the requested language but I want to see the original title as well if it is different
+        }else if(always_show_origin_title){
+            if(hit["title_req"] != hit["title_orig"]){
+                title = hit["title_req"] + " (" + hit["title_orig"] + ")";
+            }else{
+                title = hit["title_req"];
+            }
+
+        // There IS title configured on the requested language and I want to see only this title
+        }else{
+            title = hit["title_req"];
+        }
+
+        title = this.getTitleWithPart(hit, title, " - ");
+        return title
+    }
+
+    getTitleWithPart(hit, title, separator=" "){
+        let result_title = title;
+        let show_sequence = hit['title_show_sequence'];
+        if(show_sequence != "" && hit['sequence'] && hit['sequence'] > 0){
+            let part = translated_titles['sequence'][show_sequence].format("0", hit['sequence']);
+        
+            if(result_title){
+                result_title = result_title + separator + part;
+            }
+        }
+        return result_title;
+    }
+
 }
 
 
@@ -99,26 +195,35 @@ class LevelRestGenerator extends RestGenerator{
     generateThumbnail(hit){
         let refToThis = this;
         let thumbnail = new Thumbnail();
-        let max_length = 20;
 
-        if(!hit["lang_orig"]){
-            hit["lang_orig"] = "";
-        }
-        let short_title = "";
-        if ( hit["title_req"] != null ){
-            short_title = hit["title_req"];
-        }else if ( hit["title_orig"] != null ){
-            short_title = hit["title_orig"];
-        }
+        let thumbnail_title = this.getThumbnailTitle(hit);
+        let history_title = this.getHistoryTitle(hit);
+        let main_title = this.getMainTitle(hit);
 
-        short_title = this.getTruncatedTitle(short_title, max_length);
+        // if(!hit["lang_orig"]){
+        //     hit["lang_orig"] = "";
+        // }
+        // let short_title = "";
+        // let history_title = "";
+        // if(hit["on_thumbnail"]){
+        // if ( hit["title_req"] != null ){
+        //     short_title = hit["title_req"];
+        // }else if ( hit["title_orig"] != null ){
+        //     short_title = hit["title_orig"];
+        // }
+        // short_title = this.getTruncatedTitle(short_title, max_length);
 
         let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
         let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-        let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+        let main,thumb,thumbnail_src,description_src;
         thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
-        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+        thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
+//        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
+
+
+
+
 //        thumbnail.setStoryline(card["storyline"]);
 //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
 //        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
@@ -126,7 +231,7 @@ class LevelRestGenerator extends RestGenerator{
         thumbnail.setFunctionForSelection({"menu": 
             (function(hierarchy_id) {
                 return function() {
-                    return new SubLevelRestGenerator(refToThis.language_code, short_title, hierarchy_id);
+                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id);
                 };
             })(hit["id"])
         });
@@ -155,27 +260,33 @@ class SubLevelRestGenerator extends  RestGenerator{
     generateThumbnail(hit){
         let refToThis = this;
         let thumbnail = new Thumbnail();
-        let max_length = 20;
 
-        if(!hit["lang_orig"]){
-            hit["lang_orig"] = "";
-        }
-        let short_title = "";
-        if ( hit["title_req"] != null ){
-            short_title = hit["title_req"];
-        }else if ( hit["title_orig"] != null ){
-            short_title = hit["title_orig"];
-        }
+        let thumbnail_title = this.getThumbnailTitle(hit);
+        let history_title = this.getHistoryTitle(hit);
+        let main_title = this.getMainTitle(hit);
 
-        short_title = this.getTruncatedTitle(short_title, max_length);
+        // let max_length = 20;
+        // if(!hit["lang_orig"]){
+        //     hit["lang_orig"] = "";
+        // }
+        // let short_title = "";
+        // if ( hit["title_req"] != null ){
+        //     short_title = hit["title_req"];
+        // }else if ( hit["title_orig"] != null ){
+        //     short_title = hit["title_orig"];
+        // }
+        // short_title = this.getTruncatedTitle(short_title, max_length);
 
         if(hit["level"]){
             let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-            let thumbnail_src, description_src,lang,original,translated,thumb; //,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+            let main,thumb,thumbnail_src,description_src;
             thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
-            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+            thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
+//            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
+          
+
 //        thumbnail.setStoryline(card["storyline"]);
 //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
 //        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
@@ -183,7 +294,7 @@ class SubLevelRestGenerator extends  RestGenerator{
             thumbnail.setFunctionForSelection({"menu": 
                 (function(hierarchy_id) {
                     return function() {
-                        return new SubLevelRestGenerator(refToThis.language_code, short_title, hierarchy_id);
+                        return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id);
                     };
                 })(hit["id"])
             });
@@ -223,29 +334,36 @@ class SubLevelRestGenerator extends  RestGenerator{
                 }
             }
 
-            if(hit['sequence'] && hit['sequence'] > 0){
-                let part = translated_titles['part'].format("0", hit['sequence']);
-                short_title = short_title + " " + part;
+// !!!!!
+            // if(hit['sequence'] && hit['sequence'] > 0){
+            //     let part = translated_titles['part'].format("0", hit['sequence']);
+            //     short_title = short_title + " " + part;
             
-                if (hit["title_req"]){
-                    hit["title_req"] = hit["title_req"] + " - " + part
-                }
-                if(hit["title_orig"]){
-                    hit["title_orig"] = hit["title_orig"] + " - " + part
-                }    
-            }
-
+            //     if (hit["title_req"]){
+            //         hit["title_req"] = hit["title_req"] + " - " + part
+            //     }
+            //     if(hit["title_orig"]){
+            //         hit["title_orig"] = hit["title_orig"] + " - " + part
+            //     }    
+            // }
+// !!!!!
             let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
            
             let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
             let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
 
-            let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,actors,voices,hosts,guests,interviewers,interviewees,presenters,lecturers,length,date,origins,genres,themes
+            let main,thumb,thumbnail_src,description_src;
             thumbnail.setImageSources(thumbnail_src=thumbnail_path, description_src=screenshot_path);
-            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
+            thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
+
+            
+
             thumbnail.setStoryline(card["storyline"]);
+            let directors, writers, stars, actors, voices, hosts, guests, interviewers, interviewees, presenters, lecturers
             thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"], hosts=card["hosts"], guests=card["guests"], interviewers=card["interviewers"], interviewees=card["interviewees"], presenters=card["presenters"], lecturers=card["lecturers"]);
+            let length, date, origins, genres, themes
             thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
     
             thumbnail.setFunctionForSelection({[mode]: 
@@ -273,23 +391,26 @@ class IndividualRestGenerator extends  RestGenerator{
 
     generateThumbnail(hit){
         let thumbnail = new Thumbnail();
-        let max_length = 20;
+        // let max_length = 20;
 
         let card_id = hit["id"];
         let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
         let card = this.sendRestRequest("GET", card_request_url)[0];
 
-        if(!hit["lang_orig"]){
-            hit["lang_orig"] = "";
-        }
-        let short_title = "";
-        if ( hit["title_req"] != null ){
-            short_title = hit["title_req"];
-        }else if ( hit["title_orig"] != null ){
-            short_title = hit["title_orig"];
-        }
+        let thumbnail_title = this.getThumbnailTitle(hit);
+        // let history_title = this.getHistoryTitle(hit);
+        let main_title = this.getMainTitle(hit);
 
-        short_title = this.getTruncatedTitle(short_title, max_length);
+        // if(!hit["lang_orig"]){
+        //     hit["lang_orig"] = "";
+        // }
+        // let short_title = "";
+        // if ( hit["title_req"] != null ){
+        //     short_title = hit["title_req"];
+        // }else if ( hit["title_orig"] != null ){
+        //     short_title = hit["title_orig"];
+        // }
+        // short_title = this.getTruncatedTitle(short_title, max_length);
         
 
         // TODO: what happens if more than one medium are in the list ???
@@ -327,11 +448,17 @@ class IndividualRestGenerator extends  RestGenerator{
         let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
         let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
 
-        let thumbnail_src, description_src,lang,original,translated,thumb,directors,writers,stars,actors,voices,length,date,origins,genres,themes
+        let main,thumb,thumbnail_src,description_src;
         thumbnail.setImageSources(thumbnail_src=thumbnail_path, description_src=screenshot_path);
-        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=short_title);
+//        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
+        thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
+
+
+
         thumbnail.setStoryline(card["storyline"]);
+        let directors, writers, stars, actors, voices
         thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+        let length, date, origins, genres, themes
         thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
 
         thumbnail.setFunctionForSelection({[mode]: 
@@ -361,9 +488,12 @@ class MainMenuGenerator extends Generator{
 
         // Movies
         let thumbnail = new Thumbnail();
-        let thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
+        let main,thumb,history,thumbnail_src,description_src;
         thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movies'], translated=translated_titles['movies'], thumb=translated_titles['movies'], history=translated_titles['movies']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movies'], translated=translated_titles['movies'], thumb=translated_titles['movies'], history=translated_titles['movies']);
+        thumbnail.setTitles(main=translated_titles['movies'], thumb=translated_titles['movies'], history=translated_titles['movies']);
+
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -374,9 +504,10 @@ class MainMenuGenerator extends Generator{
 
         // Music
         thumbnail = new Thumbnail();
-        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/music.jpg", description_src="images/categories/music.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music'], translated=translated_titles['music'], thumb=translated_titles['music'], history=translated_titles['music']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music'], translated=translated_titles['music'], thumb=translated_titles['music'], history=translated_titles['music']);
+        thumbnail.setTitles(main=translated_titles['music'], thumb=translated_titles['music'], history=translated_titles['music']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -387,9 +518,10 @@ class MainMenuGenerator extends Generator{
 
         // Radioplay
         thumbnail = new Thumbnail();
-        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/radioplay.jpg", description_src="images/categories/radioplay.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['radioplay'], translated=translated_titles['radioplay'], thumb=translated_titles['radioplay'], history=translated_titles['radioplay']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['radioplay'], translated=translated_titles['radioplay'], thumb=translated_titles['radioplay'], history=translated_titles['radioplay']);
+        thumbnail.setTitles(main=translated_titles['radioplay'], thumb=translated_titles['radioplay'], history=translated_titles['radioplay']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -400,9 +532,10 @@ class MainMenuGenerator extends Generator{
 
         // Dia
         thumbnail = new Thumbnail();
-        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/dia.jpg", description_src="images/categories/dia.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['dia'], translated=translated_titles['dia'], thumb=translated_titles['dia'], history=translated_titles['dia']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['dia'], translated=translated_titles['dia'], thumb=translated_titles['dia'], history=translated_titles['dia']);
+        thumbnail.setTitles(main=translated_titles['dia'], thumb=translated_titles['dia'], history=translated_titles['dia']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -414,7 +547,9 @@ class MainMenuGenerator extends Generator{
         // Entertainment
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/entertainment.jpg", description_src="images/categories/entertainment.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['entertainments'], translated=translated_titles['entertainments'], thumb=translated_titles['entertainments'], history=translated_titles['entertainments']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['entertainments'], translated=translated_titles['entertainments'], thumb=translated_titles['entertainments'], history=translated_titles['entertainments']);
+        thumbnail.setTitles(main=translated_titles['entertainments'], thumb=translated_titles['entertainments'], history=translated_titles['entertainments']);
+
         thumbnail.setFunctionForSelection({"menu":
             (function(){
                 return function(){
@@ -426,7 +561,9 @@ class MainMenuGenerator extends Generator{
         // Knowledge
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/knowledge.jpg", description_src="images/categories/knowledge.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['knowledge'], translated=translated_titles['knowledge'], thumb=translated_titles['knowledge'], history=translated_titles['knowledge']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['knowledge'], translated=translated_titles['knowledge'], thumb=translated_titles['knowledge'], history=translated_titles['knowledge']);
+        thumbnail.setTitles(main=translated_titles['knowledge'], thumb=translated_titles['knowledge'], history=translated_titles['knowledge']);
+
         thumbnail.setFunctionForSelection({"menu":
             (function(){
                 return function(){
@@ -455,9 +592,11 @@ class MovieMenuGenerator extends Generator{
 
         // Individual
         let thumbnail = new Thumbnail();
-        let thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
+        let main,thumb,history,thumbnail_src,description_src;
         thumbnail.setImageSources(thumbnail_src="images/categories/movie_individual.jpg", description_src="images/categories/movie_individual.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_individual'], translated=translated_titles['movie_individual'], thumb=translated_titles['movie_individual'], history=translated_titles['movie_individual']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_individual'], translated=translated_titles['movie_individual'], thumb=translated_titles['movie_individual'], history=translated_titles['movie_individual']);
+        thumbnail.setTitles(main=translated_titles['movie_individual'], thumb=translated_titles['movie_individual'], history=translated_titles['movie_individual']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -468,9 +607,10 @@ class MovieMenuGenerator extends Generator{
 
         // Series
         thumbnail = new Thumbnail();
-        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/movie_series.jpg", description_src="images/categories/movie_series.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_series'], translated=translated_titles['movie_series'], thumb=translated_titles['movie_series'], history=translated_titles['movie_series']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_series'], translated=translated_titles['movie_series'], thumb=translated_titles['movie_series'], history=translated_titles['movie_series']);
+        thumbnail.setTitles(main=translated_titles['movie_series'], thumb=translated_titles['movie_series'], history=translated_titles['movie_series']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -481,9 +621,10 @@ class MovieMenuGenerator extends Generator{
 
         // Sequel
         thumbnail = new Thumbnail();
-        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/movie_sequels.jpg", description_src="images/categories/movie_sequels.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_sequels'], translated=translated_titles['movie_sequels'], thumb=translated_titles['movie_sequels'], history=translated_titles['movie_sequels']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_sequels'], translated=translated_titles['movie_sequels'], thumb=translated_titles['movie_sequels'], history=translated_titles['movie_sequels']);
+        thumbnail.setTitles(main=translated_titles['movie_sequels'], thumb=translated_titles['movie_sequels'], history=translated_titles['movie_sequels']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -494,9 +635,10 @@ class MovieMenuGenerator extends Generator{
 
         // Documentaries
         thumbnail = new Thumbnail();
-        thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
         thumbnail.setImageSources(thumbnail_src="images/categories/movie_documentaries.jpg", description_src="images/categories/movie_documentaries.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_documentaries'], translated=translated_titles['movie_documentaries'], thumb=translated_titles['movie_documentaries'], history=translated_titles['movie_documentaries']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_documentaries'], translated=translated_titles['movie_documentaries'], thumb=translated_titles['movie_documentaries'], history=translated_titles['movie_documentaries']);
+        thumbnail.setTitles(main=translated_titles['movie_documentaries'], thumb=translated_titles['movie_documentaries'], history=translated_titles['movie_documentaries']);
+
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -598,9 +740,11 @@ class MusicMenuGenerator extends Generator{
 
         // Video music
         let thumbnail = new Thumbnail();
-        let thumbnail_src, description_src,lang,original,translated,thumb,history; //,directors,writers,stars,length,year,origin,genre,theme
+        let main,thumb,history,thumbnail_src,description_src;
         thumbnail.setImageSources(thumbnail_src="images/categories/music_video.jpg", description_src="images/categories/music_video.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_video'], translated=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_video'], translated=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
+        thumbnail.setTitles(main=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
+
         thumbnail.setFunctionForSelection({"menu":
             (function(blabla){
                 return function(){
@@ -612,7 +756,9 @@ class MusicMenuGenerator extends Generator{
         // Audio music
         thumbnail = new Thumbnail();
         thumbnail.setImageSources(thumbnail_src="images/categories/music_audio.jpg", description_src="images/categories/music_audio.jpg");
-        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_audio'], translated=translated_titles['music_audio'], thumb=translated_titles['music_audio'], history=translated_titles['music_audio']);
+//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_audio'], translated=translated_titles['music_audio'], thumb=translated_titles['music_audio'], history=translated_titles['music_audio']);
+        thumbnail.setTitles(main=translated_titles['music_audio'], thumb=translated_titles['music_audio'], history=translated_titles['music_audio']);
+
         thumbnail.setFunctionForSelection({"menu":
             (function(){
                 return function(){

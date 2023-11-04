@@ -80,7 +80,7 @@ class CardHandle:
         if card_path:
             data = None
             with open(card_path, "r", encoding="utf-8") as file_object:
-                #data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
+                # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
                 data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
             category = data['category']
             try:
@@ -91,6 +91,15 @@ class CardHandle:
                 level = data['level']
             except:
                 level = None
+            try:
+                title_on_thumbnail = 1 if data['title']['onthumbnail'] in ['yes', 'Yes', 'true', 'True'] else 0
+            except:
+                title_on_thumbnail = 1
+            try:
+                title_show_sequence = data['title']['showsequence']
+            except:
+                title_show_sequence = ''
+
             try:
                 title_orig = data['title']['orig']
             except:
@@ -269,6 +278,8 @@ class CardHandle:
                 card_id=db.append_hierarchy(
                     title_orig=title_orig,
                     titles=titles,
+                    title_on_thumbnail=title_on_thumbnail,
+                    title_show_sequence=title_show_sequence,
                     date=date,
                     decade=decade,
                     category=category,
@@ -319,7 +330,9 @@ class CardHandle:
                     db.append_card_movie(
                         category=category,
                         title_orig=title_orig, 
-                        titles=titles, 
+                        titles=titles,
+                        title_on_thumbnail=title_on_thumbnail,
+                        title_show_sequence=title_show_sequence,
                         storylines=storylines,
                         lyrics=lyrics,
                         decade=decade,

@@ -225,6 +225,8 @@ class SqlDatabase:
                 sequence            INTEGER,
                 id_higher_card      INTEGER,
                 level               TEXT,
+                title_on_thumbnail  BOOLEAN     NOT NULL CHECK (title_on_thumbnail IN (0, 1)),
+                title_show_sequence TEXT        NOT NULL,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 FOREIGN KEY (id_higher_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id) 
             );
@@ -592,7 +594,9 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_movie(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+
+        # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -608,19 +612,12 @@ class SqlDatabase:
             # if higher_card_id:             
 
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id_title_orig, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id_title_orig, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                    (id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+                    VALUES (:id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'id_title_orig': title_orig_id, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
-            # else:
-            #     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-            #         (id_title_orig, id_category, decade, date, length, basename, source_path)
-            #         VALUES (:id_title_orig, :id_category, :decade, :date, :length, :basename, :source_path)
-            #         RETURNING id;
-            #     '''
-            #     cur.execute(query, {'id_title_orig': title_orig_id, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path})
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
 
@@ -996,7 +993,7 @@ class SqlDatabase:
         # close the insert transaction
         cur.execute("commit")
 
-    def append_hierarchy(self, title_orig, titles, date, decade, category, level, genres, themes, origins, basename, source_path, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', date=None, decade=None, category=None, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1013,18 +1010,11 @@ class SqlDatabase:
             # if higher_card_id:
 
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (level, id_title_orig, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-                    VALUES (:level, :id_title_orig, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+                    (level, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
+                    VALUES (:level, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'level': level, 'id_title_orig': title_orig_id, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
-            # else:
-            #     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-            #         (level, id_title_orig, decade, id_category, basename, source_path, sequence)
-            #         VALUES (:level, :id_title_orig, :decade, :id_category, :basename, :source_path, :sequence)
-            #         RETURNING id;
-            #     '''
-            #     cur.execute(query, {'level': level, 'id_title_orig': title_orig_id, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'sequence': sequence})
+            cur.execute(query, {'level': level, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             record = cur.fetchone()
             (hierarchy_id, ) = record if record else (None,)
 
@@ -1153,6 +1143,10 @@ class SqlDatabase:
                     MAX(lang_req) lang_req, 
                     MAX(title_orig) title_orig, 
                     MAX(lang_orig) lang_orig,
+
+                    title_on_thumbnail,
+                    title_show_sequence,
+
                     source_path
                 FROM (
                     SELECT 
@@ -1163,6 +1157,10 @@ class SqlDatabase:
                         NULL lang_req, 
                         htl.text title_orig, 
                         lang.name lang_orig,
+
+                        title_on_thumbnail,
+                        title_show_sequence,                        
+
                         card.source_path source_path,
                         card.sequence sequence,
                         card.basename
@@ -1188,6 +1186,10 @@ class SqlDatabase:
                         lang.name lang_req, 
                         NULL title_orig, 
                         NULL lang_orig,
+
+                        title_on_thumbnail,
+                        title_show_sequence,
+
                         card.source_path source_path,
                         card.sequence sequence,
                         card.basename
@@ -1271,6 +1273,24 @@ class SqlDatabase:
 
             if json:
                 records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                trans = Translator.getInstance(lang)
+
+                for record in records:
+
+                    # Lang Orig
+                    lang_orig = record["lang_orig"]
+                    lang_orig_translated = trans.translate_language_short(lang_orig)
+                    record["lang_orig"] = lang_orig_translated
+
+                    # Lang Req
+                    lang_req = record["lang_req"]
+                    lang_req_translated = trans.translate_language_short(lang_req)
+                    record["lang_req"] = lang_req_translated
         
             return records
 
@@ -1295,10 +1315,10 @@ class SqlDatabase:
 
             # Get Card list
             query = '''
-            SELECT id, level, title_req, title_orig, lang_req, lang_orig, sequence, source_path, date
+            SELECT id, level, title_req, title_orig, lang_req, lang_orig, title_on_thumbnail, title_show_sequence, sequence, source_path, date
             FROM (
                 --- all cards connected to higher card ---
-                SELECT id, level level, MAX(title_req) title_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig, MAX(lang_req) lang_req, sequence, basename, source_path, date
+                SELECT id, level level, MAX(title_req) title_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig, MAX(lang_req) lang_req, title_on_thumbnail, title_show_sequence, sequence, basename, source_path, date
                 FROM (
 
                     --- requested language not the original ---
@@ -1308,7 +1328,11 @@ class SqlDatabase:
                         NULL title_req,
                         NULL lang_req,
                         lang.name lang_orig,
-                        tcl.text title_orig, 
+                        tcl.text title_orig,
+                        
+                        title_on_thumbnail,
+                        title_show_sequence,
+
                         sequence, 
                         basename, 
                         source_path,
@@ -1335,6 +1359,10 @@ class SqlDatabase:
                         lang.name lang_req, 
                         NULL title_orig,
                         NULL lang_orig,
+
+                        title_on_thumbnail,
+                        title_show_sequence,
+
                         sequence, 
                         basename, 
                         source_path,
@@ -1360,13 +1388,34 @@ class SqlDatabase:
             END
             '''
 
-            logging.debug("child_hierarchy_or_card query: '{0}'".format(query))
+            query_parameters = {'higher_card_id': higher_card_id, 'lang':lang}
 
-            records=cur.execute(query, {'higher_card_id': higher_card_id, 'lang':lang}).fetchall()
+            logging.debug("child_hierarchy_or_card query: '{0}'".format(query))
+            logging.debug("get_general_level query: '{0} / {1}'".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
             cur.execute("commit")
 
             if json:
                 records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                trans = Translator.getInstance(lang)
+
+                for record in records:
+
+                    # Lang Orig
+                    lang_orig = record["lang_orig"]
+                    lang_orig_translated = trans.translate_language_short(lang_orig)
+                    record["lang_orig"] = lang_orig_translated
+
+                    # Lang Req
+                    lang_req = record["lang_req"]
+                    lang_req_translated = trans.translate_language_short(lang_req)
+                    record["lang_req"] = lang_req_translated
 
             return records
 
@@ -1399,6 +1448,10 @@ class SqlDatabase:
                 MAX(title_orig) title_orig, 
                 MAX(lang_orig) lang_orig,
                 MAX(lang_req) lang_req,
+
+                title_on_thumbnail,
+                title_show_sequence,
+
                 source_path
             FROM (
                 SELECT 
@@ -1408,6 +1461,10 @@ class SqlDatabase:
                     NULL lang_req, 
                     tcl.text title_orig, 
                     lang.name lang_orig,
+
+                    title_on_thumbnail,
+                    title_show_sequence,
+
                     card.source_path source_path,
                     card.decade decade
                 FROM 
@@ -1434,6 +1491,10 @@ class SqlDatabase:
                     lang.name lang_req, 
                     NULL title_orig, 
                     NULL lang_orig,
+
+                    title_on_thumbnail,
+                    title_show_sequence,
+
                     card.source_path source_path,
                     card.decade decade
                 FROM 
@@ -1524,10 +1585,16 @@ class SqlDatabase:
                 trans = Translator.getInstance(lang)
 
                 for record in records:
+
                     # Lang Orig
                     lang_orig = record["lang_orig"]
                     lang_orig_translated = trans.translate_language_short(lang_orig)
                     record["lang_orig"] = lang_orig_translated
+
+                    # Lang Req
+                    lang_req = record["lang_req"]
+                    lang_req_translated = trans.translate_language_short(lang_req)
+                    record["lang_req"] = lang_req_translated
 
             return records
 
@@ -2463,6 +2530,27 @@ class SqlDatabase:
 
             if json:
                 records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                trans = Translator.getInstance(lang)
+
+                for record in records:
+
+                    # Lang Orig
+                    lang_orig = record["lang_orig"]
+                    lang_orig_translated = trans.translate_language_short(lang_orig)
+                    record["lang_orig"] = lang_orig_translated
+
+                    # Lang Req
+                    lang_req = record["lang_req"]
+                    lang_req_translated = trans.translate_language_short(lang_req)
+                    record["lang_req"] = lang_req_translated
+
+
+
 
             return records
 

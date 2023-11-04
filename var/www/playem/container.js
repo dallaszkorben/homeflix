@@ -549,19 +549,9 @@ class Thumbnail{
         }
     }
 
-    setTitles(lang_orig, original=undefined, translated=undefined, thumb=undefined, history=undefined){
-        this.thumbnailDict["lang_orig"] = lang_orig;
-
-        //                                                               translated  original
-        // requested ≠ original requested exist,          original exist         ✔        ✔
-        // requested ≠ original requested does not exist, original exist         ❌        ✔
-        // requested = original                                                  ✔        ❌        
-        //
-
-        if(translated == undefined){
-            this.thumbnailDict["title"] = original + " (" + lang_orig + ")";
-        }else if(translated != undefined){
-            this.thumbnailDict["title"] = translated;
+    setTitles(main=undefined, thumb=undefined, history=undefined){
+        if(main != undefined){
+            this.thumbnailDict["title"] = main;
         }
 
         if(thumb != undefined){
@@ -572,6 +562,30 @@ class Thumbnail{
             this.thumbnailDict["title_history"] = history;
         }
     }
+
+    // setTitles(lang_orig, original=undefined, translated=undefined, thumb=undefined, history=undefined){
+    //     this.thumbnailDict["lang_orig"] = lang_orig;
+
+    //     //                                                               translated title    original title    original language    requested language
+    //     // requested = original                                                        ✔               ❌                    ❌                    ✔
+    //     // requested ≠ original requested exist,          original exist               ✔               ✔                    ✔                    ✔
+    //     // requested ≠ original requested does not exist, original exist               ❌               ✔                    ✔                    ❌
+    //     //
+
+    //     if(translated == undefined){
+    //         this.thumbnailDict["title"] = original + " (" + lang_orig + ")";
+    //     }else if(translated != undefined){
+    //         this.thumbnailDict["title"] = translated;
+    //     }
+
+    //     if(thumb != undefined){
+    //         this.thumbnailDict["title_thumb"] = thumb;
+    //     }
+
+    //     if(history != undefined){
+    //         this.thumbnailDict["title_history"] = history;
+    //     }
+    // }
     
     setStoryline(storyline){
         if(storyline != undefined){
