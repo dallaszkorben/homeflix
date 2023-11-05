@@ -377,6 +377,7 @@ title:
     entertainments: Szórakoztatás
     knowledge: Ismeretek
 
+    performer: Előadó
     writer: Író
     author: Szerző
     director: Rendező
@@ -441,7 +442,8 @@ title:
         part: '{0}. rész'
         season: '{0}. sorozat'
         record: '{0}. szám'
-        general: '{0}. {1}'
+        simple: '{0}'
+        general: '#{0}'
 
 
 

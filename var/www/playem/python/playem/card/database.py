@@ -38,6 +38,7 @@ class SqlDatabase:
     TABLE_CARD_INTERVIEWEE = "Card_Interviewee"
     TABLE_CARD_PRESENTER = "Card_Presenter"
     TABLE_CARD_LECTURER = "Card_Lecturer"
+    TABLE_CARD_PERFORMER = "Card_Performer"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
 
     def __init__(self):
@@ -61,6 +62,7 @@ class SqlDatabase:
                 SqlDatabase.TABLE_CARD_INTERVIEWEE,
                 SqlDatabase.TABLE_CARD_PRESENTER,
                 SqlDatabase.TABLE_CARD_LECTURER,
+                SqlDatabase.TABLE_CARD_PERFORMER,
 
                 SqlDatabase.TABLE_CARD_ORIGIN,
                 SqlDatabase.TABLE_CARD_GENRE,
@@ -389,19 +391,29 @@ class SqlDatabase:
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_LECTURER + '''(
                 id_card INTEGER            NOT NULL,
-                id_lecturer INTEGER       NOT NULL,
+                id_lecturer INTEGER        NOT NULL,
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
-                FOREIGN KEY (id_lecturer) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                FOREIGN KEY (id_lecturer)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
                 PRIMARY KEY (id_card, id_lecturer) 
             );
         ''')
 
         self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_PERFORMER + '''(
+                id_card INTEGER             NOT NULL,
+                id_performer INTEGER        NOT NULL,
+                FOREIGN KEY (id_card)       REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_performer)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_performer) 
+            );
+        ''')
+
+        self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''(
-                text         TEXT     NOT NULL,
-                id_language  INTEGER  NOT NULL,
-                id_card      INTEGER  NOT NULL,
-                type         TEXT     NOT NULL,
+                text         TEXT          NOT NULL,
+                id_language  INTEGER       NOT NULL,
+                id_card      INTEGER       NOT NULL,
+                type         TEXT          NOT NULL,
                 FOREIGN KEY (id_language)  REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 PRIMARY KEY (id_card, id_language, type)
@@ -594,7 +606,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_movie(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -886,6 +898,30 @@ class SqlDatabase:
 
                     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_LECTURER + ''' 
                             (id_lecturer, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_PERFORMER
+            #
+            for performer in performers:
+
+                if performer:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': performer}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': performer})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PERFORMER + ''' 
+                            (id_performer, id_card) 
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1610,6 +1646,8 @@ class SqlDatabase:
     #
 
     # TODO: DB name should be replaced by variables
+    # TODO: Must be renamed
+    # TODO: Give back all existing/posible fields
 
     def get_standalone_movie_by_card_id(self, card_id, lang, limit=100, json=True):
         with self.lock:
@@ -1629,6 +1667,7 @@ class SqlDatabase:
                 card.source_path as source_path,
                 medium,
                 storyline,
+                lyrics,
                 sounds,
                 subs,
                 origins,
@@ -1644,7 +1683,8 @@ class SqlDatabase:
                 interviewers,
                 interviewees,
                 presenters,
-                lecturers
+                lecturers,
+                performers
             FROM
                 (SELECT group_concat( mt.name || "=" || m.name) medium
 
@@ -1665,7 +1705,17 @@ class SqlDatabase:
                         tcl.id_card = :card_id AND
                         tcl.id_language = language.id AND
                         language.name = :lang
-                ),                        
+                ),
+                (SELECT group_concat(tcl.text) lyrics
+                    FROM 
+                        Text_Card_Lang tcl,
+                        Language language
+                    WHERE 
+                        tcl.type = "L" AND
+                        tcl.id_card = :card_id AND
+                        tcl.id_language = language.id AND
+                        language.name = :lang
+                ),
                 (SELECT group_concat(language.name) sounds
                     FROM 
                         Language language,
@@ -1795,7 +1845,16 @@ class SqlDatabase:
                     WHERE 
                         ci.id_lecturer = person.id AND
                         ci.id_card = :card_id
-                ),                
+                ),
+                (SELECT group_concat(person.name) performers
+                    FROM 
+                        Person person,
+                        Card_Performer cp
+                    WHERE 
+                        cp.id_performer = person.id AND
+                        cp.id_card = :card_id
+                ),
+
                 Card card,
                 Category category
             WHERE
@@ -1898,6 +1957,13 @@ class SqlDatabase:
                 if lecturers_string:
                     lecturers_list = lecturers_string.split(',')
                 records[0]["lecturers"] = lecturers_list
+
+                # Performers
+                performers_string = records[0]["performers"]
+                performers_list = []
+                if performers_string:
+                    performers_list = performers_string.split(',')
+                records[0]["performers"] = performers_list
 
                 # Genre
                 genres_string = records[0]["genres"]

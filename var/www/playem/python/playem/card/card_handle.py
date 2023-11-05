@@ -117,10 +117,6 @@ class CardHandle:
             except:
                 lyrics = {}
             try:
-                performer = data['performer']
-            except:
-                performer = None
-            try:
                 decade = data['decade']
             except:
                 decade = None
@@ -172,6 +168,16 @@ class CardHandle:
                 lecturers = data['lecturers']
             except:
                 lecturers = []
+            try:
+                performer = data['performer']
+                performers = [performer]
+            except:
+                performers = []
+            try:
+                if not performers:
+                    performers = data['performers']
+            except:
+                performers = []
 
             try:
                 length = data['length']
@@ -354,6 +360,7 @@ class CardHandle:
                         interviewees=interviewees,
                         presenters=presenters,
                         lecturers=lecturers,
+                        performers=performers,
 
                         media=media_dict,
 

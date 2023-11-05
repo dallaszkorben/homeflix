@@ -540,7 +540,7 @@ class Thumbnail{
         }
     }
 
-    setImageSources(thumbnail_src=undefined, description_src=undefined){
+    setImageSources({thumbnail_src=undefined, description_src=undefined}){
         if(thumbnail_src != undefined){
             this.thumbnailDict["thumbnail_src"] = thumbnail_src;
         }
@@ -549,7 +549,7 @@ class Thumbnail{
         }
     }
 
-    setTitles(main=undefined, thumb=undefined, history=undefined){
+    setTitles({main=undefined, thumb=undefined, history=undefined}){
         if(main != undefined){
             this.thumbnailDict["title"] = main;
         }
@@ -563,43 +563,16 @@ class Thumbnail{
         }
     }
 
-    // setTitles(lang_orig, original=undefined, translated=undefined, thumb=undefined, history=undefined){
-    //     this.thumbnailDict["lang_orig"] = lang_orig;
-
-    //     //                                                               translated title    original title    original language    requested language
-    //     // requested = original                                                        ✔               ❌                    ❌                    ✔
-    //     // requested ≠ original requested exist,          original exist               ✔               ✔                    ✔                    ✔
-    //     // requested ≠ original requested does not exist, original exist               ❌               ✔                    ✔                    ❌
-    //     //
-
-    //     if(translated == undefined){
-    //         this.thumbnailDict["title"] = original + " (" + lang_orig + ")";
-    //     }else if(translated != undefined){
-    //         this.thumbnailDict["title"] = translated;
-    //     }
-
-    //     if(thumb != undefined){
-    //         this.thumbnailDict["title_thumb"] = thumb;
-    //     }
-
-    //     if(history != undefined){
-    //         this.thumbnailDict["title_history"] = history;
-    //     }
-    // }
-    
-    setStoryline(storyline){
+    setTextCard({storyline=undefined, lyrics=undefined}){
         if(storyline != undefined){
             this.thumbnailDict["storyline"] = storyline;
         }
-    }
-
-    setLyrics(lyrics){
         if(lyrics != undefined){
             this.thumbnailDict["lyrics"] = lyrics;
         }
     }
 
-    setCredentials(directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined, hosts=undefined, guests=undefined, interviewers=undefined, interviewees=undefined, presenters=undefined, lecturers=undefined){
+    setCredentials({directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined, hosts=undefined, guests=undefined, interviewers=undefined, interviewees=undefined, presenters=undefined, lecturers=undefined, performers=undefined}){
         this.thumbnailDict["credentials"] = {}
         if(directors != undefined && Array.isArray(directors)){
             this.thumbnailDict["credentials"]["directors"] = directors;
@@ -634,9 +607,12 @@ class Thumbnail{
         if(lecturers != undefined && Array.isArray(lecturers)){
             this.thumbnailDict["credentials"]["lecturers"] = lecturers;
         }
+        if(performers != undefined && Array.isArray(performers)){
+            this.thumbnailDict["credentials"]["performers"] = performers;
+        }
     }
 
-    setExtras(length=undefined, date=undefined, origins=undefined, genres=undefined, themes=undefined){
+    setExtras({length=undefined, date=undefined, origins=undefined, genres=undefined, themes=undefined}){
         this.thumbnailDict["extras"] = {}
 //        if(length != undefined){
             this.thumbnailDict["extras"]["length"] = length;            
@@ -778,6 +754,7 @@ class ObjDescriptionContainer{
             descTextTitle.empty();                
             descTextTitle.html(title);
 
+            // TODO: probably it should be renamed to #description-text-main-area
             let descTextStoryline = $("#description-text-storyline");
             descTextStoryline.empty();                
 
@@ -791,7 +768,7 @@ class ObjDescriptionContainer{
                 // --------------
                 // --- lyrics ---        
                 // --------------
-                descTextLyrics.html(lyrics);
+                descTextStoryline.html(lyrics);
             }
 
             // -----------------
@@ -886,6 +863,7 @@ class ObjDescriptionContainer{
             });
             descTextCredentials.append(credTable);
 
+            mainObject.printCredentals(credTable, credentials, "performers", translated_titles['performer'] + ":");
             mainObject.printCredentals(credTable, credentials, "directors", translated_titles['director'] + ":");
             mainObject.printCredentals(credTable, credentials, "writers", translated_titles['writer'] + ":");
             mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":");

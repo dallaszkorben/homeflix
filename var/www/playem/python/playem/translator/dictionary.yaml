@@ -377,6 +377,7 @@ title:
     entertainments: Entertainments
     knowledge: Knowledge
 
+    performer: Performer
     writer: Writer(s)
     author: Author(s)
     director: Director(s)
@@ -441,7 +442,8 @@ title:
         part: Part {0}.
         season: Season {0}
         record: '# {0}'
-        general: '{1} {0}'
+        simple: '{0}'
+        general: '#{0}'
 
 
 

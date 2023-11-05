@@ -121,8 +121,6 @@ class RestGenerator extends Generator{
             title = hit["title_orig"];
         }
 
-        //title = this.getTruncatedTitle(title, max_length);
-
         title = this.getTitleWithPart(hit, title, " ");
         return title;
 
@@ -130,6 +128,8 @@ class RestGenerator extends Generator{
 
     getMainTitle(hit){
         let title;
+
+        let lang_orig = hit['lang_orig']
 
         //                                                                requested title    original title    original language    requested language
         // requested = original                                                        ✔               ❌                    ❌                    ✔
@@ -143,7 +143,7 @@ class RestGenerator extends Generator{
 
         // there is NO title configure on the requested language => show the original title and the language
         }else if(!hit["title_req"]){
-            title = original + " (" + lang_orig + ")";
+            title = hit["title_orig"]; // + " (" + lang_orig + ")";
 
         // There IS title configured on the requested language but I want to see the original title as well if it is different
         }else if(always_show_origin_title){
@@ -200,29 +200,11 @@ class LevelRestGenerator extends RestGenerator{
         let history_title = this.getHistoryTitle(hit);
         let main_title = this.getMainTitle(hit);
 
-        // if(!hit["lang_orig"]){
-        //     hit["lang_orig"] = "";
-        // }
-        // let short_title = "";
-        // let history_title = "";
-        // if(hit["on_thumbnail"]){
-        // if ( hit["title_req"] != null ){
-        //     short_title = hit["title_req"];
-        // }else if ( hit["title_orig"] != null ){
-        //     short_title = hit["title_orig"];
-        // }
-        // short_title = this.getTruncatedTitle(short_title, max_length);
-
         let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
         let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-        let main,thumb,thumbnail_src,description_src;
-        thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
-        thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
-//        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
-
-
-
+        thumbnail.setImageSources({thumbnail_src: hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src: hit["source_path"] + "/screenshots/" + screenshot_file});
+        thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
 //        thumbnail.setStoryline(card["storyline"]);
 //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
@@ -265,27 +247,12 @@ class SubLevelRestGenerator extends  RestGenerator{
         let history_title = this.getHistoryTitle(hit);
         let main_title = this.getMainTitle(hit);
 
-        // let max_length = 20;
-        // if(!hit["lang_orig"]){
-        //     hit["lang_orig"] = "";
-        // }
-        // let short_title = "";
-        // if ( hit["title_req"] != null ){
-        //     short_title = hit["title_req"];
-        // }else if ( hit["title_orig"] != null ){
-        //     short_title = hit["title_orig"];
-        // }
-        // short_title = this.getTruncatedTitle(short_title, max_length);
-
         if(hit["level"]){
             let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-            let main,thumb,thumbnail_src,description_src;
-            thumbnail.setImageSources(thumbnail_src=hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src=hit["source_path"] + "/screenshots/" + screenshot_file);
-            thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
-//            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
-          
+            thumbnail.setImageSources({thumbnail_src: hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src: hit["source_path"] + "/screenshots/" + screenshot_file});
+            thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
 //        thumbnail.setStoryline(card["storyline"]);
 //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
@@ -300,6 +267,11 @@ class SubLevelRestGenerator extends  RestGenerator{
             });
 
         }else{
+
+// Here is the point to choose request
+// Have to decide:
+// -you want to figure out what type of media is and depending on it call the corresponding REST
+// -you call the same REST (must be renamed) and this will give back all possible/existing fields
 
             let card_id = hit["id"];
             let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
@@ -334,37 +306,19 @@ class SubLevelRestGenerator extends  RestGenerator{
                 }
             }
 
-// !!!!!
-            // if(hit['sequence'] && hit['sequence'] > 0){
-            //     let part = translated_titles['part'].format("0", hit['sequence']);
-            //     short_title = short_title + " " + part;
-            
-            //     if (hit["title_req"]){
-            //         hit["title_req"] = hit["title_req"] + " - " + part
-            //     }
-            //     if(hit["title_orig"]){
-            //         hit["title_orig"] = hit["title_orig"] + " - " + part
-            //     }    
-            // }
-// !!!!!
             let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
             let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
            
             let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
             let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
 
-            let main,thumb,thumbnail_src,description_src;
-            thumbnail.setImageSources(thumbnail_src=thumbnail_path, description_src=screenshot_path);
-//            thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
-            thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
+            thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
+            thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
-            
+            thumbnail.setTextCard({storyline:card["storyline"], lyrics:card["lyrics"]});
+            thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"]});
 
-            thumbnail.setStoryline(card["storyline"]);
-            let directors, writers, stars, actors, voices, hosts, guests, interviewers, interviewees, presenters, lecturers
-            thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"], hosts=card["hosts"], guests=card["guests"], interviewers=card["interviewers"], interviewees=card["interviewees"], presenters=card["presenters"], lecturers=card["lecturers"]);
-            let length, date, origins, genres, themes
-            thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+            thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
     
             thumbnail.setFunctionForSelection({[mode]: 
                 (function(medium_path) {
@@ -391,27 +345,13 @@ class IndividualRestGenerator extends  RestGenerator{
 
     generateThumbnail(hit){
         let thumbnail = new Thumbnail();
-        // let max_length = 20;
 
         let card_id = hit["id"];
         let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
         let card = this.sendRestRequest("GET", card_request_url)[0];
 
         let thumbnail_title = this.getThumbnailTitle(hit);
-        // let history_title = this.getHistoryTitle(hit);
         let main_title = this.getMainTitle(hit);
-
-        // if(!hit["lang_orig"]){
-        //     hit["lang_orig"] = "";
-        // }
-        // let short_title = "";
-        // if ( hit["title_req"] != null ){
-        //     short_title = hit["title_req"];
-        // }else if ( hit["title_orig"] != null ){
-        //     short_title = hit["title_orig"];
-        // }
-        // short_title = this.getTruncatedTitle(short_title, max_length);
-        
 
         // TODO: what happens if more than one medium are in the list ???
         // 'video'
@@ -448,18 +388,14 @@ class IndividualRestGenerator extends  RestGenerator{
         let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
         let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
 
-        let main,thumb,thumbnail_src,description_src;
-        thumbnail.setImageSources(thumbnail_src=thumbnail_path, description_src=screenshot_path);
-//        thumbnail.setTitles(lang=hit["lang_orig"], original=hit["title_orig"], translated=hit["title_req"], thumb=thumbnail_title);
-        thumbnail.setTitles(main=main_title, thumb=thumbnail_title);
+        thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
+        thumbnail.setTitles({main:main_title, thumb: thumbnail_title});
 
+        //thumbnail.setStoryline(card["storyline"]);
+        thumbnail.setTextCard({storyline:card["storyline"], lyrics:undefined});
+        thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], performers: card["performers"]});
 
-
-        thumbnail.setStoryline(card["storyline"]);
-        let directors, writers, stars, actors, voices
-        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
-        let length, date, origins, genres, themes
-        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+        thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
 
         thumbnail.setFunctionForSelection({[mode]: 
             (function(medium_path) {
@@ -488,12 +424,9 @@ class MainMenuGenerator extends Generator{
 
         // Movies
         let thumbnail = new Thumbnail();
-        let main,thumb,history,thumbnail_src,description_src;
-        thumbnail.setImageSources(thumbnail_src="images/categories/movie.jpg", description_src="images/categories/movie.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movies'], translated=translated_titles['movies'], thumb=translated_titles['movies'], history=translated_titles['movies']);
-        thumbnail.setTitles(main=translated_titles['movies'], thumb=translated_titles['movies'], history=translated_titles['movies']);
 
-
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie.jpg", description_src: "images/categories/movie.jpg"});
+        thumbnail.setTitles({main: translated_titles['movies'], thumb: translated_titles['movies'], history: translated_titles['movies']});
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -504,10 +437,8 @@ class MainMenuGenerator extends Generator{
 
         // Music
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/music.jpg", description_src="images/categories/music.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music'], translated=translated_titles['music'], thumb=translated_titles['music'], history=translated_titles['music']);
-        thumbnail.setTitles(main=translated_titles['music'], thumb=translated_titles['music'], history=translated_titles['music']);
-
+        thumbnail.setImageSources({thumbnail_src: "images/categories/music.jpg", description_src: "images/categories/music.jpg"});
+        thumbnail.setTitles({main: translated_titles['music'], thumb: translated_titles['music'], history: translated_titles['music']});
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -518,10 +449,8 @@ class MainMenuGenerator extends Generator{
 
         // Radioplay
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/radioplay.jpg", description_src="images/categories/radioplay.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['radioplay'], translated=translated_titles['radioplay'], thumb=translated_titles['radioplay'], history=translated_titles['radioplay']);
-        thumbnail.setTitles(main=translated_titles['radioplay'], thumb=translated_titles['radioplay'], history=translated_titles['radioplay']);
-
+        thumbnail.setImageSources({thumbnail_src: "images/categories/radioplay.jpg", description_src: "images/categories/radioplay.jpg"});
+        thumbnail.setTitles({main: translated_titles['radioplay'], thumb: translated_titles['radioplay'], history: translated_titles['radioplay']});
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -532,10 +461,8 @@ class MainMenuGenerator extends Generator{
 
         // Dia
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/dia.jpg", description_src="images/categories/dia.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['dia'], translated=translated_titles['dia'], thumb=translated_titles['dia'], history=translated_titles['dia']);
-        thumbnail.setTitles(main=translated_titles['dia'], thumb=translated_titles['dia'], history=translated_titles['dia']);
-
+        thumbnail.setImageSources({thumbnail_src: "images/categories/dia.jpg", description_src: "images/categories/dia.jpg"});
+        thumbnail.setTitles({main: translated_titles['dia'], thumb: translated_titles['dia'], history: translated_titles['dia']});
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
                 return function() {
@@ -546,10 +473,8 @@ class MainMenuGenerator extends Generator{
 
         // Entertainment
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/entertainment.jpg", description_src="images/categories/entertainment.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['entertainments'], translated=translated_titles['entertainments'], thumb=translated_titles['entertainments'], history=translated_titles['entertainments']);
-        thumbnail.setTitles(main=translated_titles['entertainments'], thumb=translated_titles['entertainments'], history=translated_titles['entertainments']);
-
+        thumbnail.setImageSources({thumbnail_src: "images/categories/entertainment.jpg", description_src: "images/categories/entertainment.jpg"});
+        thumbnail.setTitles({main: translated_titles['entertainments'], thumb: translated_titles['entertainments'], history: translated_titles['entertainments']});
         thumbnail.setFunctionForSelection({"menu":
             (function(){
                 return function(){
@@ -560,10 +485,8 @@ class MainMenuGenerator extends Generator{
 
         // Knowledge
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/knowledge.jpg", description_src="images/categories/knowledge.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['knowledge'], translated=translated_titles['knowledge'], thumb=translated_titles['knowledge'], history=translated_titles['knowledge']);
-        thumbnail.setTitles(main=translated_titles['knowledge'], thumb=translated_titles['knowledge'], history=translated_titles['knowledge']);
-
+        thumbnail.setImageSources({thumbnail_src: "images/categories/knowledge.jpg", description_src: "images/categories/knowledge.jpg"});
+        thumbnail.setTitles({main: translated_titles['knowledge'], thumb: translated_titles['knowledge'], history: translated_titles['knowledge']});
         thumbnail.setFunctionForSelection({"menu":
             (function(){
                 return function(){
@@ -593,9 +516,8 @@ class MovieMenuGenerator extends Generator{
         // Individual
         let thumbnail = new Thumbnail();
         let main,thumb,history,thumbnail_src,description_src;
-        thumbnail.setImageSources(thumbnail_src="images/categories/movie_individual.jpg", description_src="images/categories/movie_individual.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_individual'], translated=translated_titles['movie_individual'], thumb=translated_titles['movie_individual'], history=translated_titles['movie_individual']);
-        thumbnail.setTitles(main=translated_titles['movie_individual'], thumb=translated_titles['movie_individual'], history=translated_titles['movie_individual']);
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_individual.jpg", description_src: "images/categories/movie_individual.jpg"});
+        thumbnail.setTitles({main: translated_titles['movie_individual'], thumb: translated_titles['movie_individual'], history: translated_titles['movie_individual']});
 
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
@@ -607,9 +529,8 @@ class MovieMenuGenerator extends Generator{
 
         // Series
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/movie_series.jpg", description_src="images/categories/movie_series.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_series'], translated=translated_titles['movie_series'], thumb=translated_titles['movie_series'], history=translated_titles['movie_series']);
-        thumbnail.setTitles(main=translated_titles['movie_series'], thumb=translated_titles['movie_series'], history=translated_titles['movie_series']);
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_series.jpg", description_src: "images/categories/movie_series.jpg"});
+        thumbnail.setTitles({main: translated_titles['movie_series'], thumb: translated_titles['movie_series'], history: translated_titles['movie_series']});
 
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
@@ -621,9 +542,8 @@ class MovieMenuGenerator extends Generator{
 
         // Sequel
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/movie_sequels.jpg", description_src="images/categories/movie_sequels.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_sequels'], translated=translated_titles['movie_sequels'], thumb=translated_titles['movie_sequels'], history=translated_titles['movie_sequels']);
-        thumbnail.setTitles(main=translated_titles['movie_sequels'], thumb=translated_titles['movie_sequels'], history=translated_titles['movie_sequels']);
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_sequels.jpg", description_src: "images/categories/movie_sequels.jpg"});
+        thumbnail.setTitles({main: translated_titles['movie_sequels'], thumb: translated_titles['movie_sequels'], history: translated_titles['movie_sequels']});
 
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
@@ -635,9 +555,8 @@ class MovieMenuGenerator extends Generator{
 
         // Documentaries
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/movie_documentaries.jpg", description_src="images/categories/movie_documentaries.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['movie_documentaries'], translated=translated_titles['movie_documentaries'], thumb=translated_titles['movie_documentaries'], history=translated_titles['movie_documentaries']);
-        thumbnail.setTitles(main=translated_titles['movie_documentaries'], thumb=translated_titles['movie_documentaries'], history=translated_titles['movie_documentaries']);
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_documentaries.jpg", description_src: "images/categories/movie_documentaries.jpg"});
+        thumbnail.setTitles({main: translated_titles['movie_documentaries'], thumb: translated_titles['movie_documentaries'], history: translated_titles['movie_documentaries']});
 
         thumbnail.setFunctionForSelection({"menu": 
             (function(movie_type) {
@@ -667,6 +586,7 @@ class MovieCategoriesIndividualRestGenerator extends  IndividualRestGenerator{
             {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
             {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
+
         ];
 
         containerList = this.generateContainers(requestList);
@@ -741,9 +661,8 @@ class MusicMenuGenerator extends Generator{
         // Video music
         let thumbnail = new Thumbnail();
         let main,thumb,history,thumbnail_src,description_src;
-        thumbnail.setImageSources(thumbnail_src="images/categories/music_video.jpg", description_src="images/categories/music_video.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_video'], translated=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
-        thumbnail.setTitles(main=translated_titles['music_video'], thumb=translated_titles['music_video'], history=translated_titles['music_video']);
+        thumbnail.setImageSources({thumbnail_src: "images/categories/music_video.jpg", description_src: "images/categories/music_video.jpg"});
+        thumbnail.setTitles({main: translated_titles['music_video'], thumb: translated_titles['music_video'], history: translated_titles['music_video']});
 
         thumbnail.setFunctionForSelection({"menu":
             (function(blabla){
@@ -755,9 +674,8 @@ class MusicMenuGenerator extends Generator{
 
         // Audio music
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources(thumbnail_src="images/categories/music_audio.jpg", description_src="images/categories/music_audio.jpg");
-//        thumbnail.setTitles(lang=this.language_code, original=translated_titles['music_audio'], translated=translated_titles['music_audio'], thumb=translated_titles['music_audio'], history=translated_titles['music_audio']);
-        thumbnail.setTitles(main=translated_titles['music_audio'], thumb=translated_titles['music_audio'], history=translated_titles['music_audio']);
+        thumbnail.setImageSources({thumbnail_src: "images/categories/music_audio.jpg", description_src: "images/categories/music_audio.jpg"});
+        thumbnail.setTitles({main: translated_titles['music_audio'], thumb: translated_titles['music_audio'], history: translated_titles['music_audio']});
 
         thumbnail.setFunctionForSelection({"menu":
             (function(){
