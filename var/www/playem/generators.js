@@ -357,7 +357,7 @@ class SubLevelRestGenerator extends  RestGenerator{
 
             thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
 
-//            thumbnail.setAppendix()
+            thumbnail.setAppendix(appendix_list);
     
             thumbnail.setFunctionForSelection({[mode]: 
                 (function(medium_path) {

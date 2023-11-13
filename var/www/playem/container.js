@@ -214,9 +214,10 @@ class ObjScrollSection{
             let lyrics = thumbnail.getLyrics();
             let credentials = thumbnail.getCredentials();
             let extra = thumbnail.getExtras();
+            let appendix = thumbnail.getAppendix();
 
             // Shows the actual Description
-            this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra);
+            this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra, appendix);
         }
     }
     
@@ -631,6 +632,10 @@ class Thumbnail{
 //        }
     }
 
+    setAppendix(appendix_list){
+        this.thumbnailDict['appendix'] = appendix_list;
+    }
+
     getThumbnailDict(){
         return this.thumbnailDict;
     }
@@ -687,6 +692,12 @@ class Thumbnail{
             return this.thumbnailDict["extras"];
         return {};
     }
+
+    getAppendix(){
+        if( "appendix" in this.thumbnailDict)
+            return this.thumbnailDict["appendix"];
+        return {};
+    }
 }
 
 
@@ -735,7 +746,7 @@ class ObjDescriptionContainer{
     * @param {*} storyline 
     * @param {*} credential 
     */
-    refreshDescription(fileName, title, storyline, lyrics, credentials, extra){
+    refreshDescription(fileName, title, storyline, lyrics, credentials, extra, appendix_list){
         let mainObject = this;
         let descImg = new Image();
         descImg.src = fileName;
@@ -764,6 +775,7 @@ class ObjDescriptionContainer{
                 // --- storyline ---        
                 // -----------------
                 descTextStoryline.html(storyline);
+
             }else if (lyrics){
                 // --------------
                 // --- lyrics ---        
@@ -876,6 +888,26 @@ class ObjDescriptionContainer{
             mainObject.printCredentals(credTable, credentials, "presenters", translated_titles['presenter'] + ":");
             mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
 
+
+
+            // ----------------
+            // --- Appendix ---
+            // ----------------
+
+            let descAppendix = $("#description-appendix");                
+            descAppendix.empty();
+            for(let i in appendix_list){
+                let button = $('<button/>', {
+                    class: "description-appendix-button",
+                    text: appendix_list[i]['title'],
+                    click: function () { alert('hi'); 
+                    }
+                });
+                descAppendix.append(button);
+            }
+
+
+
             // -------------------
     
             // Resizes the description section according to the size of the description image
@@ -918,6 +950,8 @@ class ObjDescriptionContainer{
         t.style.setProperty('--description-text-wrapper-width', wrapperWidth + 'px');
 
         // Set the description-text-area-div height => here are the storyline and credentials, next to each other
+        let domDescriptionAppendix = $("#description-appendix");
+        let appendixHeight = domDescriptionAppendix.outerHeight();
         let domDescriptionTextWrapper = $("#description-text-wrapper");
         let textWrapperHeight = domDescriptionTextWrapper.innerHeight();
         let domDescriptionTextTitle = $("#description-text-title");
@@ -928,7 +962,7 @@ class ObjDescriptionContainer{
         let areaOuterHeight = domDescriptionTextArea.outerHeight();
         let areaInnerHeight = domDescriptionTextArea.innerHeight()
         let areaHeightBorder = areaOuterHeight - areaInnerHeight;
-        let storylineHeight = textWrapperHeight - titleHeight - extraHeight - areaHeightBorder;
+        let storylineHeight = textWrapperHeight - titleHeight - extraHeight - appendixHeight - areaHeightBorder;
 
         t.style.setProperty('--description-text-storyline-height', storylineHeight + 'px');
         t.style.setProperty('--description-text-credentials-height', storylineHeight + 'px');  

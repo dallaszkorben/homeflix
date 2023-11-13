@@ -81,7 +81,7 @@ body {
     display:inline-block;
     font-family: 'Brush Script MT', cursive;
     background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
-    border: 0px rgb(98, 0, 255) solid;                        /* for test purpose */
+    border: 0px rgb(0, 255, 247) solid;                        /* for test purpose */
 }
 
 #description-text-wrapper{
@@ -129,8 +129,6 @@ body {
 #description-text-extra-block-theme{
     text-align: right;
 }
-
-
 
 #description-text-extra-block{
     display: inline-flex;                                       /* children divs (description-text-extra-block-genre, description-text-extra-block-theme, description-text-extra-block-origin) */
@@ -189,6 +187,41 @@ body {
     font-weight: inherit;
     text-shadow: inherit
 }
+
+
+
+
+
+
+
+
+
+
+
+#description-appendix{
+    display: flex;                                              /* children divs (description-text-storyline, description-text-credentials) */
+    flex-direction: row;                                        /* must be in one row */
+    /* border: 4px rgb(255, 225, 0) solid; */
+}
+
+.description-appendix-button{
+    margin: 4px;
+    font-family: 'Brush Script MT', cursive;
+    font-weight: bold;
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
 
 #description-image{
     /* height: 100%; */
