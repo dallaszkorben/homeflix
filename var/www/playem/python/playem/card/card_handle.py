@@ -10,6 +10,7 @@ class CardHandle:
     MEDIA_FOLDER = "media"
     SCREENSHOT_FOLDER = "screenshots"
     THUMBNAIL_FOLDER = "thumbnails"
+    APPENDIX_FOLDER = "appendix-"
 
     def __init__(self, web_base):
 
@@ -19,10 +20,11 @@ class CardHandle:
 
         # this keys must be in the dictionary.yaml file 'mediatype' section
         self.media_type_dict = {
-            'video': ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
-            'audio': ['mp3', 'ogg', 'm4a'], 
-            'text':  ['doc', 'odt', 'pdf', 'epub', 'mobi', 'azw', 'azw3', 'iba', 'txt','rtf'], 
+            'video':   ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
+            'audio':   ['mp3', 'ogg', 'm4a'], 
+            'text':    ['doc', 'odt', 'pdf', 'epub', 'mobi', 'azw', 'azw3', 'iba', 'txt','rtf'], 
             'picture': ['jpg', 'jpeg', 'png'], 
+            'code':    ['c', 'java', 'py', 'ino'], 
         }
 
     def getPatternImage(self):
@@ -54,6 +56,9 @@ class CardHandle:
 
         basename = os.path.basename(actualDir)
 
+        # we are in an appendix- folder
+        is_appendix = True if basename.startswith(CardHandle.APPENDIX_FOLDER) else False
+
         source_path = None
         card_path = None
         card_file_name = None    
@@ -61,6 +66,7 @@ class CardHandle:
 
         card_id = None
 
+        # check the source path in the actual directory
         for file_name in file_list:
         
             # find the Card
@@ -68,13 +74,10 @@ class CardHandle:
                 card_path = os.path.join(actualDir, file_name)
                 card_file_name = file_name
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
+                
+                logging.debug("SOURCE path: '{0}'".format(source_path))
 
-            # # find the Image
-            # if self.getPatternImage().match( file_name ):
-            #     image_path = os.path.join(actualDir, file_name)
-            #     #image_file_name = file_name
-
-            logging.debug("SOURCE path: '{0}'".format(source_path))
+                break
 
         # If there is CARD in the actual directory
         if card_path:
@@ -82,11 +85,17 @@ class CardHandle:
             with open(card_path, "r", encoding="utf-8") as file_object:
                 # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
                 data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
-            category = data['category']
+
             try:
-                mediatypes = data['mediatypes']
+                category = data['category']
             except:
-                mediatypes = []
+                category = None
+
+            try:
+                primary_mediatype = data['primarymediatype']
+            except:
+                primary_mediatype = None
+
             try:
                 level = data['level']
             except:
@@ -95,6 +104,14 @@ class CardHandle:
                 title_on_thumbnail = 1 if data['title']['onthumbnail'] in ['yes', 'Yes', 'true', 'True'] else 0
             except:
                 title_on_thumbnail = 1
+
+
+            try:
+                destination = data['destination'] if data['destination'] in ['show','download'] and is_appendix else None
+            except:
+                destination = None
+
+
             try:
                 title_show_sequence = data['title']['showsequence']
             except:
@@ -190,7 +207,7 @@ class CardHandle:
             try:
                 subs = data['subs']
             except:
-                sub = []
+                subs = []
             try:
                 genres = data['genres']
             except:
@@ -210,19 +227,32 @@ class CardHandle:
             except:
                 sequence = None
 
+            # primary_mediatype
             # collect media files now, because at this point the category is known
             media_dict = {}
-            for file_name in media_list:
-                for mediatype_key in mediatypes:
 
-                    # If this media type exists
-                    if mediatype_key in self.media_type_dict:
-                        extension_list = self.media_type_dict[mediatype_key]
-                        compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
-                        if re.compile(compile_string).match(file_name):
-                            if not mediatype_key in media_dict:
-                                media_dict[mediatype_key] = []
-                            media_dict[mediatype_key].append(file_name)
+            
+
+            for file_name in media_list:
+                if primary_mediatype in self.media_type_dict:
+                    extension_list = self.media_type_dict[primary_mediatype]
+                    compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
+                    if re.compile(compile_string).match(file_name):
+                        if not primary_mediatype in media_dict:
+                            media_dict[primary_mediatype] = []
+                        media_dict[primary_mediatype].append(file_name)
+
+
+                # for mediatype_key in mediatypes:
+
+                #     # If this media type exists
+                #     if mediatype_key in self.media_type_dict:
+                #         extension_list = self.media_type_dict[mediatype_key]
+                #         compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
+                #         if re.compile(compile_string).match(file_name):
+                #             if not mediatype_key in media_dict:
+                #                 media_dict[mediatype_key] = []
+                #             media_dict[mediatype_key].append(file_name)
 
             # filter out empty titles
             titles=dict((language, title) for language, title in titles.items() if title)
@@ -248,11 +278,11 @@ class CardHandle:
                 logging.error( "CARD - Original language ({1}) set for title in {0} is unknown".format(card_path, title_orig))
                 card_error = True
 
-            if not mediatypes and not level:
+            if not primary_mediatype and not level:
                 logging.error( "CARD - There is NO mediatype nor level configured in in {0}. At least one of them should be there".format(card_path))
                 card_error = True
 
-            if not mediatypes and level and not dir_list:
+            if not primary_mediatype and level and not dir_list:
                 logging.error( "CARD - There is level ({1}) and no mediatype configured for the card in {0} which means, it should be in the higher hierarchy. But there are NO subdirectories in the folder".format(card_path, level ))
                 card_error = True
 
@@ -276,9 +306,12 @@ class CardHandle:
 
  # ---
 
+
+
+
             # this is a level in the hierarchy / not a media
             # if not media and not card_error:
-            if not media_dict and not card_error:                
+            if not media_dict and not card_error and not is_appendix:                
 
                 # create a new Level record + get back the id
                 card_id=db.append_hierarchy(
@@ -300,19 +333,26 @@ class CardHandle:
                 )
 
 
-            # this must be the lowest level or a simple card
-            else:
+            # this must be the lowest level or a simple card or appendix
+            elif not card_error:
+#            elif not card_error and media_dict:
        
+                #logging.error( "checking appendix: '{0}', destination: '{1}'".format(is_appendix, destination))
+
+                if is_appendix and not destination:
+                    logging.error( "CARD - No destination set for card in {0}".format(card_path))
+                    card_error = True
+
                 for lang, text in storylines.items():
                     if lang not in db.language_name_id_dict:
                         logging.error( "CARD - Storyline language ({1}) is unknown in {0}".format(card_path, lang))
                         card_error = True
 
-                if not self.getPatternDate().match( date ):
+                if date and not self.getPatternDate().match( date ):
                     logging.error( "CARD - Date ({1}) is missing or in unknown form in {0}".format(card_path, date))
                     card_error = True
 
-                if not self.getPatternLength().match(length):
+                if length and not self.getPatternLength().match(length):
                     logging.error( "CARD - Length ({1}) is unknown form in {0}".format(card_path, length))
                     card_error = True
 
@@ -332,15 +372,15 @@ class CardHandle:
                         card_error = True
 
                 if not card_error:
-
-                    db.append_card_movie(
-                        category=category,
+                    card_id=db.append_card_media(
                         title_orig=title_orig, 
                         titles=titles,
                         title_on_thumbnail=title_on_thumbnail,
                         title_show_sequence=title_show_sequence,
+                        destination=destination,
+                        category=category,
                         storylines=storylines,
-                        lyrics=lyrics,
+                        lyrics=lyrics,                        
                         decade=decade,
                         date=date, 
                         length=length,

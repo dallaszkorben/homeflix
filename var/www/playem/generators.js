@@ -273,10 +273,41 @@ class SubLevelRestGenerator extends  RestGenerator{
 // -you want to figure out what type of media is and depending on it call the corresponding REST
 // -you call the same REST (must be renamed) and this will give back all possible/existing fields
 
+
+            // Read the details 
             let card_id = hit["id"];
             let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
             let card = this.sendRestRequest("GET", card_request_url)[0];
     
+            // Search for the appendix
+            let appendix_list = [];
+            if(card["appendix"]){
+
+                let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
+                let appendix_title_response = this.sendRestRequest("GET", appendix_request_url);
+
+                for(let appendix of appendix_title_response){
+
+                    let appendix_dic = {};
+                    appendix_dic["id"] = appendix['id'];
+
+                    // This request is to fetch the title
+                    if ( appendix["title_req"] != null ){
+                        appendix_dic["title"] = appendix["title_req"];
+                    }else{
+                        appendix_dic["title"] = appendix["title_orig"];
+                    }
+
+                    appendix_dic["destination"] = appendix["destination"];
+                    appendix_dic["source_path"] = appendix["source_path"];
+                    appendix_dic["media"] = appendix["media"];
+
+                    appendix_list.push(appendix_dic);
+                }
+                console.log(appendix_list);
+            }
+
+
             // TODO: what happens if more than one medium are in the list ???
             // 'video'
             // 'audio'
@@ -297,12 +328,18 @@ class SubLevelRestGenerator extends  RestGenerator{
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
                 }
-            }else if("picture"){
+            }else if("picture" in card["medium"]){
                 media=card["medium"]["picture"]
                 mode = "picture";
                 medium_path = [];
                 for(let medium of media){
                     medium_path.push(pathJoin([card["source_path"], "media", medium]));
+                }
+            }else if("text" in card["medium"]){
+                media=card["medium"]["text"][0]
+                mode = "text";
+                if(media){
+                    medium_path = pathJoin([card["source_path"], "media", media]);
                 }
             }
 
@@ -319,6 +356,8 @@ class SubLevelRestGenerator extends  RestGenerator{
             thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"]});
 
             thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
+
+//            thumbnail.setAppendix()
     
             thumbnail.setFunctionForSelection({[mode]: 
                 (function(medium_path) {
@@ -553,6 +592,19 @@ class MovieMenuGenerator extends Generator{
             })("movies")});
         oContainer.addThumbnail(3, thumbnail);
 
+        // Remake
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_remakes.jpg", description_src: "images/categories/movie_remakes.jpg"});
+        thumbnail.setTitles({main: translated_titles['movie_remakes'], thumb: translated_titles['movie_remakes'], history: translated_titles['movie_remakes']});
+
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(movie_type) {
+                return function() {
+                    return new MovieRemakesLevelRestGenerator(refToThis.language_code, translated_titles['movie_remakes']);
+                };
+            })("movies")});
+        oContainer.addThumbnail(3, thumbnail);
+        
         // Documentaries
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_documentaries.jpg", description_src: "images/categories/movie_documentaries.jpg"});
@@ -625,6 +677,25 @@ class MovieSequelsLevelRestGenerator extends  LevelRestGenerator{
 
         let requestList = [
             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/sequel/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
+
+
+class MovieRemakesLevelRestGenerator extends  LevelRestGenerator{
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let requestList = [
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/remake/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);

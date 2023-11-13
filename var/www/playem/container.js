@@ -993,8 +993,9 @@ class History{
 
 class FocusTask {
     static Menu = new FocusTask('menu');
-    static Player = new FocusTask('player');  
-    static Dia = new FocusTask('dia');  
+    static Player = new FocusTask('player');
+    static Dia = new FocusTask('dia');
+    static Text = new FocusTask('text');
     constructor(name) {
       this.name = name
     }
@@ -1079,7 +1080,7 @@ class ThumbnailController{
                     newSourceElement.attr('src', medium_path);
                     // newSourceElement.attr('type', 'video/mkv');
                     $('#video_player').append(newSourceElement);
-                                
+
                     if (player.requestFullscreen) {
                         player.requestFullscreen();
                     } else if (elem.msRequestFullscreen) {
@@ -1106,6 +1107,22 @@ class ThumbnailController{
                     player.controls = true; 
                     player.autoplay = true;                               
                     player.play();
+
+
+
+//                    domPlayer.each(function() {
+//                        for (let i = 0; i < this.audioTracks.length; i += 1) {
+//                            console.log(this.audioTracks[i]);
+//                        }
+//    
+//                    });
+//                    // for (let i = 0; i < player.audioTracks.length; i += 1) {
+//                    //     console.log(player.audioTracks[i]);
+//                    // }
+//                    console.log("");
+
+
+
 
                     $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function(e) {
                         var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
@@ -1178,6 +1195,41 @@ class ThumbnailController{
                         }
                     });
                 }
+
+            }else if("text" in functionForSelection){
+
+                // take the getCardId function
+                let getCardIdFunction = functionForSelection["text"];
+                let medium_path = getCardIdFunction();
+        
+                if (medium_path != null){
+ 
+                    this.focusTask = FocusTask.Text;
+                    let fancybox_list = [];
+                     
+                         let opts ={
+                             // caption: media_path,
+                             thumb: medium_path,
+                             width: $(window).width(),
+                             // fitToView: true,                            // does not work
+                             // autoSize: true,                             // does not work
+                             afterShow: function(instance, current){},
+                         }
+                         let src = medium_path;
+                         fancybox_list.push({
+                             src: src,
+                             opts: opts
+                         })
+
+                    $.fancybox.open(fancybox_list, {
+                         loop: false,
+                         fitToView: true,
+                         afterClose: function(instance, current) {
+                             refToThis.focusTask = FocusTask.Menu;
+                         }
+                     });
+                 }
+
             }
         }
     }

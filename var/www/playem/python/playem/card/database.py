@@ -219,6 +219,7 @@ class SqlDatabase:
                 id                  INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 id_title_orig       INTEGER     NOT NULL,
                 id_category         INTEGER     NOT NULL,
+                destination         TEXT,
                 decade              TEXT,
                 date                TEXT,
                 length              TEXT,
@@ -606,7 +607,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_movie(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', destination=None, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -622,13 +623,12 @@ class SqlDatabase:
             # INSERT into CARD
             #
             # if higher_card_id:             
-
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                    (destination, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+                    VALUES (:destination, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'destination': destination, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -1009,10 +1009,12 @@ class SqlDatabase:
             # INSERT into TABLE_CARD_MEDIA
             #
 
+            #logging.error("media: '{0}' ".format(media))
+
+
             for media_type in media:
                 media_list = media[media_type]
                 for medium in media_list:                   
-
                     if media_type in self.mediatype_name_id_dict:
                         mediatype_id = self.mediatype_name_id_dict[media_type]
                     
@@ -1028,6 +1030,9 @@ class SqlDatabase:
 
         # close the insert transaction
         cur.execute("commit")
+
+        return card_id
+
 
     def append_hierarchy(self, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', date=None, decade=None, category=None, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
@@ -1684,7 +1689,8 @@ class SqlDatabase:
                 interviewees,
                 presenters,
                 lecturers,
-                performers
+                performers,
+                appendix
             FROM
                 (SELECT group_concat( mt.name || "=" || m.name) medium
 
@@ -1855,6 +1861,16 @@ class SqlDatabase:
                         cp.id_card = :card_id
                 ),
 
+
+
+                (SELECT group_concat(appendix_card.id) appendix
+                    FROM 
+                        Card appendix_card
+                    WHERE 
+                        appendix_card.id_higher_card = :card_id
+                        AND appendix_card.destination IS NOT NULL
+                ),
+
                 Card card,
                 Category category
             WHERE
@@ -1999,6 +2015,7 @@ class SqlDatabase:
 
                 # Sounds
                 sounds_string = records[0]["sounds"]
+
                 sounds_list = []
                 if sounds_string:
                     sounds_list = sounds_string.split(',')
@@ -2018,6 +2035,157 @@ class SqlDatabase:
                 records[0]["medium"] = media_dict
 
             return records
+
+
+
+
+
+    #
+    #
+    #
+    # Detailed Card for appendix
+    #
+    # more records can be fetched
+    #
+    def get_all_appendix(self, card_id, lang='en', limit=100, json=True):
+             
+        with self.lock:
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+            SELECT 
+                merged.id id, 
+                MAX(title_req) title_req, 
+                MAX(title_orig) title_orig, 
+                MAX(lang_orig) lang_orig,
+                MAX(lang_req) lang_req,
+                sequence,
+                destination,
+                source_path,
+                media
+            FROM (
+                SELECT 
+                    card.id id, 
+                    card.id_category id_category,
+                    NULL title_req, 
+                    NULL lang_req, 
+                    tcl.text title_orig, 
+                    lang.name lang_orig,
+                    card.sequence sequence,
+                    card.destination destination,
+                    card.source_path source_path
+                FROM 
+                    
+                    CARD card,
+                    TEXT_CARD_LANG tcl, 
+                    LANGUAGE lang                    
+                   
+                WHERE
+                
+                    tcl.id_card=card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND card.id_title_orig=lang.id
+
+                    AND card.id_higher_card = :card_id
+                    AND lang.name <> :lang
+
+                UNION
+
+                SELECT 
+                    card.id id,
+                    card.id_category id_category,
+                    tcl.text title_req, 
+                    lang.name lang_req, 
+                    NULL title_orig, 
+                    NULL lang_orig,
+                    card.sequence sequence,
+                    card.destination destination,
+                    card.source_path source_path
+                FROM 
+               
+                    CARD card,
+                    TEXT_CARD_LANG tcl, 
+                    LANGUAGE lang                    
+                WHERE
+               
+                    tcl.id_card=card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+
+                    AND card.id_higher_card = :card_id 
+                    AND lang.name=:lang
+                ) merged,
+
+               (SELECT group_concat( mt.name || "=" || m.name) media, m.id_card card_id
+                    FROM 
+                        Card c,
+                        Card_Media m,
+                        MediaType mt
+                    WHERE
+                        c.id = m.id_card
+                        AND m.id_mediatype = mt.id                        
+                        AND c.destination IS NOT NULL   --- indicates that this is appendix
+                    GROUP BY c.id
+                ) media
+
+            WHERE media.card_id = merged.id
+            GROUP BY merged.id
+            ORDER BY sequence
+            LIMIT :limit;           
+            '''
+
+            query_parameters = {'card_id': card_id, 'lang': lang, 'limit': limit}            
+
+            logging.debug("get_appendix query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = [{key: record[key] for key in record.keys()} for record in records]
+
+                #
+                # Translate
+                #
+
+                trans = Translator.getInstance(lang)
+
+                for record in records:
+
+                    # Lang Orig
+                    lang_orig = record["lang_orig"]
+                    lang_orig_translated = trans.translate_language_short(lang_orig)
+                    record["lang_orig"] = lang_orig_translated
+
+                    # Lang Req
+                    lang_req = record["lang_req"]
+                    lang_req_translated = trans.translate_language_short(lang_req)
+                    record["lang_req"] = lang_req_translated
+
+                    # Media
+                    medium_string = record["media"]
+                    media_dict = {}
+                    if medium_string:
+                        medium_string_list = medium_string.split(',')
+                        for medium_string in medium_string_list:
+                            (media_type, media) = medium_string.split("=")
+                            if not media_type in media_dict:
+                                media_dict[media_type] = []
+                            media_dict[media_type].append(media)
+                    record["media"] = media_dict
+
+            return records
+
+
+
+
+
+
 
 
     # 

@@ -20,6 +20,10 @@ from playem.restserver.endpoints.ep_collect_general_standalone import EPCollectG
 from playem.restserver.endpoints.ep_collect_standalone_music_audio_by_card_id import EPCollectStandaloneMusicAudioByCardId
 from playem.restserver.endpoints.ep_collect_standalone_music_video_by_card_id import EPCollectStandaloneMusicVideoByCardId
 
+from playem.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCollectAllAppendixByCardId
+
+
+
 #from playem.restserver.endpoints.ep_collect_all_series_movies import EPCollectAllSeriesMovies
 #from playem.restserver.endpoints.ep_collect_standalone_movies_all import EPCollectStandaloneMoviesAll
 
@@ -50,6 +54,10 @@ class CollectView(FlaskView):
         self.epCollectStandaloneMovieByCardId = EPCollectStandaloneMovieByCardId(web_gadget)
         self.epCollectStandaloneMusicVideoByCardId = EPCollectStandaloneMusicVideoByCardId(web_gadget)
         self.epCollectStandaloneMusicAudioByCardId = EPCollectStandaloneMusicAudioByCardId(web_gadget)
+
+        self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
+
+        
 
         # # --- to delete ---
         # self.epCollectAllSeriesMovies = EPCollectAllSeriesMovies(web_gadget)             #ep_collect_all_series_movies.py / view_collection
@@ -158,7 +166,19 @@ class CollectView(FlaskView):
 
 
 
+    #
+    # Gives back all appendix of a specific card id
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/all/appendix/card_id/123/lang/en
+    #
+    # GET http://localhost:80/collect/all/appendix/card_id/123/lang/en
+    #
+    #@route('/all/appendix/card_id/<card_id>/lang/<lang>')
+    @route(EPCollectAllAppendixByCardId.PATH_PAR_URL, methods=[EPCollectAllAppendixByCardId.METHOD])
+    def collectAllAppendixByCardIdWithParameter(self, card_id, lang):
 
+        out = self.epCollectAllAppendixByCardId.executeByParameters(card_id=card_id, lang=lang)
+        return out
 
 
 

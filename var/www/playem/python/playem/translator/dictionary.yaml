@@ -102,6 +102,7 @@ mediatype:
     audio: Audio
     text: Text
     picture: Picture
+    code: Code
 
 level:
     series: Series
@@ -346,6 +347,8 @@ theme:
     boat: Boat
     apocalipse: Apocalipse
     zombi: Zombi
+    bank: Bank
+    broker: Broker
 
 title:
     title: Title
@@ -364,6 +367,7 @@ title:
     movie_series: Movie Series
     series: Series
     movie_sequels: Movie Sequels
+    movie_remakes: Movie Remakes
     movie_individual: Movie Individual
     movie_documentaries: Documentaries
     movie_hungarian: Hungarian
