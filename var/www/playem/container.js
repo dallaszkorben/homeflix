@@ -897,13 +897,39 @@ class ObjDescriptionContainer{
             let descAppendix = $("#description-appendix");                
             descAppendix.empty();
             for(let i in appendix_list){
-                let button = $('<button/>', {
-                    class: "description-appendix-button",
-                    text: appendix_list[i]['title'],
-                    click: function () { alert('hi'); 
-                    }
-                });
-                descAppendix.append(button);
+                let title = appendix_list[i]['title'];
+                let destination = appendix_list[i]['destination'];
+                let source_path = appendix_list[i]['source_path'];
+                let media_dict = appendix_list[i]['media'];
+
+                if(destination == 'download'){
+
+                    // Through the keys: mediaTypes: text/picture/ebook
+                    Object.entries(media_dict).forEach(([media_type, media_list]) => {
+
+                        // Through the media_list
+                        for(let media of media_list){
+                        
+                            // I'm expecting only one media here. TODO: get if there are others
+                            let file_path = pathJoin([source_path, "media", media]);
+
+                            let link = $('<a/>',{
+                                class: "description-appendix-button",
+                                href: file_path,
+                                download: "download",
+                                text: title
+                            });
+
+//                            let button = $('<button/>', {
+//                                onclick: "window.location.href='" + file_path + "'",
+//                                type: "submit",
+//                                class: "description-appendix-button",
+//                                text: title
+//                            });
+                            descAppendix.append(link);
+                        }
+                    });
+                }
             }
 
 
@@ -1245,8 +1271,6 @@ class ThumbnailController{
                              // caption: media_path,
                              thumb: medium_path,
                              width: $(window).width(),
-                             // fitToView: true,                            // does not work
-                             // autoSize: true,                             // does not work
                              afterShow: function(instance, current){},
                          }
                          let src = medium_path;
