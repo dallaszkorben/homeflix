@@ -219,7 +219,10 @@ class SqlDatabase:
                 id                  INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 id_title_orig       INTEGER     NOT NULL,
                 id_category         INTEGER     NOT NULL,
-                destination         TEXT,
+---                destination         TEXT,
+                isappendix          BOOLEAN     NOT NULL CHECK (isappendix IN (0, 1)),
+                show                BOOLEAN     NOT NULL CHECK (show IN (0, 1)),
+                download            BOOLEAN     NOT NULL CHECK (download IN (0, 1)),
                 decade              TEXT,
                 date                TEXT,
                 length              TEXT,
@@ -607,7 +610,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', destination=None, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -624,11 +627,11 @@ class SqlDatabase:
             #
             # if higher_card_id:             
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (destination, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                    VALUES (:destination, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                    (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+                    VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'destination': destination, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -1034,7 +1037,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', date=None, decade=None, category=None, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1051,11 +1054,11 @@ class SqlDatabase:
             # if higher_card_id:
 
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (level, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-                    VALUES (:level, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+                    (level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
+                    VALUES (:level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'level': level, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             record = cur.fetchone()
             (hierarchy_id, ) = record if record else (None,)
 
@@ -1868,8 +1871,19 @@ class SqlDatabase:
                         Card appendix_card
                     WHERE 
                         appendix_card.id_higher_card = :card_id
-                        AND appendix_card.destination IS NOT NULL
+                        AND appendix_card.isappendix = 1
                 ),
+
+
+---                (SELECT group_concat(appendix_card.id) appendix
+---                    FROM 
+---                        Card appendix_card
+---                    WHERE 
+---                        appendix_card.id_higher_card = :card_id
+---                        AND appendix_card.isappendix = 1
+---
+---                     AND appendix_card.destination IS NOT NULL
+---                ),
 
                 Card card,
                 Category category
@@ -2064,7 +2078,8 @@ class SqlDatabase:
                 MAX(lang_orig) lang_orig,
                 MAX(lang_req) lang_req,
                 sequence,
-                destination,
+                show,
+                download,
                 source_path,
                 media
             FROM (
@@ -2076,7 +2091,10 @@ class SqlDatabase:
                     tcl.text title_orig, 
                     lang.name lang_orig,
                     card.sequence sequence,
-                    card.destination destination,
+                    card.show,
+                    card.download,
+
+---                    card.destination destination,
                     card.source_path source_path
                 FROM 
                     
@@ -2104,7 +2122,10 @@ class SqlDatabase:
                     NULL title_orig, 
                     NULL lang_orig,
                     card.sequence sequence,
-                    card.destination destination,
+                    card.show,
+                    card.download,
+
+---                    card.destination destination,
                     card.source_path source_path
                 FROM 
                
@@ -2128,8 +2149,10 @@ class SqlDatabase:
                         MediaType mt
                     WHERE
                         c.id = m.id_card
-                        AND m.id_mediatype = mt.id                        
-                        AND c.destination IS NOT NULL   --- indicates that this is appendix
+                        AND m.id_mediatype = mt.id
+                        AND c.isappendix=1
+
+--                        AND c.destination IS NOT NULL   --- indicates that this is appendix
                     GROUP BY c.id
                 ) media
 

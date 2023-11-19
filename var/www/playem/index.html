@@ -242,8 +242,13 @@
                 translated_categories = result.responseJSON;                
 
                 let mainMenuGenerator = new MainMenuGenerator(languageCode);
-                let oScrollSection = new ObjScrollSection(mainMenuGenerator);
-                let oThumbnailController = new ThumbnailController(oScrollSection);
+
+//                let oScrollSection = new ObjScrollSection(mainMenuGenerator);                
+//                let oThumbnailController = new ThumbnailController(oScrollSection);
+
+                let oThumbnailController = new ThumbnailController(mainMenuGenerator);
+                let oScrollSection = oThumbnailController.getScrollSection();
+
                 oScrollSection.focusDefault();
 
                 // -----------------------

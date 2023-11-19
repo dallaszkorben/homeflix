@@ -101,15 +101,24 @@ class CardHandle:
             except:
                 level = None
             try:
-                title_on_thumbnail = 1 if data['title']['onthumbnail'] in ['yes', 'Yes', 'true', 'True'] else 0
+                title_on_thumbnail = 1 if data['title']['onthumbnail'] in ['yes', 'Yes', 'true', 'True', 'y', 1] else 0
             except:
                 title_on_thumbnail = 1
 
+            try:
+                show = 1 if data['show'] in ['yes', 'Yes', 'true', 'True', 'y', 1] else 0
+            except:
+                show = 1
 
             try:
-                destination = data['destination'] if data['destination'] in ['show','download'] and is_appendix else None
+                download = 1 if data['download'] in ['yes', 'Yes', 'true', 'True', 'y', 1] else 0
             except:
-                destination = None
+                download = 0
+
+            # try:
+            #     destination = data['destination'] if data['destination'] in ['show','download'] and is_appendix else None
+            # except:
+            #     destination = None
 
 
             try:
@@ -319,6 +328,9 @@ class CardHandle:
                     titles=titles,
                     title_on_thumbnail=title_on_thumbnail,
                     title_show_sequence=title_show_sequence,
+                    isappendix=is_appendix,
+                    show=show,
+                    download=download,
                     date=date,
                     decade=decade,
                     category=category,
@@ -339,9 +351,9 @@ class CardHandle:
        
                 #logging.error( "checking appendix: '{0}', destination: '{1}'".format(is_appendix, destination))
 
-                if is_appendix and not destination:
-                    logging.error( "CARD - No destination set for card in {0}".format(card_path))
-                    card_error = True
+#                if is_appendix and not destination:
+#                    logging.error( "CARD - No destination set for card in {0}".format(card_path))
+#                    card_error = True
 
                 for lang, text in storylines.items():
                     if lang not in db.language_name_id_dict:
@@ -377,7 +389,10 @@ class CardHandle:
                         titles=titles,
                         title_on_thumbnail=title_on_thumbnail,
                         title_show_sequence=title_show_sequence,
-                        destination=destination,
+#                        destination=destination,
+                        isappendix=is_appendix,
+                        show=show,
+                        download=download,
                         category=category,
                         storylines=storylines,
                         lyrics=lyrics,                        

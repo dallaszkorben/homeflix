@@ -27,9 +27,9 @@ class ObjScrollSection{
      * @param {number} numberOfContainers 
      */
     // TODO: change current to focused
-    constructor(oContainerGenerator, history={text:"", link:""}){
+    constructor({oContainerGenerator, historyLevels={text:"", link:""}, objThumbnailController=null}){
         this.oContainerGenerator = oContainerGenerator;
-        this.historyDict = history;
+        this.historyLevels = historyLevels;
 
         this.defaultContainerIndex = 0
         this.oDescriptionContainer;
@@ -39,11 +39,16 @@ class ObjScrollSection{
         this.focusedThumbnailList = [];  
 
         this.oDescriptionContainer = new ObjDescriptionContainer();        
+        this.oDescriptionContainer.setThumbnailController(objThumbnailController);
 
         this.resetDom();
 
         this.oContainerGenerator.showContainers(this);
     }
+
+//    setThumbnailController(objThumbnailController){
+//        this.oDescriptionContainer.setThumbnailController(objThumbnailController);
+//    }
 
     resetDom(){
         // Remove all elements from the <div id=scroll-section> and <div id=detail-text-title> and <div id=detail-image-div>
@@ -51,10 +56,10 @@ class ObjScrollSection{
         this.domScrollSection.empty();
 
         let tsht = $("#history-section-text");
-        tsht.html(this.historyDict["text"]);
+        tsht.html(this.historyLevels["text"]);
 
         let tshl = $("#history-section-link");
-        tshl.html(this.historyDict["link"]);
+        tshl.html(this.historyLevels["link"]);
     }
 
     /**
@@ -707,6 +712,11 @@ class ObjDescriptionContainer{
             width: 0,
             height: 0
         }
+        this.objThumbnailController = undefined;
+    }
+
+    setThumbnailController(objThumbnailController){
+        this.objThumbnailController = objThumbnailController;
     }
 
     /**
@@ -750,9 +760,10 @@ class ObjDescriptionContainer{
         let mainObject = this;
         let descImg = new Image();
         descImg.src = fileName;
+//        let refToObjThumbnailController = this.objThumbnailController;
 
         // when the image loaded, the onload event will be fired
-        descImg.onload = function(){
+        descImg.onload = function(refToObjThumbnailController){
         
             // calculates the new size of the description image
             mainObject.description_img.height = descImg.height;
@@ -896,27 +907,29 @@ class ObjDescriptionContainer{
 
             let descAppendix = $("#description-appendix");                
             descAppendix.empty();
-            for(let i in appendix_list){
-                let title = appendix_list[i]['title'];
-                let destination = appendix_list[i]['destination'];
+            for(let i in appendix_list){                
+                let show = appendix_list[i]['show'];
+                let download = appendix_list[i]['download'];
                 let source_path = appendix_list[i]['source_path'];
                 let media_dict = appendix_list[i]['media'];
 
-                if(destination == 'download'){
+                if(download==1){
+                    let title = '\u{1F4E5}' + " " + appendix_list[i]['title'];
 
                     // Through the keys: mediaTypes: text/picture/ebook
                     Object.entries(media_dict).forEach(([media_type, media_list]) => {
 
-                        // Through the media_list
+                        // Through the media_list - most probably only one media
+                        // I do not care about the type of the media, just want to download
                         for(let media of media_list){
                         
                             // I'm expecting only one media here. TODO: get if there are others
                             let file_path = pathJoin([source_path, "media", media]);
 
                             let link = $('<a/>',{
-                                class: "description-appendix-button",
+                                class: "description-appendix-download-button",
                                 href: file_path,
-                                download: "download",
+                                download: "download",   // This is needed to download
                                 text: title
                             });
 
@@ -930,6 +943,113 @@ class ObjDescriptionContainer{
                         }
                     });
                 }
+                if(show==1){
+                    let title = '\u{261D}' + " " + appendix_list[i]['title'];
+
+                    // Through the keys: mediaTypes: text/picture/ebook
+                    Object.entries(media_dict).forEach(([media_type, media_list]) => {
+
+                        let medium_path = "";
+                        let mode = "";
+
+                        if(media_type == "audio"){
+                            let media = media_list[0];  //Only one media will be played
+                            mode = "audio";
+                            medium_path = pathJoin([source_path, "media", media]);
+                        }else if(media_type == "video"){
+                            let media = media_list[0];  // Only one media will be played
+                            mode = "video";
+                            medium_path = pathJoin([source_path, "media", media]);
+                        }else if(media_type == "picture"){
+                            let media = media_list;
+                            mode = "picture"; 
+                            medium_path = [];                           
+                            for(let medium of media){
+                                medium_path.push(pathJoin([source_path, "media", medium]));
+                            }
+                        }else if( media_type == "text"){
+                            let media = media_list[0];  // Only one media will be played
+                            mode = "text";
+                            medium_path = pathJoin([source_path, "media", media]);
+                        }else if( media_type == "code"){
+                            let media = media_list[0];  // Only one media will be played
+                            mode = "code";
+                            medium_path = pathJoin([source_path, "media", media]);
+                        }
+
+                        // Through the media_list and create button for them
+                        for(let media of media_list){
+                        
+                            // I'm expecting only one media here. TODO: get if there are others
+                            let file_path = pathJoin([source_path, "media", media]);
+
+                            let link = $('<a/>',{
+                                class: "description-appendix-show-button",
+                                text: title
+                            });
+                            link.click(function(my_mode, my_file_path){
+                                return function(){
+                                    
+
+
+
+                                    if(my_mode=="picture"){
+
+refToObjThumbnailController.focusTask = FocusTask.Picture;
+
+                                        let fancybox_list = [];
+                                        let opts ={
+                                            thumb: my_file_path,
+                                            width: $(window).width(),
+                                            afterShow: function(instance, current){},
+                                        }
+                                        let src = my_file_path;
+                                        fancybox_list.push({
+                                            src: src,
+                                            opts: opts
+                                        });
+
+
+
+//                                        for( let media_path of my_file_path){
+//                                            let opts ={
+//                                            // caption: media_path,
+//                                                thumb: media_path,
+//                                                width: $(window).width(),
+//                                            // fitToView: true,                            // does not work
+//                                            // autoSize: true,                             // does not work
+//                                                afterShow: function(instance, current){},
+//                                            }
+//                                            let src = media_path;
+//                                            fancybox_list.push({
+//                                                src: src,
+//                                                opts: opts
+//                                            })
+//                                        }
+                                        $.fancybox.open(fancybox_list, {
+                                            loop: false,
+                                            fitToView: true,
+                                            afterClose: function(instance, current) {
+refToObjThumbnailController.focusTask = FocusTask.Menu;
+                                            }
+                                        });
+
+                                    }
+
+
+
+
+
+                                };
+                            }(mode, file_path));
+                            descAppendix.append(link);
+                        }
+                    });
+                }
+
+
+
+                
             }
 
 
@@ -938,7 +1058,7 @@ class ObjDescriptionContainer{
     
             // Resizes the description section according to the size of the description image
             mainObject.resizeDescriptionSection();
-        }
+        }(this.objThumbnailController);
 
         // Loads the new image, which will trigger the onload event
         let description_image = "url(" + descImg.src + ")";
@@ -1056,17 +1176,33 @@ class FocusTask {
     static Player = new FocusTask('player');
     static Dia = new FocusTask('dia');
     static Text = new FocusTask('text');
+    static Code = new FocusTask('code');
+    static Picture = new FocusTask('picture');
+
     constructor(name) {
-      this.name = name
+        this.name = name
     }
 }
 
 
 class ThumbnailController{
-    constructor(objScrollSection){
+
+//    constructor(objScrollSection){
+//        this.history = new History();
+//        this.objScrollSection = objScrollSection;
+//        this.focusTask = FocusTask.Menu;
+//        
+//        let tshl = $("#history-section-link");
+//        tshl.click(function() {
+//            let esc = $.Event("keydown", { keyCode: 27 });
+//            $(document).trigger(esc);
+//        });
+//    }
+
+    constructor(mainMenuGenerator){
         this.history = new History();
-        this.objScrollSection = objScrollSection;
         this.focusTask = FocusTask.Menu;
+        this.objScrollSection = new ObjScrollSection({oContainerGenerator: mainMenuGenerator, objThumbnailController: this}); 
         
         let tshl = $("#history-section-link");
         tshl.click(function() {
@@ -1074,6 +1210,7 @@ class ThumbnailController{
             $(document).trigger(esc);
         });
     }
+
 
     /*
     After the size of the description-section changed, the description-image size recalculation is needed.
@@ -1085,9 +1222,14 @@ class ThumbnailController{
 
     }
 
-    generateScrollSection(oContainerGenerator, history={text:"", link:""}){
-        let oScrollSection = new ObjScrollSection(oContainerGenerator, history);
+    getScrollSection(){
+        return this.objScrollSection;
+    }
+
+    generateScrollSection(oContainerGenerator, historyLevels={text:"", link:""}){
+        let oScrollSection = new ObjScrollSection({oContainerGenerator: oContainerGenerator, historyLevels: historyLevels, objThumbnailController: this});
         oScrollSection.focusDefault();
+        
         return oScrollSection;
     }
 
@@ -1117,10 +1259,17 @@ class ThumbnailController{
                 // Shows the new ScrollSection generated by the Container Generator
                 this.objScrollSection = this.generateScrollSection(oContainerGenerator, this.history.getLevels());
 
-            }else if("play" in functionForSelection){                
+//this.objScrollSection.setThumbnailController(this);                
 
-                // take the getCardId function
-                let getCardIdFunction = functionForSelection["play"];
+            }else if("audio" in functionForSelection || "video" in functionForSelection){                
+
+                let getCardIdFunction;
+                if("audio" in functionForSelection){
+                    getCardIdFunction = functionForSelection["audio"];
+                }else{
+                    getCardIdFunction = functionForSelection["video"];
+                }
+
                 let medium_path = getCardIdFunction();
         
                 if (medium_path != null){

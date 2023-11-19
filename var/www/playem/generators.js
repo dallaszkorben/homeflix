@@ -298,13 +298,14 @@ class SubLevelRestGenerator extends  RestGenerator{
                         appendix_dic["title"] = appendix["title_orig"];
                     }
 
-                    appendix_dic["destination"] = appendix["destination"];
+                    appendix_dic["show"] = appendix["show"];
+                    appendix_dic["download"] = appendix["download"];
                     appendix_dic["source_path"] = appendix["source_path"];
                     appendix_dic["media"] = appendix["media"];
 
                     appendix_list.push(appendix_dic);
                 }
-                console.log(appendix_list);
+//                console.log(appendix_list);
             }
 
 
@@ -318,13 +319,15 @@ class SubLevelRestGenerator extends  RestGenerator{
             let medium_path;
             if("audio" in card["medium"]){
                 media=card["medium"]["audio"][0]
-                mode = "play";
+                //mode = "play";
+                mode = "audio";
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
                 }
             }else if("video" in card["medium"]){
                 media=card["medium"]["video"][0]
-                mode = "play";
+                // mode = "play";
+                mode = "video";
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
                 }
@@ -402,13 +405,13 @@ class IndividualRestGenerator extends  RestGenerator{
         let medium_path;
         if("audio" in card["medium"]){
             media=card["medium"]["audio"][0]
-            mode = "play";
+            mode = "audio";
             if(media){
                 medium_path = pathJoin([card["source_path"], "media", media]);
             }
         }else if("video" in card["medium"]){
             media=card["medium"]["video"][0]
-            mode = "play";
+            mode = "video";
             if(media){
                 medium_path = pathJoin([card["source_path"], "media", media]);
             }    
