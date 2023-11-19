@@ -975,6 +975,10 @@ class ObjDescriptionContainer{
                             let media = media_list[0];  // Only one media will be played
                             mode = "code";
                             medium_path = pathJoin([source_path, "media", media]);
+                        }else if( media_type == "pdf"){
+                            let media = media_list[0];  // Only one media will be played
+                            mode = "pdf";
+                            medium_path = pathJoin([source_path, "media", media]);
                         }
 
                         // Through the media_list and create button for them
@@ -989,13 +993,10 @@ class ObjDescriptionContainer{
                             });
                             link.click(function(my_mode, my_file_path){
                                 return function(){
-                                    
-
-
 
                                     if(my_mode=="picture"){
 
-refToObjThumbnailController.focusTask = FocusTask.Picture;
+                                        refToObjThumbnailController.focusTask = FocusTask.Picture;
 
                                         let fancybox_list = [];
                                         let opts ={
@@ -1008,37 +1009,59 @@ refToObjThumbnailController.focusTask = FocusTask.Picture;
                                             src: src,
                                             opts: opts
                                         });
-
-
-
-//                                        for( let media_path of my_file_path){
-//                                            let opts ={
-//                                            // caption: media_path,
-//                                                thumb: media_path,
-//                                                width: $(window).width(),
-//                                            // fitToView: true,                            // does not work
-//                                            // autoSize: true,                             // does not work
-//                                                afterShow: function(instance, current){},
-//                                            }
-//                                            let src = media_path;
-//                                            fancybox_list.push({
-//                                                src: src,
-//                                                opts: opts
-//                                            })
-//                                        }
                                         $.fancybox.open(fancybox_list, {
                                             loop: false,
                                             fitToView: true,
                                             afterClose: function(instance, current) {
-refToObjThumbnailController.focusTask = FocusTask.Menu;
+                                                refToObjThumbnailController.focusTask = FocusTask.Menu;
                                             }
                                         });
 
+                                    }else if(my_mode=="code"){
+                                        refToObjThumbnailController.focusTask = FocusTask.Code;
+
+                                        // Text load and show in a modal window
+
+                                        $.ajax({
+                                            url: my_file_path,
+                                            dataType: 'text',
+                                            success: function (text) {
+                                                $('#text-content').text(text);
+                                                $('#modal, #overlay').show();
+
+                                                // Highlight.js initialization after modal is shown
+                                                hljs.highlightAll();
+                                            },
+                                            error: function (error) {
+                                                console.error('Error loading text file:', error);
+                                            }
+                                        });
+
+                                        // Bezárás gomb eseménykezelő
+                                        $('#close-button').on('click', function () {
+                                            $('#modal').hide();
+                                            $('#overlay').hide();
+
+                                            $('#text-content').empty();
+                                            $('#text-content').removeAttr("data-highlighted");
+
+                                            refToObjThumbnailController.focusTask = FocusTask.Menu;
+                                        });
+                                        $(document).on('keydown',function(e){
+                                            function clickOnEscape(){
+                                                $('#close-button').trigger('click');
+                                            }
+                                            function arrowLeft(){
+                                                $('#close-button').trigger('click');
+                                            }
+                                            function arrowRight(){
+                                                $('#close-button').trigger('click');
+                                            }
+                                            var act={27:clickOnEscape, 37:arrowLeft, 39:arrowRight};
+                                            if(act[e.keyCode])
+                                            var a=new act[e.keyCode];
+                                        });
                                     }
-
-
-
-
 
                                 };
                             }(mode, file_path));
@@ -1176,6 +1199,7 @@ class FocusTask {
     static Player = new FocusTask('player');
     static Dia = new FocusTask('dia');
     static Text = new FocusTask('text');
+    static Pdf = new FocusTask('pdf');
     static Code = new FocusTask('code');
     static Picture = new FocusTask('picture');
 
@@ -1405,10 +1429,10 @@ class ThumbnailController{
                     });
                 }
 
-            }else if("text" in functionForSelection){
+            }else if("pdf" in functionForSelection){
 
                 // take the getCardId function
-                let getCardIdFunction = functionForSelection["text"];
+                let getCardIdFunction = functionForSelection["pdf"];
                 let medium_path = getCardIdFunction();
         
                 if (medium_path != null){
@@ -1435,7 +1459,11 @@ class ThumbnailController{
                              refToThis.focusTask = FocusTask.Menu;
                          }
                      });
-                 }
+                }
+                
+            }else if("txt" in functionForSelection){
+
+            }else if("code" in functionForSelection){
 
             }
         }

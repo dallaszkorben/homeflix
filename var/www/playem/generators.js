@@ -344,6 +344,12 @@ class SubLevelRestGenerator extends  RestGenerator{
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
                 }
+            }else if("pdf" in card["medium"]){
+                media=card["medium"]["pdf"][0]
+                mode = "pdf";
+                if(media){
+                    medium_path = pathJoin([card["source_path"], "media", media]);
+                }
             }
 
             let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);

@@ -22,7 +22,10 @@ class CardHandle:
         self.media_type_dict = {
             'video':   ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
             'audio':   ['mp3', 'ogg', 'm4a'], 
-            'text':    ['doc', 'odt', 'pdf', 'epub', 'mobi', 'azw', 'azw3', 'iba', 'txt','rtf'], 
+            'text':    ['txt'], 
+            'pdf':     ['pdf'], 
+            'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba'],
+            'doc':     ['doc', 'odt', 'rtf'], 
             'picture': ['jpg', 'jpeg', 'png'], 
             'code':    ['c', 'java', 'py', 'ino'], 
         }
@@ -240,8 +243,6 @@ class CardHandle:
             # collect media files now, because at this point the category is known
             media_dict = {}
 
-            
-
             for file_name in media_list:
                 if primary_mediatype in self.media_type_dict:
                     extension_list = self.media_type_dict[primary_mediatype]
@@ -250,18 +251,6 @@ class CardHandle:
                         if not primary_mediatype in media_dict:
                             media_dict[primary_mediatype] = []
                         media_dict[primary_mediatype].append(file_name)
-
-
-                # for mediatype_key in mediatypes:
-
-                #     # If this media type exists
-                #     if mediatype_key in self.media_type_dict:
-                #         extension_list = self.media_type_dict[mediatype_key]
-                #         compile_string = ".+\\." + "(" + "|".join(extension_list) + ")$"
-                #         if re.compile(compile_string).match(file_name):
-                #             if not mediatype_key in media_dict:
-                #                 media_dict[mediatype_key] = []
-                #             media_dict[mediatype_key].append(file_name)
 
             # filter out empty titles
             titles=dict((language, title) for language, title in titles.items() if title)

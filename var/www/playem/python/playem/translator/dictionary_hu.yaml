@@ -101,8 +101,10 @@ mediatype:
     video: Video
     audio: Audio
     text: Szöveg
-    picture: Kép
     code: Kód
+    doc: Dokumentum
+    pdf: PDF
+    picture: Kép
 
 level:
     series: Sorozat
