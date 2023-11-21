@@ -261,6 +261,10 @@ class ObjScrollSection{
         }
     }
 
+    escapeOfCode(){
+        this.oDescriptionContainer.escapeOfCode();
+    }
+
     arrowRight(){
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -764,6 +768,7 @@ class ObjDescriptionContainer{
 
         // when the image loaded, the onload event will be fired
         descImg.onload = function(refToObjThumbnailController){
+        return function(){
         
             // calculates the new size of the description image
             mainObject.description_img.height = descImg.height;
@@ -1039,6 +1044,7 @@ class ObjDescriptionContainer{
 
                                         // Bezárás gomb eseménykezelő
                                         $('#close-button').on('click', function () {
+
                                             $('#modal').hide();
                                             $('#overlay').hide();
 
@@ -1047,20 +1053,46 @@ class ObjDescriptionContainer{
 
                                             refToObjThumbnailController.focusTask = FocusTask.Menu;
                                         });
-                                        $(document).on('keydown',function(e){
-                                            function clickOnEscape(){
-                                                $('#close-button').trigger('click');
-                                            }
-                                            function arrowLeft(){
-                                                $('#close-button').trigger('click');
-                                            }
-                                            function arrowRight(){
-                                                $('#close-button').trigger('click');
-                                            }
-                                            var act={27:clickOnEscape, 37:arrowLeft, 39:arrowRight};
-                                            if(act[e.keyCode])
-                                            var a=new act[e.keyCode];
-                                        });
+
+                                        // $(document).on('keydown',function(e){
+                                        //     function clickOnEscape(){
+                                        //         $('#close-button').trigger('click');
+                                        //     }
+                                        //     function arrowLeft(){
+                                        //         $('#close-button').trigger('click');
+                                        //     }
+                                        //     function arrowRight(){
+                                        //         $('#close-button').trigger('click');
+                                        //     }
+                                        //     var act={27:clickOnEscape, 37:arrowLeft, 39:arrowRight};
+                                        //     if(act[e.keyCode])
+                                        //         act[e.keyCode]();
+                                        // });
+
+
+                                        // function clickOnEscape() {
+                                        //     $('#close-button').trigger('click');
+                                        // }
+                                        
+                                        // function arrowLeft() {
+                                        //     $('#close-button').trigger('click');
+                                        // }
+                                        
+                                        // function arrowRight() {
+                                        //     $('#close-button').trigger('click');
+                                        // }
+
+                                        // $(document).on('keydown', function (e) {
+                                        //     // Handle key events
+                                        //     if (e.key === 'Escape') {
+                                        //         clickOnEscape();
+                                        //     } else if (e.key === 'ArrowLeft') {
+                                        //         arrowLeft();
+                                        //     } else if (e.key === 'ArrowRight') {
+                                        //         arrowRight();
+                                        //     }
+                                        // });
+
                                     }
 
                                 };
@@ -1069,23 +1101,30 @@ class ObjDescriptionContainer{
                         }
                     });
                 }
-
-
-
-                
+               
             }
-
-
 
             // -------------------
     
             // Resizes the description section according to the size of the description image
             mainObject.resizeDescriptionSection();
+
+        }
+        
         }(this.objThumbnailController);
 
         // Loads the new image, which will trigger the onload event
         let description_image = "url(" + descImg.src + ")";
         t.style.setProperty('--description-image', description_image);
+    }
+
+
+    escapeOfCode(){
+        // Trigger a click on the close icon
+        $('#close-button').trigger('click');
+        
+        // remove the listener on the close icon
+        $('#close-button').off('click');
     }
 
 
@@ -1234,7 +1273,6 @@ class ThumbnailController{
             $(document).trigger(esc);
         });
     }
-
 
     /*
     After the size of the description-section changed, the description-image size recalculation is needed.
@@ -1477,14 +1515,21 @@ class ThumbnailController{
                 this.objScrollSection = oT;
                 this.objScrollSection.buildUpDom();
             }
+
         }else if(this.focusTask === FocusTask.Player){
             this.focusTask = FocusTask.Menu;
+        
+        }else if(this.focusTask === FocusTask.Code){
+            this.objScrollSection.escapeOfCode();
         }
     }
 
     arrowLeft(){
         if(this.focusTask === FocusTask.Menu){
             this.objScrollSection.arrowLeft();
+
+        }else if(this.focusTask === FocusTask.Code){
+            this.objScrollSection.escapeOfCode();
         }
     }
 
@@ -1497,6 +1542,9 @@ class ThumbnailController{
     arrowRight(){
         if(this.focusTask === FocusTask.Menu){
             this.objScrollSection.arrowRight();
+
+        }else if(this.focusTask === FocusTask.Code){
+            this.objScrollSection.escapeOfCode();
         }
     }
 
