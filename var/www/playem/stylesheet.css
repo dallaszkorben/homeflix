@@ -399,6 +399,7 @@ body {
     background-color: var(--thumbnail_background);
     display: flex;                                              /* flex box layout model */
     position: relative;                                         /* This made the animation with text work. I do not know how */
+    cursor: pointer;
 }
 
 .thumbnail img {
