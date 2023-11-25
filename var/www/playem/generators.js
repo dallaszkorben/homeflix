@@ -64,13 +64,13 @@ class RestGenerator extends Generator{
 
         for(let request of requestList){
     
-            let oContainer = new ObjThumbnailContainer(request["title"]);
-            
+            let oContainer = new ObjThumbnailContainer(request["title"]);            
             let request_result = this.sendRestRequest(request["rq_method"], request["rq_url"]);
+            let type = request["type"];
 
             for(let line of request_result){
 
-                let thumbnail = this.generateThumbnail(line);
+                let thumbnail = this.generateThumbnail(line, type);
                 // let details = this.fetchDetails(line["id"]);
                 // let thumbnail = this.generateThumbnail(details);
 
@@ -178,11 +178,113 @@ class RestGenerator extends Generator{
 }
 
 
-// --------------------
-// Level REST Generator
-// --------------------
+// // --------------------
+// // Level REST Generator
+// // --------------------
+// //
+// class LevelRestGenerator extends RestGenerator{
+//     constructor(language_code, container_title){
+//         super(language_code);
+//         this.container_title = container_title;
+//     }
+
+//     getContainerList(){
+//         throw new Error("Implement getContainerList() method in the " + this.constructor.name + " class!");
+//     }
+
+//     generateThumbnail(hit){
+//         let refToThis = this;
+//         let thumbnail = new Thumbnail();
+
+//         let thumbnail_title = this.getThumbnailTitle(hit);
+//         let history_title = this.getHistoryTitle(hit);
+//         let main_title = this.getMainTitle(hit);
+
+//         let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+//         let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+
+//         thumbnail.setImageSources({thumbnail_src: hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src: hit["source_path"] + "/screenshots/" + screenshot_file});
+//         thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
+
+// //        thumbnail.setStoryline(card["storyline"]);
+// //        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
+// //        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+
+//         thumbnail.setFunctionForSelection({"menu": 
+//             (function(hierarchy_id) {
+//                 return function() {
+//                     return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id);
+//                 };
+//             })(hit["id"])
+//         });
+//         return thumbnail;
+//     }    
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------
+// General REST Generator
+// ----------------------
 //
-class LevelRestGenerator extends RestGenerator{
+class GeneralRestGenerator extends RestGenerator{
     constructor(language_code, container_title){
         super(language_code);
         this.container_title = container_title;
@@ -192,34 +294,152 @@ class LevelRestGenerator extends RestGenerator{
         throw new Error("Implement getContainerList() method in the " + this.constructor.name + " class!");
     }
 
-    generateThumbnail(hit){
+    generateThumbnail(hit, type){
         let refToThis = this;
         let thumbnail = new Thumbnail();
+    
+        if( type == "level"){
 
-        let thumbnail_title = this.getThumbnailTitle(hit);
-        let history_title = this.getHistoryTitle(hit);
-        let main_title = this.getMainTitle(hit);
 
-        let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
-        let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
+            let thumbnail_title = this.getThumbnailTitle(hit);
+            let history_title = this.getHistoryTitle(hit);
+            let main_title = this.getMainTitle(hit);
 
-        thumbnail.setImageSources({thumbnail_src: hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src: hit["source_path"] + "/screenshots/" + screenshot_file});
-        thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
+            let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-//        thumbnail.setStoryline(card["storyline"]);
-//        thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
-//        thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
+            thumbnail.setImageSources({thumbnail_src: hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src: hit["source_path"] + "/screenshots/" + screenshot_file});
+            thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
-        thumbnail.setFunctionForSelection({"menu": 
-            (function(hierarchy_id) {
-                return function() {
-                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id);
-                };
-            })(hit["id"])
-        });
+
+            thumbnail.setFunctionForSelection({"menu": 
+                (function(hierarchy_id) {
+                    return function() {
+                        return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id);
+                    };
+                })(hit["id"])
+            });
+
+        }else if(type == "individual"){
+
+            let card_id = hit["id"];
+            let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
+            let card = this.sendRestRequest("GET", card_request_url)[0];
+    
+            let thumbnail_title = this.getThumbnailTitle(hit);
+            let main_title = this.getMainTitle(hit);
+    
+            // TODO: what happens if more than one medium are in the list ???
+            // 'video'
+            // 'audio'
+            // 'text'
+            // 'picture'
+            let media;
+            let mode;
+            let medium_path;
+            if("audio" in card["medium"]){
+                media=card["medium"]["audio"][0]
+                mode = "audio";
+                if(media){
+                    medium_path = pathJoin([card["source_path"], "media", media]);
+                }
+            }else if("video" in card["medium"]){
+                media=card["medium"]["video"][0]
+                mode = "video";
+                if(media){
+                    medium_path = pathJoin([card["source_path"], "media", media]);
+                }    
+            }else if("picture" in card["medium"]){
+                media=card["medium"]["picture"]
+                mode = "picture";
+                medium_path = [];
+                for(let medium of media){
+                    medium_path.push(pathJoin([card["source_path"], "media", medium]));
+                }
+            }
+
+            let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
+            let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
+    
+            let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
+            let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
+    
+            thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
+            thumbnail.setTitles({main:main_title, thumb: thumbnail_title});
+
+            
+
+
+
+
+            thumbnail.setTextCard({storyline:card["storyline"], lyrics:undefined});
+            thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], performers: card["performers"]});
+            thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
+
+            thumbnail.setFunctionForSelection({[mode]: 
+                (function(medium_path) {
+                    return function() {
+                        return medium_path
+                    };
+                })(medium_path)
+            });
+    
+        }
+
         return thumbnail;
+
     }    
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class SubLevelRestGenerator extends  RestGenerator{
     constructor(language_code, container_title, hierarchy_id){
@@ -381,81 +601,81 @@ class SubLevelRestGenerator extends  RestGenerator{
 }
 
 
-// -------------------------
-// Individual REST Generator
-// -------------------------
+//// -------------------------
+//// Individual REST Generator
+//// -------------------------
+////
+//class IndividualRestGenerator extends  RestGenerator{
 //
-class IndividualRestGenerator extends  RestGenerator{
-
-    getContainerList(){
-        throw new Error("Implement getContainerList() method in the " + this.constructor.name + " class!");
-    }
-
-    generateThumbnail(hit){
-        let thumbnail = new Thumbnail();
-
-        let card_id = hit["id"];
-        let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
-        let card = this.sendRestRequest("GET", card_request_url)[0];
-
-        let thumbnail_title = this.getThumbnailTitle(hit);
-        let main_title = this.getMainTitle(hit);
-
-        // TODO: what happens if more than one medium are in the list ???
-        // 'video'
-        // 'audio'
-        // 'text'
-        // 'picture'
-        let media;
-        let mode;
-        let medium_path;
-        if("audio" in card["medium"]){
-            media=card["medium"]["audio"][0]
-            mode = "audio";
-            if(media){
-                medium_path = pathJoin([card["source_path"], "media", media]);
-            }
-        }else if("video" in card["medium"]){
-            media=card["medium"]["video"][0]
-            mode = "video";
-            if(media){
-                medium_path = pathJoin([card["source_path"], "media", media]);
-            }    
-        }else if("picture"){
-            media=card["medium"]["picture"]
-            mode = "picture";
-            medium_path = [];
-            for(let medium of media){
-                medium_path.push(pathJoin([card["source_path"], "media", medium]));
-            }
-        }
-
-        let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
-        let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
-
-        let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
-        let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
-
-        thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
-        thumbnail.setTitles({main:main_title, thumb: thumbnail_title});
-
-        //thumbnail.setStoryline(card["storyline"]);
-        thumbnail.setTextCard({storyline:card["storyline"], lyrics:undefined});
-        thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], performers: card["performers"]});
-
-        thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
-
-        thumbnail.setFunctionForSelection({[mode]: 
-            (function(medium_path) {
-                return function() {
-                    return medium_path
-                };
-            })(medium_path)
-        });
-
-        return thumbnail;
-    }    
-}
+//    getContainerList(){
+//        throw new Error("Implement getContainerList() method in the " + this.constructor.name + " class!");
+//    }
+//
+//    generateThumbnail(hit){
+//        let thumbnail = new Thumbnail();
+//
+//        let card_id = hit["id"];
+//        let card_request_url = "http://" + host + port + "/collect/standalone/movie/card_id/" + card_id + "/lang/" + this.language_code
+//        let card = this.sendRestRequest("GET", card_request_url)[0];
+//
+//        let thumbnail_title = this.getThumbnailTitle(hit);
+//        let main_title = this.getMainTitle(hit);
+//
+//        // TODO: what happens if more than one medium are in the list ???
+//        // 'video'
+//        // 'audio'
+//        // 'text'
+//        // 'picture'
+//        let media;
+//        let mode;
+//        let medium_path;
+//        if("audio" in card["medium"]){
+//            media=card["medium"]["audio"][0]
+//            mode = "audio";
+//            if(media){
+//                medium_path = pathJoin([card["source_path"], "media", media]);
+//            }
+//        }else if("video" in card["medium"]){
+//            media=card["medium"]["video"][0]
+//            mode = "video";
+//            if(media){
+//                medium_path = pathJoin([card["source_path"], "media", media]);
+//            }    
+//        }else if("picture" in card["medium"]){
+//            media=card["medium"]["picture"]
+//            mode = "picture";
+//            medium_path = [];
+//            for(let medium of media){
+//                medium_path.push(pathJoin([card["source_path"], "media", medium]));
+//            }
+//        }
+//
+//        let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
+//        let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
+//
+//        let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
+//        let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
+//
+//        thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
+//        thumbnail.setTitles({main:main_title, thumb: thumbnail_title});
+//
+//        //thumbnail.setStoryline(card["storyline"]);
+//        thumbnail.setTextCard({storyline:card["storyline"], lyrics:undefined});
+//        thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], performers: card["performers"]});
+//
+//        thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
+//
+//        thumbnail.setFunctionForSelection({[mode]: 
+//            (function(medium_path) {
+//                return function() {
+//                    return medium_path
+//                };
+//            })(medium_path)
+//        });
+//
+//        return thumbnail;
+//    }    
+//}
 
 // =============================================================================
 
@@ -506,6 +726,18 @@ class MainMenuGenerator extends Generator{
                 };
             })("movies")});
         oContainer.addThumbnail(1, thumbnail);        
+
+        // Audiobook
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/audiobook.jpg", description_src: "images/categories/audiobook.jpg"});
+        thumbnail.setTitles({main: translated_titles['audiobook'], thumb: translated_titles['audiobook'], history: translated_titles['audiobook']});
+        thumbnail.setFunctionForSelection({"menu": 
+            (function(movie_type) {
+                return function() {
+                    return new AudiobookMenuGenerator(refToThis.language_code);
+                };
+            })("movies")});
+        oContainer.addThumbnail(1, thumbnail);
 
         // Dia
         thumbnail = new Thumbnail();
@@ -634,20 +866,21 @@ class MovieMenuGenerator extends Generator{
 }
 
 
-class MovieCategoriesIndividualRestGenerator extends  IndividualRestGenerator{
+//class MovieCategoriesIndividualRestGenerator extends  IndividualRestGenerator{
+class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
         let requestList = [
-            {title: translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/drama/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/comedy/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/scifi/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/western/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/documentary/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
-            {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
-
+            {type: "individual", title: translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/drama/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/comedy/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/scifi/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/western/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/documentary/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
+            {type: "individual", title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_themes['broker'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/broker/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -656,7 +889,8 @@ class MovieCategoriesIndividualRestGenerator extends  IndividualRestGenerator{
 }
 
 
-class MovieSerialsLevelRestGenerator extends  LevelRestGenerator{
+//class MovieSerialsLevelRestGenerator extends  LevelRestGenerator{
+class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
     constructor(language_code, container_title){
         super(language_code);
         this.container_title = container_title;
@@ -666,7 +900,7 @@ class MovieSerialsLevelRestGenerator extends  LevelRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/series/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "level", title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/series/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -675,7 +909,9 @@ class MovieSerialsLevelRestGenerator extends  LevelRestGenerator{
 }
 
 
-class MovieSequelsLevelRestGenerator extends  LevelRestGenerator{
+//class MovieSequelsLevelRestGenerator extends  LevelRestGenerator{
+class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
+    
     constructor(language_code, container_title){
         super(language_code);
         this.container_title = container_title;
@@ -685,7 +921,7 @@ class MovieSequelsLevelRestGenerator extends  LevelRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/sequel/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "level", title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/sequel/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -694,7 +930,8 @@ class MovieSequelsLevelRestGenerator extends  LevelRestGenerator{
 }
 
 
-class MovieRemakesLevelRestGenerator extends  LevelRestGenerator{
+//class MovieRemakesLevelRestGenerator extends  LevelRestGenerator{
+class MovieRemakesLevelRestGenerator extends  GeneralRestGenerator{
     constructor(language_code, container_title){
         super(language_code);
         this.container_title = container_title;
@@ -704,7 +941,7 @@ class MovieRemakesLevelRestGenerator extends  LevelRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/remake/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "level", title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/remake/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -713,12 +950,13 @@ class MovieRemakesLevelRestGenerator extends  LevelRestGenerator{
 }
 
 
-class MovieDocumentariesIndividualRestGenerator extends  IndividualRestGenerator{
+//class MovieDocumentariesIndividualRestGenerator extends  IndividualRestGenerator{
+class MovieDocumentariesIndividualRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
         let requestList = [
-            {title: translated_genre_movie['movie_documentaries'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/standalone/movies/genre/documentary/lang/" +  this.language_code},
+            {type: "individual", title: translated_genre_movie['movie_documentaries'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/standalone/movies/genre/documentary/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -771,19 +1009,20 @@ class MusicMenuGenerator extends Generator{
     }  
 }
 
-class MusicVideoLevelRestGenerator extends  LevelRestGenerator{
+//class MusicVideoLevelRestGenerator extends  LevelRestGenerator{
+class MusicVideoLevelRestGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
         let containerList = [];
 
         let requestList = [
-            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
-            {title: "70s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/70s/lang/" +  this.language_code},
-            {title: "80s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/80s/lang/" +  this.language_code},
-            {title: "90s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/90s/lang/" +  this.language_code},
-            {title: "2000s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/2000s/lang/" +  this.language_code},
-            {title: "2010s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/2010s/lang/" +  this.language_code},
-            {title: translated_titles['music_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "level", title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
+            {type: "level", title: "70s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/70s/lang/" +  this.language_code},
+            {type: "level", title: "80s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/80s/lang/" +  this.language_code},
+            {type: "level", title: "90s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/90s/lang/" +  this.language_code},
+            {type: "level", title: "2000s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/2000s/lang/" +  this.language_code},
+            {type: "level", title: "2010s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/2010s/lang/" +  this.language_code},
+            {type: "level", title: translated_titles['music_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -791,13 +1030,14 @@ class MusicVideoLevelRestGenerator extends  LevelRestGenerator{
    }
 }
 
-class MusicAudioLevelRestGenerator extends  LevelRestGenerator{
+//class MusicAudioLevelRestGenerator extends  LevelRestGenerator{
+class MusicAudioLevelRestGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
         let containerList = [];
 
         let requestList = [
-            {title: "80s",  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/80s/lang/" +  this.language_code},
+            {type: "level", title: "80s",  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/80s/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -811,12 +1051,34 @@ class MusicAudioLevelRestGenerator extends  LevelRestGenerator{
 // Radioplay MENU
 // ==============
 //
-class RadioplayMenuGenerator extends  IndividualRestGenerator{
+//class RadioplayMenuGenerator extends  IndividualRestGenerator{
+class RadioplayMenuGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
         let containerList = [];
         let requestList = [
-            {title: translated_titles['radioplay'],  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/radio_play/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_titles['radioplay'],  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/radio_play/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
+
+
+// ==============
+// Audiobook MENU
+// ==============
+//
+//class AudiobookMenuGenerator extends  IndividualRestGenerator{
+class AudiobookMenuGenerator extends  GeneralRestGenerator{
+
+
+    getContainerList(){
+        let containerList = [];
+        let requestList = [
+            {type: "level",      title: translated_titles['audiobook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/audiobook/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_titles['audiobook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/audiobook/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -829,12 +1091,13 @@ class RadioplayMenuGenerator extends  IndividualRestGenerator{
 // Dia MENU
 // ========
 //
-class DiaMenuGenerator extends  IndividualRestGenerator{
+//class DiaMenuGenerator extends  IndividualRestGenerator{
+class DiaMenuGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
         let containerList = [];
         let requestList = [
-            {title: translated_titles['dia'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/dia/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "individual", title: translated_titles['dia'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/dia/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -847,13 +1110,14 @@ class DiaMenuGenerator extends  IndividualRestGenerator{
 // Entertainment MENU
 // ==================
 //
-class EntertainmentLevelRestGenerator extends  LevelRestGenerator{
+//class EntertainmentLevelRestGenerator extends  LevelRestGenerator{
+class EntertainmentLevelRestGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/entertainment/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "level", title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/entertainment/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
            ];
 
         containerList = this.generateContainers(requestList);
@@ -866,13 +1130,14 @@ class EntertainmentLevelRestGenerator extends  LevelRestGenerator{
 // Knowledge MENU
 // ==============
 //
-class KnowledgeLevelRestGenerator extends  LevelRestGenerator{
+//class KnowledgeLevelRestGenerator extends  LevelRestGenerator{
+class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/knowledge/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {type: "level", title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/knowledge/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);

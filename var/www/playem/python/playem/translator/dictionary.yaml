@@ -91,6 +91,7 @@ category:
     music_video: Music (video)
     music_audio: Music
     radio_play: Radio Play
+    audiobook: Audiobook
     knowledge: Knowledge
     entertainment: Entertainment
     dia: Dia
@@ -168,6 +169,9 @@ genre:
         portrait: Portrait
         science_nature_documentary: Science and Nature Documentary
         puppet: Puppet
+
+    audiobook:
+        <<: *common
 
     dia:
         <<: *common
@@ -378,6 +382,7 @@ title:
     music_audio: Music Audio
     music_hungarian: Hungarian
     radioplay: Radioplay
+    audiobook: Audiobook
     dia: Diafilm
     entertainment: Entertainment
     entertainments: Entertainments

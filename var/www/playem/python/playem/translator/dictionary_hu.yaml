@@ -91,6 +91,7 @@ category:
     music_video: Zene (video)
     music_audio: Zene
     radio_play: Radiójáték
+    audiobook: Hangoskönyv
     knowledge: Tudás
     entertainment: Szórakoztatás
     dia: Dia
@@ -378,6 +379,7 @@ title:
     music_audio: Zene-Audio
     music_hungarian: Magyar
     radioplay: Rádiójáték
+    audiobook: Hangoskönyv
     dia: Dia
     entertainment: Szórakoztatás
     entertainments: Szórakoztatás
