@@ -170,6 +170,9 @@ genre:
         science_nature_documentary: Természettudományos dokumentum film
         puppet: Bábfilm
 
+    audiobook:
+        <<: *common
+
     dia:
         <<: *common
         dia: Dia
@@ -217,6 +220,13 @@ genre:
         skit: Skit
         analysis: Analysis
         talk: Beszélgetés
+        interview: Interjú
+        news: Híradó
+        talk: Beszélgetés
+        footage: Filmfelvétel
+        hearing: Meghallgatás
+        presentation: Bemutató
+        lecture: Előadás
 
     personal:
         photos: Photos

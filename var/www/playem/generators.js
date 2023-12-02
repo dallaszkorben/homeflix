@@ -27,7 +27,7 @@ class Generator{
 //
 class RestGenerator extends Generator{
     
-    generateThumbnail(hit){
+    generateThumbnail(hit, type){
         throw new Error("Implement generateThumbnails() method in the " + this.constructor.name + " class!");
     }
 
@@ -382,12 +382,9 @@ class GeneralRestGenerator extends RestGenerator{
                         return medium_path
                     };
                 })(medium_path)
-            });
-    
+            });    
         }
-
         return thumbnail;
-
     }    
 }
 
@@ -452,6 +449,7 @@ class SubLevelRestGenerator extends  RestGenerator{
         let containerList = [];
 
         let requestList = [
+            // I can not tell if it is individual or level
             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/child_hierarchy_or_card/id/" + this.hierarchy_id+ "/lang/" +  this.language_code},
         ];
 

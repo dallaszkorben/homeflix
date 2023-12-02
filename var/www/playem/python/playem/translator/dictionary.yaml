@@ -220,6 +220,13 @@ genre:
         skit: Skit
         analysis: Analysis
         talk: Talk
+        interview: Interview
+        news: News
+        talk: Talk
+        footage: Footage
+        hearing: Hearing
+        presentation: Presentation
+        lecture: Lecture
 
     personal:
         photos: Photos
