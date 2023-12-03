@@ -37,20 +37,6 @@ class RestGenerator extends Generator{
         return result.responseJSON;
     }
 
-    getRandomFileFromDirectory(path, filter){
-        let file_list = [];
-        let rawText = $.ajax({url: path, async: false}).responseText;
-        $(rawText).find('tr > td > a').not(':first').each(function(){                          
-            let file_name = $(this).attr("href");
-            if(filter.test(file_name))
-                file_list.push(file_name);
-        });
-        let random_file = undefined;
-        if(file_list.length)
-            random_file = file_list[Math.floor(Math.random()*file_list.length)];
-        return random_file;
-    }
-
     getTruncatedTitle(text, max_length){
         let tail = "...";    
         if (text.length > max_length + tail.length)
@@ -186,6 +172,35 @@ class RestGenerator extends Generator{
         return result_title;
     }
 
+    static getRandomFileFromDirectory(path, filter){
+        let file_list = [];
+        let rawText = $.ajax({url: path, async: false}).responseText;
+        $(rawText).find('tr > td > a').not(':first').each(function(){                          
+            let file_name = $(this).attr("href");
+            if(filter.test(file_name))
+                file_list.push(file_name);
+        });
+        let random_file = undefined;
+        if(file_list.length)
+            random_file = file_list[Math.floor(Math.random()*file_list.length)];
+        return random_file;
+    }
+
+    static getRandomSnapshotPath(source_path){       
+        return RestGenerator.getRandomFilePath(source_path, "thumbnails");
+    }
+
+    static getRandomScreenshotPath(source_path){   
+        return RestGenerator.getRandomFilePath(source_path, "screenshots");  
+    }
+
+    static getRandomFilePath(source_path, folder_name){
+        let path_to_folder = pathJoin([source_path, folder_name]);
+        let file_name = RestGenerator.getRandomFileFromDirectory(path_to_folder, /\.jpg$/);       
+        let path = pathJoin([path_to_folder, file_name]);
+        return path;
+    }
+
     generateThumbnail(hit, all_hits){
         let refToThis = this;
         let thumbnail = new Thumbnail();
@@ -195,15 +210,12 @@ class RestGenerator extends Generator{
         let main_title = this.getMainTitle(hit);
 
         if(hit["level"]){
-            let thumbnail_file = this.getRandomFileFromDirectory(hit["source_path"] + "/thumbnails", /\.jpg$/);
-            let screenshot_file = this.getRandomFileFromDirectory(hit["source_path"] + "/screenshots", /\.jpg$/);
 
-            thumbnail.setImageSources({thumbnail_src: hit["source_path"] + "/thumbnails/" + thumbnail_file, description_src: hit["source_path"] + "/screenshots/" + screenshot_file});
+            let thumbnail_path = RestGenerator.getRandomSnapshotPath(hit["source_path"]);
+            let screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
+
+            thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
-
-            // thumbnail.setStoryline(card["storyline"]);
-            // thumbnail.setCredentials(directors=card["directors"], writers=card["writers"], stars=card["stars"], actors=card["actors"], voices=card["voices"]);
-            // thumbnail.setExtras(length=card["length"], date=card["date"], origins=card["origins"], genres=card["genres"], themes=card["themes"]);
 
             thumbnail.setFunctionForSelection({
                 "single": 
@@ -293,11 +305,8 @@ class RestGenerator extends Generator{
                 }
             }
 
-            let thumbnail_file = this.getRandomFileFromDirectory(card["source_path"] + "/thumbnails", /\.jpg$/);
-            let screenshot_file = this.getRandomFileFromDirectory(card["source_path"] + "/screenshots", /\.jpg$/);
-           
-            let thumbnail_path = pathJoin([card["source_path"], "thumbnails", thumbnail_file]);
-            let screenshot_path = pathJoin([card["source_path"], "screenshots", screenshot_file]);
+            let thumbnail_path = RestGenerator.getRandomSnapshotPath(card["source_path"]);
+            let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
 
             thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
@@ -315,7 +324,10 @@ class RestGenerator extends Generator{
                                 return function() {
                                     return medium_path
                                 };
-                            })(medium_path)
+                            })(medium_path),
+                        "mode": mode,
+                        "medium_path": medium_path,
+                        "screenshot_path": screenshot_path
                     },
                 "continuous": all_hits
             });

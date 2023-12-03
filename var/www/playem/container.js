@@ -1053,46 +1053,6 @@ class ObjDescriptionContainer{
 
                                             refToObjThumbnailController.focusTask = FocusTask.Menu;
                                         });
-
-                                        // $(document).on('keydown',function(e){
-                                        //     function clickOnEscape(){
-                                        //         $('#close-button').trigger('click');
-                                        //     }
-                                        //     function arrowLeft(){
-                                        //         $('#close-button').trigger('click');
-                                        //     }
-                                        //     function arrowRight(){
-                                        //         $('#close-button').trigger('click');
-                                        //     }
-                                        //     var act={27:clickOnEscape, 37:arrowLeft, 39:arrowRight};
-                                        //     if(act[e.keyCode])
-                                        //         act[e.keyCode]();
-                                        // });
-
-
-                                        // function clickOnEscape() {
-                                        //     $('#close-button').trigger('click');
-                                        // }
-                                        
-                                        // function arrowLeft() {
-                                        //     $('#close-button').trigger('click');
-                                        // }
-                                        
-                                        // function arrowRight() {
-                                        //     $('#close-button').trigger('click');
-                                        // }
-
-                                        // $(document).on('keydown', function (e) {
-                                        //     // Handle key events
-                                        //     if (e.key === 'Escape') {
-                                        //         clickOnEscape();
-                                        //     } else if (e.key === 'ArrowLeft') {
-                                        //         arrowLeft();
-                                        //     } else if (e.key === 'ArrowRight') {
-                                        //         arrowRight();
-                                        //     }
-                                        // });
-
                                     }
 
                                 };
@@ -1327,6 +1287,8 @@ class ThumbnailController{
             }else if("audio" in functionSingle || "video" in functionSingle){                
 
                 let continuous_list = []
+
+                // If continuous play needed
                 if(true){
 
                     for( let hit of functionContinuous){
@@ -1334,6 +1296,7 @@ class ThumbnailController{
                         let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
                         let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
 
+                        let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
                         let medium_path;
                         let media;
                         if("audio" in card["medium"]){
@@ -1344,7 +1307,7 @@ class ThumbnailController{
 
                         if(media){
                             medium_path = pathJoin([card["source_path"], "media", media]);
-                            continuous_list.push(medium_path);
+                            continuous_list.push({"medium_path": medium_path, "screenshot_path": screenshot_path});
                         }
                     }
                 }
@@ -1365,27 +1328,13 @@ class ThumbnailController{
                     let player = $("#video_player")[0];
                     let domPlayer = $("#video_player");
 
+                    // Remove all media source from the player befor I add the new
                     $('#video_player').children("source").remove();
-
-                    // var sourceElement = $('#video_player').find('source');
-                    // if (sourceElement.length > 0) {
-                    //      sourceElement.remove();
-                    // }
 
                     // Creates a new source element
                     newSourceElement = $('<source>');
                     newSourceElement.attr('src', medium_path);
-                    // newSourceElement.attr('type', 'video/mkv');
                     $('#video_player').append(newSourceElement);
-
-                    // if(continuous_list.length > 0){
-                    //     for(let src of continuous_list){
-                    //         let newSourceElement2 = $('<source>');
-                    //         newSourceElement2.attr('src', src);
-                    //         $('#video_player').append(newSourceElement2);
-                    //     }    
-                    // }
-
 
                     if (player.requestFullscreen) {
                         player.requestFullscreen();
@@ -1397,92 +1346,26 @@ class ThumbnailController{
                         player.webkitRequestFullscreen();
                     }
 
+                    let screenshot_path = functionSingle["screenshot_path"];
+
+                    player.poster = screenshot_path;
                     player.load();
                     player.controls = true; 
                     player.autoplay = true;                               
                     player.play();
 
-                    $("#video_player").bind("ended", function(par) {
-                        
+                    // ENDED event listener
+                    $("#video_player").bind("ended", function(par) {                        
                         refToThis.finishedPlaying('ended', continuous_list);
-
-//                        console.log("source: " + par["source"]);
-
-                        //if(par["source"] == 'fullscreenchanged'){
-//                        if( par['type'] == 'ended' ){
-//                            //$('#video_player').trigger('fullscreenchange');
-//                            $('video')[0].webkitExitFullScreen();
-//                        }else{
-
-                        //if(continuous_list.length > 0){
-                            
-                        //}
-
-                        // ESC button to close
-                        //let esc = $.Event("keydown", { keyCode: 27 });
-                        //$('#video_player').trigger('fullscreenchange');
-//                        var fullScreenChangeEvent = new Event('fullscreenchange');
-//                        $('#video_player').trigger(fullScreenChangeEvent);
-
-
-                            // Ez nem mukodik
-                            //$("#section-0_container-0").focus();
-
-//                            //player.hidden=true;
-//                            domPlayer.hide();
-//                            player.pause();
-//                            player.height = 0;
-//
-//                            // Remove the playing list
-//                            $('#video_player').children("source").remove();
-//
-//                            // Remove the listeners
-//                            $('#video_player').off('fullscreenchange');
-//                            $('#video_player').off('mozfullscreenchange');
-//                            $('#video_player').off('webkitfullscreenchange');
-//                            $('#video_player').off('ended');
-//
-//
-//                            refToThis.focusTask = FocusTask.Menu;
-//
-
-
-
-                            //let esc = $.Event("keydown", { keyCode: 27 });
-                            //$(document).trigger(esc);
-
-  //                      }
-
-
                     });
 
+                    // FULLSCREENCHANGE event listener
                     $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function(e) {
                         var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
 
                         // If exited of full screen
                         if(!state){
-
                             refToThis.finishedPlaying('fullscreenchanged', continuous_list);
-
-//                            let ended = $.Event("ended", { source: "fullscreenchanged" });
-//                            $('#video_player').trigger(ended);
-
-
-
-
-
-                            // Ez nem mukodik
-//                            //$("#section-0_container-0").focus();
-//
-//                            //player.hidden=true;
-//                            domPlayer.hide();
-//                            player.pause();
-//                            player.height = 0;
-//
-//                            $('#video_player').children("source").remove();
-//
-//                            refToThis.focusTask = FocusTask.Menu;
-
                         }
                     });
                     player.style.display = 'block';
@@ -1575,18 +1458,19 @@ class ThumbnailController{
 
         if( event == 'ended' && continuous_list.length > 0){
 
-            let medium_path = continuous_list.shift();
+            let path = continuous_list.shift();
+
+            let medium_path = path["medium_path"];
+            let screenshot_path = path["screenshot_path"];
 
             // Creates a new source element
             let sourceElement = $('<source>');
             sourceElement.attr('src', medium_path);
             domPlayer.append(sourceElement);
 
+            player.poster = screenshot_path;
             player.load();
-//            player.controls = true; 
-//            player.autoplay = true;                               
             player.play();
-
 
         }else{
 
