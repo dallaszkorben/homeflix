@@ -6,13 +6,13 @@ from playem.restserver.representations import output_json
 
 from flask import request
 
-class EPCollectStandaloneMovieByCardId(EP):
+class EPCollectMediaByCardId(EP):
 
-    ID = 'collect_standalone_movie'
-    URL = '/collect/standalone/movie'
+    ID = 'collect_standalone_media'
+    URL = '/collect/standalone/media'
 
-#    PATH_PAR_PAYLOAD = '/standalone/movie'
-    PATH_PAR_URL = '/standalone/movie/card_id/<card_id>/lang/<lang>'
+#    PATH_PAR_PAYLOAD = '/media'
+    PATH_PAR_URL = '/media/card_id/<card_id>/lang/<lang>'
 
     METHOD = 'GET'
 
@@ -25,8 +25,8 @@ class EPCollectStandaloneMovieByCardId(EP):
     def executeByParameters(self, card_id, lang) -> dict:
 
         payload = {}
-        payload[EPCollectStandaloneMovieByCardId.ATTR_CARD_ID] = card_id
-        payload[EPCollectStandaloneMovieByCardId.ATTR_LANG] = lang
+        payload[EPCollectMediaByCardId.ATTR_CARD_ID] = card_id
+        payload[EPCollectMediaByCardId.ATTR_LANG] = lang
 
         return self.executeByPayload(payload)
 
@@ -34,9 +34,9 @@ class EPCollectStandaloneMovieByCardId(EP):
 
         remoteAddress = request.remote_addr
 
-        card_id = payload[EPCollectStandaloneMovieByCardId.ATTR_CARD_ID]
-        lang = payload[EPCollectStandaloneMovieByCardId.ATTR_LANG]
+        card_id = payload[EPCollectMediaByCardId.ATTR_CARD_ID]
+        lang = payload[EPCollectMediaByCardId.ATTR_LANG]
         
-        output = self.web_gadget.db.get_standalone_movie_by_card_id(card_id=card_id, lang=lang, limit=100)
+        output = self.web_gadget.db.get_media_by_card_id(card_id=card_id, lang=lang, limit=100)
 
         return output_json(output, EP.CODE_OK)

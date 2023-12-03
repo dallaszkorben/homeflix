@@ -1182,7 +1182,7 @@ class SqlDatabase:
             query = '''
                 SELECT 
                     merged.id, 
-                   
+                    merged.level level,
                     MAX(title_req) title_req, 
                     MAX(lang_req) lang_req, 
                     MAX(title_orig) title_orig, 
@@ -1195,6 +1195,7 @@ class SqlDatabase:
                 FROM (
                     SELECT 
                         card.id id,
+                        card.level level,
                         card.id_category id_category,
                         card.decade decade,
                         NULL title_req, 
@@ -1224,6 +1225,7 @@ class SqlDatabase:
     
                     SELECT 
                         card.id id,
+                        card.level level,
                         card.id_category id_category,
                         card.decade decade,
                         htl.text title_req, 
@@ -1487,7 +1489,8 @@ class SqlDatabase:
 
             query = '''
             SELECT 
-                merged.id, 
+                merged.id,
+                merged.level level,
                 MAX(title_req) title_req, 
                 MAX(title_orig) title_orig, 
                 MAX(lang_orig) lang_orig,
@@ -1500,6 +1503,7 @@ class SqlDatabase:
             FROM (
                 SELECT 
                     card.id id, 
+                    card.level level,
                     card.id_category id_category,
                     NULL title_req, 
                     NULL lang_req, 
@@ -1531,6 +1535,7 @@ class SqlDatabase:
 
                 SELECT 
                     card.id id,
+                    card.level level,
                     card.id_category id_category,
                     tcl.text title_req, 
                     lang.name lang_req, 
@@ -1644,8 +1649,6 @@ class SqlDatabase:
             return records
 
 
-
-
     # 
     #
     #
@@ -1654,10 +1657,9 @@ class SqlDatabase:
     #
 
     # TODO: DB name should be replaced by variables
-    # TODO: Must be renamed
     # TODO: Give back all existing/posible fields
 
-    def get_standalone_movie_by_card_id(self, card_id, lang, limit=100, json=True):
+    def get_media_by_card_id(self, card_id, lang, limit=100, json=True):
         with self.lock:
 
             cur = self.conn.cursor()

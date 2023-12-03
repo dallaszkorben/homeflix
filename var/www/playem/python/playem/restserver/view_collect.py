@@ -8,8 +8,9 @@ from flask_classful import FlaskView, route, request
 from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
+from playem.restserver.endpoints.ep_collect_media_by_card_id import EPCollectMediaByCardId
+
 from playem.restserver.endpoints.ep_collect_standalone_movies_by_genre import EPCollectStandaloneMoviesByGenre
-from playem.restserver.endpoints.ep_collect_standalone_movie_by_card_id import EPCollectStandaloneMovieByCardId
 from playem.restserver.endpoints.ep_collect_medium_by_card_id import EPCollectMediumByCardId
 
 from playem.restserver.endpoints.ep_collect_child_hierarchy_or_card import EPCollectChildHierarchyOrCard
@@ -51,7 +52,7 @@ class CollectView(FlaskView):
 
         self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
 
-        self.epCollectStandaloneMovieByCardId = EPCollectStandaloneMovieByCardId(web_gadget)
+        self.epCollectMediaByCardId = EPCollectMediaByCardId(web_gadget)
         self.epCollectStandaloneMusicVideoByCardId = EPCollectStandaloneMusicVideoByCardId(web_gadget)
         self.epCollectStandaloneMusicAudioByCardId = EPCollectStandaloneMusicAudioByCardId(web_gadget)
 
@@ -184,25 +185,22 @@ class CollectView(FlaskView):
 
 
 
+    #
+    # Gives back any media with a specific card id
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/media/card_id/123/lang/en
+    #
+    # GET http://localhost:80/collect/media/card_id/123/lang/en
+    #
+    #@route('/media/card_id/<card_id>/lang/<lang>')
+    @route(EPCollectMediaByCardId.PATH_PAR_URL, methods=[EPCollectMediaByCardId.METHOD])
+    def collectStandaloneMediaByCardIdWithParameter(self, card_id, lang):
 
+        out = self.epCollectMediaByCardId.executeByParameters(card_id=card_id, lang=lang)
+        return out
 
 
 # === standalone media with a specific id ===
-
-    #
-    # Gives back a standalone movie with a specific card id
-    #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movie/card_id/123/lang/en
-    #
-    # GET http://localhost:80/collect/standalone/movie/card_id/123/lang/en
-    #
-    #@route('/standalone/movie/card_id/<card_id>/lang/<lang>')
-    @route(EPCollectStandaloneMovieByCardId.PATH_PAR_URL, methods=[EPCollectStandaloneMovieByCardId.METHOD])
-    def collectStandaloneMovieByCardIdWithParameter(self, card_id, lang):
-
-        out = self.epCollectStandaloneMovieByCardId.executeByParameters(card_id=card_id, lang=lang)
-        return out
-
 
     #
     # Gives back a video music with a specific card id
