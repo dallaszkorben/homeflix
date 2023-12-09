@@ -610,7 +610,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -1028,7 +1028,7 @@ class SqlDatabase:
                         cur.execute(query, (medium, card_id, mediatype_id))   
 
         except sqlite3.Error as e:
-            logging.error("To append media failed with: '{0}' while inserting record".format(e))
+            logging.error("To append media failed with: '{0}' while inserting record, configured in {1} card".format(e, card_path))
             cur.execute("rollback")
 
         # close the insert transaction
@@ -1037,7 +1037,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1103,7 +1103,8 @@ class SqlDatabase:
                 cur.execute(query, (self.country_name_id_dict[origin], hierarchy_id))    
 
         except sqlite3.Error as e:
-            logging.error("To append hierarchy failed with: '{0}' while inserting record. Level: {1}".format(e, level))
+            logging.error("To append hierarchy failed with: '{0}' while inserting record. Level: {1}, configured in {2} card".format(e, level, card_path))
+
             cur.execute("rollback")
 
         cur.execute("commit")

@@ -313,6 +313,7 @@ class CardHandle:
 
                 # create a new Level record + get back the id
                 card_id=db.append_hierarchy(
+                    card_path=card_path,
                     title_orig=title_orig,
                     titles=titles,
                     title_on_thumbnail=title_on_thumbnail,
@@ -374,6 +375,7 @@ class CardHandle:
 
                 if not card_error:
                     card_id=db.append_card_media(
+                        card_path=card_path,
                         title_orig=title_orig, 
                         titles=titles,
                         title_on_thumbnail=title_on_thumbnail,

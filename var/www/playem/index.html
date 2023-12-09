@@ -1,348 +1,355 @@
 <meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
 <!DOCTYPE html>
-<html>    
-    <head>
-        <style>
-        </style>
+<html>
 
-        <script src="script/jquery/jquery-3.6.0.min.js"></script>
-        <script src="script/js-jaml/js-yaml.js"></script>
+<head>
+    <style>
+    </style>
 
-        <link href="script/fancybox/jquery.fancybox.min.css" rel="stylesheet" />
-        <script src="script/fancybox/jquery.fancybox.min.js"></script>
+    <script src="script/jquery/jquery-3.6.0.min.js"></script>
+    <script src="script/js-jaml/js-yaml.js"></script>
 
-        <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
-        <script src="script/highlight/highlight.min.js"></script>
+    <link href="script/fancybox/jquery.fancybox.min.css" rel="stylesheet" />
+    <script src="script/fancybox/jquery.fancybox.min.js"></script>
 
-<!--        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
+    <script src="script/highlight/highlight.min.js"></script>
+
+    <!--        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 -->
-<!--        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <!--        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
 -->
 
-        <script src="container.js"></script>
-        <script src="generators.js"></script>
+    <script src="container.js"></script>
+    <script src="generators.js"></script>
 
-        <link rel="stylesheet" href="stylesheet.css">
-        <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="stylesheet.css">
+    <link rel="icon" href="favicon.ico">
 
-        <script>
+    <script>
 
-            //let host = "192.168.0.21"
-            //let host = "localhost"
-            let host = location.hostname;
-            let port = ":80";
+        //let host = "192.168.0.21"
+        //let host = "localhost"
+        let host = location.hostname;
+        let port = ":80";
 
-            let languageCode = "hu";
-            let always_show_origin_title = true;
+        let languageCode = "hu";
+        let always_show_origin_title = true;
 
-            /*
-            Substitute substrings, similar to "Hello {0}".format("world") mechanizm
-            Usage: "hello {123}".format("123", world")
-            */ 
-            String.prototype.format = function () {
-                var i = 0, args = arguments;
-                return this.replace("{"+args[0]+"}", function () {
-                    return typeof args[1] != 'undefined' ? args[1] : '';
-                });
-            };
+        /*
+        Substitute substrings, similar to "Hello {0}".format("world") mechanizm
+        Usage: "hello {123}".format("123", world")
+        */
+        String.prototype.format = function () {
+            var i = 0, args = arguments;
+            return this.replace("{" + args[0] + "}", function () {
+                return typeof args[1] != 'undefined' ? args[1] : '';
+            });
+        };
 
-            // String.prototype.format = function () {
-            //     var i = 0, args = arguments;
-            //     return this.replace(/{}/g, function () {
-            //         console.log("args[0]: "+ args[0]);
-            //         console.log("args[1]: "+ args[1]);
-            //         return typeof args[i] != 'undefined' ? args[i++] : '';
-            //     });
-            // };
-        
-            function pathJoin(parts, sep){
-                var separator = sep || '/';
-                var replace   = new RegExp(separator+'{1,}', 'g');
-                return parts.join(separator).replace(replace, separator);
-            }
+        // String.prototype.format = function () {
+        //     var i = 0, args = arguments;
+        //     return this.replace(/{}/g, function () {
+        //         console.log("args[0]: "+ args[0]);
+        //         console.log("args[1]: "+ args[1]);
+        //         return typeof args[i] != 'undefined' ? args[i++] : '';
+        //     });
+        // };
+
+        function pathJoin(parts, sep) {
+            var separator = sep || '/';
+            var replace = new RegExp(separator + '{1,}', 'g');
+            return parts.join(separator).replace(replace, separator);
+        }
+
+        //
+        // Calculate the containers sizes
+        //
+
+        // var desc_img_height;
+        // var desc_img_width;
+
+        // Thumbnail
+        const thumbnail_border_width = 7;
+        const thumbnail_border_color = 'white';
+        const thumbnail_image_width = 160;
+        const thumbnail_image_height = 208;
+        const thumbnail_background = 'rgb(100, 100, 100)';
+
+        const thumbnail_text_font_size = 30;
+        const thumbnail_text_font_color = 'rgb(7, 24, 101)'
+        const thumbnail_text_font_shadow_color = 'rgb(255,255,255)'
+
+        // Container
+        const thumbnail_container_border_width = 4
+        const thumbnail_container_border_color = 'rgb(100, 100, 100)';
+        const thumbnail_container_background = 'rgb(100, 100, 100)';
+        const thumbnail_container_height = thumbnail_image_height + (2 * thumbnail_border_width) + (2 * thumbnail_container_border_width)
+
+        // Container block
+        const thumbnail_container_block_border_width = 1;
+        const thumbnail_container_block_border_color = 'rgb(0, 0, 0)';
+        const thumbnail_container_block_background = 'rgb(40, 40, 40)';
+
+        // Scroll section
+        const scroll_section_border_width = 0;  // Needed to be changed with description_section_border_width. If they are different, then a horizontal slider bar appears in the browser
+        const scroll_section_border_color = 'rgb(30, 30, 30)';
+        const scroll_section_background = 'rgb(30, 30, 30)';
+        const scroll_section_height_portion = 50;
+
+        // Static section
+        const static_section_height_portion = 50;
+
+        // History section
+        const history_section_background = 'rgb(80, 80, 80)';
+        const history_section_border_width = 1
+        const history_section_border_color = 'rgb(0, 0, 0)';
+        const history_section_font_size = 20;
+        const history_section_font_color = 'rgb(0, 0, 0)';
+        const history_section_height = 40;
+
+        // Description section
+        const description_section_border_width = 0; // Needed to be changed with scroll_section_border_width. If they are different, then a horizontal slider bar appears in the browser
+        const description_section_border_color = 'rgb(9, 60, 41)';
+        const description_section_background = 'rgb(171, 253, 176)';
+
+        const description_text_extra_font_size = 25;
+        const description_text_storyline_font_size = 20;
+        const description_text_credentials_font_size = 20;
+
+        const description_text_storyline_width = 45;
+
+        const description_text_wrapper_top = scroll_section_border_width;
+        const description_text_wrapper_left = scroll_section_border_width;
+
+        t = document.querySelector(':root');
+
+        // Thumbnail
+        t.style.setProperty('--thumbnail-border-width', thumbnail_border_width + 'px');
+        t.style.setProperty('--thumbnail-border-color', thumbnail_border_color);
+        t.style.setProperty('--thumbnail-image-height', thumbnail_image_height + 'px');
+        t.style.setProperty('--thumbnail-image-width', thumbnail_image_width + 'px');
+        t.style.setProperty('--thumbnail_background', thumbnail_background);
+
+        t.style.setProperty('--thumbnail-text-font-size', thumbnail_text_font_size + 'px');
+        t.style.setProperty('--thumbnail-text-font-color', thumbnail_text_font_color);
+        t.style.setProperty('--thumbnail-text-font-shadow-color', thumbnail_text_font_shadow_color);
+
+        // Container
+        t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
+        t.style.setProperty('--thumbnail-container-border-color', thumbnail_container_border_color);
+        t.style.setProperty('--thumbnail-container-background', thumbnail_container_background);
+        t.style.setProperty('--thumbnail-container-height', thumbnail_container_height + 'px');
+
+        // Container block
+        t.style.setProperty('--thumbnail-container-block-border-color', thumbnail_container_block_border_color);
+        t.style.setProperty('--thumbnail-container-block-background', thumbnail_container_block_background);
+        t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
+
+        // Scroll section
+        t.style.setProperty('--scroll-section-border-width', scroll_section_border_width + 'px');
+        t.style.setProperty('--scroll-section-border-color', scroll_section_border_color);
+        t.style.setProperty('--scroll-section-background', scroll_section_background);
+        t.style.setProperty('--scroll-section-height-portion', scroll_section_height_portion + '%');
+
+        // Static section
+        t.style.setProperty('--static-section-height-portion', static_section_height_portion + '%');
+
+        // History section
+        t.style.setProperty('--history-section-background', history_section_background);
+        t.style.setProperty('--history-section-border-width', history_section_border_width + 'px');
+        t.style.setProperty('--history-section-border-color', history_section_border_color);
+        t.style.setProperty('--history-section-font-size', history_section_font_size + 'px');
+        t.style.setProperty('--history-section-font-color', history_section_font_color);
+        t.style.setProperty('--history-section-height', history_section_height + 'px');
+
+        // Description section
+        t.style.setProperty('--description-section-border-width', description_section_border_width + 'px');
+        t.style.setProperty('--description-section-border-color', description_section_border_color);
+        t.style.setProperty('--description-section-background', description_section_background);
+
+
+
+
+
+        t.style.setProperty('--description-text-wrapper-top', description_text_wrapper_top + 'px');
+        t.style.setProperty('--description-text-wrapper-left', description_text_wrapper_left + 'px');
+        t.style.setProperty('--description-text-extra-font-size', description_text_extra_font_size + 'px');
+        t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
+        t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
+
+        t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
+
+        let translated_titles;
+        let translated_genre_movie;
+        let translated_categories;
+        let translated_themes;
+
+        function generateRandom(min = 0, max = 100) {
+
+            // find diff
+            let difference = max - min;
+
+            // generate random number 
+            let rand = Math.random();
+
+            // multiply with difference 
+            rand = Math.floor(rand * difference);
+
+            // add with min value 
+            rand = rand + min;
+
+            return rand;
+        }
+
+        $(document).ready(function () {
 
             //
-            // Calculate the containers sizes
+            // 
             //
-           
-            // var desc_img_height;
-            // var desc_img_width;
 
-            // Thumbnail
-            const thumbnail_border_width = 7;
-            const thumbnail_border_color = 'white';
-            const thumbnail_image_width = 160;
-            const thumbnail_image_height = 208;
-            const thumbnail_background = 'rgb(100, 100, 100)';
+            // let languageCode = "hu";
+            // let always_show_origin_title = true;
 
-            const thumbnail_text_font_size = 30;
-            const thumbnail_text_font_color = 'rgb(7, 24, 101)'
-            const thumbnail_text_font_shadow_color = 'rgb(255,255,255)'
+            //
+            //
 
-            // Container
-            const thumbnail_container_border_width = 4
-            const thumbnail_container_border_color = 'rgb(100, 100, 100)';
-            const thumbnail_container_background = 'rgb(100, 100, 100)';
-            const thumbnail_container_height = thumbnail_image_height + (2*thumbnail_border_width) + (2*thumbnail_container_border_width)
+            // Load Translated Titles
+            let rq_method = "GET";
+            let rq_url = "http://" + host + port + "/translate/titles/lang/" + languageCode;
+            let rq_assync = false;
+            let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+            translated_titles = result.responseJSON;
 
-            // Container block
-            const thumbnail_container_block_border_width = 1;
-            const thumbnail_container_block_border_color = 'rgb(0, 0, 0)';
-            const thumbnail_container_block_background = 'rgb(40, 40, 40)';
+            // Load Translated Genre: Movie
+            rq_method = "GET";
+            rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + languageCode;
+            rq_assync = false;
+            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+            translated_genre_movie = result.responseJSON;
 
-            // Scroll section
-            const scroll_section_border_width = 0;  // Needed to be changed with description_section_border_width. If they are different, then a horizontal slider bar appears in the browser
-            const scroll_section_border_color = 'rgb(30, 30, 30)';
-            const scroll_section_background = 'rgb(30, 30, 30)';
-            const scroll_section_height_portion = 50;
+            // Load Translated Themes
+            rq_method = "GET";
+            rq_url = "http://" + host + port + "/translate/themes/lang/" + languageCode;
+            rq_assync = false;
+            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+            translated_themes = result.responseJSON;
 
-            // Static section
-            const static_section_height_portion = 50;
+            // Load Translated Categories
+            rq_method = "GET";
+            rq_url = "http://" + host + port + "/translate/categories/lang/" + languageCode;
+            rq_assync = false;
+            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+            translated_categories = result.responseJSON;
 
-            // History section
-            const history_section_background = 'rgb(80, 80, 80)';
-            const history_section_border_width = 1
-            const history_section_border_color = 'rgb(0, 0, 0)';
-            const history_section_font_size = 20;
-            const history_section_font_color = 'rgb(0, 0, 0)';
-            const history_section_height = 40;
+            let mainMenuGenerator = new MainMenuGenerator(languageCode);
+            let oThumbnailController = new ThumbnailController(mainMenuGenerator);
+            let oScrollSection = oThumbnailController.getScrollSection();
 
-            // Description section
-            const description_section_border_width = 0; // Needed to be changed with scroll_section_border_width. If they are different, then a horizontal slider bar appears in the browser
-            const description_section_border_color = 'rgb(9, 60, 41)';
-            const description_section_background = 'rgb(171, 253, 176)';
+//            oScrollSection.focusDefault();
 
-            const description_text_extra_font_size = 25;
-            const description_text_storyline_font_size = 20;
-            const description_text_credentials_font_size = 20;
+            // -----------------------
+            // Listener configurations
+            // -----------------------
 
-            const description_text_storyline_width = 45;
+            //
+            // Description section resize observer
+            //
 
-            const description_text_wrapper_top = scroll_section_border_width;
-            const description_text_wrapper_left = scroll_section_border_width;
+            // Triggered if the size of the description section changed - I have to resize the Description Image
+            const resizeObserver = new ResizeObserver(entries => {
 
-            t = document.querySelector(':root');
+                // I do the refresh through the ThumbnailController
+                oThumbnailController.resizeDescriptionSection();
+            });
+            const domDescSectSection = document.querySelector("#description-section");
+            resizeObserver.observe(domDescSectSection);
 
-            // Thumbnail
-            t.style.setProperty('--thumbnail-border-width', thumbnail_border_width + 'px');
-            t.style.setProperty('--thumbnail-border-color', thumbnail_border_color);
-            t.style.setProperty('--thumbnail-image-height', thumbnail_image_height + 'px');
-            t.style.setProperty('--thumbnail-image-width', thumbnail_image_width + 'px');
-            t.style.setProperty('--thumbnail_background', thumbnail_background);
+            //
+            // Arrow keyboard event listener
+            //
 
-            t.style.setProperty('--thumbnail-text-font-size', thumbnail_text_font_size + 'px');
-            t.style.setProperty('--thumbnail-text-font-color', thumbnail_text_font_color);
-            t.style.setProperty('--thumbnail-text-font-shadow-color', thumbnail_text_font_shadow_color);
+            $(document).on('keydown', function (e) {
+                function clickOnThumbnail() {
+                    oThumbnailController.enter();
+                }
+                function clickOnEscape() {
+                    oThumbnailController.escape();
+                }
+                function arrowLeft() {
+                    oThumbnailController.arrowLeft();
+                }
+                function arrowUp() {
+                    oThumbnailController.arrowUp();
+                }
+                function arrowRight() {
+                    oThumbnailController.arrowRight();
+                }
+                function arrowDown() {
+                    oThumbnailController.arrowDown();
+                }
 
-            // Container
-            t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
-            t.style.setProperty('--thumbnail-container-border-color', thumbnail_container_border_color);
-            t.style.setProperty('--thumbnail-container-background', thumbnail_container_background);
-            t.style.setProperty('--thumbnail-container-height', thumbnail_container_height + 'px');
-
-            // Container block
-            t.style.setProperty('--thumbnail-container-block-border-color', thumbnail_container_block_border_color);
-            t.style.setProperty('--thumbnail-container-block-background', thumbnail_container_block_background);
-            t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
-
-            // Scroll section
-            t.style.setProperty('--scroll-section-border-width', scroll_section_border_width + 'px');
-            t.style.setProperty('--scroll-section-border-color', scroll_section_border_color);
-            t.style.setProperty('--scroll-section-background', scroll_section_background);
-            t.style.setProperty('--scroll-section-height-portion', scroll_section_height_portion + '%');
-
-            // Static section
-            t.style.setProperty('--static-section-height-portion', static_section_height_portion + '%');
-
-            // History section
-            t.style.setProperty('--history-section-background', history_section_background);
-            t.style.setProperty('--history-section-border-width', history_section_border_width + 'px');
-            t.style.setProperty('--history-section-border-color', history_section_border_color);
-            t.style.setProperty('--history-section-font-size', history_section_font_size + 'px');
-            t.style.setProperty('--history-section-font-color', history_section_font_color);
-            t.style.setProperty('--history-section-height', history_section_height + 'px');
-
-            // Description section
-            t.style.setProperty('--description-section-border-width', description_section_border_width + 'px');
-            t.style.setProperty('--description-section-border-color', description_section_border_color);
-            t.style.setProperty('--description-section-background', description_section_background);
-
-
-
-
-
-            t.style.setProperty('--description-text-wrapper-top', description_text_wrapper_top + 'px');
-            t.style.setProperty('--description-text-wrapper-left', description_text_wrapper_left + 'px');
-            t.style.setProperty('--description-text-extra-font-size', description_text_extra_font_size + 'px');
-            t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
-            t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
-
-            t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
-
-            let translated_titles;
-            let translated_genre_movie;
-            let translated_categories;
-            let translated_themes;
-
-            function generateRandom(min = 0, max = 100) {
-
-                // find diff
-                let difference = max - min;
-
-                // generate random number 
-                let rand = Math.random();
-
-                // multiply with difference 
-                rand = Math.floor( rand * difference);
-
-                // add with min value 
-                rand = rand + min;
-
-                return rand;
-            }
-
-            $(document).ready(function() {                
-
-                //
-                // 
-                //
-
-                // let languageCode = "hu";
-                // let always_show_origin_title = true;
-
-                //
-                //
-
-                // Load Translated Titles
-                let rq_method = "GET";
-                let rq_url = "http://" + host + port +"/translate/titles/lang/" + languageCode;
-                let rq_assync = false;
-                let result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
-                translated_titles = result.responseJSON;
-
-                // Load Translated Genre: Movie
-                rq_method = "GET";
-                rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + languageCode;
-                rq_assync = false;
-                result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
-                translated_genre_movie = result.responseJSON;
-
-                // Load Translated Themes
-                rq_method = "GET";
-                rq_url = "http://" + host + port + "/translate/themes/lang/" + languageCode;
-                rq_assync = false;
-                result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
-                translated_themes = result.responseJSON;
-
-                // Load Translated Categories
-                rq_method = "GET";
-                rq_url = "http://" + host + port + "/translate/categories/lang/" + languageCode;
-                rq_assync = false;
-                result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
-                translated_categories = result.responseJSON;                
-
-                let mainMenuGenerator = new MainMenuGenerator(languageCode);
-                let oThumbnailController = new ThumbnailController(mainMenuGenerator);
-                let oScrollSection = oThumbnailController.getScrollSection();
-
-                oScrollSection.focusDefault();
-
-                // -----------------------
-                // Listener configurations
-                // -----------------------
-
-                //
-                // Description section resize observer
-                //
-
-                // Triggered if the size of the description section changed - I have to resize the Description Image
-                const resizeObserver = new ResizeObserver(entries => {
-
-                    // I do the refresh through the ThumbnailController
-                    oThumbnailController.resizeDescriptionSection();
-                });
-                const domDescSectSection = document.querySelector("#description-section");
-                resizeObserver.observe(domDescSectSection);
-
-                //
-                // Arrow keyboard event listener
-                //
-
-                $(document).on('keydown',function(e){
-                    function clickOnThumbnail(){
-                        oThumbnailController.enter();
-                    }
-                    function clickOnEscape(){
-                        oThumbnailController.escape();
-                    }
-                    function arrowLeft(){
-                        oThumbnailController.arrowLeft();
-                    }
-                    function arrowUp(){
-                        oThumbnailController.arrowUp();
-                    }
-                    function arrowRight(){
-                        oThumbnailController.arrowRight();
-                    }
-                    function arrowDown(){
-                        oThumbnailController.arrowDown();
-                    }
-
-                    var act={27:clickOnEscape, 13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
-                    if(act[e.keyCode])
-                        var a=new act[e.keyCode];
-                });
-
-                let touchXPos;
-                let touchYPos;
-
-                // store the touching position at the start of each touch
-                $(document).on('touchstart', function(e){
-                    touchXPos = e.changedTouches[0].clientX;
-                    touchYPos = e.changedTouches[0].clientY;
-                });
-
-                $(document).on('touchmove', function(e){
-                    let newTouchYPos = e.changedTouches[0].clientY;
-                    let newTouchXPos = e.changedTouches[0].clientX;
-
-                    let minDiffX = 100;
-                    let minDiffY = 100;
-                    let diffX = Math.abs(newTouchXPos-touchXPos);
-                    let diffY = Math.abs(newTouchYPos-touchYPos);
-
-                    if( diffX > minDiffX ){
-                        if(newTouchXPos > touchXPos) {
-                            oThumbnailController.arrowRight();
-                        } else
-                        if(newTouchXPos < touchXPos) {
-                            oThumbnailController.arrowLeft();
-                        }
-                        touchXPos = newTouchXPos;
-
-                    } else if(diffY > minDiffY){
-                        if(newTouchYPos > touchYPos) {
-                            oThumbnailController.arrowDown();
-                        } else
-                        if(newTouchYPos < touchYPos) {
-                            oThumbnailController.arrowUp();
-                        }
-                        touchYPos = newTouchYPos;                    
-                    }
-                });
+                var act = { 27: clickOnEscape, 13: clickOnThumbnail, 32: clickOnThumbnail, 37: arrowLeft, 38: arrowUp, 39: arrowRight, 40: arrowDown };
+                if (act[e.keyCode])
+                    var a = new act[e.keyCode];
             });
 
-        </script>
-    </head>
-    <body>
+            let touchXPos;
+            let touchYPos;
+
+            // store the touching position at the start of each touch
+            $(document).on('touchstart', function (e) {
+                touchXPos = e.changedTouches[0].clientX;
+                touchYPos = e.changedTouches[0].clientY;
+            });
+
+            $(document).on('touchmove', function (e) {
+                let newTouchYPos = e.changedTouches[0].clientY;
+                let newTouchXPos = e.changedTouches[0].clientX;
+
+                let minDiffX = 100;
+                let minDiffY = 100;
+                let diffX = Math.abs(newTouchXPos - touchXPos);
+                let diffY = Math.abs(newTouchYPos - touchYPos);
+
+                if (diffX > minDiffX) {
+                    if (newTouchXPos > touchXPos) {
+                        oThumbnailController.arrowRight();
+                    } else
+                        if (newTouchXPos < touchXPos) {
+                            oThumbnailController.arrowLeft();
+                        }
+                    touchXPos = newTouchXPos;
+
+                } else if (diffY > minDiffY) {
+                    if (newTouchYPos > touchYPos) {
+                        oThumbnailController.arrowDown();
+                    } else
+                        if (newTouchYPos < touchYPos) {
+                            oThumbnailController.arrowUp();
+                        }
+                    touchYPos = newTouchYPos;
+                }
+            });
+        });
+
+    </script>
+</head>
+
+<body>
+
+
+    <div id="viewport">
+
+        <!-- Info section -->
         <div id="static-section">
             <div id="description-section">
                 <div id="description-text-div">
-                    <div id="description-text-wrapper">                       
-                        
+                    <div id="description-text-wrapper">
+
                         <div id="description-text-title"></div>
-                        
+
                         <div id="description-text-extra">
                             <div id="description-text-extra-date"></div>
                             <div id="description-text-extra-length"></div>
@@ -356,7 +363,7 @@
                             <div id="description-text-storyline"></div>
                             <div id="description-text-credentials"></div>
                         </div>
-                        <div id="description-appendix"></div>                                                
+                        <div id="description-appendix"></div>
                     </div>
                 </div>
                 <div id="description-image"></div>
@@ -366,22 +373,31 @@
                 <div id="history-section-link"></div>
             </div>
         </div>
-  
-        <!-- </div>     -->
+
+        <!-- scroll section -->
         <div>
-            <div id="scroll-section">                
+            <div id="scroll-section">
             </div>
         </div>
 
-        <div id="video-container">
-            <video height="0" id="video_player"></video>
+        <!-- spinner -->
+        <div id="spinner">
+            <img src="spinner.gif">
         </div>
-        <div>
-            <div id="overlay"></div>
-            <div id="modal">
-              <div id="close-button">❌</div>
-              <pre><code id="text-content"></code></pre>
-            </div>
+
+    </div>
+
+
+    <div id="video-container">
+        <video height="0" id="video_player"></video>
+    </div>
+    <div>
+        <div id="overlay"></div>
+        <div id="modal">
+            <div id="close-button">❌</div>
+            <pre><code id="text-content"></code></pre>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>

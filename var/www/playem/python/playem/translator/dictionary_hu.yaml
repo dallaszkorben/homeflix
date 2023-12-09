@@ -359,9 +359,10 @@ theme:
     collapse: Összeomlás
     boat: Hajó
     apocalipse: Apokalipszis
-    zombi: Zombi
     bank: Bank
     broker: Bróker
+    propaganda: Propaganda
+
 
 title:
     title: Cím

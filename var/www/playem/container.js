@@ -5,7 +5,7 @@ Parameters
 sectionMap : A map where the thumbnail hierarchy is stored
 sectionIndex : The index of the HTML's scroll-section <div> (inside the thumbnal-sections <div>) where the new Container should go
 */
-class ObjScrollSection{
+class ObjScrollSection {
     /**
      * Delete the existing Containers and create a given number of Containers
      * 
@@ -27,7 +27,7 @@ class ObjScrollSection{
      * @param {number} numberOfContainers 
      */
     // TODO: change current to focused
-    constructor({oContainerGenerator, historyLevels={text:"", link:""}, objThumbnailController=null}){
+    constructor({ oContainerGenerator, historyLevels = { text: "", link: "" }, objThumbnailController = null }) {
         this.oContainerGenerator = oContainerGenerator;
         this.historyLevels = historyLevels;
 
@@ -36,21 +36,17 @@ class ObjScrollSection{
         this.numberOfContainers = 0;
         this.currentContainerIndex = -1;
         this.thumbnailContainerList = [];
-        this.focusedThumbnailList = [];  
+        this.focusedThumbnailList = [];
 
-        this.oDescriptionContainer = new ObjDescriptionContainer();        
+        this.oDescriptionContainer = new ObjDescriptionContainer();
         this.oDescriptionContainer.setThumbnailController(objThumbnailController);
 
         this.resetDom();
 
-        this.oContainerGenerator.showContainers(this);
+        this.oContainerGenerator.showContainers(this)
     }
 
-//    setThumbnailController(objThumbnailController){
-//        this.oDescriptionContainer.setThumbnailController(objThumbnailController);
-//    }
-
-    resetDom(){
+    resetDom() {
         // Remove all elements from the <div id=scroll-section> and <div id=detail-text-title> and <div id=detail-image-div>
         this.domScrollSection = $("#scroll-section");
         this.domScrollSection.empty();
@@ -65,25 +61,25 @@ class ObjScrollSection{
     /**
      * Builds up new DOM for ControllerSection after it was taken out from the history
      */
-    buildUpDom(){
+    buildUpDom() {
         this.resetDom();
         let refToThis = this;
 
-        for(let containerIndex=0; containerIndex<this.thumbnailContainerList.length; containerIndex++){
+        for (let containerIndex = 0; containerIndex < this.thumbnailContainerList.length; containerIndex++) {
             let objThumbnailContainer = this.thumbnailContainerList[containerIndex];
 
             objThumbnailContainer.buildUpDom();
             let domThumbnailContainer = objThumbnailContainer.getDom();
-            
+
             let id = domThumbnailContainer.attr("id");
             domThumbnailContainer.attr("id", id.format("???", containerIndex));
-            domThumbnailContainer.children('.thumbnail').each(function(){
+            domThumbnailContainer.children('.thumbnail').each(function () {
                 let element = $(this);
-                let id=element.attr("id");
-                element.attr("id",id.format("???", containerIndex));
+                let id = element.attr("id");
+                element.attr("id", id.format("???", containerIndex));
 
                 // Add click listener on thumbnail. It must be set on the buildUpDome again
-                element.click(function(){
+                element.click(function () {
                     refToThis.clickedOnThumbnail($(this).attr('id'));
                 });
             });
@@ -92,34 +88,34 @@ class ObjScrollSection{
                 class: "thumbnail-container-block",
                 id: "container-block-" + containerIndex
             });
-    
+
             // Creates the Title JQuery element of the Thumbnail Container
-            let domThumbnailContainerTitle = $("<div>",{
+            let domThumbnailContainerTitle = $("<div>", {
                 class: "thumbnail-container-title",
                 text: objThumbnailContainer.getTitle()
             });
 
-            let domThumbnailContainerSpace = $("<div>",{
+            let domThumbnailContainerSpace = $("<div>", {
                 class: "thumbnail-container-space",
                 id: "container-space-" + containerIndex
             });
-    
+
             domThumbnailContainerBlock.append(domThumbnailContainerTitle);
             domThumbnailContainerBlock.append(domThumbnailContainer);
             domThumbnailContainerBlock.append(domThumbnailContainerSpace);
             this.domScrollSection.append(domThumbnailContainerBlock);
         }
-        
+
         this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
 
         this.focus();
     }
 
-    getDescriptionContainer(){
+    getDescriptionContainer() {
         return this.oDescriptionContainer;
     }
 
-    addThumbnailContainerObject(thumbnailContainer){
+    addThumbnailContainerObject(thumbnailContainer) {
         let refToThis = this;
         let containerIndex = this.focusedThumbnailList.length;
 
@@ -129,7 +125,7 @@ class ObjScrollSection{
         });
 
         // Creates the Title JQuery element of the Thumbnail Container
-        let domThumbnailContainerTitle = $("<div>",{
+        let domThumbnailContainerTitle = $("<div>", {
             class: "thumbnail-container-title",
             text: thumbnailContainer.getTitle()
         });
@@ -145,19 +141,19 @@ class ObjScrollSection{
 
         let id = domThumbnailContainer.attr("id");
         domThumbnailContainer.attr("id", id.format("???", containerIndex));
-        domThumbnailContainer.children('.thumbnail').each(function(){
+        domThumbnailContainer.children('.thumbnail').each(function () {
             let thumbnailElement = $(this);
-            let id=thumbnailElement.attr("id");
-            thumbnailElement.attr("id",id.format("???", containerIndex));
+            let id = thumbnailElement.attr("id");
+            thumbnailElement.attr("id", id.format("???", containerIndex));
 
             // Add click listener on thumbnail
-            thumbnailElement.click(function(){
+            thumbnailElement.click(function () {
                 refToThis.clickedOnThumbnail($(this).attr('id'));
             });
         });
 
         // Creates the Space JQuery element after the Thumbnail Container
-        let domThumbnailContainerSpace = $("<div>",{
+        let domThumbnailContainerSpace = $("<div>", {
             class: "thumbnail-container-space",
             id: "container-space-" + containerIndex
         });
@@ -171,12 +167,12 @@ class ObjScrollSection{
         this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
     }
 
-    focusDefault(){
+    focusDefault() {
         this.currentContainerIndex = 0;
         this.focus();
     }
 
-    focus(){
+    focus() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -193,12 +189,12 @@ class ObjScrollSection{
     //     return thumbnail.getHistoryTitle();
     // } 
 
-    getFocusedThubnailContainerTitle(){
+    getFocusedThubnailContainerTitle() {
         let oThumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         return oThumbnailContainer.title;
     }
 
-    getSelectedThumbnalFunctionForSelection(){
+    getSelectedThumbnalFunctionForSelection() {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
@@ -207,12 +203,12 @@ class ObjScrollSection{
     }
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
-    showDetails(){
+    showDetails() {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex]
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
 
-        if (thumbnail != undefined){
+        if (thumbnail != undefined) {
             let image = thumbnail.getDescriptionImageSource();
             let title = thumbnail.getTitle();
             let storyline = thumbnail.getStoryline();
@@ -225,8 +221,8 @@ class ObjScrollSection{
             this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra, appendix);
         }
     }
-    
-    clickedOnThumbnail(id){
+
+    clickedOnThumbnail(id) {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         const re = /\d+/g
@@ -235,7 +231,7 @@ class ObjScrollSection{
         let clickedThumbnailIndex = parseInt(match[1]);
 
         // Enter needed
-        if(this.currentContainerIndex==clickedContainerIndex && currentThumbnailIndex==clickedThumbnailIndex){
+        if (this.currentContainerIndex == clickedContainerIndex && currentThumbnailIndex == clickedThumbnailIndex) {
 
             // Simulate an Enter press on the "document"
             let e = jQuery.Event("keydown");
@@ -243,11 +239,11 @@ class ObjScrollSection{
             e.keyCode = 13;
             $(document).trigger(e);
 
-        // Focus needed
-        }else{
+            // Focus needed
+        } else {
 
             // Hide the current focus
-            let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
+            let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
             domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
             this.currentContainerIndex = clickedContainerIndex;
             domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
@@ -261,12 +257,12 @@ class ObjScrollSection{
         }
     }
 
-    escapeOfCode(){
+    escapeOfCode() {
         this.oDescriptionContainer.escapeOfCode();
     }
 
-    arrowRight(){
-        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
+    arrowRight() {
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
@@ -278,7 +274,7 @@ class ObjScrollSection{
     }
 
     arrowLeft() {
-        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
@@ -290,9 +286,9 @@ class ObjScrollSection{
     }
 
     arrowDown() {
-        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
-        
+
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
         this.currentContainerIndex = (this.currentContainerIndex + 1) % this.numberOfContainers;
         domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
@@ -305,7 +301,7 @@ class ObjScrollSection{
     };
 
     arrowUp() {
-        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');        
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
@@ -316,12 +312,12 @@ class ObjScrollSection{
         currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         domThumbnails.eq(currentThumbnailIndex).css('border-color', thumbnail_border_color);
-        this. scrollThumbnails();
+        this.scrollThumbnails();
         this.showDetails();
     };
 
     scrollThumbnails() {
-        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail'); 
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
         // Vertical scroll 
@@ -335,7 +331,7 @@ class ObjScrollSection{
             this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
         } else if (this.currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
             this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
-        }                    
+        }
 
         // Horizontal scroll
         let domContainer = $('#container-' + this.currentContainerIndex);
@@ -352,9 +348,9 @@ class ObjScrollSection{
         }
     }
 }
-   
 
-class ObjThumbnailContainer{
+
+class ObjThumbnailContainer {
     /**
      * <div class="thumbnail-container-block" id="container-block-1">
      *   <div class="thumbnail-container-title">Comedy</div>
@@ -363,18 +359,18 @@ class ObjThumbnailContainer{
      *   <div class="thumbnail-container-space" id="container-space-1"></div>
      * </div>
      */
-    constructor(title, defaultThumbnailIndex=0){            
+    constructor(title, defaultThumbnailIndex = 0) {
         this.title = title
         this.numberOfThumbnails = undefined;
         this.defaultThumbnailIndex = defaultThumbnailIndex;
         this.currentThumbnailIndex = undefined;
         this.thumbnailList = [];
-        
+
         this.resetDom();
     }
 
-    resetDom(){
-        this.domThumbnailContainer = $("<div>",{
+    resetDom() {
+        this.domThumbnailContainer = $("<div>", {
             class: "thumbnail-container",
             id: "container-{???}"
         });
@@ -385,51 +381,51 @@ class ObjThumbnailContainer{
      * Builds up new DOM for ThumbnailContainer
      * Called from the ScrollSection after it was taken out from the history
      */
-    buildUpDom(){
+    buildUpDom() {
         this.resetDom();
 
-        for(let thumbnailIndex=0; thumbnailIndex<this.thumbnailList.length; thumbnailIndex++){
+        for (let thumbnailIndex = 0; thumbnailIndex < this.thumbnailList.length; thumbnailIndex++) {
             let objThumbnail = this.thumbnailList[thumbnailIndex];
 
-            let title_thumb = objThumbnail.getThumbnailTitle(); 
+            let title_thumb = objThumbnail.getThumbnailTitle();
             let thumbnail_src = objThumbnail.getThumbnailImageSource();
 
-            let domThumbnail = $("<div>",{
+            let domThumbnail = $("<div>", {
                 class: "thumbnail",
                 id: "container-{???}-thumbnail-" + thumbnailIndex
             });
-            let domThumbnailTextWrapper = $("<div>",{
+            let domThumbnailTextWrapper = $("<div>", {
                 class: "thumbnail-text-wrapper",
             });
-            let domThumbnailText = $("<div>",{
+            let domThumbnailText = $("<div>", {
                 class: "thumbnail-text",
                 text: title_thumb
             });
-            let domImg = $("<img>",{
+            let domImg = $("<img>", {
                 src: thumbnail_src,
                 alt: "Image"
             });
             domThumbnailTextWrapper.append(domThumbnailText);
             domThumbnail.append(domThumbnailTextWrapper);
             domThumbnail.append(domImg);
-    
+
             this.domThumbnailContainer.append(domThumbnail);
         }
     }
 
-    getDom(){
+    getDom() {
         return this.domThumbnailContainer;
-    }        
+    }
 
-    getTitle(){
+    getTitle() {
         return this.title;
     }
 
-    getDefaultThumbnailIndex(){
+    getDefaultThumbnailIndex() {
         return this.defaultThumbnailIndex;
     }
 
-    getThumbnail(thumbnailIndex){
+    getThumbnail(thumbnailIndex) {
         return this.thumbnailList[thumbnailIndex];
     }
 
@@ -471,25 +467,25 @@ class ObjThumbnailContainer{
      *   <img src="images/categories/movie.jpg" alt="Image">
      * </div>
      */
-    addThumbnail(recordId, thumbnail){
-        let title_thumb = thumbnail.getThumbnailTitle(); 
+    addThumbnail(recordId, thumbnail) {
+        let title_thumb = thumbnail.getThumbnailTitle();
         let thumbnail_src = thumbnail.getThumbnailImageSource();
 
         let thumbnailIndex = this.thumbnailList.length;
         this.thumbnailList.push(thumbnail);
 
-        let domThumbnail = $("<div>",{
+        let domThumbnail = $("<div>", {
             class: "thumbnail",
             id: "container-{???}-thumbnail-" + thumbnailIndex
         });
-        let domThumbnailTextWrapper = $("<div>",{
+        let domThumbnailTextWrapper = $("<div>", {
             class: "thumbnail-text-wrapper",
         });
-        let domThumbnailText = $("<div>",{
+        let domThumbnailText = $("<div>", {
             class: "thumbnail-text",
             text: title_thumb
         });
-        let domImg = $("<img>",{
+        let domImg = $("<img>", {
             src: thumbnail_src,
             alt: "Image"
         });
@@ -499,11 +495,11 @@ class ObjThumbnailContainer{
 
         this.domThumbnailContainer.append(domThumbnail);
 
-//        this.thumbnailDomList.push(domThumbnail);
+        //        this.thumbnailDomList.push(domThumbnail);
     }
 }
 
-class Thumbnail{
+class Thumbnail {
 
     /**
     * this.thumbnailDict = {
@@ -531,195 +527,195 @@ class Thumbnail{
     *    }
     * };
     */
-    
-    constructor(){
+
+    constructor() {
         this.selection_fn = undefined;
         this.thumbnailDict = {
-        };    
+        };
     }
 
-    setFunctionForSelection(function_for_selection){
+    setFunctionForSelection(function_for_selection) {
         this.function_for_selection = function_for_selection;
     }
-    
-    getFunctionForSelection(){
-        if(this.function_for_selection){
+
+    getFunctionForSelection() {
+        if (this.function_for_selection) {
             return this.function_for_selection;
-        }else{
+        } else {
             return undefined;
         }
     }
 
-    setImageSources({thumbnail_src=undefined, description_src=undefined}){
-        if(thumbnail_src != undefined){
+    setImageSources({ thumbnail_src = undefined, description_src = undefined }) {
+        if (thumbnail_src != undefined) {
             this.thumbnailDict["thumbnail_src"] = thumbnail_src;
         }
-        if(description_src != undefined){
+        if (description_src != undefined) {
             this.thumbnailDict["description_src"] = description_src;
         }
     }
 
-    setTitles({main=undefined, thumb=undefined, history=undefined}){
-        if(main != undefined){
+    setTitles({ main = undefined, thumb = undefined, history = undefined }) {
+        if (main != undefined) {
             this.thumbnailDict["title"] = main;
         }
 
-        if(thumb != undefined){
+        if (thumb != undefined) {
             this.thumbnailDict["title_thumb"] = thumb;
         }
 
-        if(history != undefined){
+        if (history != undefined) {
             this.thumbnailDict["title_history"] = history;
         }
     }
 
-    setTextCard({storyline=undefined, lyrics=undefined}){
-        if(storyline != undefined){
+    setTextCard({ storyline = undefined, lyrics = undefined }) {
+        if (storyline != undefined) {
             this.thumbnailDict["storyline"] = storyline;
         }
-        if(lyrics != undefined){
+        if (lyrics != undefined) {
             this.thumbnailDict["lyrics"] = lyrics;
         }
     }
 
-    setCredentials({directors=undefined, writers=undefined, stars=undefined, actors=undefined, voices=undefined, hosts=undefined, guests=undefined, interviewers=undefined, interviewees=undefined, presenters=undefined, lecturers=undefined, performers=undefined}){
+    setCredentials({ directors = undefined, writers = undefined, stars = undefined, actors = undefined, voices = undefined, hosts = undefined, guests = undefined, interviewers = undefined, interviewees = undefined, presenters = undefined, lecturers = undefined, performers = undefined }) {
         this.thumbnailDict["credentials"] = {}
-        if(directors != undefined && Array.isArray(directors)){
+        if (directors != undefined && Array.isArray(directors)) {
             this.thumbnailDict["credentials"]["directors"] = directors;
         }
-        if(writers != undefined && Array.isArray(writers)){
+        if (writers != undefined && Array.isArray(writers)) {
             this.thumbnailDict["credentials"]["writers"] = writers;
         }
-        if(stars != undefined && Array.isArray(stars)){
+        if (stars != undefined && Array.isArray(stars)) {
             this.thumbnailDict["credentials"]["stars"] = stars;
         }
-        if(actors != undefined && Array.isArray(actors)){
+        if (actors != undefined && Array.isArray(actors)) {
             this.thumbnailDict["credentials"]["actors"] = actors;
         }
-        if(voices != undefined && Array.isArray(voices)){
+        if (voices != undefined && Array.isArray(voices)) {
             this.thumbnailDict["credentials"]["voices"] = voices;
         }
-        if(hosts != undefined && Array.isArray(hosts)){
+        if (hosts != undefined && Array.isArray(hosts)) {
             this.thumbnailDict["credentials"]["hosts"] = hosts;
         }
-        if(guests != undefined && Array.isArray(guests)){
+        if (guests != undefined && Array.isArray(guests)) {
             this.thumbnailDict["credentials"]["guests"] = guests;
         }
-        if(interviewers != undefined && Array.isArray(interviewers)){
+        if (interviewers != undefined && Array.isArray(interviewers)) {
             this.thumbnailDict["credentials"]["interviewers"] = interviewers;
         }
-        if(interviewees != undefined && Array.isArray(interviewees)){
+        if (interviewees != undefined && Array.isArray(interviewees)) {
             this.thumbnailDict["credentials"]["interviewees"] = interviewees;
         }
-        if(presenters != undefined && Array.isArray(presenters)){
+        if (presenters != undefined && Array.isArray(presenters)) {
             this.thumbnailDict["credentials"]["presenters"] = presenters;
         }
-        if(lecturers != undefined && Array.isArray(lecturers)){
+        if (lecturers != undefined && Array.isArray(lecturers)) {
             this.thumbnailDict["credentials"]["lecturers"] = lecturers;
         }
-        if(performers != undefined && Array.isArray(performers)){
+        if (performers != undefined && Array.isArray(performers)) {
             this.thumbnailDict["credentials"]["performers"] = performers;
         }
     }
 
-    setExtras({length=undefined, date=undefined, origins=undefined, genres=undefined, themes=undefined}){
+    setExtras({ length = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined }) {
         this.thumbnailDict["extras"] = {}
-//        if(length != undefined){
-            this.thumbnailDict["extras"]["length"] = length;            
-//        }
-//        if(year != undefined){
-            this.thumbnailDict["extras"]["date"] = date;
-//        }
-//        if(origin != undefined && Array.isArray(origin)){
-            this.thumbnailDict["extras"]["origins"] = origins;            
-//        }
-//        if(genre != undefined && Array.isArray(genre)){
-            this.thumbnailDict["extras"]["genres"] = genres;            
-//        }
-//        if(theme != undefined && Array.isArray(theme)){
-            this.thumbnailDict["extras"]["themes"] = themes;            
-//        }
+        //        if(length != undefined){
+        this.thumbnailDict["extras"]["length"] = length;
+        //        }
+        //        if(year != undefined){
+        this.thumbnailDict["extras"]["date"] = date;
+        //        }
+        //        if(origin != undefined && Array.isArray(origin)){
+        this.thumbnailDict["extras"]["origins"] = origins;
+        //        }
+        //        if(genre != undefined && Array.isArray(genre)){
+        this.thumbnailDict["extras"]["genres"] = genres;
+        //        }
+        //        if(theme != undefined && Array.isArray(theme)){
+        this.thumbnailDict["extras"]["themes"] = themes;
+        //        }
     }
 
-    setAppendix(appendix_list){
+    setAppendix(appendix_list) {
         this.thumbnailDict['appendix'] = appendix_list;
     }
 
-    getThumbnailDict(){
+    getThumbnailDict() {
         return this.thumbnailDict;
     }
 
-    getThumbnailImageSource(){
-        if("thumbnail_src" in this.thumbnailDict)
+    getThumbnailImageSource() {
+        if ("thumbnail_src" in this.thumbnailDict)
             return this.thumbnailDict["thumbnail_src"];
         return "";
     }
 
-    getDescriptionImageSource(){
-        if("description_src" in this.thumbnailDict)
+    getDescriptionImageSource() {
+        if ("description_src" in this.thumbnailDict)
             return this.thumbnailDict["description_src"];
         return "";
     }
 
-    getTitle(){
-            return this.thumbnailDict["title"];
+    getTitle() {
+        return this.thumbnailDict["title"];
         return "";
     }
 
-    getThumbnailTitle(){
-        if("title_thumb" in this.thumbnailDict)
+    getThumbnailTitle() {
+        if ("title_thumb" in this.thumbnailDict)
             return this.thumbnailDict["title_thumb"];
         return "";
     }
 
-    getHistoryTitle(){
-        if("title_history" in this.thumbnailDict)
+    getHistoryTitle() {
+        if ("title_history" in this.thumbnailDict)
             return this.thumbnailDict["title_history"];
         return "";
     }
 
-    getStoryline(){
-        if("storyline" in this.thumbnailDict)
+    getStoryline() {
+        if ("storyline" in this.thumbnailDict)
             return this.thumbnailDict["storyline"];
         return ""
     }
 
-    getLyrics(){
-        if("lyrics" in this.thumbnailDict)
+    getLyrics() {
+        if ("lyrics" in this.thumbnailDict)
             return this.thumbnailDict["lyrics"];
         return ""
     }
 
-    getCredentials(){
-        if("credentials" in this.thumbnailDict)
+    getCredentials() {
+        if ("credentials" in this.thumbnailDict)
             return this.thumbnailDict["credentials"];
         return {};
     }
 
-    getExtras(){
-        if("extras" in this.thumbnailDict)
+    getExtras() {
+        if ("extras" in this.thumbnailDict)
             return this.thumbnailDict["extras"];
         return {};
     }
 
-    getAppendix(){
-        if( "appendix" in this.thumbnailDict)
+    getAppendix() {
+        if ("appendix" in this.thumbnailDict)
             return this.thumbnailDict["appendix"];
         return {};
     }
 }
 
 
-class ObjDescriptionContainer{
-    constructor(){
-        this.description_img={
+class ObjDescriptionContainer {
+    constructor() {
+        this.description_img = {
             width: 0,
             height: 0
         }
         this.objThumbnailController = undefined;
     }
 
-    setThumbnailController(objThumbnailController){
+    setThumbnailController(objThumbnailController) {
         this.objThumbnailController = objThumbnailController;
     }
 
@@ -760,317 +756,317 @@ class ObjDescriptionContainer{
     * @param {*} storyline 
     * @param {*} credential 
     */
-    refreshDescription(fileName, title, storyline, lyrics, credentials, extra, appendix_list){
+    refreshDescription(fileName, title, storyline, lyrics, credentials, extra, appendix_list) {
         let mainObject = this;
         let descImg = new Image();
         descImg.src = fileName;
-//        let refToObjThumbnailController = this.objThumbnailController;
+        //        let refToObjThumbnailController = this.objThumbnailController;
 
         // when the image loaded, the onload event will be fired
-        descImg.onload = function(refToObjThumbnailController){
-        return function(){
-        
-            // calculates the new size of the description image
-            mainObject.description_img.height = descImg.height;
-            mainObject.description_img.width = descImg.width;
-        
-            // -------------
-            // --- title ---        
-            // -------------
-            let descTextTitle = $("#description-text-title");
-            descTextTitle.empty();                
-            descTextTitle.html(title);
+        descImg.onload = function (refToObjThumbnailController) {
+            return function () {
 
-            // TODO: probably it should be renamed to #description-text-main-area
-            let descTextStoryline = $("#description-text-storyline");
-            descTextStoryline.empty();                
+                // calculates the new size of the description image
+                mainObject.description_img.height = descImg.height;
+                mainObject.description_img.width = descImg.width;
 
-            if(storyline){
-            
+                // -------------
+                // --- title ---        
+                // -------------
+                let descTextTitle = $("#description-text-title");
+                descTextTitle.empty();
+                descTextTitle.html(title);
+
+                // TODO: probably it should be renamed to #description-text-main-area
+                let descTextStoryline = $("#description-text-storyline");
+                descTextStoryline.empty();
+
+                if (storyline) {
+
+                    // -----------------
+                    // --- storyline ---        
+                    // -----------------
+                    descTextStoryline.html(storyline);
+
+                } else if (lyrics) {
+                    // --------------
+                    // --- lyrics ---        
+                    // --------------
+                    descTextStoryline.html(lyrics);
+                }
+
                 // -----------------
-                // --- storyline ---        
-                // -----------------
-                descTextStoryline.html(storyline);
 
-            }else if (lyrics){
-                // --------------
-                // --- lyrics ---        
-                // --------------
-                descTextStoryline.html(lyrics);
-            }
+                // -------------
+                // --- extra ---
+                // -------------
 
-            // -----------------
-
-            // -------------
-            // --- extra ---
-            // -------------
-
-            // --- extra - year ---
-            let descTextExtraDate = $("#description-text-extra-date");
-            descTextExtraDate.empty();
-            let textExtraDate = "";
-            if ("date" in extra && extra["date"]){
-                textExtraDate += "" + extra["date"] + "";
-            }
-            descTextExtraDate.html(textExtraDate);
-
-            // --- extra - length ---
-            let descTextExtraLength = $("#description-text-extra-length");
-            descTextExtraLength.empty();
-            let textExtraLength = "";
-            if ("length" in extra && extra["length"]){
-                textExtraLength += "   ";
-                textExtraLength += extra["length"];
-            }
-            descTextExtraLength.html(textExtraLength);
-
-            // --- extra - origin ---
-            let descTextExtraOrigin = $("#description-text-extra-block-origin");
-            descTextExtraOrigin.empty();
-            let textExtraOrigin = "";
-            if ("origins" in extra && extra["origins"]){
-                let originList = extra["origins"];
-                let first = true;
-                for (let item of originList) {
-                    if(first){
-                        first = false;
-                    }else{
-                        textExtraOrigin += " • ";
-                    }
-                    textExtraOrigin += item;
+                // --- extra - year ---
+                let descTextExtraDate = $("#description-text-extra-date");
+                descTextExtraDate.empty();
+                let textExtraDate = "";
+                if ("date" in extra && extra["date"]) {
+                    textExtraDate += "" + extra["date"] + "";
                 }
-            }
-            descTextExtraOrigin.html(textExtraOrigin);
+                descTextExtraDate.html(textExtraDate);
 
-            // --- extra - genre ---
-            let descTextExtraGenre = $("#description-text-extra-block-genre");
-            descTextExtraGenre.empty();
-            let textExtraGenre = "";
-            if ("genres" in extra && extra["genres"]){
-                let genreList = extra["genres"];
-                let first = true;
-                for (let item of genreList) {
-                    if(first){
-                        first = false;
-                    }else{
-                        textExtraGenre += " • ";
-                    }
-                    textExtraGenre += item;
+                // --- extra - length ---
+                let descTextExtraLength = $("#description-text-extra-length");
+                descTextExtraLength.empty();
+                let textExtraLength = "";
+                if ("length" in extra && extra["length"]) {
+                    textExtraLength += "   ";
+                    textExtraLength += extra["length"];
                 }
-            }
-            descTextExtraGenre.html(textExtraGenre);
+                descTextExtraLength.html(textExtraLength);
 
-            // --- extra - theme ---
-            let descTextExtraTheme = $("#description-text-extra-block-theme");
-            descTextExtraTheme.empty();
-            let textExtraTheme = "";
-            if ("themes" in extra && extra["themes"]){
-                let themeList = extra["themes"];
-                let first = true;
-                for (let item of themeList) {
-                    if(first){
-                        first = false;
-                    }else{
-                        textExtraTheme += " • ";
-                    }
-                    textExtraTheme += item;
-                }
-            }
-            descTextExtraTheme.html(textExtraTheme);
-
-            // -------------------
-            // --- credentials ---
-            // -------------------
-
-            let descTextCredentials = $("#description-text-credentials");                
-            descTextCredentials.empty();
-
-            let credTable = $("<table>",{
-                border: 0,
-                id: "description-text-credentials-table"
-            });
-            descTextCredentials.append(credTable);
-
-            mainObject.printCredentals(credTable, credentials, "performers", translated_titles['performer'] + ":");
-            mainObject.printCredentals(credTable, credentials, "directors", translated_titles['director'] + ":");
-            mainObject.printCredentals(credTable, credentials, "writers", translated_titles['writer'] + ":");
-            mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":");
-            mainObject.printCredentals(credTable, credentials, "actors", translated_titles['actor'] + ":");
-            mainObject.printCredentals(credTable, credentials, "voices", translated_titles['voice'] + ":");
-            mainObject.printCredentals(credTable, credentials, "hosts", translated_titles['host'] + ":");
-            mainObject.printCredentals(credTable, credentials, "guests", translated_titles['guest'] + ":");
-            mainObject.printCredentals(credTable, credentials, "interviewers", translated_titles['interviewer'] + ":");
-            mainObject.printCredentals(credTable, credentials, "interviewees", translated_titles['interviewee'] + ":");
-            mainObject.printCredentals(credTable, credentials, "presenters", translated_titles['presenter'] + ":");
-            mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
-
-
-
-            // ----------------
-            // --- Appendix ---
-            // ----------------
-
-            let descAppendix = $("#description-appendix");                
-            descAppendix.empty();
-            for(let i in appendix_list){                
-                let show = appendix_list[i]['show'];
-                let download = appendix_list[i]['download'];
-                let source_path = appendix_list[i]['source_path'];
-                let media_dict = appendix_list[i]['media'];
-
-                if(download==1){
-                    let title = '\u{1F4E5}' + " " + appendix_list[i]['title'];
-
-                    // Through the keys: mediaTypes: text/picture/ebook
-                    Object.entries(media_dict).forEach(([media_type, media_list]) => {
-
-                        // Through the media_list - most probably only one media
-                        // I do not care about the type of the media, just want to download
-                        for(let media of media_list){
-                        
-                            // I'm expecting only one media here. TODO: get if there are others
-                            let file_path = pathJoin([source_path, "media", media]);
-
-                            let link = $('<a/>',{
-                                class: "description-appendix-download-button",
-                                href: file_path,
-                                download: "download",   // This is needed to download
-                                text: title
-                            });
-
-//                            let button = $('<button/>', {
-//                                onclick: "window.location.href='" + file_path + "'",
-//                                type: "submit",
-//                                class: "description-appendix-button",
-//                                text: title
-//                            });
-                            descAppendix.append(link);
+                // --- extra - origin ---
+                let descTextExtraOrigin = $("#description-text-extra-block-origin");
+                descTextExtraOrigin.empty();
+                let textExtraOrigin = "";
+                if ("origins" in extra && extra["origins"]) {
+                    let originList = extra["origins"];
+                    let first = true;
+                    for (let item of originList) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            textExtraOrigin += " • ";
                         }
-                    });
+                        textExtraOrigin += item;
+                    }
                 }
-                if(show==1){
-                    let title = '\u{261D}' + " " + appendix_list[i]['title'];
+                descTextExtraOrigin.html(textExtraOrigin);
 
-                    // Through the keys: mediaTypes: text/picture/ebook
-                    Object.entries(media_dict).forEach(([media_type, media_list]) => {
+                // --- extra - genre ---
+                let descTextExtraGenre = $("#description-text-extra-block-genre");
+                descTextExtraGenre.empty();
+                let textExtraGenre = "";
+                if ("genres" in extra && extra["genres"]) {
+                    let genreList = extra["genres"];
+                    let first = true;
+                    for (let item of genreList) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            textExtraGenre += " • ";
+                        }
+                        textExtraGenre += item;
+                    }
+                }
+                descTextExtraGenre.html(textExtraGenre);
 
-                        let medium_path = "";
-                        let mode = "";
+                // --- extra - theme ---
+                let descTextExtraTheme = $("#description-text-extra-block-theme");
+                descTextExtraTheme.empty();
+                let textExtraTheme = "";
+                if ("themes" in extra && extra["themes"]) {
+                    let themeList = extra["themes"];
+                    let first = true;
+                    for (let item of themeList) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            textExtraTheme += " • ";
+                        }
+                        textExtraTheme += item;
+                    }
+                }
+                descTextExtraTheme.html(textExtraTheme);
 
-                        if(media_type == "audio"){
-                            let media = media_list[0];  //Only one media will be played
-                            mode = "audio";
-                            medium_path = pathJoin([source_path, "media", media]);
-                        }else if(media_type == "video"){
-                            let media = media_list[0];  // Only one media will be played
-                            mode = "video";
-                            medium_path = pathJoin([source_path, "media", media]);
-                        }else if(media_type == "picture"){
-                            let media = media_list;
-                            mode = "picture"; 
-                            medium_path = [];                           
-                            for(let medium of media){
-                                medium_path.push(pathJoin([source_path, "media", medium]));
+                // -------------------
+                // --- credentials ---
+                // -------------------
+
+                let descTextCredentials = $("#description-text-credentials");
+                descTextCredentials.empty();
+
+                let credTable = $("<table>", {
+                    border: 0,
+                    id: "description-text-credentials-table"
+                });
+                descTextCredentials.append(credTable);
+
+                mainObject.printCredentals(credTable, credentials, "performers", translated_titles['performer'] + ":");
+                mainObject.printCredentals(credTable, credentials, "directors", translated_titles['director'] + ":");
+                mainObject.printCredentals(credTable, credentials, "writers", translated_titles['writer'] + ":");
+                mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":");
+                mainObject.printCredentals(credTable, credentials, "actors", translated_titles['actor'] + ":");
+                mainObject.printCredentals(credTable, credentials, "voices", translated_titles['voice'] + ":");
+                mainObject.printCredentals(credTable, credentials, "hosts", translated_titles['host'] + ":");
+                mainObject.printCredentals(credTable, credentials, "guests", translated_titles['guest'] + ":");
+                mainObject.printCredentals(credTable, credentials, "interviewers", translated_titles['interviewer'] + ":");
+                mainObject.printCredentals(credTable, credentials, "interviewees", translated_titles['interviewee'] + ":");
+                mainObject.printCredentals(credTable, credentials, "presenters", translated_titles['presenter'] + ":");
+                mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
+
+
+
+                // ----------------
+                // --- Appendix ---
+                // ----------------
+
+                let descAppendix = $("#description-appendix");
+                descAppendix.empty();
+                for (let i in appendix_list) {
+                    let show = appendix_list[i]['show'];
+                    let download = appendix_list[i]['download'];
+                    let source_path = appendix_list[i]['source_path'];
+                    let media_dict = appendix_list[i]['media'];
+
+                    if (download == 1) {
+                        let title = '\u{1F4E5}' + " " + appendix_list[i]['title'];
+
+                        // Through the keys: mediaTypes: text/picture/ebook
+                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
+
+                            // Through the media_list - most probably only one media
+                            // I do not care about the type of the media, just want to download
+                            for (let media of media_list) {
+
+                                // I'm expecting only one media here. TODO: get if there are others
+                                let file_path = pathJoin([source_path, "media", media]);
+
+                                let link = $('<a/>', {
+                                    class: "description-appendix-download-button",
+                                    href: file_path,
+                                    download: "download",   // This is needed to download
+                                    text: title
+                                });
+
+                                //                            let button = $('<button/>', {
+                                //                                onclick: "window.location.href='" + file_path + "'",
+                                //                                type: "submit",
+                                //                                class: "description-appendix-button",
+                                //                                text: title
+                                //                            });
+                                descAppendix.append(link);
                             }
-                        }else if( media_type == "text"){
-                            let media = media_list[0];  // Only one media will be played
-                            mode = "text";
-                            medium_path = pathJoin([source_path, "media", media]);
-                        }else if( media_type == "code"){
-                            let media = media_list[0];  // Only one media will be played
-                            mode = "code";
-                            medium_path = pathJoin([source_path, "media", media]);
-                        }else if( media_type == "pdf"){
-                            let media = media_list[0];  // Only one media will be played
-                            mode = "pdf";
-                            medium_path = pathJoin([source_path, "media", media]);
-                        }
+                        });
+                    }
+                    if (show == 1) {
+                        let title = '\u{261D}' + " " + appendix_list[i]['title'];
 
-                        // Through the media_list and create button for them
-                        for(let media of media_list){
-                        
-                            // I'm expecting only one media here. TODO: get if there are others
-                            let file_path = pathJoin([source_path, "media", media]);
+                        // Through the keys: mediaTypes: text/picture/ebook
+                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
 
-                            let link = $('<a/>',{
-                                class: "description-appendix-show-button",
-                                text: title
-                            });
-                            link.click(function(my_mode, my_file_path){
-                                return function(){
+                            let medium_path = "";
+                            let mode = "";
 
-                                    if(my_mode=="picture"){
+                            if (media_type == "audio") {
+                                let media = media_list[0];  //Only one media will be played
+                                mode = "audio";
+                                medium_path = pathJoin([source_path, "media", media]);
+                            } else if (media_type == "video") {
+                                let media = media_list[0];  // Only one media will be played
+                                mode = "video";
+                                medium_path = pathJoin([source_path, "media", media]);
+                            } else if (media_type == "picture") {
+                                let media = media_list;
+                                mode = "picture";
+                                medium_path = [];
+                                for (let medium of media) {
+                                    medium_path.push(pathJoin([source_path, "media", medium]));
+                                }
+                            } else if (media_type == "text") {
+                                let media = media_list[0];  // Only one media will be played
+                                mode = "text";
+                                medium_path = pathJoin([source_path, "media", media]);
+                            } else if (media_type == "code") {
+                                let media = media_list[0];  // Only one media will be played
+                                mode = "code";
+                                medium_path = pathJoin([source_path, "media", media]);
+                            } else if (media_type == "pdf") {
+                                let media = media_list[0];  // Only one media will be played
+                                mode = "pdf";
+                                medium_path = pathJoin([source_path, "media", media]);
+                            }
 
-                                        refToObjThumbnailController.focusTask = FocusTask.Picture;
+                            // Through the media_list and create button for them
+                            for (let media of media_list) {
 
-                                        let fancybox_list = [];
-                                        let opts ={
-                                            thumb: my_file_path,
-                                            width: $(window).width(),
-                                            afterShow: function(instance, current){},
-                                        }
-                                        let src = my_file_path;
-                                        fancybox_list.push({
-                                            src: src,
-                                            opts: opts
-                                        });
-                                        $.fancybox.open(fancybox_list, {
-                                            loop: false,
-                                            fitToView: true,
-                                            afterClose: function(instance, current) {
+                                // I'm expecting only one media here. TODO: get if there are others
+                                let file_path = pathJoin([source_path, "media", media]);
+
+                                let link = $('<a/>', {
+                                    class: "description-appendix-show-button",
+                                    text: title
+                                });
+                                link.click(function (my_mode, my_file_path) {
+                                    return function () {
+
+                                        if (my_mode == "picture") {
+
+                                            refToObjThumbnailController.focusTask = FocusTask.Picture;
+
+                                            let fancybox_list = [];
+                                            let opts = {
+                                                thumb: my_file_path,
+                                                width: $(window).width(),
+                                                afterShow: function (instance, current) { },
+                                            }
+                                            let src = my_file_path;
+                                            fancybox_list.push({
+                                                src: src,
+                                                opts: opts
+                                            });
+                                            $.fancybox.open(fancybox_list, {
+                                                loop: false,
+                                                fitToView: true,
+                                                afterClose: function (instance, current) {
+                                                    refToObjThumbnailController.focusTask = FocusTask.Menu;
+                                                }
+                                            });
+
+                                        } else if (my_mode == "code") {
+                                            refToObjThumbnailController.focusTask = FocusTask.Code;
+
+                                            // Text load and show in a modal window
+
+                                            $.ajax({
+                                                url: my_file_path,
+                                                dataType: 'text',
+                                                success: function (text) {
+                                                    $('#text-content').text(text);
+                                                    $('#modal, #overlay').show();
+
+                                                    // Highlight.js initialization after modal is shown
+                                                    hljs.highlightAll();
+                                                },
+                                                error: function (error) {
+                                                    console.error('Error loading text file:', error);
+                                                }
+                                            });
+
+                                            // Bezárás gomb eseménykezelő
+                                            $('#close-button').on('click', function () {
+
+                                                $('#modal').hide();
+                                                $('#overlay').hide();
+
+                                                $('#text-content').empty();
+                                                $('#text-content').removeAttr("data-highlighted");
+
                                                 refToObjThumbnailController.focusTask = FocusTask.Menu;
-                                            }
-                                        });
+                                            });
+                                        }
 
-                                    }else if(my_mode=="code"){
-                                        refToObjThumbnailController.focusTask = FocusTask.Code;
+                                    };
+                                }(mode, file_path));
+                                descAppendix.append(link);
+                            }
+                        });
+                    }
 
-                                        // Text load and show in a modal window
-
-                                        $.ajax({
-                                            url: my_file_path,
-                                            dataType: 'text',
-                                            success: function (text) {
-                                                $('#text-content').text(text);
-                                                $('#modal, #overlay').show();
-
-                                                // Highlight.js initialization after modal is shown
-                                                hljs.highlightAll();
-                                            },
-                                            error: function (error) {
-                                                console.error('Error loading text file:', error);
-                                            }
-                                        });
-
-                                        // Bezárás gomb eseménykezelő
-                                        $('#close-button').on('click', function () {
-
-                                            $('#modal').hide();
-                                            $('#overlay').hide();
-
-                                            $('#text-content').empty();
-                                            $('#text-content').removeAttr("data-highlighted");
-
-                                            refToObjThumbnailController.focusTask = FocusTask.Menu;
-                                        });
-                                    }
-
-                                };
-                            }(mode, file_path));
-                            descAppendix.append(link);
-                        }
-                    });
                 }
-               
+
+                // -------------------
+
+                // Resizes the description section according to the size of the description image
+                mainObject.resizeDescriptionSection();
+
             }
 
-            // -------------------
-    
-            // Resizes the description section according to the size of the description image
-            mainObject.resizeDescriptionSection();
-
-        }
-        
         }(this.objThumbnailController);
 
         // Loads the new image, which will trigger the onload event
@@ -1079,10 +1075,10 @@ class ObjDescriptionContainer{
     }
 
 
-    escapeOfCode(){
+    escapeOfCode() {
         // Trigger a click on the close icon
         $('#close-button').trigger('click');
-        
+
         // remove the listener on the close icon
         $('#close-button').off('click');
     }
@@ -1094,13 +1090,13 @@ class ObjDescriptionContainer{
     * Typically used by the ResizeObserver
     * 
     */
-    resizeDescriptionSection(){
+    resizeDescriptionSection() {
         let domDescriptionSectionDiv = $("#description-section");
 
         let domDescriptionImageDiv = $("#description-image");
-        let description_image_border_sum_width = domDescriptionImageDiv.outerWidth()-domDescriptionImageDiv.innerWidth();
-        let description_image_border_sum_height = domDescriptionImageDiv.outerHeight()-domDescriptionImageDiv.innerHeight();
-        
+        let description_image_border_sum_width = domDescriptionImageDiv.outerWidth() - domDescriptionImageDiv.innerWidth();
+        let description_image_border_sum_height = domDescriptionImageDiv.outerHeight() - domDescriptionImageDiv.innerHeight();
+
         let description_image_outer_width = this.description_img.width + description_image_border_sum_width;
         let description_image_outer_height = this.description_img.height + description_image_border_sum_height;
 
@@ -1133,61 +1129,61 @@ class ObjDescriptionContainer{
         let storylineHeight = textWrapperHeight - titleHeight - extraHeight - appendixHeight - areaHeightBorder;
 
         t.style.setProperty('--description-text-storyline-height', storylineHeight + 'px');
-        t.style.setProperty('--description-text-credentials-height', storylineHeight + 'px');  
+        t.style.setProperty('--description-text-credentials-height', storylineHeight + 'px');
     }
 
-    printCredentals(table, dict, id, title){
-        if (id in dict){
+    printCredentals(table, dict, id, title) {
+        if (id in dict) {
             let first = true;
             let listItems = dict[id];
             for (let item of listItems) {
                 let line = $("<tr>");
                 let column = $("<td>");
-                if (first){
+                if (first) {
                     column.text(title);
                 }
                 first = false;
                 line.append(column);
-    
+
                 column = $("<td>");
                 column.text(item);
                 line.append(column);
-    
+
                 table.append(line);
             }
         }
-    }    
+    }
 }
 
 
-class History{
-    constructor(){
+class History {
+    constructor() {
         this.levelList = [];
     }
 
-    addNewLevel(objScrollSection){
+    addNewLevel(objScrollSection) {
         let text = objScrollSection.getFocusedThubnailContainerTitle();
-        this.levelList.push({"text": text, "obj": objScrollSection});
+        this.levelList.push({ "text": text, "obj": objScrollSection });
     }
 
-    getLevels(){
+    getLevels() {
         let text = "";
         let link = "";
 
-        for(let i=0; i<this.levelList.length-1; i++){
+        for (let i = 0; i < this.levelList.length - 1; i++) {
             text += this.levelList[i]["text"] + " >&nbsp;";
         }
-        
+
         link = this.levelList.length ? " " + this.levelList[this.levelList.length - 1]["text"] : "";
-        return {"text": text, "link": link};
+        return { "text": text, "link": link };
 
     }
 
-    popLevel(){
-        if(this.levelList.length){
+    popLevel() {
+        if (this.levelList.length) {
             let level = this.levelList.pop();
             return level["obj"];
-        }else{
+        } else {
             return undefined;
         }
     }
@@ -1208,28 +1204,29 @@ class FocusTask {
 }
 
 
-class ThumbnailController{
+class ThumbnailController {
 
-//    constructor(objScrollSection){
-//        this.history = new History();
-//        this.objScrollSection = objScrollSection;
-//        this.focusTask = FocusTask.Menu;
-//        
-//        let tshl = $("#history-section-link");
-//        tshl.click(function() {
-//            let esc = $.Event("keydown", { keyCode: 27 });
-//            $(document).trigger(esc);
-//        });
-//    }
+    //    constructor(objScrollSection){
+    //        this.history = new History();
+    //        this.objScrollSection = objScrollSection;
+    //        this.focusTask = FocusTask.Menu;
+    //        
+    //        let tshl = $("#history-section-link");
+    //        tshl.click(function() {
+    //            let esc = $.Event("keydown", { keyCode: 27 });
+    //            $(document).trigger(esc);
+    //        });
+    //    }
 
-    constructor(mainMenuGenerator){
+    constructor(mainMenuGenerator) {
         this.language_code = mainMenuGenerator.language_code;
         this.history = new History();
         this.focusTask = FocusTask.Menu;
-        this.objScrollSection = new ObjScrollSection({oContainerGenerator: mainMenuGenerator, objThumbnailController: this}); 
         
+        this.objScrollSection = new ObjScrollSection({ oContainerGenerator: mainMenuGenerator, objThumbnailController: this });
+
         let tshl = $("#history-section-link");
-        tshl.click(function() {
+        tshl.click(function () {
             let esc = $.Event("keydown", { keyCode: 27 });
             $(document).trigger(esc);
         });
@@ -1239,28 +1236,27 @@ class ThumbnailController{
     After the size of the description-section changed, the description-image size recalculation is needed.
 
     */
-    resizeDescriptionSection(){
+    resizeDescriptionSection() {
         //this.objScrollSection.focus();
         this.objScrollSection.getDescriptionContainer().resizeDescriptionSection();
-
     }
 
-    getScrollSection(){
+    getScrollSection() {
         return this.objScrollSection;
     }
 
-    generateScrollSection(oContainerGenerator, historyLevels={text:"", link:""}){
-        let oScrollSection = new ObjScrollSection({oContainerGenerator: oContainerGenerator, historyLevels: historyLevels, objThumbnailController: this});
-        oScrollSection.focusDefault();
-        
+    generateScrollSection(oContainerGenerator, historyLevels = { text: "", link: "" }) {
+        let oScrollSection = new ObjScrollSection({ oContainerGenerator: oContainerGenerator, historyLevels: historyLevels, objThumbnailController: this });
+//        oScrollSection.focusDefault();
+
         return oScrollSection;
     }
 
-    enter(){
+    enter() {
         let refToThis = this;
         let newSourceElement
-        
-        if(this.focusTask === FocusTask.Menu){
+
+        if (this.focusTask === FocusTask.Menu) {
 
             // fetch the generator function of the thumbnail in the focus
             let functionForSelection = this.objScrollSection.getSelectedThumbnalFunctionForSelection();
@@ -1268,30 +1264,30 @@ class ThumbnailController{
             let functionSingle = functionForSelection["single"]
 
             // If the selected thumbnail will produce a sub-menu
-            if("menu" in functionSingle){
+            if ("menu" in functionSingle) {
 
                 this.focusTask = FocusTask.Menu;
 
                 // We get one level deeper in the history
-                this.history.addNewLevel(this.objScrollSection);        
+                this.history.addNewLevel(this.objScrollSection);
 
                 // take the generator's function
                 let getGeneratorFunction = functionSingle["menu"];
 
                 // and call the generator's function to produce a new Container Generator
                 let oContainerGenerator = getGeneratorFunction();
-            
+
                 // Shows the new ScrollSection generated by the Container Generator
                 this.objScrollSection = this.generateScrollSection(oContainerGenerator, this.history.getLevels());
 
-            }else if("audio" in functionSingle || "video" in functionSingle){                
+            } else if ("audio" in functionSingle || "video" in functionSingle) {
 
                 let continuous_list = []
 
                 // If continuous play needed
-                if(true){
+                if (true) {
 
-                    for( let hit of functionContinuous){
+                    for (let hit of functionContinuous) {
                         let card_id = hit["id"];
                         let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
                         let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
@@ -1299,29 +1295,29 @@ class ThumbnailController{
                         let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
                         let medium_path;
                         let media;
-                        if("audio" in card["medium"]){
-                            media=card["medium"]["audio"][0]
-                        }else if("video" in card["medium"]){
-                            media=card["medium"]["video"][0]
+                        if ("audio" in card["medium"]) {
+                            media = card["medium"]["audio"][0]
+                        } else if ("video" in card["medium"]) {
+                            media = card["medium"]["video"][0]
                         }
 
-                        if(media){
+                        if (media) {
                             medium_path = pathJoin([card["source_path"], "media", media]);
-                            continuous_list.push({"medium_path": medium_path, "screenshot_path": screenshot_path});
+                            continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": card["medium"] });
                         }
                     }
                 }
 
                 let getCardIdFunction;
-                if("audio" in functionSingle){
+                if ("audio" in functionSingle) {
                     getCardIdFunction = functionSingle["audio"];
-                }else{
+                } else {
                     getCardIdFunction = functionSingle["video"];
                 }
 
                 let medium_path = getCardIdFunction();
-        
-                if (medium_path != null){
+
+                if (medium_path != null) {
 
                     this.focusTask = FocusTask.Player;
 
@@ -1346,52 +1342,56 @@ class ThumbnailController{
                         player.webkitRequestFullscreen();
                     }
 
-                    let screenshot_path = functionSingle["screenshot_path"];
-
-                    player.poster = screenshot_path;
+                    // Poster only if audio media
+                    if ("audio" in functionSingle) {
+                        let screenshot_path = functionSingle["screenshot_path"];
+                        player.poster = screenshot_path;
+                    } else {
+                        player.poster = "";
+                    }
                     player.load();
-                    player.controls = true; 
-                    player.autoplay = true;                               
+                    player.controls = true;
+                    player.autoplay = true;
                     player.play();
 
                     // ENDED event listener
-                    $("#video_player").bind("ended", function(par) {                        
+                    $("#video_player").bind("ended", function (par) {
                         refToThis.finishedPlaying('ended', continuous_list);
                     });
 
                     // FULLSCREENCHANGE event listener
-                    $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function(e) {
+                    $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
                         var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
 
                         // If exited of full screen
-                        if(!state){
-                            refToThis.finishedPlaying('fullscreenchanged', continuous_list);
+                        if (!state) {
+                            refToThis.finishedPlaying('fullscreenchange', continuous_list);
                         }
                     });
                     player.style.display = 'block';
-                
+
                     // It is important to have this line, otherwise you can not control the voice level
                     $('#video_player').focus();
 
                 }
-            }else if("picture" in functionSingle){
+            } else if ("picture" in functionSingle) {
 
-               // take the getCardId function
-               let getCardIdFunction = functionSingle["picture"];
-               let medium_path = getCardIdFunction();
-       
-               if (medium_path != null){
+                // take the getCardId function
+                let getCardIdFunction = functionSingle["picture"];
+                let medium_path = getCardIdFunction();
+
+                if (medium_path != null) {
 
                     this.focusTask = FocusTask.Player;
                     let fancybox_list = [];
-                    for( let media_path of medium_path){
-                        let opts ={
+                    for (let media_path of medium_path) {
+                        let opts = {
                             // caption: media_path,
                             thumb: media_path,
                             width: $(window).width(),
                             // fitToView: true,                            // does not work
                             // autoSize: true,                             // does not work
-                            afterShow: function(instance, current){},
+                            afterShow: function (instance, current) { },
                         }
                         let src = media_path;
                         fancybox_list.push({
@@ -1402,53 +1402,53 @@ class ThumbnailController{
                     $.fancybox.open(fancybox_list, {
                         loop: false,
                         fitToView: true,
-                        afterClose: function(instance, current) {
+                        afterClose: function (instance, current) {
                             refToThis.focusTask = FocusTask.Menu;
                         }
                     });
                 }
 
-            }else if("pdf" in functionSingle){
+            } else if ("pdf" in functionSingle) {
 
                 // take the getCardId function
                 let getCardIdFunction = functionSingle["pdf"];
                 let medium_path = getCardIdFunction();
-        
-                if (medium_path != null){
- 
+
+                if (medium_path != null) {
+
                     this.focusTask = FocusTask.Text;
                     let fancybox_list = [];
-                     
-                         let opts ={
-                             // caption: media_path,
-                             thumb: medium_path,
-                             width: $(window).width(),
-                             afterShow: function(instance, current){},
-                         }
-                         let src = medium_path;
-                         fancybox_list.push({
-                             src: src,
-                             opts: opts
-                         })
+
+                    let opts = {
+                        // caption: media_path,
+                        thumb: medium_path,
+                        width: $(window).width(),
+                        afterShow: function (instance, current) { },
+                    }
+                    let src = medium_path;
+                    fancybox_list.push({
+                        src: src,
+                        opts: opts
+                    })
 
                     $.fancybox.open(fancybox_list, {
-                         loop: false,
-                         fitToView: true,
-                         afterClose: function(instance, current) {
-                             refToThis.focusTask = FocusTask.Menu;
-                         }
-                     });
+                        loop: false,
+                        fitToView: true,
+                        afterClose: function (instance, current) {
+                            refToThis.focusTask = FocusTask.Menu;
+                        }
+                    });
                 }
-                
-            }else if("txt" in functionSingle){
 
-            }else if("code" in functionSingle){
+            } else if ("txt" in functionSingle) {
+
+            } else if ("code" in functionSingle) {
 
             }
         }
     }
 
-    finishedPlaying(event, continuous_list){
+    finishedPlaying(event, continuous_list) {
 
         let player = $("#video_player")[0];
         let domPlayer = $("#video_player");
@@ -1456,7 +1456,7 @@ class ThumbnailController{
         // Remove the playing list
         domPlayer.children("source").remove();
 
-        if( event == 'ended' && continuous_list.length > 0){
+        if (event == 'ended' && continuous_list.length > 0) {
 
             let path = continuous_list.shift();
 
@@ -1468,11 +1468,16 @@ class ThumbnailController{
             sourceElement.attr('src', medium_path);
             domPlayer.append(sourceElement);
 
-            player.poster = screenshot_path;
+            // Poster only if audio medium
+            if ("audio" in path["medium"]) {
+                player.poster = screenshot_path;
+            } else {
+                player.poster = "";
+            }
             player.load();
             player.play();
 
-        }else{
+        } else {
 
             // Remove the listeners
             domPlayer.off('fullscreenchange');
@@ -1486,57 +1491,59 @@ class ThumbnailController{
 
             this.focusTask = FocusTask.Menu;
 
-            if(event == 'fullscreenchange'){
+            if (event == 'fullscreenchange') {
 
-            }else if(event == 'ended'){
+            } else if (event == 'ended') {
                 $('video')[0].webkitExitFullScreen();
             }
+
+            player.load();
         }
     }
 
-    escape(){
-        if(this.focusTask === FocusTask.Menu){
+    escape() {
+        if (this.focusTask === FocusTask.Menu) {
 
             let oT = this.history.popLevel();
-            if (oT){
+            if (oT) {
                 this.objScrollSection = oT;
                 this.objScrollSection.buildUpDom();
             }
 
-        }else if(this.focusTask === FocusTask.Player){
+        } else if (this.focusTask === FocusTask.Player) {
             this.focusTask = FocusTask.Menu;
-        
-        }else if(this.focusTask === FocusTask.Code){
+
+        } else if (this.focusTask === FocusTask.Code) {
             this.objScrollSection.escapeOfCode();
         }
     }
 
-    arrowLeft(){
-        if(this.focusTask === FocusTask.Menu){
+    arrowLeft() {
+        if (this.focusTask === FocusTask.Menu) {
             this.objScrollSection.arrowLeft();
 
-        }else if(this.focusTask === FocusTask.Code){
+        } else if (this.focusTask === FocusTask.Code) {
             this.objScrollSection.escapeOfCode();
         }
     }
 
-    arrowUp(){
-        if(this.focusTask === FocusTask.Menu){
+    arrowUp() {
+        if (this.focusTask === FocusTask.Menu) {
             this.objScrollSection.arrowUp();
         }
     }
 
-    arrowRight(){
-        if(this.focusTask === FocusTask.Menu){
+    arrowRight() {
+        if (this.focusTask === FocusTask.Menu) {
             this.objScrollSection.arrowRight();
 
-        }else if(this.focusTask === FocusTask.Code){
+        } else if (this.focusTask === FocusTask.Code) {
             this.objScrollSection.escapeOfCode();
         }
     }
 
-    arrowDown(){
-        if(this.focusTask === FocusTask.Menu){
+    arrowDown() {
+        if (this.focusTask === FocusTask.Menu) {
             this.objScrollSection.arrowDown();
         }
     }

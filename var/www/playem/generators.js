@@ -8,11 +8,34 @@ class Generator{
         this.language_code = language_code;
     }
 
+    static startSpinner(){
+        $("#spinner").show();
+        $("#spinner").attr("width", "100%");    
+        $("#spinner").attr("height", "100%");    
+    }
+
+    static stopSpinner(){
+        $("#spinner").hide();
+        $("#spinner").attr("width", "0");    
+        $("#spinner").attr("height", "0");    
+    }
+
     showContainers(objScrollSection){
-        let containerList = this.getContainerList();
-        containerList.forEach(oContainer => {
-            objScrollSection.addThumbnailContainerObject(oContainer);
-        });
+        let refToThis = this
+        Generator.startSpinner();
+
+        setTimeout(function () {
+
+            let containerList = refToThis.getContainerList();
+            containerList.forEach(oContainer => {
+                objScrollSection.addThumbnailContainerObject(oContainer);
+            });
+
+            Generator.stopSpinner();
+
+            objScrollSection.focusDefault();
+
+        }, 0);
     }
 
     getContainerList(){
@@ -26,17 +49,17 @@ class Generator{
 // --------------
 //
 class RestGenerator extends Generator{
-    
-    generateThumbnail(hit, type){
-        throw new Error("Implement generateThumbnails() method in the " + this.constructor.name + " class!");
-    }
-    
+
     static sendRestRequest(rq_method, rq_url){
         let rq_assync = false;
         let result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
         return result.responseJSON;
     }
 
+    generateThumbnail(hit, type){
+        throw new Error("Implement generateThumbnails() method in the " + this.constructor.name + " class!");
+    }
+    
     getTruncatedTitle(text, max_length){
         let tail = "...";    
         if (text.length > max_length + tail.length)
@@ -68,13 +91,9 @@ class RestGenerator extends Generator{
                 oContainer.addThumbnail(line["id"], thumbnail);
             }
 
-            // for(let line of request_result){
-            //     let thumbnail = this.generateThumbnail(line, request_result);
-            //     oContainer.addThumbnail(line["id"], thumbnail);
-            // }
-
             container_list.push(oContainer);
         }
+
         return container_list;
     }
 
@@ -232,6 +251,8 @@ class RestGenerator extends Generator{
 
         }else{
 
+//console.log("request started")
+
             // Read the details 
             let card_id = hit["id"];
             let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
@@ -325,12 +346,15 @@ class RestGenerator extends Generator{
                                     return medium_path
                                 };
                             })(medium_path),
-                        "mode": mode,
-                        "medium_path": medium_path,
                         "screenshot_path": screenshot_path
                     },
                 "continuous": all_hits
             });
+
+
+//console.log("request ended")
+
+
         }
         return thumbnail;
     }    
@@ -650,9 +674,12 @@ class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/scifi/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/western/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/documentary/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
+            {title: translated_themes['apocalypse'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/apocalypse/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['drog'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/drog/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['broker'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/broker/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['evil'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/evil/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
             {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 

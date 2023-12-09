@@ -359,9 +359,9 @@ theme:
     collapse: Collapse
     boat: Boat
     apocalipse: Apocalipse
-    zombi: Zombi
     bank: Bank
     broker: Broker
+    propaganda: Propaganda
 
 title:
     title: Title
