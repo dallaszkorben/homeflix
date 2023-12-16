@@ -671,13 +671,17 @@ class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
         let requestList = [
             {title: translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/drama/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/comedy/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['satire'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/satire/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/scifi/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/western/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['war'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/war/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/documentary/theme/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['apocalypse'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/apocalypse/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['conspiracy'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/conspiracy/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['drog'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/drog/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['broker'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/broker/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['media'],            rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/media/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['evil'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/evil/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
             {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
@@ -847,6 +851,7 @@ class MusicAudioLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
+            {title: "70s",  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/70s/lang/" +  this.language_code},
             {title: "80s",  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/80s/lang/" +  this.language_code},
         ];
 

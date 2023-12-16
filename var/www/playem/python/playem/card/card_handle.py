@@ -161,8 +161,14 @@ class CardHandle:
                 writers = data['writers']
             except:
                 writers = []
-            try:       
-                actors = data['actors']
+
+            # Temprary solution for actors
+            # TODO: Add "Role" "Role_Actor" tables
+            try:
+                actors = []
+                for actor in data['actors']:
+                    actors.append(actor)
+                #actors = data['actors']
             except:
                 actors = []
             try:       
