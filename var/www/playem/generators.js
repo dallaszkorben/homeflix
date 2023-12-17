@@ -309,6 +309,9 @@ class RestGenerator extends Generator{
                 media=card["medium"]["picture"]
                 mode = "picture";
                 medium_path = [];
+
+                // For picture it creates a list
+
                 for(let medium of media){
                     medium_path.push(pathJoin([card["source_path"], "media", medium]));
                 }

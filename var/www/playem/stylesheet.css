@@ -189,16 +189,19 @@ body {
 }
 
 
-
-
-
-
-
-
-
-
-
 #description-appendix{
+    display: flex;                                              /* children divs (description-text-storyline, description-text-credentials) */
+    flex-direction: column;                                        /* must be in one row */
+    /* border: 4px rgb(255, 225, 0) solid; */
+}
+
+#description-appendix-play{
+    display: flex;                                              /* children divs (description-text-storyline, description-text-credentials) */
+    flex-direction: row;                                        /* must be in one row */
+    /* border: 4px rgb(255, 225, 0) solid; */
+}
+
+#description-appendix-download{
     display: flex;                                              /* children divs (description-text-storyline, description-text-credentials) */
     flex-direction: row;                                        /* must be in one row */
     /* border: 4px rgb(255, 225, 0) solid; */
@@ -231,7 +234,7 @@ body {
     text-decoration: none;
 }
 
-.description-appendix-show-button {
+.description-appendix-play-button {
     display: inline-block;
     margin: 4px;
     font-weight: bold;

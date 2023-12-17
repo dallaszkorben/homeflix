@@ -227,6 +227,9 @@ genre:
         hearing: Hearing
         presentation: Presentation
         lecture: Lecture
+        podcast: Podcast
+        propaganda: Propaganda
+        press_conference: Press Conference
 
     personal:
         photos: Photos

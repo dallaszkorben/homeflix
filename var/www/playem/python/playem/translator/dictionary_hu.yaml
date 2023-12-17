@@ -227,6 +227,9 @@ genre:
         hearing: Meghallgatás
         presentation: Bemutató
         lecture: Előadás
+        podcast: Podcast
+        propaganda: Propaganda
+        press_conference: Sajtótájékoztató
 
     personal:
         photos: Photos

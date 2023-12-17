@@ -764,6 +764,7 @@ class ObjDescriptionContainer {
 
         // when the image loaded, the onload event will be fired
         descImg.onload = function (refToObjThumbnailController) {
+            let refToThis = this;
             return function () {
 
                 // calculates the new size of the description image
@@ -793,6 +794,13 @@ class ObjDescriptionContainer {
                     // --- lyrics ---        
                     // --------------
                     descTextStoryline.html(lyrics);
+
+                } else{
+                    // -------------
+                    // --- empty ---        
+                    // -------------
+
+                    descTextStoryline.html("");
                 }
 
                 // -----------------
@@ -900,21 +908,23 @@ class ObjDescriptionContainer {
                 mainObject.printCredentals(credTable, credentials, "presenters", translated_titles['presenter'] + ":");
                 mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
 
-
-
                 // ----------------
                 // --- Appendix ---
                 // ----------------
 
-                let descAppendix = $("#description-appendix");
-                descAppendix.empty();
+                let descAppendixDownload = $("#description-appendix-download");
+                let descAppendixPlay = $("#description-appendix-play");
+                descAppendixDownload.empty();
+                descAppendixPlay.empty();
                 for (let i in appendix_list) {
                     let show = appendix_list[i]['show'];
                     let download = appendix_list[i]['download'];
                     let source_path = appendix_list[i]['source_path'];
                     let media_dict = appendix_list[i]['media'];
 
+                    // Every media in the appendix, will be shown, one by one, as download button
                     if (download == 1) {
+                        // Unicode Character: 📥
                         let title = '\u{1F4E5}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
@@ -933,131 +943,64 @@ class ObjDescriptionContainer {
                                     download: "download",   // This is needed to download
                                     text: title
                                 });
-
-                                //                            let button = $('<button/>', {
-                                //                                onclick: "window.location.href='" + file_path + "'",
-                                //                                type: "submit",
-                                //                                class: "description-appendix-button",
-                                //                                text: title
-                                //                            });
-                                descAppendix.append(link);
+                                descAppendixDownload.append(link);
                             }
                         });
                     }
+
+                    // TODO: rename "show" to "play"
+                    // Every media in the appendix, will be shown, one by one, as show/play button except the media_type=picture
+                    // All media with media_type=picture in one appendix will be shown as ONE show/play button
                     if (show == 1) {
-                        let title = '\u{261D}' + " " + appendix_list[i]['title'];
+                        // Unicode Character: 25B6 ▶, 23EF ⏯, 
+                        let title = '\u{25B6}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
                         Object.entries(media_dict).forEach(([media_type, media_list]) => {
 
-                            let medium_path = "";
-                            let mode = "";
+                            let medium_path;
 
-                            if (media_type == "audio") {
-                                let media = media_list[0];  //Only one media will be played
-                                mode = "audio";
-                                medium_path = pathJoin([source_path, "media", media]);
-                            } else if (media_type == "video") {
-                                let media = media_list[0];  // Only one media will be played
-                                mode = "video";
-                                medium_path = pathJoin([source_path, "media", media]);
-                            } else if (media_type == "picture") {
-                                let media = media_list;
-                                mode = "picture";
+
+                            if(media_type == "picture"){
+                                
+                                // create a list for medium path
                                 medium_path = [];
-                                for (let medium of media) {
+                                for (let medium of media_list) {
                                     medium_path.push(pathJoin([source_path, "media", medium]));
                                 }
-                            } else if (media_type == "text") {
-                                let media = media_list[0];  // Only one media will be played
-                                mode = "text";
-                                medium_path = pathJoin([source_path, "media", media]);
-                            } else if (media_type == "code") {
-                                let media = media_list[0];  // Only one media will be played
-                                mode = "code";
-                                medium_path = pathJoin([source_path, "media", media]);
-                            } else if (media_type == "pdf") {
-                                let media = media_list[0];  // Only one media will be played
-                                mode = "pdf";
-                                medium_path = pathJoin([source_path, "media", media]);
-                            }
-
-                            // Through the media_list and create button for them
-                            for (let media of media_list) {
-
-                                // I'm expecting only one media here. TODO: get if there are others
-                                let file_path = pathJoin([source_path, "media", media]);
 
                                 let link = $('<a/>', {
-                                    class: "description-appendix-show-button",
+                                    class: "description-appendix-play-button",
                                     text: title
                                 });
-                                link.click(function (my_mode, my_file_path) {
+                                link.click(function (my_media_type, my_file_path) {
                                     return function () {
+                                        refToObjThumbnailController.playMedia(my_media_type, my_file_path);
+                                    }
+                                }(media_type, medium_path));
+                                descAppendixPlay.append(link);
 
-                                        if (my_mode == "picture") {
+                            }else{
 
-                                            refToObjThumbnailController.focusTask = FocusTask.Picture;
+                                for (let media of media_list) {
 
-                                            let fancybox_list = [];
-                                            let opts = {
-                                                thumb: my_file_path,
-                                                width: $(window).width(),
-                                                afterShow: function (instance, current) { },
-                                            }
-                                            let src = my_file_path;
-                                            fancybox_list.push({
-                                                src: src,
-                                                opts: opts
-                                            });
-                                            $.fancybox.open(fancybox_list, {
-                                                loop: false,
-                                                fitToView: true,
-                                                afterClose: function (instance, current) {
-                                                    refToObjThumbnailController.focusTask = FocusTask.Menu;
-                                                }
-                                            });
+                                    // create single value for every medium path
+                                    medium_path = pathJoin([source_path, "media", media]);
 
-                                        } else if (my_mode == "code") {
-                                            refToObjThumbnailController.focusTask = FocusTask.Code;
-
-                                            // Text load and show in a modal window
-
-                                            $.ajax({
-                                                url: my_file_path,
-                                                dataType: 'text',
-                                                success: function (text) {
-                                                    $('#text-content').text(text);
-                                                    $('#modal, #overlay').show();
-
-                                                    // Highlight.js initialization after modal is shown
-                                                    hljs.highlightAll();
-                                                },
-                                                error: function (error) {
-                                                    console.error('Error loading text file:', error);
-                                                }
-                                            });
-
-                                            // Bezárás gomb eseménykezelő
-                                            $('#close-button').on('click', function () {
-
-                                                $('#modal').hide();
-                                                $('#overlay').hide();
-
-                                                $('#text-content').empty();
-                                                $('#text-content').removeAttr("data-highlighted");
-
-                                                refToObjThumbnailController.focusTask = FocusTask.Menu;
-                                            });
+                                    let link = $('<a/>', {
+                                        class: "description-appendix-play-button",
+                                        text: title
+                                    });
+                                    link.click(function (my_media_type, my_file_path) {
+                                        return function () {
+                                            refToObjThumbnailController.playMedia(my_media_type, my_file_path);
                                         }
-
-                                    };
-                                }(mode, file_path));
-                                descAppendix.append(link);
+                                    }(media_type, medium_path));
+                                    descAppendixPlay.append(link);
+                                }
                             }
                         });
                     }
-
                 }
 
                 // -------------------
@@ -1206,18 +1149,6 @@ class FocusTask {
 
 class ThumbnailController {
 
-    //    constructor(objScrollSection){
-    //        this.history = new History();
-    //        this.objScrollSection = objScrollSection;
-    //        this.focusTask = FocusTask.Menu;
-    //        
-    //        let tshl = $("#history-section-link");
-    //        tshl.click(function() {
-    //            let esc = $.Event("keydown", { keyCode: 27 });
-    //            $(document).trigger(esc);
-    //        });
-    //    }
-
     constructor(mainMenuGenerator) {
         this.language_code = mainMenuGenerator.language_code;
         this.history = new History();
@@ -1248,13 +1179,10 @@ class ThumbnailController {
     generateScrollSection(oContainerGenerator, historyLevels = { text: "", link: "" }) {
         let oScrollSection = new ObjScrollSection({ oContainerGenerator: oContainerGenerator, historyLevels: historyLevels, objThumbnailController: this });
 //        oScrollSection.focusDefault();
-
         return oScrollSection;
     }
 
     enter() {
-        let refToThis = this;
-        let newSourceElement
 
         if (this.focusTask === FocusTask.Menu) {
 
@@ -1317,96 +1245,15 @@ class ThumbnailController {
 
                 let medium_path = getCardIdFunction();
 
-                if (medium_path != null) {
+                this.playMediaAudioVideo(functionSingle, continuous_list, medium_path);
 
-                    this.focusTask = FocusTask.Player;
-
-                    let player = $("#video_player")[0];
-                    let domPlayer = $("#video_player");
-
-                    // Remove all media source from the player befor I add the new
-                    $('#video_player').children("source").remove();
-
-                    // Creates a new source element
-                    newSourceElement = $('<source>');
-                    newSourceElement.attr('src', medium_path);
-                    $('#video_player').append(newSourceElement);
-
-                    if (player.requestFullscreen) {
-                        player.requestFullscreen();
-                    } else if (elem.msRequestFullscreen) {
-                        player.msRequestFullscreen();
-                    } else if (elem.mozRequestFullScreen) {
-                        player.mozRequestFullScreen();
-                    } else if (elem.webkitRequestFullscreen) {
-                        player.webkitRequestFullscreen();
-                    }
-
-                    // Poster only if audio media
-                    if ("audio" in functionSingle) {
-                        let screenshot_path = functionSingle["screenshot_path"];
-                        player.poster = screenshot_path;
-                    } else {
-                        player.poster = "";
-                    }
-                    player.load();
-                    player.controls = true;
-                    player.autoplay = true;
-                    player.play();
-
-                    // ENDED event listener
-                    $("#video_player").bind("ended", function (par) {
-                        refToThis.finishedPlaying('ended', continuous_list);
-                    });
-
-                    // FULLSCREENCHANGE event listener
-                    $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
-                        var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-
-                        // If exited of full screen
-                        if (!state) {
-                            refToThis.finishedPlaying('fullscreenchange', continuous_list);
-                        }
-                    });
-                    player.style.display = 'block';
-
-                    // It is important to have this line, otherwise you can not control the voice level
-                    $('#video_player').focus();
-
-                }
             } else if ("picture" in functionSingle) {
 
                 // take the getCardId function
                 let getCardIdFunction = functionSingle["picture"];
                 let medium_path = getCardIdFunction();
 
-                if (medium_path != null) {
-
-                    this.focusTask = FocusTask.Player;
-                    let fancybox_list = [];
-                    for (let media_path of medium_path) {
-                        let opts = {
-                            // caption: media_path,
-                            thumb: media_path,
-                            width: $(window).width(),
-                            // fitToView: true,                            // does not work
-                            // autoSize: true,                             // does not work
-                            afterShow: function (instance, current) { },
-                        }
-                        let src = media_path;
-                        fancybox_list.push({
-                            src: src,
-                            opts: opts
-                        })
-                    }
-                    $.fancybox.open(fancybox_list, {
-                        loop: false,
-                        fitToView: true,
-                        afterClose: function (instance, current) {
-                            refToThis.focusTask = FocusTask.Menu;
-                        }
-                    });
-                }
+                this.playMediaPicture(medium_path);
 
             } else if ("pdf" in functionSingle) {
 
@@ -1414,39 +1261,209 @@ class ThumbnailController {
                 let getCardIdFunction = functionSingle["pdf"];
                 let medium_path = getCardIdFunction();
 
-                if (medium_path != null) {
-
-                    this.focusTask = FocusTask.Text;
-                    let fancybox_list = [];
-
-                    let opts = {
-                        // caption: media_path,
-                        thumb: medium_path,
-                        width: $(window).width(),
-                        afterShow: function (instance, current) { },
-                    }
-                    let src = medium_path;
-                    fancybox_list.push({
-                        src: src,
-                        opts: opts
-                    })
-
-                    $.fancybox.open(fancybox_list, {
-                        loop: false,
-                        fitToView: true,
-                        afterClose: function (instance, current) {
-                            refToThis.focusTask = FocusTask.Menu;
-                        }
-                    });
-                }
+                this.playMediaPdf(medium_path);
 
             } else if ("txt" in functionSingle) {
 
+                // take the getCardId function
+                let getCardIdFunction = functionSingle["txt"];
+                let medium_path = getCardIdFunction();
+                
+                this.playMediaText(medium_path);
+
             } else if ("code" in functionSingle) {
+
+                // take the getCardId function
+                let getCardIdFunction = functionSingle["code"];
+                let medium_path = getCardIdFunction();
+                
+                this.playMediaCode(medium_path);
 
             }
         }
     }
+
+    // ---
+
+    playMedia(media_type, medium_path){
+        if(media_type == "audio" || media_type == "video"){
+            this.playMediaAudioVideo({}, [], medium_path);
+        }else if(media_type == "pdf"){
+            this.playMediaPdf(medium_path);
+        }else if(media_type == "picture"){
+            this.playMediaPicture(medium_path);
+        }else if(media_type == "text"){
+            this.playMediaText(medium_path)
+        }else if(media_type == "code"){
+            this.playMediaCode(medium_path)
+        }
+    }
+
+
+    playMediaAudioVideo(functionSingle, continuous_list, medium_path){
+        if (medium_path != null) {
+
+            let refToThis = this;
+
+            this.focusTask = FocusTask.Player;
+
+            let player = $("#video_player")[0];
+//            let domPlayer = $("#video_player");
+
+            // Remove all media source from the player befor I add the new
+            $('#video_player').children("source").remove();
+
+            // Creates a new source element
+            let newSourceElement = $('<source>');
+            newSourceElement.attr('src', medium_path);
+            $('#video_player').append(newSourceElement);
+
+            if (player.requestFullscreen) {
+                player.requestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                player.msRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                player.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                player.webkitRequestFullscreen();
+            }
+
+            // Poster only if audio media
+            if ("audio" in functionSingle) {
+                let screenshot_path = functionSingle["screenshot_path"];
+                player.poster = screenshot_path;
+            } else {
+                player.poster = "";
+            }
+            player.load();
+            player.controls = true;
+            player.autoplay = true;
+            player.play();
+
+            // ENDED event listener
+            $("#video_player").bind("ended", function (par) {
+                refToThis.finishedPlaying('ended', continuous_list);
+            });
+
+            // FULLSCREENCHANGE event listener
+            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
+                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+
+                // If exited of full screen
+                if (!state) {
+                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
+                }
+            });
+            player.style.display = 'block';
+
+            // It is important to have this line, otherwise you can not control the voice level
+            $('#video_player').focus();
+
+        }
+    }
+
+
+    playMediaPdf(medium_path){
+        if (medium_path != null) {
+            this.focusTask = FocusTask.Text;
+             let fancybox_list = [];
+             let opts = {
+                 // caption: media_path,
+                 thumb: medium_path,
+                 width: $(window).width(),
+                 afterShow: function (instance, current) { },
+             }
+             let src = medium_path;
+             fancybox_list.push({
+                 src: src,
+                 opts: opts
+             })
+             $.fancybox.open(fancybox_list, {
+                 loop: false,
+                 fitToView: true,
+                 afterClose: function (instance, current) {
+                    this.focusTask = FocusTask.Menu;
+                 }
+             });
+         }    
+    }
+
+
+    // It can play list of pictures => medium_path = List
+    playMediaPicture(medium_path){
+                
+        if (medium_path != null) {
+
+            this.focusTask = FocusTask.Player;
+            let fancybox_list = [];
+            for (let media_path of medium_path) {
+                let opts = {
+                    // caption: media_path,
+                    thumb: media_path,
+                    width: $(window).width(),
+                    // fitToView: true,                            // does not work
+                    // autoSize: true,                             // does not work
+                    afterShow: function (instance, current) { },
+                }
+                let src = media_path;
+                fancybox_list.push({
+                    src: src,
+                    opts: opts
+                })
+            }
+            $.fancybox.open(fancybox_list, {
+                loop: false,
+                fitToView: true,
+                afterClose: function (instance, current) {
+                this.focusTask = FocusTask.Menu;
+                }
+            });
+        }
+    }
+    
+    playMediaText(medium_path){
+        this.playMediaCode(medium_path)
+    }
+
+    playMediaCode(medium_path){
+
+        if (medium_path != null) {
+
+            this.focusTask = FocusTask.Code;
+
+            // Text load and show in a modal window
+
+            $.ajax({
+                url: medium_path,
+                dataType: 'text',
+                success: function (text) {
+                    $('#text-content').text(text);
+                    $('#modal, #overlay').show();
+
+                    // Highlight.js initialization after modal is shown
+                    hljs.highlightAll();
+                },
+                error: function (error) {
+                    console.error('Error loading text file:', error);
+                }
+            });
+
+            // Bezárás gomb eseménykezelő
+            $('#close-button').on('click', function () {
+
+                $('#modal').hide();
+                $('#overlay').hide();
+
+                $('#text-content').empty();
+                $('#text-content').removeAttr("data-highlighted");
+
+                this.focusTask = FocusTask.Menu;
+            });
+        }        
+    }
+
+
+    // ---
 
     finishedPlaying(event, continuous_list) {
 
