@@ -1588,7 +1588,7 @@ class SqlDatabase:
     # Only for standalone media search
     #
     #
-    def get_general_standalone(self, category, genre=None, theme=None, origin=None, not_origin=None, decade=None, lang='en', limit=100, json=True):
+    def get_general_standalone(self, category, genre=None, theme=None, director=None, actor=None, origin=None, not_origin=None, decade=None, lang='en', limit=100, json=True):
              
         with self.lock:
 
@@ -1678,6 +1678,16 @@ class SqlDatabase:
                     ''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co,
             ''' if origin or not_origin else '') + ('''
 
+                    --- actor ---
+                    ''' + SqlDatabase.TABLE_PERSON + ''' actor,
+                    ''' + SqlDatabase.TABLE_CARD_ACTOR + ''' ca,
+            ''' if actor else '') + ('''
+
+                    --- director ---
+                    ''' + SqlDatabase.TABLE_PERSON + ''' director,
+                    ''' + SqlDatabase.TABLE_CARD_DIRECTOR + ''' cd,
+            ''' if director else '') + ('''
+
                     --- genre ---
                     ''' + SqlDatabase.TABLE_GENRE + ''' genre,
                     ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg,
@@ -1696,11 +1706,25 @@ class SqlDatabase:
                     AND cat.name=:category
             ''' + ('''
 
+                    --- actor ---
+                    AND ca.id_actor = actor.id
+                    AND ca.id_card = merged.id 
+                    AND actor.name =:actor
+
+            ''' if actor else '') + ('''
+
+                    --- director ---
+                    AND cd.id_director = director.id
+                    AND cd.id_card = merged.id 
+                    AND director.name =:director
+
+            ''' if director else '') + ('''
+
                     --- genre ---
                     AND cg.id_genre = genre.id
                     AND cg.id_card = merged.id 
                     AND genre.name =:genre    
-            ''' if genre else '') + ('''
+            ''' if genre else '') + ('''            
 
                     --- theme ---
                     AND ct.id_theme = theme.id
@@ -1728,7 +1752,7 @@ class SqlDatabase:
             LIMIT :limit;
             '''
 
-            query_parameters = {'category': category, 'decade': decade, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit': limit}            
+            query_parameters = {'category': category, 'decade': decade, 'genre': genre, 'theme': theme, 'actor': actor, 'director': director, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit': limit}            
 
             logging.debug("get_general_standalone query: '{0}' / {1}".format(query, query_parameters))
 
@@ -1854,26 +1878,6 @@ class SqlDatabase:
                         tcl.text IS NOT NULL
                     )                
                 ),
-
----                (SELECT group_concat(tcl.text) lyrics
----                    FROM 
----                        Text_Card_Lang tcl,
----                        Language language
----                    WHERE 
----                        tcl.type = "L" AND
----                        tcl.id_card = :card_id AND
----                        tcl.id_language = language.id AND
----                        language.name = :lang
----                ),
-
-
-
-
-
-
-
-
-
 
                 (SELECT group_concat(language.name) sounds
                     FROM 
@@ -2029,17 +2033,6 @@ class SqlDatabase:
                         appendix_card.id_higher_card = :card_id
                         AND appendix_card.isappendix = 1
                 ),
-
-
----                (SELECT group_concat(appendix_card.id) appendix
----                    FROM 
----                        Card appendix_card
----                    WHERE 
----                        appendix_card.id_higher_card = :card_id
----                        AND appendix_card.isappendix = 1
----
----                     AND appendix_card.destination IS NOT NULL
----                ),
 
                 Card card,
                 Category category

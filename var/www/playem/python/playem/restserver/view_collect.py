@@ -104,15 +104,15 @@ class CollectView(FlaskView):
     #
     # Gives back list of standalones of all levels with the given parameters
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/origin/*/not_origin/*/decade/80s/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/80s/lang/en
     #
     # GET http://localhost:80/collect/all/series/movies
     #
-    #@route('/general/standalone/category/<category>/genre/<genre>/theme/<theme>/origin/<origin>/not_origin/<not_origin>/decade/<decade>/lang/<lang>)
+    #@route('/general/standalone/category/<category>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/origin/<origin>/not_origin/<not_origin>/decade/<decade>/lang/<lang>)
     @route(EPCollectGeneralStandalone.PATH_PAR_URL, methods=[EPCollectGeneralStandalone.METHOD])
-    def collectGeneralStandaloneWithParameter(self, category, genre, theme, origin, not_origin, decade, lang):
+    def collectGeneralStandaloneWithParameter(self, category, genre, theme, director, actor, origin, not_origin, decade, lang):
 
-        out = self.epCollectGeneralStandalone.executeByParameters(category=category, genre=genre, theme=theme, origin=origin, not_origin=not_origin, decade=decade, lang=lang)
+        out = self.epCollectGeneralStandalone.executeByParameters(category=category, genre=genre, theme=theme, director=director, actor=actor, origin=origin, not_origin=not_origin, decade=decade, lang=lang)
         return out
 
 
@@ -229,41 +229,3 @@ class CollectView(FlaskView):
 
         out = self.epCollectStandaloneMusicAudioByCardId.executeByParameters(card_id=card_id, lang=lang)
         return out
-
-
-
-
-
-
-
-# # === medium list of a specific card ===
-
-#     #
-#     # Gives back the medium list of the given Card.
-#     #
-#     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/medium/card_id/33
-#     #
-#     # GET http://localhost:80/collect/medium/card_id/33
-#     #@route('/medium/card_id/<card_id>')
-#     @route(EPCollectMediumByCardId.PATH_PAR_URL, methods=[EPCollectMediumByCardId.METHOD])
-#     def collectMediumByCardId(self, card_id):
-
-#         out = self.epCollectMediumByCardId.executeByParameters(card_id=card_id)
-#         return out
-
-
-# # === all series of movies ===
-
-#     #
-#     # Gives back list of records of all series of movies with parameters
-#     #
-#     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/all/series/movies/lang/en
-#     #
-#     # GET http://localhost:80/collect/all/series/movies
-#     #
-#     #@route('/all/series/movies/lang/<lang>')
-#     @route(EPCollectAllSeriesMovies.PATH_PAR_URL, methods=[EPCollectAllSeriesMovies.METHOD])
-#     def collectAllSeriesMoviesWithParameter(self, lang):
-
-#         out = self.epCollectAllSeriesMovies.executeByParameters(lang=lang)
-#         return out
