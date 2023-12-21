@@ -230,6 +230,8 @@ genre:
         podcast: Podcast
         propaganda: Propaganda
         press_conference: Press Conference
+        report: Report
+        demonstration: Demonstration
 
     personal:
         photos: Photos
@@ -410,6 +412,7 @@ title:
     guest: Guest
     interviewee: Interviewee
     interviewer: Interviewer
+    reporter: Reporter
 
     maker: Maker
     performer: Performer

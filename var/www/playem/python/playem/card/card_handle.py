@@ -123,7 +123,6 @@ class CardHandle:
             # except:
             #     destination = None
 
-
             try:
                 title_show_sequence = data['title']['showsequence']
             except:
@@ -165,10 +164,10 @@ class CardHandle:
             # Temprary solution for actors
             # TODO: Add "Role" "Role_Actor" tables
             try:
-                actors = []
-                for actor in data['actors']:
-                    actors.append(actor)
-                #actors = data['actors']
+                #actors = []
+                #for actor in data['actors']:
+                #    actors.append(actor)
+                actors = data['actors']
             except:
                 actors = []
             try:       
@@ -203,6 +202,16 @@ class CardHandle:
                 lecturers = data['lecturers']
             except:
                 lecturers = []
+            try:
+                reporter = data['reporter']
+                reporters = [reporter]
+            except:
+                reporters = []
+            try:
+                if not reporters:
+                    reporters = data['reporters']
+            except:
+                reporters = []
             try:
                 performer = data['performer']
                 performers = [performer]
@@ -413,6 +422,7 @@ class CardHandle:
                         presenters=presenters,
                         lecturers=lecturers,
                         performers=performers,
+                        reporters=reporters,
 
                         media=media_dict,
 

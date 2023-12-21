@@ -336,7 +336,7 @@ class RestGenerator extends Generator{
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
             thumbnail.setTextCard({storyline:card["storyline"], lyrics:card["lyrics"]});
-            thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"]});
+            thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"], reporters: card["reporters"]});
             thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
             thumbnail.setAppendix(appendix_list);
     
@@ -688,6 +688,10 @@ class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
             {title: translated_themes['evil'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/evil/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
             {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
+
+//            {title: "Luc Besson",                          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/director/Luc Besson/actor/*/writer/*/decade/*/lang/" +  this.language_code},
+
+
         ];
 
         containerList = this.generateContainers(requestList);

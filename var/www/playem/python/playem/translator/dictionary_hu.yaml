@@ -230,6 +230,8 @@ genre:
         podcast: Podcast
         propaganda: Propaganda
         press_conference: Sajtótájékoztató
+        report: Riport
+        demonstration: Tüntetés
 
     personal:
         photos: Photos
@@ -366,7 +368,6 @@ theme:
     broker: Bróker
     propaganda: Propaganda
 
-
 title:
     title: Cím
     list: Lista
@@ -411,6 +412,7 @@ title:
     guest: Vendég
     interviewee: Válaszoló
     interviewer: Kérdező
+    reporter: Riporter
 
     maker: Készítő
     performer: Előadó

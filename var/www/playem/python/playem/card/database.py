@@ -39,7 +39,11 @@ class SqlDatabase:
     TABLE_CARD_PRESENTER = "Card_Presenter"
     TABLE_CARD_LECTURER = "Card_Lecturer"
     TABLE_CARD_PERFORMER = "Card_Performer"
+    TABLE_CARD_REPORTER = "Card_Reporter"
     TABLE_TEXT_CARD_LANG = "Text_Card_Lang"
+
+    TABLE_ROLE = "Role"
+    TABLE_ACTOR_ROLE = "Actor_Role"
 
     def __init__(self):
         config = getConfig()
@@ -49,39 +53,42 @@ class SqlDatabase:
         self.language = self.translator.get_actual_language_code()
 
         self.table_list = [
-                SqlDatabase.TABLE_TEXT_CARD_LANG,
-                SqlDatabase.TABLE_CARD_MEDIA,
-                SqlDatabase.TABLE_CARD_VOICE,
-                SqlDatabase.TABLE_CARD_WRITER,
-                SqlDatabase.TABLE_CARD_DIRECTOR,
-                SqlDatabase.TABLE_CARD_ACTOR,
-                SqlDatabase.TABLE_CARD_STAR,
-                SqlDatabase.TABLE_CARD_HOST,
-                SqlDatabase.TABLE_CARD_GUEST,
-                SqlDatabase.TABLE_CARD_INTERVIEWER,
-                SqlDatabase.TABLE_CARD_INTERVIEWEE,
-                SqlDatabase.TABLE_CARD_PRESENTER,
-                SqlDatabase.TABLE_CARD_LECTURER,
-                SqlDatabase.TABLE_CARD_PERFORMER,
+            SqlDatabase.TABLE_TEXT_CARD_LANG,
+            SqlDatabase.TABLE_CARD_MEDIA,
+            SqlDatabase.TABLE_CARD_VOICE,
+            SqlDatabase.TABLE_CARD_WRITER,
+            SqlDatabase.TABLE_CARD_DIRECTOR,
+            SqlDatabase.TABLE_CARD_ACTOR,
+            SqlDatabase.TABLE_CARD_STAR,
+            SqlDatabase.TABLE_CARD_HOST,
+            SqlDatabase.TABLE_CARD_GUEST,
+            SqlDatabase.TABLE_CARD_INTERVIEWER,
+            SqlDatabase.TABLE_CARD_INTERVIEWEE,
+            SqlDatabase.TABLE_CARD_PRESENTER,
+            SqlDatabase.TABLE_CARD_LECTURER,
+            SqlDatabase.TABLE_CARD_PERFORMER,
+            SqlDatabase.TABLE_CARD_REPORTER,
 
-                SqlDatabase.TABLE_CARD_ORIGIN,
-                SqlDatabase.TABLE_CARD_GENRE,
-                SqlDatabase.TABLE_CARD_THEME,
-                SqlDatabase.TABLE_CARD_SOUND,
-                SqlDatabase.TABLE_CARD_SUB,
+            SqlDatabase.TABLE_CARD_ORIGIN,
+            SqlDatabase.TABLE_CARD_GENRE,
+            SqlDatabase.TABLE_CARD_THEME,
+            SqlDatabase.TABLE_CARD_SOUND,
+            SqlDatabase.TABLE_CARD_SUB,
 
-                SqlDatabase.TABLE_CARD,
+            SqlDatabase.TABLE_CARD,
 
-                SqlDatabase.TABLE_COUNTRY,
-                SqlDatabase.TABLE_LANGUAGE,
+            SqlDatabase.TABLE_COUNTRY,
+            SqlDatabase.TABLE_LANGUAGE,
 
-                SqlDatabase.TABLE_GENRE,
-                SqlDatabase.TABLE_THEME,
-                SqlDatabase.TABLE_PERSON,
-                SqlDatabase.TABLE_MEDIATYPE,
-                SqlDatabase.TABLE_CATEGORY,
+            SqlDatabase.TABLE_GENRE,
+            SqlDatabase.TABLE_THEME,
+            SqlDatabase.TABLE_PERSON,
+            SqlDatabase.TABLE_MEDIATYPE,
+            SqlDatabase.TABLE_CATEGORY,
 
-            ]
+            SqlDatabase.TABLE_ROLE,
+            SqlDatabase.TABLE_ACTOR_ROLE
+        ]
 
         self.lock = Lock()
 
@@ -219,7 +226,6 @@ class SqlDatabase:
                 id                  INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 id_title_orig       INTEGER     NOT NULL,
                 id_category         INTEGER     NOT NULL,
----                destination         TEXT,
                 isappendix          BOOLEAN     NOT NULL CHECK (isappendix IN (0, 1)),
                 show                BOOLEAN     NOT NULL CHECK (show IN (0, 1)),
                 download            BOOLEAN     NOT NULL CHECK (download IN (0, 1)),
@@ -413,6 +419,16 @@ class SqlDatabase:
         ''')
 
         self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_CARD_REPORTER + '''(
+                id_card INTEGER            NOT NULL,
+                id_reporter INTEGER        NOT NULL,
+                FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_reporter)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+                PRIMARY KEY (id_card, id_reporter) 
+            );
+        ''')
+
+        self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''(
                 text         TEXT          NOT NULL,
                 id_language  INTEGER       NOT NULL,
@@ -429,11 +445,44 @@ class SqlDatabase:
                 name         TEXT     NOT NULL,
                 id_card      INTEGER  NOT NULL,
                 id_mediatype INTEGER  NOT NULL,
+
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id), 
                 FOREIGN KEY (id_mediatype) REFERENCES ''' + SqlDatabase.TABLE_MEDIATYPE + ''' (id),
                 PRIMARY KEY (id_card, id_mediatype, name)
             );
         ''' )
+
+
+
+
+
+
+
+
+        self.conn.execute('''
+           CREATE TABLE ''' + SqlDatabase.TABLE_ROLE + '''(
+               id      INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+               id_card INTEGER     NOT NULL,
+               name    TEXT        NOT NULL,
+               FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+               UNIQUE (id_card, name)
+           );
+        ''')
+
+        self.conn.execute('''
+           CREATE TABLE ''' + SqlDatabase.TABLE_ACTOR_ROLE + '''(
+               id_actor      INTEGER  NOT NULL,
+               id_role       INTEGER  NOT NULL,
+               FOREIGN KEY (id_actor)     REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id), 
+               FOREIGN KEY (id_role)      REFERENCES ''' + SqlDatabase.TABLE_ROLE + ''' (id),
+               PRIMARY KEY (id_actor, id_role)
+           );
+        ''' )
+
+
+
+
+
 
         self.fill_up_theme_table_from_dict()
         self.fill_up_genre_table_from_dict()
@@ -520,7 +569,6 @@ class SqlDatabase:
             id = self.append_genre(cur, genre)
             self.genre_name_id_dict[genre] = id
             self.genre_id_name_dict[id] = genre
-
         cur.execute("commit")
 
     def fill_up_mediatype_table_from_dict(self):
@@ -533,7 +581,6 @@ class SqlDatabase:
             id = self.append_mediatype(cur, mediatype)
             self.mediatype_name_id_dict[mediatype] = id
             self.mediatype_id_name_dict[id] = mediatype
-
         cur.execute("commit")
 
     def fill_up_theme_table_from_dict(self):
@@ -610,7 +657,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -663,7 +710,14 @@ class SqlDatabase:
             #
             # INSERT into TABLE_CARD_ACTOR
             #
-            for actor in actors:
+            if isinstance(actors, list):
+            
+                tmp_actors = {}
+                for key in actors:
+                    tmp_actors[key] = ""
+                actors = tmp_actors
+
+            for actor, role in actors.items():
 
                 if actor:
                     query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
@@ -671,8 +725,6 @@ class SqlDatabase:
                     '''
                     record=cur.execute(query, {'name': actor}).fetchone()
                     (person_id, ) = record if record else (None,)
-
-#                    logging.error( "TEST - there is actor: '{0}'. From select query: {1}. Person Id: {2}".format(actor, record, person_id))
 
                     if not person_id:
 
@@ -686,6 +738,39 @@ class SqlDatabase:
                             (id_actor, id_card) 
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+##################################
+
+                    # Ask if there is Role for this Card
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_ROLE + '''
+                        WHERE name= :name AND id_card= :card_id;
+                    '''
+                    record=cur.execute(query, {'name': role, 'card_id': card_id}).fetchone()
+                    (role_id, ) = record if record else (None,)
+
+                    # If the Role does not exist for the Card
+                    if not role_id:
+
+                        # Creates to Role
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_ROLE + ''' 
+                           (id_card, name) 
+                           VALUES (:card_id, :name);'''
+                        res = cur.execute(query, {'card_id': card_id, 'name': role})
+                        role_id = res.lastrowid
+
+                    # Connects the Role to the Actor
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_ACTOR_ROLE + ''' 
+                        (id_actor, id_role) 
+                        VALUES (:person_id, :role_id);'''
+                    cur.execute(query, {'person_id': person_id, 'role_id': role_id})
+         
+                    # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. role_id: {3}. Role: {4}.".format(card_id, person_id, actor, role_id, role))
+                    # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. Role: {3}.".format(card_id, person_id, actor, role))
+
+
+
+#                    logging.error( "TEST - there is actor: '{0}'. From select query: {1}. Person Id: {2}".format(actor, record, person_id))
+###################################33
 
             #
             # INSERT into TABLE_CARD_STARS
@@ -925,6 +1010,30 @@ class SqlDatabase:
 
                     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PERFORMER + ''' 
                             (id_performer, id_card) 
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+            #
+            # INSERT into TABLE_CARD_REPORTER
+            #
+            for reporter in reporters:
+
+                if reporter:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': reporter}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
+                                (name) 
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': reporter})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_REPORTER + ''' 
+                            (id_reporter, id_card) 
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1694,6 +1803,7 @@ class SqlDatabase:
                 interviewers,
                 interviewees,
                 presenters,
+                reporters,
                 lecturers,
                 performers,
                 appendix
@@ -1718,16 +1828,53 @@ class SqlDatabase:
                         tcl.id_language = language.id AND
                         language.name = :lang
                 ),
-                (SELECT group_concat(tcl.text) lyrics
-                    FROM 
-                        Text_Card_Lang tcl,
-                        Language language
-                    WHERE 
-                        tcl.type = "L" AND
-                        tcl.id_card = :card_id AND
-                        tcl.id_language = language.id AND
-                        language.name = :lang
+
+                (SELECT * FROM 
+                    (SELECT tcl.text lyrics
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language
+                        WHERE 
+                            tcl.type = "L" AND
+                            tcl.id_card = :card_id AND
+                            tcl.id_language = language.id AND
+                            language.name = :lang
+                    UNION
+                    SELECT group_concat(tcl.text) lyrics
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "L" AND
+                            tcl.id_card = :card_id AND
+                            tcl.id_language = language.id AND
+                            card.id = :card_id AND
+                            card.id_title_orig = language.id AND
+                        tcl.text IS NOT NULL
+                    )                
                 ),
+
+---                (SELECT group_concat(tcl.text) lyrics
+---                    FROM 
+---                        Text_Card_Lang tcl,
+---                        Language language
+---                    WHERE 
+---                        tcl.type = "L" AND
+---                        tcl.id_card = :card_id AND
+---                        tcl.id_language = language.id AND
+---                        language.name = :lang
+---                ),
+
+
+
+
+
+
+
+
+
+
                 (SELECT group_concat(language.name) sounds
                     FROM 
                         Language language,
@@ -1866,8 +2013,14 @@ class SqlDatabase:
                         cp.id_performer = person.id AND
                         cp.id_card = :card_id
                 ),
-
-
+                (SELECT group_concat(person.name) reporters
+                    FROM 
+                        Person person,
+                        Card_Reporter cr
+                    WHERE 
+                        cr.id_reporter = person.id AND
+                        cr.id_card = :card_id
+                ),
 
                 (SELECT group_concat(appendix_card.id) appendix
                     FROM 
@@ -1903,6 +2056,9 @@ class SqlDatabase:
 
             records=cur.execute(query, query_parameters).fetchall()
             cur.execute("commit")
+
+            # I expect 1 record
+            logging.debug("response: '{0}'".format(records[0]))         
 
             if json:
                 records = [{key: record[key] for key in record.keys()} for record in records]
@@ -1997,6 +2153,13 @@ class SqlDatabase:
                 if performers_string:
                     performers_list = performers_string.split(',')
                 records[0]["performers"] = performers_list
+
+                # Reporters
+                reporters_string = records[0]["reporters"]
+                reporters_list = []
+                if reporters_string:
+                    reporters_list = reporters_string.split(',')
+                records[0]["reporters"] = reporters_list
 
                 # Genre
                 genres_string = records[0]["genres"]

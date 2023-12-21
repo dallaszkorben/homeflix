@@ -578,7 +578,7 @@ class Thumbnail {
         }
     }
 
-    setCredentials({ directors = undefined, writers = undefined, stars = undefined, actors = undefined, voices = undefined, hosts = undefined, guests = undefined, interviewers = undefined, interviewees = undefined, presenters = undefined, lecturers = undefined, performers = undefined }) {
+    setCredentials({ directors = undefined, writers = undefined, stars = undefined, actors = undefined, voices = undefined, hosts = undefined, guests = undefined, interviewers = undefined, interviewees = undefined, presenters = undefined, lecturers = undefined, performers = undefined, reporters = undefined }) {
         this.thumbnailDict["credentials"] = {}
         if (directors != undefined && Array.isArray(directors)) {
             this.thumbnailDict["credentials"]["directors"] = directors;
@@ -615,6 +615,9 @@ class Thumbnail {
         }
         if (performers != undefined && Array.isArray(performers)) {
             this.thumbnailDict["credentials"]["performers"] = performers;
+        }
+        if (reporters != undefined && Array.isArray(reporters)) {
+            this.thumbnailDict["credentials"]["reporters"] = reporters;
         }
     }
 
@@ -907,6 +910,7 @@ class ObjDescriptionContainer {
                 mainObject.printCredentals(credTable, credentials, "interviewees", translated_titles['interviewee'] + ":");
                 mainObject.printCredentals(credTable, credentials, "presenters", translated_titles['presenter'] + ":");
                 mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
+                mainObject.printCredentals(credTable, credentials, "reporters", translated_titles['reporter'] + ":");
 
                 // ----------------
                 // --- Appendix ---
