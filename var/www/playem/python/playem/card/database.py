@@ -1320,16 +1320,16 @@ class SqlDatabase:
                         card.sequence sequence,
                         card.basename
                     FROM
-
                         ''' + SqlDatabase.TABLE_CARD + ''' card,
                         ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' htl, 
                         ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
                     WHERE
-                        card.level=:level AND
-                        htl.id_card=card.id AND
-                        htl.id_language=lang.id AND
-                        card.id_title_orig=lang.id AND
-                        lang.name <> :lang 
+                        card.level=:level
+                        AND htl.id_card=card.id
+                        AND htl.id_language=lang.id
+                        AND card.id_title_orig=lang.id
+                        AND lang.name <> :lang
+                        AND card.isappendix = 0
     
                     UNION
     
@@ -1349,16 +1349,16 @@ class SqlDatabase:
                         card.source_path source_path,
                         card.sequence sequence,
                         card.basename
-                    FROM 
-
+                    FROM
                         ''' + SqlDatabase.TABLE_CARD + ''' card,
                         ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' htl, 
                         ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
                     WHERE
-                        card.level=:level AND
-                        htl.id_card=card.id AND
-                        htl.id_language=lang.id AND
-                        lang.name = :lang
+                        card.level=:level
+                        AND htl.id_card=card.id
+                        AND htl.id_language=lang.id
+                        AND lang.name = :lang
+                        AND card.isappendix = 0
                     ) merged,
             ''' + ('''
                     --- origin or not_origin ---
@@ -1471,10 +1471,10 @@ class SqlDatabase:
 
             # Get Card list
             query = '''
-            SELECT id, level, title_req, title_orig, lang_req, lang_orig, title_on_thumbnail, title_show_sequence, sequence, source_path, date
+            SELECT id, level, title_req, title_orig, lang_req, lang_orig, title_on_thumbnail, title_show_sequence, sequence, source_path, date, appendix
             FROM (
                 --- all cards connected to higher card ---
-                SELECT id, level level, MAX(title_req) title_req, MAX(title_orig) title_orig, MAX(lang_orig) lang_orig, MAX(lang_req) lang_req, title_on_thumbnail, title_show_sequence, sequence, basename, source_path, date
+                SELECT merged.id, merged.level level, MAX(merged.title_req) title_req, MAX(merged.title_orig) title_orig, MAX(merged.lang_orig) lang_orig, MAX(merged.lang_req) lang_req, merged.title_on_thumbnail, merged.title_show_sequence, merged.sequence, merged.basename, merged.source_path, merged.date, group_concat(appendix_card.id) appendix
                 FROM (
 
                     --- requested language not the original ---
@@ -1497,14 +1497,15 @@ class SqlDatabase:
                         ''' + SqlDatabase.TABLE_CARD + ''' card, 
                         ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
                         ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
-                    WHERE
-                        card.id_higher_card=:higher_card_id AND
-                        tcl.id_card=card.id AND
-                        tcl.id_language=lang.id AND
-                        tcl.type="T" AND
-                        card.id_title_orig=lang.id AND
-                        lang.name <> :lang
 
+                    WHERE
+                        card.id_higher_card=:higher_card_id
+                        AND tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.id_title_orig=lang.id
+                        AND lang.name <> :lang
+                        AND card.isappendix = 0
                     UNION    
                         
                     --- requested language is any existing language ---
@@ -1528,13 +1529,19 @@ class SqlDatabase:
                         ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
                         ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                     WHERE
-                        card.id_higher_card=:higher_card_id AND
-                        tcl.id_card=card.id AND
-                        tcl.id_language=lang.id AND
-                        tcl.type="T" AND                        
-                        lang.name = :lang
-                )
-                GROUP BY id
+                        card.id_higher_card=:higher_card_id
+                        AND tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"                 
+                        AND lang.name = :lang
+                        AND card.isappendix = 0
+                ) merged
+
+                LEFT JOIN Card appendix_card ON
+                        appendix_card.id_higher_card = merged.id
+                        AND appendix_card.isappendix = 1
+
+                GROUP BY merged.id
             )
             ORDER BY CASE 
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
@@ -1561,7 +1568,11 @@ class SqlDatabase:
 
                 trans = Translator.getInstance(lang)
 
+                index = 0
                 for record in records:
+
+                    logging.debug("  {0}. record: '{1}'".format(index, record))
+                    index += 1
 
                     # Lang Orig
                     lang_orig = record["lang_orig"]
@@ -1609,8 +1620,19 @@ class SqlDatabase:
                 title_on_thumbnail,
                 title_show_sequence,
 
-                source_path
-            FROM (
+                source_path,
+                appendix
+            FROM 
+---
+                (SELECT group_concat(appendix_card.id) appendix
+                    FROM 
+                        Card appendix_card
+                    WHERE 
+                        appendix_card.id_higher_card = :card_id
+                        AND appendix_card.isappendix = 1
+                ),
+---  
+                (
                 SELECT 
                     card.id id, 
                     card.level level,
@@ -1639,6 +1661,7 @@ class SqlDatabase:
                     AND card.id_title_orig=lang.id
                     AND card.level IS NULL
 
+                    AND card.isappendix = 0
                     AND lang.name <> :lang
 
                 UNION
@@ -1670,6 +1693,7 @@ class SqlDatabase:
                     AND tcl.type="T"
                     AND card.level IS NULL
  
+                    AND card.isappendix = 0
                     AND lang.name=:lang
             ) merged,
             ''' + ('''

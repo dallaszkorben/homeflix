@@ -1367,8 +1367,9 @@ class ThumbnailController {
     }
 
 
-    playMediaPdf(medium_path){
+    playMediaPdf(medium_path){        
         if (medium_path != null) {
+            let retToThis = this;
             this.focusTask = FocusTask.Text;
              let fancybox_list = [];
              let opts = {
@@ -1386,7 +1387,7 @@ class ThumbnailController {
                  loop: false,
                  fitToView: true,
                  afterClose: function (instance, current) {
-                    this.focusTask = FocusTask.Menu;
+                    retToThis.focusTask = FocusTask.Menu;
                  }
              });
          }    
@@ -1395,9 +1396,8 @@ class ThumbnailController {
 
     // It can play list of pictures => medium_path = List
     playMediaPicture(medium_path){
-                
         if (medium_path != null) {
-
+            let retToThis = this;
             this.focusTask = FocusTask.Player;
             let fancybox_list = [];
             for (let media_path of medium_path) {
@@ -1419,7 +1419,7 @@ class ThumbnailController {
                 loop: false,
                 fitToView: true,
                 afterClose: function (instance, current) {
-                this.focusTask = FocusTask.Menu;
+                refToThis.focusTask = FocusTask.Menu;
                 }
             });
         }

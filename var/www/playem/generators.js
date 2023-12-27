@@ -90,10 +90,8 @@ class RestGenerator extends Generator{
 
                 oContainer.addThumbnail(line["id"], thumbnail);
             }
-
             container_list.push(oContainer);
         }
-
         return container_list;
     }
 
@@ -228,6 +226,39 @@ class RestGenerator extends Generator{
         let history_title = this.getHistoryTitle(hit);
         let main_title = this.getMainTitle(hit);
 
+        let card_id = hit["id"];
+
+        // If appendix belongs to the card (regardles of it is media card or level)
+        if(hit["appendix"]){
+            
+            let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
+            let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
+
+            let appendix_list = [];
+            for(let appendix of appendix_title_response){
+
+                let appendix_dic = {};
+                appendix_dic["id"] = appendix['id'];
+
+                // This request is to fetch the title
+                if ( appendix["title_req"] != null ){
+                    appendix_dic["title"] = appendix["title_req"];
+                }else{
+                    appendix_dic["title"] = appendix["title_orig"];
+                }
+
+                appendix_dic["show"] = appendix["show"];
+                appendix_dic["download"] = appendix["download"];
+                appendix_dic["source_path"] = appendix["source_path"];
+                appendix_dic["media"] = appendix["media"];
+
+                appendix_list.push(appendix_dic);
+            }
+
+            // save the appendix list
+            thumbnail.setAppendix(appendix_list);
+        }
+      
         if(hit["level"]){
 
             let thumbnail_path = RestGenerator.getRandomSnapshotPath(hit["source_path"]);
@@ -251,40 +282,45 @@ class RestGenerator extends Generator{
 
         }else{
 
-//console.log("request started")
-
             // Read the details 
             let card_id = hit["id"];
             let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
             let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
-    
-            // Search for the appendix
-            let appendix_list = [];
-            if(card["appendix"]){
 
-                let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
-                let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
 
-                for(let appendix of appendix_title_response){
 
-                    let appendix_dic = {};
-                    appendix_dic["id"] = appendix['id'];
 
-                    // This request is to fetch the title
-                    if ( appendix["title_req"] != null ){
-                        appendix_dic["title"] = appendix["title_req"];
-                    }else{
-                        appendix_dic["title"] = appendix["title_orig"];
-                    }
+            // // Search for the appendix
+            // let appendix_list = [];
+            // if(card["appendix"]){
 
-                    appendix_dic["show"] = appendix["show"];
-                    appendix_dic["download"] = appendix["download"];
-                    appendix_dic["source_path"] = appendix["source_path"];
-                    appendix_dic["media"] = appendix["media"];
+            //     let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
+            //     let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
 
-                    appendix_list.push(appendix_dic);
-                }
-            }
+            //     for(let appendix of appendix_title_response){
+
+            //         let appendix_dic = {};
+            //         appendix_dic["id"] = appendix['id'];
+
+            //         // This request is to fetch the title
+            //         if ( appendix["title_req"] != null ){
+            //             appendix_dic["title"] = appendix["title_req"];
+            //         }else{
+            //             appendix_dic["title"] = appendix["title_orig"];
+            //         }
+
+            //         appendix_dic["show"] = appendix["show"];
+            //         appendix_dic["download"] = appendix["download"];
+            //         appendix_dic["source_path"] = appendix["source_path"];
+            //         appendix_dic["media"] = appendix["media"];
+
+            //         appendix_list.push(appendix_dic);
+            //     }
+            // }
+
+
+
+
 
             // 'video'
             // 'audio'
@@ -338,7 +374,7 @@ class RestGenerator extends Generator{
             thumbnail.setTextCard({storyline:card["storyline"], lyrics:card["lyrics"]});
             thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"], reporters: card["reporters"]});
             thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
-            thumbnail.setAppendix(appendix_list);
+            //thumbnail.setAppendix(appendix_list);
     
             thumbnail.setFunctionForSelection({
                 "single": 
@@ -697,8 +733,11 @@ class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
             {title: "Robert Loggia",                       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Robert Loggia/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
             {title: "Gene Hackman",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Gene Hackman/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
             {title: "Jonah Hill",                          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Jonah Hill/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Kevin Spacey",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Kevin Spacey/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Peter Greene",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Peter Greene/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Michael Douglas",                     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Michael Douglas/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
 
-            
+            {title: translated_themes['monty_python'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/monty_python/director/*/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
 
         ];
 

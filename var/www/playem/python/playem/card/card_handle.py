@@ -84,6 +84,7 @@ class CardHandle:
 
         # If there is CARD in the actual directory
         if card_path:
+
             data = None
             with open(card_path, "r", encoding="utf-8") as file_object:
                 # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
@@ -319,9 +320,6 @@ class CardHandle:
 
  # ---
 
-
-
-
             # this is a level in the hierarchy / not a media
             # if not media and not card_error:
             if not media_dict and not card_error and not is_appendix:                
@@ -352,14 +350,6 @@ class CardHandle:
 
             # this must be the lowest level or a simple card or appendix
             elif not card_error:
-#            elif not card_error and media_dict:
-       
-                #logging.error( "checking appendix: '{0}', destination: '{1}'".format(is_appendix, destination))
-
-#                if is_appendix and not destination:
-#                    logging.error( "CARD - No destination set for card in {0}".format(card_path))
-#                    card_error = True
-
                 for lang, text in storylines.items():
                     if lang not in db.language_name_id_dict:
                         logging.error( "CARD - Storyline language ({1}) is unknown in {0}".format(card_path, lang))
@@ -389,6 +379,7 @@ class CardHandle:
                         card_error = True
 
                 if not card_error:
+
                     card_id=db.append_card_media(
                         card_path=card_path,
                         title_orig=title_orig, 
