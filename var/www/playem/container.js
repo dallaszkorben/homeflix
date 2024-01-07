@@ -1216,27 +1216,45 @@ class ThumbnailController {
 
                 let continuous_list = []
 
+// !!!!!!! fix it
+
                 // If continuous play needed
                 if (true) {
 
                     for (let hit of functionContinuous) {
                         let card_id = hit["id"];
-                        let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
-                        let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
 
-                        let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
+//                        let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
+//                        let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
+
+                        let screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
                         let medium_path;
                         let media;
-                        if ("audio" in card["medium"]) {
-                            media = card["medium"]["audio"][0]
-                        } else if ("video" in card["medium"]) {
-                            media = card["medium"]["video"][0]
+                        if ("audio" in hit["medium"]) {
+                            media = hit["medium"]["audio"][0]
+                        } else if ("video" in hit["medium"]) {
+                            media = hit["medium"]["video"][0]
                         }
 
                         if (media) {
-                            medium_path = pathJoin([card["source_path"], "media", media]);
-                            continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": card["medium"] });
+                            medium_path = pathJoin([hit["source_path"], "media", media]);
+                            continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": hit["medium"] });
                         }
+
+//                        let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
+//                        let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
+//                        let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
+//                        let medium_path;
+//                        let media;
+//                        if ("audio" in card["medium"]) {
+//                            media = card["medium"]["audio"][0]
+//                        } else if ("video" in card["medium"]) {
+//                            media = card["medium"]["video"][0]
+//                        }
+//                        if (media) {
+//                            medium_path = pathJoin([card["source_path"], "media", media]);
+//                            continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": card["medium"] });
+//                        }
                     }
                 }
 
@@ -1309,10 +1327,7 @@ class ThumbnailController {
 
             let refToThis = this;
 
-            this.focusTask = FocusTask.Player;
-
             let player = $("#video_player")[0];
-//            let domPlayer = $("#video_player");
 
             // Remove all media source from the player befor I add the new
             $('#video_player').children("source").remove();
@@ -1322,13 +1337,22 @@ class ThumbnailController {
             newSourceElement.attr('src', medium_path);
             $('#video_player').append(newSourceElement);
 
+//            let isInFullScreen = false;
+//            if (document.fullscreenEnabled){
+//                player.requestFullscreen();
+//
+//                isInFullScreen = (document.fullScreenElement && document.fullScreenElement !== null) ||  (document.mozFullScreen || document.webkitIsFullScreen);
+//            }
+//
+//            console.log("fullscreen: " + isInFullScreen);
+
             if (player.requestFullscreen) {
                 player.requestFullscreen();
-            } else if (elem.msRequestFullscreen) {
+            }else if (player.msRequestFullscreen) {
                 player.msRequestFullscreen();
-            } else if (elem.mozRequestFullScreen) {
+            } else if (player.mozRequestFullScreen) {
                 player.mozRequestFullScreen();
-            } else if (elem.webkitRequestFullscreen) {
+            } else if (player.webkitRequestFullscreen) {
                 player.webkitRequestFullscreen();
             }
 
@@ -1352,7 +1376,6 @@ class ThumbnailController {
             // FULLSCREENCHANGE event listener
             $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
                 var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-
                 // If exited of full screen
                 if (!state) {
                     refToThis.finishedPlaying('fullscreenchange', continuous_list);
@@ -1363,6 +1386,7 @@ class ThumbnailController {
             // It is important to have this line, otherwise you can not control the voice level
             $('#video_player').focus();
 
+            this.focusTask = FocusTask.Player;
         }
     }
 
@@ -1497,6 +1521,9 @@ class ThumbnailController {
             }
             player.load();
             player.play();
+
+            // It is important to have this line, otherwise you can not control the voice level
+            domPlayer.focus();
 
         } else {
 

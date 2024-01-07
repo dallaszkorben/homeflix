@@ -24,10 +24,11 @@ class CardHandle:
             'audio':   ['mp3', 'ogg', 'm4a'], 
             'text':    ['txt'], 
             'pdf':     ['pdf'], 
-            'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba'],
+            'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba', 'pdf'],
             'doc':     ['doc', 'odt', 'rtf'], 
             'picture': ['jpg', 'jpeg', 'png'], 
-            'code':    ['c', 'java', 'py', 'ino'], 
+            'code':    ['c', 'java', 'py', 'ino'],
+            'archive': ['tar', 'gz', 'zip', 'deb'],
         }
 
     def getPatternImage(self):
@@ -224,6 +225,8 @@ class CardHandle:
             except:
                 performers = []
 
+            # TODO: Makers, Contributors     
+
             try:
                 length = data['length']
             except:
@@ -386,7 +389,6 @@ class CardHandle:
                         titles=titles,
                         title_on_thumbnail=title_on_thumbnail,
                         title_show_sequence=title_show_sequence,
-#                        destination=destination,
                         isappendix=is_appendix,
                         show=show,
                         download=download,

@@ -228,7 +228,7 @@ class RestGenerator extends Generator{
 
         let card_id = hit["id"];
 
-        // If appendix belongs to the card (regardles of it is media card or level)
+        // If any numbers of appendix belong to the card (regardles of it is media card or level)
         if(hit["appendix"]){
             
             let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
@@ -286,41 +286,6 @@ class RestGenerator extends Generator{
             let card_id = hit["id"];
             let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
             let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
-
-
-
-
-            // // Search for the appendix
-            // let appendix_list = [];
-            // if(card["appendix"]){
-
-            //     let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
-            //     let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
-
-            //     for(let appendix of appendix_title_response){
-
-            //         let appendix_dic = {};
-            //         appendix_dic["id"] = appendix['id'];
-
-            //         // This request is to fetch the title
-            //         if ( appendix["title_req"] != null ){
-            //             appendix_dic["title"] = appendix["title_req"];
-            //         }else{
-            //             appendix_dic["title"] = appendix["title_orig"];
-            //         }
-
-            //         appendix_dic["show"] = appendix["show"];
-            //         appendix_dic["download"] = appendix["download"];
-            //         appendix_dic["source_path"] = appendix["source_path"];
-            //         appendix_dic["media"] = appendix["media"];
-
-            //         appendix_list.push(appendix_dic);
-            //     }
-            // }
-
-
-
-
 
             // 'video'
             // 'audio'
@@ -389,11 +354,6 @@ class RestGenerator extends Generator{
                     },
                 "continuous": all_hits
             });
-
-
-//console.log("request ended")
-
-
         }
         return thumbnail;
     }    
@@ -532,6 +492,24 @@ class MainMenuGenerator extends Generator{
         });
         oContainer.addThumbnail(1, thumbnail);
 
+        // EBook
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/ebook.jpg", description_src: "images/categories/ebook.jpg"});
+        thumbnail.setTitles({main: translated_titles['ebook'], thumb: translated_titles['ebook'], history: translated_titles['ebook']});
+        thumbnail.setFunctionForSelection({
+            "single": 
+                {
+                    "menu": 
+                        (function(movie_type) {
+                            return function() {
+                                return new EbookMenuGenerator(refToThis.language_code);
+                            };
+                        })("movies")
+                },
+            "continuous": []
+        });
+        oContainer.addThumbnail(1, thumbnail);
+        
         // Dia
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/dia.jpg", description_src: "images/categories/dia.jpg"});
@@ -716,6 +694,7 @@ class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_movie['war'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/war/theme/*/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/documentary/theme/*/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['apocalypse'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/apocalypse/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['dystopia'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/dystopia/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['conspiracy'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/conspiracy/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['drog'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/drog/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
             {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/director/*/actor/*/origin/*/not_origin/hu/decade/*/lang/" +  this.language_code},
@@ -814,7 +793,7 @@ class MovieDocumentariesIndividualRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: translated_genre_movie['movie_documentaries'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/standalone/movies/genre/documentary/lang/" +  this.language_code},
+            {title: translated_genre_movie['movie_documentaries'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/documentary/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -942,7 +921,6 @@ class RadioplayMenuGenerator extends  GeneralRestGenerator{
 //class AudiobookMenuGenerator extends  IndividualRestGenerator{
 class AudiobookMenuGenerator extends  GeneralRestGenerator{
 
-
     getContainerList(){
         let containerList = [];
         let requestList = [
@@ -956,6 +934,25 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
 }
 
 
+// ==============
+// Audiobook MENU
+// ==============
+//
+//class AudiobookMenuGenerator extends  IndividualRestGenerator{
+class EbookMenuGenerator extends  GeneralRestGenerator{
+
+    getContainerList(){
+        let containerList = [];
+        let requestList = [
+            {title: translated_titles['ebook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/ebook/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
+
+    
 // ========
 // Dia MENU
 // ========

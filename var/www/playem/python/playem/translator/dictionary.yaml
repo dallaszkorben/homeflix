@@ -15,7 +15,6 @@ language:
         ko: Kor
         hr: Hrv
 
-
     long:
         hu: Hungarian
         en: English
@@ -31,7 +30,6 @@ language:
         cs: Czech
         ko: Korean
         hr: Croatian
-
 
 country:
     short:
@@ -98,6 +96,7 @@ category:
     music_audio: Music
     radio_play: Radio Play
     audiobook: Audiobook
+    ebook: E-book
     knowledge: Knowledge
     entertainment: Entertainment
     dia: Dia
@@ -112,6 +111,8 @@ mediatype:
     doc: Document
     pdf: PDF
     picture: Picture
+    archive: Archive
+    ebook: Ebook
 
 level:
     series: Series
@@ -132,6 +133,7 @@ genre:
         drama: Drama
         history: History
         romance: Romance
+        dark_comedy: Dark Comedy
 
     music:
         &music
@@ -164,7 +166,6 @@ genre:
         musical: Musical
         war: War
         parody: Parody
-        dark_comedy: Dark Comedy
         thriller: Thriller
         mystery: Mystery
         satire: Satire
@@ -187,7 +188,7 @@ genre:
         <<: *common
         radio_play: Radioplay
 
-    book:
+    ebook:
         <<: *common
         nonfiction: Nonfiction
         political_fiction: Political Fiction
@@ -238,6 +239,8 @@ genre:
         press_conference: Press Conference
         report: Report
         demonstration: Demonstration
+        statement: Statement
+        speech: Speech
 
     personal:
         photos: Photos
@@ -276,7 +279,7 @@ theme:
     heroism: Heroism
     ai: Artifical Intelligent
     robot: Robot
-    clone: Clone
+    cloning: Cloning
     search_god: Search for God
     faith: Faith
     commitment: Commitment
@@ -374,6 +377,7 @@ theme:
     broker: Broker
     propaganda: Propaganda
     monty_python: Monty Python
+    christmas: Christmas
 
 title:
     title: Title
@@ -402,6 +406,7 @@ title:
     music_hungarian: Hungarian
     radioplay: Radioplay
     audiobook: Audiobook
+    ebook: Ebook
     dia: Diafilm
     entertainment: Entertainment
     entertainments: Entertainments
