@@ -1490,7 +1490,7 @@ class SqlDatabase:
                         title_on_thumbnail,
                         title_show_sequence,
 
-                        sequence, 
+                        sequence,
                         basename, 
                         source_path,
                         date
@@ -1867,6 +1867,7 @@ class SqlDatabase:
                 card.date as date,
                 card.length as length,
                 card.source_path as source_path,
+                card.download,
                 medium,
                 storyline,
                 lyrics,

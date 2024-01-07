@@ -338,8 +338,10 @@ class RestGenerator extends Generator{
 
             thumbnail.setTextCard({storyline:card["storyline"], lyrics:card["lyrics"]});
             thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"], reporters: card["reporters"]});
-            thumbnail.setExtras({length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
-            //thumbnail.setAppendix(appendix_list);
+
+            // TODO: fix it
+            // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I chose. It could be changed
+            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
     
             thumbnail.setFunctionForSelection({
                 "single": 

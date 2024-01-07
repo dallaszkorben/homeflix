@@ -182,13 +182,6 @@ class ObjScrollSection {
         this.showDetails();
     }
 
-    // getFocusedHistoryTitle(){
-    //     let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
-    //     let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
-    //     let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
-    //     return thumbnail.getHistoryTitle();
-    // } 
-
     getFocusedThubnailContainerTitle() {
         let oThumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         return oThumbnailContainer.title;
@@ -621,23 +614,25 @@ class Thumbnail {
         }
     }
 
-    setExtras({ length = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined }) {
+    setExtras({ medium_path = undefined, download = undefined, length = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined }) {
         this.thumbnailDict["extras"] = {}
-        //        if(length != undefined){
+
+        // TODO: This is not the best choice to store 'medium_path' in the 'extras', but that is what I chose. It could be changed
+        this.thumbnailDict["extras"]["medium_path"] = medium_path;
+
+        // TODO: This is not the best choice to store 'download' in the 'extras', but that is what I chose. It could be changed
+        this.thumbnailDict["extras"]["download"] = download;
+
         this.thumbnailDict["extras"]["length"] = length;
-        //        }
-        //        if(year != undefined){
+
         this.thumbnailDict["extras"]["date"] = date;
-        //        }
-        //        if(origin != undefined && Array.isArray(origin)){
+
         this.thumbnailDict["extras"]["origins"] = origins;
-        //        }
-        //        if(genre != undefined && Array.isArray(genre)){
+
         this.thumbnailDict["extras"]["genres"] = genres;
-        //        }
-        //        if(theme != undefined && Array.isArray(theme)){
+
         this.thumbnailDict["extras"]["themes"] = themes;
-        //        }
+
     }
 
     setAppendix(appendix_list) {
@@ -912,14 +907,33 @@ class ObjDescriptionContainer {
                 mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
                 mainObject.printCredentals(credTable, credentials, "reporters", translated_titles['reporter'] + ":");
 
-                // ----------------
-                // --- Appendix ---
-                // ----------------
 
                 let descAppendixDownload = $("#description-appendix-download");
                 let descAppendixPlay = $("#description-appendix-play");
                 descAppendixDownload.empty();
                 descAppendixPlay.empty();
+
+                // ------------------------------
+                // --- Download media allowed ---
+                // ------------------------------
+                if ("download" in extra && extra["download"] == 1) {
+                    let file_path = extra["medium_path"];
+
+                    let link = $('<a/>', {
+                        class: "description-appendix-download-button",
+                        href: file_path,
+                        download: "download",   // This is needed to download
+                        text: title
+                    });
+                    descAppendixDownload.append(link);
+
+                }
+
+
+
+                // ----------------
+                // --- Appendix ---
+                // ----------------
                 for (let i in appendix_list) {
                     let show = appendix_list[i]['show'];
                     let download = appendix_list[i]['download'];
@@ -1216,16 +1230,11 @@ class ThumbnailController {
 
                 let continuous_list = []
 
-// !!!!!!! fix it
-
                 // If continuous play needed
                 if (true) {
 
                     for (let hit of functionContinuous) {
                         let card_id = hit["id"];
-
-//                        let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
-//                        let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
 
                         let screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
                         let medium_path;
@@ -1240,21 +1249,6 @@ class ThumbnailController {
                             medium_path = pathJoin([hit["source_path"], "media", media]);
                             continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": hit["medium"] });
                         }
-
-//                        let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
-//                        let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
-//                        let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
-//                        let medium_path;
-//                        let media;
-//                        if ("audio" in card["medium"]) {
-//                            media = card["medium"]["audio"][0]
-//                        } else if ("video" in card["medium"]) {
-//                            media = card["medium"]["video"][0]
-//                        }
-//                        if (media) {
-//                            medium_path = pathJoin([card["source_path"], "media", media]);
-//                            continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": card["medium"] });
-//                        }
                     }
                 }
 
