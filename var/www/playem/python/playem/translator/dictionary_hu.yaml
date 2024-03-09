@@ -14,6 +14,7 @@ language:
         cs: Cze
         ko: Kor
         hr: Hrv
+        ga: Ír
 
     long:
         hu: Magyar
@@ -30,6 +31,7 @@ language:
         cs: Cseh
         ko: Koreai
         hr: Horvát
+        ga: Ír
 
 country:
     short:
@@ -37,7 +39,7 @@ country:
         hu: Hun
         us: USA
         se: Swe
-        gb: UK
+        gb: GB
         uk: UK
         es: Spa
         de: Ger
@@ -60,6 +62,7 @@ country:
         jp: JP
         ie: IE
         hr: HR
+        ar: Arg
 
     long:
         eu: Europai Unió
@@ -89,6 +92,8 @@ country:
         jp: Japán
         ie: Ír
         hr: Horvát
+        ar: Argentína
+
 
 category:
     movie: Mozi
@@ -152,6 +157,7 @@ genre:
         soul: Soul
         funk: Funk
         folk: Folk
+        punk: Punk
 
     movie:
         <<: *common
@@ -174,8 +180,10 @@ genre:
         documentary: Dokumentumfilm
         mockumentary: Mockumentary
         portrait: Portré
-        science_nature_documentary: Természettudományos dokumentum film
         puppet: Bábfilm
+        trash: Szemét
+        police: Rendőrség
+        political: Politikai
 
     audiobook:
         <<: *common
@@ -227,6 +235,7 @@ genre:
         skit: Skit
         analysis: Analysis
         talk: Beszélgetés
+        show: Show
         interview: Interjú
         news: Híradó
         talk: Beszélgetés
@@ -241,6 +250,8 @@ genre:
         demonstration: Tüntetés
         statement: Nyilatkozat
         speech: Beszéd
+        documentary: Dokumentumfilm
+        science_nature_documentary: Természettudományos dokumentum film
 
     personal:
         photos: Photos
@@ -298,6 +309,7 @@ theme:
     small_man_rebellion: Kis ember lázadása
     stupidity: Ostobaság
     concern_future: Aggódás a jövőért
+    nature: Természet
     bureaucracy: Bürokrácia
     meaning_of_life: Élet értelme
     origin_of_life: Élet eredete
@@ -358,7 +370,7 @@ theme:
     corruption: Korrupció
     covid19: COVID-19
     virus: Vírus
-    911: 911
+    '911': 911
     mobile: Mobil telefon
     cia: CIA
     drug: Kábítószer
@@ -378,6 +390,9 @@ theme:
     propaganda: Propaganda
     monty_python: Monty Python
     christmas: Karácsony
+    survival: Túlélés
+    sex: Szex
+    gun: Fegyver
 
 title:
     title: Cím
@@ -416,8 +431,8 @@ title:
     writer: Író
     author: Szerző
     director: Rendező
-    actor: Szinész
-    star: Sztár
+    actor: Szereplő
+    star: Főszereplő
     voice: Hang
 
     host: Házigazda

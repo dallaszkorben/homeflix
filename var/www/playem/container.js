@@ -232,7 +232,7 @@ class ObjScrollSection {
             e.keyCode = 13;
             $(document).trigger(e);
 
-            // Focus needed
+        // Focus needed
         } else {
 
             // Hide the current focus
@@ -1377,7 +1377,7 @@ class ThumbnailController {
             });
             player.style.display = 'block';
 
-            // It is important to have this line, otherwise you can not control the voice level
+            // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
             $('#video_player').focus();
 
             this.focusTask = FocusTask.Player;
@@ -1516,7 +1516,7 @@ class ThumbnailController {
             player.load();
             player.play();
 
-            // It is important to have this line, otherwise you can not control the voice level
+            // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
             domPlayer.focus();
 
         } else {

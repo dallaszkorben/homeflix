@@ -100,7 +100,6 @@ class CollectView(FlaskView):
     #@route('/general/standalone/category/<category>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/origin/<origin>/not_origin/<not_origin>/decade/<decade>/lang/<lang>)
     @route(EPCollectGeneralStandalone.PATH_PAR_URL, methods=[EPCollectGeneralStandalone.METHOD])
     def collectGeneralStandaloneWithParameter(self, category, genre, theme, director, actor, origin, not_origin, decade, lang):
-
         out = self.epCollectGeneralStandalone.executeByParameters(category=category, genre=genre, theme=theme, director=director, actor=actor, origin=origin, not_origin=not_origin, decade=decade, lang=lang)
         return out
 

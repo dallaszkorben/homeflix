@@ -1143,3 +1143,209 @@ con.execute('''
 ''', {'level': 'series', 'category': 'movie', 'genre': 'drama', 'theme': 'it', 'origin': 'hu', 'not_origin': 'hu', 'lang': 'en'}).fetchall()
 
 ''', {'level': 'band', 'category': 'music_video', 'genre': 'pop', 'origin': 'hu', 'not_origin': 'hu', 'lang': 'en'}).fetchall()
+
+
+
+
+
+
+===========================================
+---       get general standalone        ---
+--- Filter: genre/theme/origin          ---
+===========================================
+
+
+import sqlite3
+con = sqlite3.connect("/home/akoel/.playem/playem.db")
+
+con.execute(''' 
+SELECT *
+FROM
+    (
+    SELECT
+        base.id id,
+        base.level level,
+        base.title_req title_req,
+        base.title_orig title_orig,
+        base.lang_orig lang_orig,
+        base.lang_req lang_req,
+        base.title_on_thumbnail title_on_thumbnail,
+        base.title_show_sequence title_show_sequence,
+        base.source_path source_path,
+        base.appendix appendix,
+        base.medium medium,
+        base.genres genres,
+        base.themes,
+        group_concat(country.name) origins
+    FROM
+        (
+        SELECT
+            base.id id,
+            base.level level,
+            base.title_req title_req,
+            base.title_orig title_orig,
+            base.lang_orig lang_orig,
+            base.lang_req lang_req,
+            base.title_on_thumbnail title_on_thumbnail,
+            base.title_show_sequence title_show_sequence,
+            base.source_path source_path,
+            base.appendix appendix,
+            base.medium medium,
+            base.genres genres,
+            group_concat(theme.name) themes
+        FROM
+            (
+            SELECT
+                base.id id,
+                base.level level,
+                base.title_req title_req,
+                base.title_orig title_orig,
+                base.lang_orig lang_orig,
+                base.lang_req lang_req,
+                base.title_on_thumbnail title_on_thumbnail,
+                base.title_show_sequence title_show_sequence,
+                base.source_path source_path,
+                base.appendix appendix,
+                base.medium medium,
+                group_concat(genre.name) genres
+            FROM
+                (        
+                SELECT 
+                    merged.id id,
+                    merged.level level,
+                    MAX(title_req) title_req, 
+                    MAX(title_orig) title_orig, 
+                    MAX(lang_orig) lang_orig,
+                    MAX(lang_req) lang_req,
+
+                    merged.title_on_thumbnail title_on_thumbnail,
+                    merged.title_show_sequence title_show_sequence,
+                
+                    merged.source_path,
+                    group_concat(appendix_card.id) appendix,
+                    group_concat( mt.name || "=" || cm.name) medium
+                FROM 
+                    (
+                    SELECT 
+                        card.id id, 
+                        card.level level,
+                        card.id_category id_category,
+                        NULL title_req, 
+                        NULL lang_req, 
+                        tcl.text title_orig, 
+                        lang.name lang_orig,
+
+                        title_on_thumbnail,
+                        title_show_sequence,
+    
+                        card.source_path source_path,
+                        card.decade decade
+                    FROM                     
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE                
+                        card.id_higher_card IS NULL
+                        AND tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.id_title_orig=lang.id
+                        AND card.level IS NULL
+
+                        AND card.isappendix = 0
+                        AND lang.name <> :lang
+
+                    UNION
+
+                    SELECT 
+                        card.id id,
+                        card.level level,
+                        card.id_category id_category,
+                        tcl.text title_req, 
+                        lang.name lang_req, 
+                        NULL title_orig, 
+                        NULL lang_orig,
+
+                        title_on_thumbnail,
+                        title_show_sequence,
+
+                        card.source_path source_path,
+                        card.decade decade
+                    FROM                
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE               
+                        card.id_higher_card IS NULL
+                        AND tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.level IS NULL
+ 
+                        AND card.isappendix = 0
+                        AND lang.name=:lang
+                    ) merged,
+                    Category cat
+
+                    --- It does not matter if it is empty ---
+                    LEFT JOIN Card appendix_card 
+                        ON appendix_card.id_higher_card = merged.id
+                        AND appendix_card.isappendix = 1
+
+                    LEFT JOIN Card_Media cm 
+                        ON cm.id_card=merged.id
+                        LEFT JOIN MediaType mt
+                            ON cm.id_mediatype = mt.id
+                    WHERE
+                        --- category --- 
+                        merged.id_category=cat.id
+                        AND cat.name=:category
+
+                        --- decade ---
+--                        AND merged.decade=:decade
+
+                GROUP BY merged.id
+                ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+                ) base,
+
+                Genre genre,
+                Card_Genre card_genre
+        
+            WHERE
+                --- genre ---
+                card_genre.id_card = base.id
+                AND genre.id = card_genre.id_genre
+
+            GROUP BY base.id
+            ) base,
+
+            Theme theme,
+            Card_Theme card_theme
+        WHERE
+            --- theme ---
+            card_theme.id_card = base.id
+            AND theme.id = card_theme.id_theme
+
+        GROUP BY base.id
+        )base,
+        
+        Country country,
+        Card_Origin card_origin
+    
+    WHERE
+        --- origin ---
+        card_origin.id_card = base.id
+        AND country.id = card_origin.id_origin
+    GROUP BY base.id
+    )base  
+        
+     
+WHERE 
+--    ',' || genres || ',' LIKE '%,comedy,%' AND ',' || genres || ',' LIKE '%,comedy,%'
+--    AND ',' || themes || ',' LIKE '%,apocalypse,%' AND ',' || themes || ',' NOT LIKE '%,zombie,%'
+--    AND 
+    ',' || origins || ',' LIKE '%,fr,%' AND ',' || origins || ',' LIKE '%,fr,%'
+LIMIT :limit;   
+            
+
+''', {'category': 'movie', 'decade': '80s', 'genre': ('satire', 'drama'), 'theme': None, 'actor': None, 'director': None, 'origin': None, 'not_origin': None, 'lang': 'en', 'limit': 100}).fetchall()        

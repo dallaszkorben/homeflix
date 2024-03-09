@@ -26,7 +26,7 @@ class CardHandle:
             'pdf':     ['pdf'], 
             'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba', 'pdf'],
             'doc':     ['doc', 'odt', 'rtf'], 
-            'picture': ['jpg', 'jpeg', 'png'], 
+            'picture': ['jpg', 'jpeg', 'png', 'webp', 'avif'], 
             'code':    ['c', 'java', 'py', 'ino'],
             'archive': ['tar', 'gz', 'zip', 'deb'],
         }

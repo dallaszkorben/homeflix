@@ -14,6 +14,7 @@ language:
         cs: Cze
         ko: Kor
         hr: Hrv
+        ga: Irish
 
     long:
         hu: Hungarian
@@ -30,6 +31,7 @@ language:
         cs: Czech
         ko: Korean
         hr: Croatian
+        ga: Irish
 
 country:
     short:
@@ -37,7 +39,7 @@ country:
         hu: Hun
         us: USA
         se: Swe
-        gb: UK
+        gb: GB
         uk: UK
         es: Spa
         de: Ger
@@ -58,8 +60,9 @@ country:
         kr: KR
         ar: AR
         jp: JP
-        ie: IE
+        ie: IRL
         hr: Hrv
+        ar: Arg
 
     long:
         eu: Europian Union
@@ -89,6 +92,7 @@ country:
         jp: Japan
         ie: Ireland
         hr: Croatia
+        ar: Argentina
 
 category:
     movie: Movie
@@ -152,6 +156,7 @@ genre:
         soul: Soul
         funk: Funk
         folk: Folk
+        punk: Punk
 
     movie:
         <<: *common
@@ -174,8 +179,10 @@ genre:
         documentary: Documentary
         mockumentary: Mockumentary
         portrait: Portrait
-        science_nature_documentary: Science and Nature Documentary
         puppet: Puppet
+        trash: Trash
+        police: Police
+        political: Political
 
     audiobook:
         <<: *common
@@ -227,6 +234,7 @@ genre:
         skit: Skit
         analysis: Analysis
         talk: Talk
+        show: Show
         interview: Interview
         news: News
         talk: Talk
@@ -241,6 +249,8 @@ genre:
         demonstration: Demonstration
         statement: Statement
         speech: Speech
+        documentary: Documentary
+        science_nature_documentary: Science and Nature Documentary
 
     personal:
         photos: Photos
@@ -298,6 +308,7 @@ theme:
     small_man_rebellion: Rebellion of a small man
     stupidity: Stupidity
     concern_future: Concern for the future
+    nature: Nature
     bureaucracy: Bureaucracy
     meaning_of_life: Meaning of life
     origin_of_life: Origin of Life
@@ -358,7 +369,7 @@ theme:
     corruption: Corruption
     covid19: COVID-19
     virus: Virus
-    911: 911
+    '911': 911
     mobile: Mobile
     cia: CIA
     drug: Drug
@@ -378,6 +389,9 @@ theme:
     propaganda: Propaganda
     monty_python: Monty Python
     christmas: Christmas
+    survival: Survival
+    sex: Sex
+    gun: Gun
 
 title:
     title: Title
