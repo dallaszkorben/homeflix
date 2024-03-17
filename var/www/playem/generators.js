@@ -83,6 +83,8 @@ class RestGenerator extends Generator{
                 let sub_lines = []
 
                 // TODO: check !if(line["level"])
+                // Tricky thing for continous play
+                // collects all lines (cards) which are after the recent line (card)
                 for(let sub_index=index+1; sub_index<request_result.length; sub_index++){
                     sub_lines.push(request_result[sub_index]);
                 }
@@ -230,30 +232,51 @@ class RestGenerator extends Generator{
 
         // If any numbers of appendix belong to the card (regardles of it is media card or level)
         if(hit["appendix"]){
-            
-            let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
-            let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
-
+ 
             let appendix_list = [];
-            for(let appendix of appendix_title_response){
+            for(let appendix of hit["appendix"]){
 
                 let appendix_dic = {};
                 appendix_dic["id"] = appendix['id'];
 
-                // This request is to fetch the title
-                if ( appendix["title_req"] != null ){
-                    appendix_dic["title"] = appendix["title_req"];
+                if ( appendix["rt"] != null ){
+                    appendix_dic["title"] = appendix["rt"];
                 }else{
-                    appendix_dic["title"] = appendix["title_orig"];
+                    appendix_dic["title"] = appendix["ot"];
                 }
 
-                appendix_dic["show"] = appendix["show"];
-                appendix_dic["download"] = appendix["download"];
-                appendix_dic["source_path"] = appendix["source_path"];
-                appendix_dic["media"] = appendix["media"];
-
-                appendix_list.push(appendix_dic);
+                appendix_dic["show"] = appendix["sw"];
+                appendix_dic["download"] = appendix["dl"];
+                appendix_dic["source_path"] = appendix["sp"];
+                let media = {};
+                media[appendix["mt"]] = appendix["cm"];
+                appendix_dic["media"] = media;
+                appendix_list.push(appendix_dic);                
             }
+
+            // let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
+            // let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
+
+            // let appendix_list = [];
+            // for(let appendix of appendix_title_response){
+
+            //     let appendix_dic = {};
+            //     appendix_dic["id"] = appendix['id'];
+
+            //     // This request is to fetch the title
+            //     if ( appendix["title_req"] != null ){
+            //         appendix_dic["title"] = appendix["title_req"];
+            //     }else{
+            //         appendix_dic["title"] = appendix["title_orig"];
+            //     }
+
+            //     appendix_dic["show"] = appendix["show"];
+            //     appendix_dic["download"] = appendix["download"];
+            //     appendix_dic["source_path"] = appendix["source_path"];
+            //     appendix_dic["media"] = appendix["media"];
+
+            //     appendix_list.push(appendix_dic);
+            // }
 
             // save the appendix list
             thumbnail.setAppendix(appendix_list);
@@ -283,9 +306,11 @@ class RestGenerator extends Generator{
         }else{
 
             // Read the details 
-            let card_id = hit["id"];
-            let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
-            let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
+//            let card_id = hit["id"];
+//            let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
+//            let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
+
+            let card = hit
 
             // 'video'
             // 'audio'
@@ -666,7 +691,7 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         // Needed a new fuction in the GeneralRestGenerator !!!
 
 
-        let request = {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/documentary/category/movie/genre/documentary/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code};
+        let request = {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/documentary/category/movie/genre/documentary/theme/*/origin/*/decade/*/lang/" +  this.language_code};
         let request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);
 
         //for(let index in request_result){
@@ -700,49 +725,49 @@ class MovieCategoriesIndividualRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/comedy/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['satire'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/satire/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/scifi/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['fantasy'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/fantasy/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['crime'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/crime/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/western/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['war'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/war/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['action'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/action/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['thriller'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/thriller/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['music'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/music/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: translated_genre_movie['trash'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/trash/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/comedy/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['satire'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/satire/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/scifi/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['fantasy'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/fantasy/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['crime'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/crime/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['western'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/western/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['war'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/war/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['action'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/action/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['thriller'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/thriller/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['music'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/music/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_genre_movie['trash'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/trash/theme/*/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
 
-            {title: translated_themes['apocalypse'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/apocalypse/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['dystopia'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/dystopia/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['conspiracy'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/conspiracy/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['drog'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/drog/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['broker'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/broker/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['media'],            rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/media/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['evil'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/evil/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['alien'],            rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/alien/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: translated_themes['revenge'],          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/revenge/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/*/lang/" +  this.language_code},
-            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/*/origin/_NOT_hu/not_origin/hu/decade/60s/lang/" +  this.language_code},
-            {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['apocalypse'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/apocalypse/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['dystopia'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/dystopia/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['conspiracy'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/conspiracy/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['drog'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/drog/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['maffia'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/maffia/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['broker'],           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/broker/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['media'],            rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/media/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['evil'],             rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/evil/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['alien'],            rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/alien/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['revenge'],          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/revenge/director/*/actor/*/origin/_NOT_hu/decade/*/lang/" +  this.language_code},
+            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/*/origin/_NOT_hu/decade/60s/lang/" +  this.language_code},
+            {title: translated_titles['movie_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/*/origin/hu/decade/*/lang/" +  this.language_code},
 
-            {title: "Luc Besson",                          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/Luc Besson/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "David Lynch",                         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/David Lynch/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Woody Allen",                         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/Woody Allen/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Luc Besson",                          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/Luc Besson/actor/*/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "David Lynch",                         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/David Lynch/actor/*/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Woody Allen",                         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/Woody Allen/actor/*/origin/*/decade/*/lang/" +  this.language_code},
 
-            {title: "Robert De Niro",                      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Robert De Niro/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Al Pacino",                           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Al Pacino/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Johnny Depp",                         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Johnny Depp/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Benicio Del Toro",                    rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Benicio Del Toro/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Robert Loggia",                       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Robert Loggia/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Gene Hackman",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Gene Hackman/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Jonah Hill",                          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Jonah Hill/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Kevin Spacey",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Kevin Spacey/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Peter Greene",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Peter Greene/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Michael Douglas",                     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Michael Douglas/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: "Joaquin Phoenix",                     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Joaquin Phoenix/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Robert De Niro",                      rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Robert De Niro/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Al Pacino",                           rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Al Pacino/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Johnny Depp",                         rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Johnny Depp/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Benicio Del Toro",                    rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Benicio Del Toro/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Robert Loggia",                       rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Robert Loggia/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Gene Hackman",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Gene Hackman/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Jonah Hill",                          rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Jonah Hill/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Kevin Spacey",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Kevin Spacey/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Peter Greene",                        rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Peter Greene/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Michael Douglas",                     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Michael Douglas/origin/*/decade/*/lang/" +  this.language_code},
+            {title: "Joaquin Phoenix",                     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/*/director/*/actor/Joaquin Phoenix/origin/*/decade/*/lang/" +  this.language_code},
 
-            {title: translated_themes['monty_python'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/monty_python/director/*/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_themes['monty_python'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/movie/genre/*/theme/monty_python/director/*/actor/*/origin/*/decade/*/lang/" +  this.language_code},
 
         ];
 
@@ -763,7 +788,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/series/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/series/category/movie/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -784,7 +809,7 @@ class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/sequel/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/sequel/category/movie/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -804,7 +829,7 @@ class MovieRemakesLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/remake/category/movie/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/remake/category/movie/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -875,13 +900,13 @@ class MusicVideoLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/60s/lang/" +  this.language_code},
-            {title: "70s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/70s/lang/" +  this.language_code},
-            {title: "80s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/80s/lang/" +  this.language_code},
-            {title: "90s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/90s/lang/" +  this.language_code},
-            {title: "2000s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/2000s/lang/" +  this.language_code},
-            {title: "2010s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/not_origin/hu/decade/2010s/lang/" +  this.language_code},
-            {title: translated_titles['music_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/hu/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: "60s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/decade/60s/lang/" +  this.language_code},
+            {title: "70s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/decade/70s/lang/" +  this.language_code},
+            {title: "80s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/decade/80s/lang/" +  this.language_code},
+            {title: "90s",                                 rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/decade/90s/lang/" +  this.language_code},
+            {title: "2000s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/decade/2000s/lang/" +  this.language_code},
+            {title: "2010s",                               rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/*/decade/2010s/lang/" +  this.language_code},
+            {title: translated_titles['music_hungarian'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_video/genre/*/theme/*/origin/hu/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -896,10 +921,10 @@ class MusicAudioLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: "70s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/70s/lang/" +  this.language_code},
-            {title: "80s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/80s/lang/" +  this.language_code},
-            {title: "90s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/90s/lang/" +  this.language_code},
-            {title: "2000s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/not_origin/*/decade/2000s/lang/" +  this.language_code},
+            {title: "70s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/decade/70s/lang/" +  this.language_code},
+            {title: "80s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/decade/80s/lang/" +  this.language_code},
+            {title: "90s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/decade/90s/lang/" +  this.language_code},
+            {title: "2000s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/band/category/music_audio/genre/*/theme/*/origin/*/decade/2000s/lang/" +  this.language_code},
 
         ];
 
@@ -920,7 +945,7 @@ class RadioplayMenuGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
         let requestList = [
-            {title: translated_titles['radioplay'],  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/radio_play/genre/*/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_titles['radioplay'],  rq_method: "GET", rq_url: "http://" + host + "/collect/general/standalone/category/radio_play/genre/*/theme/*/director/*/actor/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -939,8 +964,8 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
         let requestList = [
-            {title: translated_titles['audiobook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/audiobook/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
-            {title: translated_titles['audiobook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/audiobook/genre/*/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_titles['audiobook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/audiobook/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_titles['audiobook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/audiobook/genre/*/theme/*/director/*/actor/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -959,7 +984,7 @@ class EbookMenuGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
         let requestList = [
-            {title: translated_titles['ebook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/ebook/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_titles['ebook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/ebook/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -978,7 +1003,7 @@ class DiaMenuGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
         let requestList = [
-            {title: translated_titles['dia'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/dia/genre/*/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: translated_titles['dia'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/dia/genre/*/theme/*/director/*/actor/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -998,7 +1023,7 @@ class EntertainmentLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/entertainment/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/entertainment/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
            ];
 
         containerList = this.generateContainers(requestList);
@@ -1018,7 +1043,7 @@ class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/knowledge/genre/*/theme/*/origin/*/not_origin/*/decade/*/lang/" +  this.language_code},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/knowledge/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
         ];
 
         containerList = this.generateContainers(requestList);

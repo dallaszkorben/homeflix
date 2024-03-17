@@ -24,8 +24,8 @@ from playem.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCol
 #
 # GET info
 #
-# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/band/category/music_video/genre/new_wave/theme/*/origin/*/not_origin/*/decade/80s/lang/en
-# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/80s/lang/en
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/band/category/music_video/genre/new_wave/theme/*/origin/*/decade/80s/lang/en
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/*/decade/80s/lang/en
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/child_hierarchy_or_card/id/123/lang/en
 #
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/standalone/movies/genre/drama/lang/en
@@ -62,8 +62,6 @@ class CollectView(FlaskView):
 
 
 
-# === all series of movies filtered by not_origin ===
-
 # === series movies filtered by genre             ===
 
 # === series movies filtered by theme             ===
@@ -77,30 +75,30 @@ class CollectView(FlaskView):
     #
     # Gives back list of records of all levels with the given parameters
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/band/category/music_video/genre/new_wave/theme/*/origin/*/not_origin/*/decade/80s/lang/en
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/series/category/movie/genre/drama/theme/life/origin/*/not_origin/hu/decade/*/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/band/category/music_video/genre/new_wave/theme/*/origin/*/decade/80s/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/series/category/movie/genre/drama/theme/life/origin/*/hu/decade/*/lang/en
     #
     # GET http://localhost:80/collect/all/series/movies
     #
-    #@route('/general/level/<level>/category/<category>/genre/<genre>/theme/<theme>/origin/<origin>/not_origin/<not_origin>/decade/<decade>/lang/<lang>)
+    #@route('/general/level/<level>/category/<category>/genre/<genre>/theme/<theme>/origin/<origin>/decade/<decade>/lang/<lang>)
     @route(EPCollectGeneralLevel.PATH_PAR_URL, methods=[EPCollectGeneralLevel.METHOD])
-    def collectGeneralLevelWithParameter(self, level, category, genre, theme, origin, not_origin, decade, lang):
+    def collectGeneralLevelWithParameter(self, level, category, genre, theme, origin, decade, lang):
 
-        out = self.epCollectGeneralLevel.executeByParameters(level, category, genre=genre, theme=theme, origin=origin, not_origin=not_origin, decade=decade, lang=lang)
+        out = self.epCollectGeneralLevel.executeByParameters(level, category, genre=genre, theme=theme, origin=origin, decade=decade, lang=lang)
         return out
 
 
     #
     # Gives back list of standalones of all levels with the given parameters
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/*/not_origin/*/decade/80s/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/*/decade/80s/lang/en
     #
     # GET http://localhost:80/collect/all/series/movies
     #
-    #@route('/general/standalone/category/<category>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/origin/<origin>/not_origin/<not_origin>/decade/<decade>/lang/<lang>)
+    #@route('/general/standalone/category/<category>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/origin/<origin>/decade/<decade>/lang/<lang>)
     @route(EPCollectGeneralStandalone.PATH_PAR_URL, methods=[EPCollectGeneralStandalone.METHOD])
-    def collectGeneralStandaloneWithParameter(self, category, genre, theme, director, actor, origin, not_origin, decade, lang):
-        out = self.epCollectGeneralStandalone.executeByParameters(category=category, genre=genre, theme=theme, director=director, actor=actor, origin=origin, not_origin=not_origin, decade=decade, lang=lang)
+    def collectGeneralStandaloneWithParameter(self, category, genre, theme, director, actor, origin, decade, lang):
+        out = self.epCollectGeneralStandalone.executeByParameters(category=category, genre=genre, theme=theme, director=director, actor=actor, origin=origin, decade=decade, lang=lang)
         return out
 
 

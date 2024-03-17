@@ -12,7 +12,7 @@ class EPCollectGeneralLevel(EP):
     URL = '/collect/general/level'
 
     PATH_PAR_PAYLOAD = '/general/level'
-    PATH_PAR_URL = '/general/level/<level>/category/<category>/genre/<genre>/theme/<theme>/origin/<origin>/not_origin/<not_origin>/decade/<decade>/lang/<lang>'
+    PATH_PAR_URL = '/general/level/<level>/category/<category>/genre/<genre>/theme/<theme>/origin/<origin>/decade/<decade>/lang/<lang>'
     METHOD = 'GET'
 
     ATTR_LEVEL = 'level'
@@ -20,14 +20,13 @@ class EPCollectGeneralLevel(EP):
     ATTR_GENRE = 'genre'
     ATTR_THEME = 'theme'
     ATTR_ORIGIN = 'origin'
-    ATTR_NOT_ORIGIN = 'not_origin'
     ATTR_DECADE = 'decade'
     ATTR_LANG = 'lang'
 
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
-    def executeByParameters(self, level, category, genre, theme, origin, not_origin, decade, lang) -> dict:
+    def executeByParameters(self, level, category, genre, theme, origin, decade, lang) -> dict:
         payload = {}
 
         payload[EPCollectGeneralLevel.ATTR_LEVEL] = level
@@ -35,7 +34,6 @@ class EPCollectGeneralLevel(EP):
         payload[EPCollectGeneralLevel.ATTR_GENRE] = genre
         payload[EPCollectGeneralLevel.ATTR_THEME] = theme
         payload[EPCollectGeneralLevel.ATTR_ORIGIN] = origin
-        payload[EPCollectGeneralLevel.ATTR_NOT_ORIGIN] = not_origin
         payload[EPCollectGeneralLevel.ATTR_DECADE] = decade
         payload[EPCollectGeneralLevel.ATTR_LANG] = lang
         
@@ -50,18 +48,16 @@ class EPCollectGeneralLevel(EP):
         genre = payload[EPCollectGeneralLevel.ATTR_GENRE]
         theme = payload[EPCollectGeneralLevel.ATTR_THEME]
         origin = payload[EPCollectGeneralLevel.ATTR_ORIGIN]
-        not_origin = payload[EPCollectGeneralLevel.ATTR_NOT_ORIGIN]
         decade = payload[EPCollectGeneralLevel.ATTR_DECADE]
         lang = payload[EPCollectGeneralLevel.ATTR_LANG]
 
-        logging.debug( "WEB request ({0}): {1} {2} ('{3}': {4}, '{5}': {6}, '{7}': {8}, '{9}': {10}, '{11}': {12}, '{13}': {14}, '{15}': {16}, '{17}': {18})".format(
+        logging.debug( "WEB request ({0}): {1} {2} ('{3}': {4}, '{5}': {6}, '{7}': {8}, '{9}': {10}, '{11}': {12}, '{13}': {14}, '{15}': {16})".format(
                     remoteAddress, EPCollectGeneralLevel.METHOD, EPCollectGeneralLevel.URL,
                     EPCollectGeneralLevel.ATTR_LEVEL, level,
                     EPCollectGeneralLevel.ATTR_CATEGORY, category,
                     EPCollectGeneralLevel.ATTR_GENRE, genre,
                     EPCollectGeneralLevel.ATTR_THEME, theme,
                     EPCollectGeneralLevel.ATTR_ORIGIN, origin,
-                    EPCollectGeneralLevel.ATTR_NOT_ORIGIN, not_origin,
                     EPCollectGeneralLevel.ATTR_DECADE, decade,
                     EPCollectGeneralLevel.ATTR_LANG, lang
                 )
@@ -73,11 +69,9 @@ class EPCollectGeneralLevel(EP):
             theme=None
         if origin == '*':
             origin=None
-        if not_origin == '*':
-            not_origin=None
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_general_level(level, category, genre, theme, origin, not_origin, decade, lang, limit=100)
+        output = self.web_gadget.db.get_general_level(level, category, genre, theme, origin, decade, lang, limit=100)
 
         return output_json(output, EP.CODE_OK)

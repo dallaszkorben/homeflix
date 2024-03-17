@@ -105,7 +105,7 @@ class SqlDatabase:
             exit()
 
         # check if the databases are correct
-        if not self.is_dbs_ok():            
+        if not self.is_dbs_ok():
             self.recreate_dbs()
 
         self.fill_up_constant_dicts()
@@ -126,7 +126,7 @@ class SqlDatabase:
                     raise NotExistingTable("{0} table does not exist. All tables must be recreated".format(table), error_code)
 
         except NotExistingTable as e:
-            logging.debug(e.message)            
+            logging.debug(e.message)   
             return False
 
         finally:
@@ -522,7 +522,7 @@ class SqlDatabase:
         for pair in records:
             self.genre_name_id_dict[pair[0]] = pair[1]
             self.genre_id_name_dict[pair[1]] = pair[0]
-            
+
         query = 'SELECT name, id FROM ' + SqlDatabase.TABLE_THEME + ' ORDER BY name;'
         records = cur.execute(query).fetchall()
         for pair in records:
@@ -1279,7 +1279,7 @@ class SqlDatabase:
     # General - for any kind of Card on a certain level
     #
     #
-    def get_general_level(self, level, category, genre=None, theme=None, origin=None, not_origin=None, decade=None, lang='en', limit=100, json=True):
+    def get_general_level(self, level, category, genre=None, theme=None, origin=None, decade=None, lang='en', limit=100, json=True):
         """
         It returns a list of the given level cards in the given category, optionally filtered by genre/theme/origin/decade
         """
@@ -1363,10 +1363,10 @@ class SqlDatabase:
                         AND card.isappendix = 0
                     ) merged,
             ''' + ('''
-                    --- origin or not_origin ---
+                    --- origin ---
                     ''' + SqlDatabase.TABLE_COUNTRY + ''' country,
                     ''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co,                    
-            ''' if origin or not_origin else '') + ('''
+            ''' if origin else '') + ('''
 
                     --- genre ---
                     ''' + SqlDatabase.TABLE_GENRE + ''' genre,
@@ -1400,13 +1400,10 @@ class SqlDatabase:
                     --- origin ---
                     AND co.id_card = merged.id
                     AND co.id_origin = country.id
-            ''' if origin or not_origin else '') + ('''
+            ''' if origin else '') + ('''
             
                     AND country.name = :origin
             ''' if origin else '') + ('''
-
-                    AND country.name != :not_origin
-            ''' if not_origin else '') +  ('''
 
                     --- decade ---
                     AND merged.decade = :decade
@@ -1422,7 +1419,7 @@ class SqlDatabase:
                 LIMIT :limit;
             '''
 
-            query_parameters = {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'not_origin': not_origin, 'lang': lang, 'limit':limit}
+            query_parameters = {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'lang': lang, 'limit':limit}
 
             logging.debug("get_general_level query: '{0} / {1}'".format(query, query_parameters))
 
@@ -1619,6 +1616,33 @@ class SqlDatabase:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # reviewed
     #
     #
@@ -1628,7 +1652,7 @@ class SqlDatabase:
     #   - theme
     #
     #
-    def get_general_standalone(self, category, genres=None, themes=None, directors=None, actors=None, origins=None, not_origin=None, decade=None, lang='en', limit=100, json=True):
+    def get_general_standalone(self, category, genres=None, themes=None, directors=None, actors=None, origins=None, decade=None, lang='en', limit=100, json=True):
              
         with self.lock:
             where = ''
@@ -1702,6 +1726,10 @@ class SqlDatabase:
             query = '''
 SELECT
     core.*,
+
+    storyline,
+    lyrics,
+
     sounds,
     subs,
     directors,
@@ -1794,8 +1822,99 @@ FROM
     ) unioned
 
     GROUP BY unioned.id               
-) core, ''' + SqlDatabase.TABLE_CATEGORY + ''' cat
+) core,
+''' + SqlDatabase.TABLE_CATEGORY + ''' cat
 
+
+--- STORYLINE ---
+LEFT JOIN
+    (
+        SELECT ord, storyline, id_card
+        FROM
+        (
+
+            --- Select the storyline on the requested language, not the original ---
+
+            SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+            FROM
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE
+                tcl.type = "S" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                language.name = :lang AND
+                card.id_title_orig<>language.id AND
+                tcl.text IS NOT NULL
+
+            UNION
+
+            --- Select the storyline on the original language ---
+
+            SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+            FROM 
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE 
+                tcl.type = "S" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                card.id_title_orig=language.id AND        
+                tcl.text IS NOT NULL
+        )
+        GROUP BY id_card
+--        HAVING MIN(ord)
+--        ORDER BY ord
+    )strl
+    ON strl.id_card=core.id
+
+--- LYRICS ---
+LEFT JOIN
+    (
+        SELECT ord, lyrics, id_card
+        FROM
+        (
+
+            --- Select the storyline on the requested language, not the original ---
+
+            SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+            FROM
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE
+                tcl.type = "L" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                language.name = :lang AND
+                card.id_title_orig<>language.id AND
+                tcl.text IS NOT NULL
+                
+            UNION
+
+            --- Select the storyline on the original language ---
+
+            SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+            FROM 
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE 
+                tcl.type = "L" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                card.id_title_orig=language.id AND        
+                tcl.text IS NOT NULL
+        )
+        GROUP BY id_card
+--        HAVING MIN(ord)
+--        ORDER BY ord
+    )lrx
+    ON lrx.id_card=core.id 
+
+--- MEDIUM ---
 LEFT JOIN
     (SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
     FROM
@@ -1807,16 +1926,92 @@ LEFT JOIN
     )mdt
     ON mdt.id_card=core.id
 
-LEFT JOIN
-    (SELECT group_concat(appendix_card.id) appendix, appendix_card.id_higher_card
+--- APPENDIX ---
+LEFT JOIN    
+    (    
+    SELECT
+        card_id,
+        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
     FROM
-        Card appendix_card        
-    WHERE
-        appendix_card.isappendix=1
-    GROUP BY appendix_card.id_higher_card
-    )pndx
-    ON pndx.id_higher_card=core.id
-   
+    
+        (
+        SELECT                
+            merged_appendix.id,
+            merged_appendix.card_id,
+            MAX(merged_appendix.title_req) title_req, 
+            MAX(merged_appendix.title_orig) title_orig,
+            merged_appendix.show,
+            merged_appendix.download,
+            merged_appendix.source_path,
+            mt.name media_type,
+            cm.name contact_media                
+        FROM
+            (
+            SELECT 
+                app_card.id id,
+                id_higher_card card_id,
+                app_card.isappendix,
+                app_card.show,
+                app_card.download,
+                app_card.source_path,
+                "" title_req, 
+                tcl.text title_orig
+            FROM 
+                CARD app_card,
+                TEXT_CARD_LANG tcl, 
+                LANGUAGE lang                    
+            WHERE                
+                app_card.isappendix=1
+                AND tcl.id_card=app_card.id
+                AND tcl.id_language=lang.id
+                AND tcl.type="T"
+                AND app_card.id_title_orig=lang.id
+                AND lang.name <> :lang
+            UNION
+            SELECT 
+                app_card.id id,
+                id_higher_card card_id,
+                app_card.isappendix,
+                app_card.show,
+                app_card.download,
+                app_card.source_path,
+                tcl.text title_req, 
+                "" title_orig
+            FROM 
+                CARD app_card,
+                TEXT_CARD_LANG tcl, 
+                LANGUAGE lang                    
+            WHERE
+                app_card.isappendix=1
+                AND tcl.id_card=app_card.id
+                AND tcl.id_language=lang.id
+                AND tcl.type="T"
+                AND lang.name=:lang
+            ) merged_appendix,
+            Card_Media cm,
+            MediaType mt
+            
+        WHERE
+            cm.id_card=merged_appendix.id
+            AND mt.id=cm.id_mediatype
+            
+        GROUP BY merged_appendix.id
+        )
+    GROUP BY card_id
+) pndx
+ON pndx.card_id=core.id 
+
+-- LEFT JOIN
+--     (SELECT group_concat(appendix_card.id) appendix, appendix_card.id_higher_card
+--     FROM
+--         Card appendix_card        
+--     WHERE
+--         appendix_card.isappendix=1
+--     GROUP BY appendix_card.id_higher_card
+--     )pndx
+--     ON pndx.id_higher_card=core.id
+
+--- ORIGIN ---
 LEFT JOIN
     (SELECT group_concat(origin.name) origins, card_origin.id_card
     FROM
@@ -1828,6 +2023,7 @@ LEFT JOIN
     )rgn
     ON rgn.id_card=core.id
 
+--- THEME ---
 LEFT JOIN 
     (SELECT group_concat(theme.name) themes, card_theme.id_card
         FROM
@@ -1839,6 +2035,7 @@ LEFT JOIN
     )thm
     ON thm.id_card=core.id
 
+--- GENRE ---
 LEFT JOIN 
     (SELECT group_concat(genre.name) genres, card_genre.id_card
         FROM
@@ -1849,7 +2046,8 @@ LEFT JOIN
         GROUP BY card_genre.id_card
     )gnr
     ON gnr.id_card=core.id
-    
+
+--- LANGUAGE ---   
 LEFT JOIN 
     (SELECT group_concat(language.name) sounds, card_sound.id_card
         FROM 
@@ -1861,6 +2059,7 @@ LEFT JOIN
     ) snd
     ON snd.id_card=core.id
 
+--- SUB ---
 LEFT JOIN
     (SELECT group_concat(language.name) subs, card_sub.id_card
         FROM 
@@ -1872,6 +2071,7 @@ LEFT JOIN
     ) sb
     ON sb.id_card=core.id
 
+--- DIRECTORS ---
 LEFT JOIN    
     (SELECT group_concat(person.name) directors,  card_dir.id_card
         FROM 
@@ -1883,6 +2083,7 @@ LEFT JOIN
     ) dr
     ON dr.id_card=core.id
 
+--- WRITERS ---
 LEFT JOIN    
     (SELECT group_concat(person.name) writers,  card_writer.id_card
         FROM 
@@ -1894,6 +2095,7 @@ LEFT JOIN
     ) wr
     ON wr.id_card=core.id
 
+--- VOICES ---
 LEFT JOIN    
     (SELECT group_concat(person.name) voices,  card_voice.id_card
         FROM 
@@ -1905,6 +2107,7 @@ LEFT JOIN
     ) vc
     ON vc.id_card=core.id    
 
+--- STARS ---
 LEFT JOIN    
     (SELECT group_concat(person.name) stars,  card_star.id_card
         FROM 
@@ -1916,6 +2119,7 @@ LEFT JOIN
     ) str
     ON str.id_card=core.id
     
+--- ACTORS ---
 LEFT JOIN    
     (SELECT group_concat(person.name) actors,  card_actor.id_card
         FROM 
@@ -1938,7 +2142,7 @@ WHERE
     AND core.decade=:decade ''' if decade else '') + ('''
                         
     --- WHERE ORIGIN - conditional ---
-    AND ',' || origins || ',' LIKE '%,us,%' ''' if origins else '') + ('''
+    ''' + origins_where if origins else '') + ('''
 
     --- WHERE THEMES - conditional ---
     ''' + themes_where if themes else '') + ('''
@@ -1951,7 +2155,6 @@ WHERE
 
     --- WHERE DIRECTORS - conditional ---
     ''' + directors_where if directors else '') + '''
-
 
 ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
 
@@ -1968,7 +2171,7 @@ LIMIT :limit; '''
                 records = [{key: record[key] for key in record.keys()} for record in records]
 
                 #
-                # Translate
+                # Translate and Convert
                 #
 
                 trans = Translator.getInstance(lang)
@@ -1985,7 +2188,7 @@ LIMIT :limit; '''
                     lang_req_translated = trans.translate_language_short(lang_req)
                     record["lang_req"] = lang_req_translated
 
-                   # Media
+                    # Media
                     medium_string = record["medium"]
                     media_dict = {}
                     if medium_string:
@@ -1996,6 +2199,20 @@ LIMIT :limit; '''
                                 media_dict[media_type] = []
                             media_dict[media_type].append(media)
                     record["medium"] = media_dict
+
+                    # Appendix
+                    appendix_string = record["appendix"]
+                    appendix_list = []
+                    if appendix_string:
+                        text_list = appendix_string.split(',')
+                        for appendix_string in text_list:
+                            var_list = appendix_string.split(";")
+                            appendix_dict = {}
+                            for var_pair in var_list:
+                                (key, value) = var_pair.split("=")
+                                appendix_dict[key] = value
+                            appendix_list.append(appendix_dict)
+                    record["appendix"] = appendix_list
 
                     # Writers
                     writers_string = record["writers"]
@@ -2129,9 +2346,22 @@ LIMIT :limit; '''
                         sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
                     record["sounds"] = sounds_list
     
-                logging.error("Converted records: '{0}'".format(records))
+                logging.debug("Converted records: '{0}'".format(records))
 
             return records
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     # 

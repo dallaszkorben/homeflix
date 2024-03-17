@@ -926,7 +926,6 @@ class ObjDescriptionContainer {
                         text: title
                     });
                     descAppendixDownload.append(link);
-
                 }
 
 
@@ -946,24 +945,40 @@ class ObjDescriptionContainer {
                         let title = '\u{1F4E5}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
-                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
+                        Object.entries(media_dict).forEach(([media_type, medium]) => {
 
-                            // Through the media_list - most probably only one media
                             // I do not care about the type of the media, just want to download
-                            for (let media of media_list) {
+                            let file_path = pathJoin([source_path, "media", medium]);
 
-                                // I'm expecting only one media here. TODO: get if there are others
-                                let file_path = pathJoin([source_path, "media", media]);
-
-                                let link = $('<a/>', {
+                            let link = $('<a/>', {
                                     class: "description-appendix-download-button",
                                     href: file_path,
                                     download: "download",   // This is needed to download
                                     text: title
-                                });
-                                descAppendixDownload.append(link);
-                            }
+                            });
+                            descAppendixDownload.append(link);
                         });
+
+//                        // Through the keys: mediaTypes: text/picture/ebook
+//                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
+//
+//                            // Through the media_list - most probably only one media
+//                            // I do not care about the type of the media, just want to download
+//                            for (let media of media_list) {
+//
+//                                // I'm expecting only one media here. TODO: get if there are others
+//                                let file_path = pathJoin([source_path, "media", media]);
+//
+//                                let link = $('<a/>', {
+//                                    class: "description-appendix-download-button",
+//                                    href: file_path,
+//                                    download: "download",   // This is needed to download
+//                                    text: title
+//                                });
+//                                descAppendixDownload.append(link);
+//                            }
+//                        });
+
                     }
 
                     // TODO: rename "show" to "play"
@@ -974,7 +989,7 @@ class ObjDescriptionContainer {
                         let title = '\u{25B6}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
-                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
+                        Object.entries(media_dict).forEach(([media_type, medium]) => {
 
                             let medium_path;
 
@@ -983,9 +998,7 @@ class ObjDescriptionContainer {
                                 
                                 // create a list for medium path
                                 medium_path = [];
-                                for (let medium of media_list) {
-                                    medium_path.push(pathJoin([source_path, "media", medium]));
-                                }
+                                medium_path.push(pathJoin([source_path, "media", medium]));
 
                                 let link = $('<a/>', {
                                     class: "description-appendix-play-button",
@@ -1000,24 +1013,68 @@ class ObjDescriptionContainer {
 
                             }else{
 
-                                for (let media of media_list) {
-
-                                    // create single value for every medium path
-                                    medium_path = pathJoin([source_path, "media", media]);
-
-                                    let link = $('<a/>', {
-                                        class: "description-appendix-play-button",
-                                        text: title
-                                    });
-                                    link.click(function (my_media_type, my_file_path) {
-                                        return function () {
-                                            refToObjThumbnailController.playMedia(my_media_type, my_file_path);
-                                        }
-                                    }(media_type, medium_path));
-                                    descAppendixPlay.append(link);
-                                }
+                                // create single value for every medium path
+                                medium_path = pathJoin([source_path, "media", medium]);
+                                let link = $('<a/>', {
+                                    class: "description-appendix-play-button",
+                                    text: title
+                                });
+                                link.click(function (my_media_type, my_file_path) {
+                                    return function () {
+                                        refToObjThumbnailController.playMedia(my_media_type, my_file_path);
+                                    }
+                                }(media_type, medium_path));
+                                descAppendixPlay.append(link);
                             }
                         });
+
+
+//                        // Through the keys: mediaTypes: text/picture/ebook
+//                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
+//
+//                            let medium_path;
+//
+//
+//                            if(media_type == "picture"){
+//                                
+//                                // create a list for medium path
+//                                medium_path = [];
+//                                for (let medium of media_list) {
+//                                    medium_path.push(pathJoin([source_path, "media", medium]));
+//                                }
+//
+//                                let link = $('<a/>', {
+//                                    class: "description-appendix-play-button",
+//                                    text: title
+//                                });
+//                                link.click(function (my_media_type, my_file_path) {
+//                                    return function () {
+//                                        refToObjThumbnailController.playMedia(my_media_type, my_file_path);
+//                                    }
+//                                }(media_type, medium_path));
+//                                descAppendixPlay.append(link);
+//
+//                            }else{
+//
+//                                for (let media of media_list) {
+//
+//                                    // create single value for every medium path
+//                                    medium_path = pathJoin([source_path, "media", media]);
+//
+//                                    let link = $('<a/>', {
+//                                        class: "description-appendix-play-button",
+//                                        text: title
+//                                    });
+//                                    link.click(function (my_media_type, my_file_path) {
+//                                        return function () {
+//                                            refToObjThumbnailController.playMedia(my_media_type, my_file_path);
+//                                        }
+//                                    }(media_type, medium_path));
+//                                    descAppendixPlay.append(link);
+//                                }
+//                            }
+//                        });
+
                     }
                 }
 
@@ -1415,7 +1472,7 @@ class ThumbnailController {
     // It can play list of pictures => medium_path = List
     playMediaPicture(medium_path){
         if (medium_path != null) {
-            let retToThis = this;
+            let refToThis = this;
             this.focusTask = FocusTask.Player;
             let fancybox_list = [];
             for (let media_path of medium_path) {

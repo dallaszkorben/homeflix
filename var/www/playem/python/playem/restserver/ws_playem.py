@@ -62,13 +62,18 @@ class WSPlayem(Flask):
         self.db=DB()
 
         # TODO: at every start I recreate the table. Has to be fixed
-        self.db.drop_tables()
-        self.db.create_tables()
+
+# Uncommented: regenerate db        
+#        self.db.drop_tables()
+#        self.db.create_tables()
 
         self.cardHandle = CardHandle(self)
         print("Started to collect media...")
         start = time.time()
-        self.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
+
+# Uncommented: regenerate db        
+#        self.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
+
         end = time.time()
         diff = end-start
         records = self.db.get_numbers_of_records_in_card()
