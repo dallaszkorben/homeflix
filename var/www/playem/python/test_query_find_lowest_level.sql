@@ -28,7 +28,7 @@ SELECT
     lowest_id_list.interviewees,
     lowest_id_list.presenters,
     lowest_id_list.reporters,
-    lowest_id_list.performers
+    lowest_id_list.performers,
 
     storyline,
     lyrics,

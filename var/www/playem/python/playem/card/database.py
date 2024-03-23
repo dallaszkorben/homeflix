@@ -2986,8 +2986,2137 @@ LIMIT :limit; '''
   
 
 
+# ================================================================================================================================================
+# ================================================================================================================================================
+# ================================================================================================================================================
+# TODO: use variables for tables
+#''' + SqlDatabase.TABLE_CARD + ''' card,
+#''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
+#''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
+#''' + SqlDatabase.TABLE_CARD + ''' card,
+#''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
+#''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
+#''' + SqlDatabase.TABLE_COUNTRY + ''' country,
+#''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co,
+#''' + SqlDatabase.TABLE_PERSON + ''' actor,
+#''' + SqlDatabase.TABLE_CARD_ACTOR + ''' ca,
+#''' + SqlDatabase.TABLE_PERSON + ''' director,
+#''' + SqlDatabase.TABLE_CARD_DIRECTOR + ''' cd,
+#'' + SqlDatabase.TABLE_CATEGORY + ''' cat ''' + ('''
 
 
 
 
+
+    def get_highest_level_cards(self, category, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+        """
+        FULL QUERY for highest level list                              
+        Returns mixed cards:                                           
+          - media card, if the filtered card has NO higher card        
+          - highest level cards, if the filtered card has higher level 
+                                                                       
+        Parameters for filtering:
+          - category                                                   
+          - decade                                                     
+          - language                                                   
+                                                                       
+          logical operands (_AND_, _NOT_) in                           
+          - genres                                                     
+          - themes                                                     
+          - actors                                                     
+          - directors                                                  
+          - lecturers                                                 
+          - origins                                                    
+        """
+        with self.lock:
+#            where = ''
+
+            genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
+            themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
+            actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+            directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
+            lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+            origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+            # # Generate and Convert GENRE conditions
+            # genre_list =             [] if genres == None else genres.split('_AND_')
+            # genre_in_list =          [] if genres == None else [genre for genre in genre_list if not genre.startswith("_NOT_")]
+            # genre_not_in_list =      [] if genres == None else [genre.removeprefix("_NOT_") for genre in genre_list if genre.startswith("_NOT_")]
+            # genres_where =           '' if genres == None else 'AND ' + ' AND '.join(["',' || genres || ',' " + ("NOT " if genre.startswith("_NOT_") else "") + "LIKE '%," + genre.removeprefix("_NOT_") + ",%'" for genre in genre_list])
+            # logging.error("GENRE IN LIST: {}".format(genre_in_list))
+            # logging.error("GENRE NOT IN LIST: {}".format(genre_not_in_list))
+            # logging.error("GENRE WHERE: {}".format(genres_where))
+
+            # # Generate and Convert THEME conditions
+            # theme_list =             [] if themes == None else themes.split('_AND_')
+            # theme_in_list =          [] if themes == None else [theme for theme in theme_list if not theme.startswith("_NOT_")]
+            # theme_not_in_list =      [] if themes == None else [theme.removeprefix("_NOT_") for theme in theme_list if theme.startswith("_NOT_")]
+            # themes_where =           '' if themes == None else 'AND ' + ' AND '.join(["',' || themes || ',' " + ("NOT " if theme.startswith("_NOT_") else "") + "LIKE '%," + theme.removeprefix("_NOT_") + ",%'" for theme in theme_list])
+            # logging.error("THEME IN LIST: {}".format(theme_in_list))
+            # logging.error("THEME NOT IN LIST: {}".format(theme_not_in_list))
+            # logging.error("THEME WHERE: {}".format(themes_where))
+
+            # # Generate and Convert ACTORS conditions
+            # actor_list =            [] if actors == None else actors.split('_AND_')
+            # actor_in_list =         [] if actors == None else [actor for actor in actor_list if not actor.startswith("_NOT_")]
+            # actor_not_in_list =     [] if actors == None else [actor.removeprefix("_NOT_") for actor in actor_list if actor.startswith("_NOT_")]
+            # actors_where =          '' if actors == None else 'AND ' + ' AND '.join(["',' || actors || ',' " + ("NOT " if actor.startswith("_NOT_") else "") + "LIKE '%," + actor.removeprefix("_NOT_") + ",%'" for actor in actor_list])
+            # logging.error("ACTOR IN LIST: {}".format(actor_in_list))
+            # logging.error("ACTOR NOT IN LIST: {}".format(actor_not_in_list))
+            # logging.error("ACTOR WHERE: {}".format(actors_where))
+
+            # # Generate and Convert DIRECTOR conditions
+            # director_list =         [] if directors == None else directors.split('_AND_')
+            # director_in_list =      [] if directors == None else [director for director in director_list if not director.startswith("_NOT_")]
+            # director_not_in_list =  [] if directors == None else [director.removeprefix("_NOT_") for director in director_list if director.startswith("_NOT_")]
+            # directors_where =       '' if directors == None else 'AND' + ' AND '.join(["',' || directors || ',' " + ("NOT " if director.startswith("_NOT_") else "") + "LIKE '%," + director.removeprefix("_NOT_") + ",%'" for director in director_list])
+            # logging.error("DIRECTOR IN LIST: {}".format(director_in_list))
+            # logging.error("DIRECTOR NOT IN LIST: {}".format(director_not_in_list))
+            # logging.error("DIRECTOR WHERE: {}".format(directors_where))
+
+            # # Generate and Convert LECTURER conditions
+            # lecturer_list =         [] if lecturers == None else lecturers.split('_AND_')
+            # lecturer_in_list =      [] if lecturers == None else [lecturer for lecturer in lecturer_list if not lecturer.startswith("_NOT_")]
+            # lecturer_not_in_list =  [] if lecturers == None else [lecturer.removeprefix("_NOT_") for lecturer in lecturer_list if lecturer.startswith("_NOT_")]
+            # lecturers_where =       '' if lecturers == None else 'AND' + ' AND '.join(["',' || lecturers || ',' " + ("NOT " if lecturer.startswith("_NOT_") else "") + "LIKE '%," + lecturer.removeprefix("_NOT_") + ",%'" for lecturer in lecturer_list])
+            # logging.error("LECTURER IN LIST: {}".format(lecturer_in_list))
+            # logging.error("LECTURER NOT IN LIST: {}".format(lecturer_not_in_list))
+            # logging.error("LECTURER WHERE: {}".format(lecturers_where))
+
+            # # Generate and Convert ORIGIN conditions
+            # origin_list =            [] if origins == None else origins.split('_AND_')
+            # origin_in_list =         [] if origins == None else [origin for origin in origin_list if not origin.startswith("_NOT_")]
+            # origin_not_in_list =     [] if origins == None else [origin.removeprefix("_NOT_") for origin in origin_list if origin.startswith("_NOT_")]
+            # origins_where =          '' if origins == None else 'AND ' + ' AND '.join(["',' || origins || ',' " + ("NOT " if origin.startswith("_NOT_") else "") + "LIKE '%," + origin.removeprefix("_NOT_") + ",%'" for origin in origin_list])
+            # logging.error("ORIGIN IN LIST: {}".format(theme_in_list))
+            # logging.error("ORIGIN NOT IN LIST: {}".format(origin_not_in_list))
+            # logging.error("ORIGIN WHERE: {}".format(origins_where))
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+SELECT
+    core.*,
+    mixed_id_list.themes,
+    mixed_id_list.genres,
+    mixed_id_list.origins,
+    mixed_id_list.directors,
+    mixed_id_list.actors,
+    
+    storyline,
+    lyrics,
+    medium,
+    appendix,
+    
+    sounds,
+    subs,
+    writers,
+    voices,
+    stars,
+    hosts,
+    guests,    
+
+    interviewers,
+    interviewees,
+    presenters,
+    reporters,
+    lecturers,
+    performers
+FROM
+
+    ---------------------------
+    --- mixed level id list ---
+    ---------------------------
+    (
+    WITH RECURSIVE
+        rec(id,id_higher_card,level,source_path, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        (
+            SELECT                 
+                card.id, 
+                card.id_higher_card, 
+                card.level,
+                card.source_path,
+                themes,
+                genres,
+                origins,
+                directors,
+                actors,
+                lecturers,
+                
+                sounds,
+                subs,
+                writers,
+                voices,
+                stars,        
+                hosts,
+                guests,
+                interviewers,
+                interviewees,
+                presenters,
+                reporters,
+                performers
+                
+            FROM 
+                Card card,
+                
+                --- Conditional ---
+                Category category
+            
+            -------------
+            --- GENRE ---
+            -------------
+            LEFT JOIN 
+            (
+                SELECT group_concat(genre.name) genres, card_genre.id_card
+                FROM
+                    Genre genre,
+                    Card_Genre card_genre
+                WHERE            
+                    card_genre.id_genre=genre.id
+                GROUP BY card_genre.id_card
+            )gnr
+            ON gnr.id_card=card.id
+            
+            -------------
+            --- THEME ---
+            -------------
+            LEFT JOIN 
+            (
+                SELECT group_concat(theme.name) themes, card_theme.id_card
+                FROM
+                    Theme theme,
+                    Card_Theme card_theme
+                WHERE            
+                    card_theme.id_theme=theme.id
+                GROUP BY card_theme.id_card
+            )thm
+            ON thm.id_card=card.id
+    
+            ---------------
+            --- ORIGINS ---
+            ---------------
+            LEFT JOIN
+            (
+                SELECT group_concat(origin.name) origins, card_origin.id_card
+                FROM
+                    Country origin,
+                    Card_Origin card_origin
+                WHERE
+                    card_origin.id_origin=origin.id
+                GROUP BY card_origin.id_card
+            )rgn
+            ON rgn.id_card=card.id    
+    
+            -----------------
+            --- DIRECTORS ---
+            -----------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) directors,  card_dir.id_card
+                FROM 
+                    Person person,
+                    Card_Director card_dir
+                WHERE 
+                    card_dir.id_director = person.id
+                GROUP BY card_dir.id_card
+            ) dr
+            ON dr.id_card=card.id
+
+            --------------
+            --- ACTORS ---
+            --------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) actors,  card_actor.id_card
+                FROM 
+                    Person person,
+                    Card_Actor card_actor
+                WHERE 
+                    card_actor.id_actor = person.id
+                GROUP BY card_actor.id_card
+            ) act
+            ON act.id_card=card.id
+    
+            ----------------
+            --- LECTURER ---
+            ----------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+                FROM 
+                    Person person,
+                    Card_Lecturer card_lecturer
+                WHERE 
+                    card_lecturer.id_lecturer = person.id
+                GROUP BY card_lecturer.id_card
+            ) lctr
+            ON lctr.id_card=card.id           
+    
+            --- No Filter ---
+
+            --------------
+            --- SOUNDS ---
+            --------------
+            LEFT JOIN 
+            (
+                SELECT group_concat(language.name) sounds, card_sound.id_card
+                FROM 
+                    Language language,
+                    Card_Sound card_sound
+                WHERE 
+                    card_sound.id_sound=language.id 
+                GROUP BY card_sound.id_card
+            ) snd
+            ON snd.id_card=card.id
+
+            ----------------
+            --- SUBTITLE ---
+            ----------------
+            LEFT JOIN
+            (
+                SELECT group_concat(language.name) subs, card_sub.id_card
+                FROM 
+                    Language language,
+                    Card_Sub card_sub
+                WHERE 
+                    card_sub.id_sub=language.id
+                GROUP BY card_sub.id_card
+            ) sb
+            ON sb.id_card=card.id
+
+            ---------------
+            --- WRITERS ---
+            ---------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) writers,  card_writer.id_card
+                FROM 
+                    Person person,
+                    Card_Writer card_writer
+                WHERE 
+                    card_writer.id_writer = person.id
+                GROUP BY card_writer.id_card
+            ) wr
+            ON wr.id_card=card.id
+
+            --------------
+            --- VOICES ---
+            --------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) voices,  card_voice.id_card
+                FROM 
+                    Person person,
+                    Card_Voice card_voice
+                WHERE 
+                    card_voice.id_voice = person.id
+                GROUP BY card_voice.id_card
+            ) vc
+            ON vc.id_card=card.id    
+
+            -------------
+            --- STARS ---
+            -------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) stars,  card_star.id_card
+                FROM 
+                    Person person,
+                    Card_Star card_star
+                WHERE 
+                    card_star.id_star = person.id
+                GROUP BY card_star.id_card
+            ) str
+            ON str.id_card=card.id
+
+            -------------
+            --- HOSTS ---
+            -------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) hosts,  card_host.id_card
+                FROM 
+                    Person person,
+                    Card_Host card_host
+                WHERE 
+                    card_host.id_host = person.id
+                GROUP BY card_host.id_card
+            ) hst
+            ON hst.id_card=card.id    
+    
+            --------------
+            --- GUESTS ---
+            --------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) guests,  card_guest.id_card
+                FROM 
+                    Person person,
+                    Card_Guest card_guest
+                WHERE 
+                    card_guest.id_guest = person.id
+                GROUP BY card_guest.id_card
+            ) gst
+            ON gst.id_card=card.id
+            
+            ---------------------
+            --- INTERVIEWERS  ---
+            ---------------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+                FROM 
+                    Person person,
+                    Card_Interviewer card_interviewer
+                WHERE 
+                    card_interviewer.id_interviewer = person.id
+                GROUP BY card_interviewer.id_card
+            ) ntrvwr
+            ON ntrvwr.id_card=card.id
+
+            ---------------------
+            --- INTERVIEWEES  ---
+            ---------------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+                FROM 
+                    Person person,
+                    Card_Interviewee card_interviewee
+                WHERE 
+                    card_interviewee.id_interviewee = person.id
+                GROUP BY card_interviewee.id_card
+            ) ntrw
+            ON ntrw.id_card=card.id
+
+            -------------------
+            --- PRESENTERS  ---
+            -------------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) presenters,  card_presenter.id_card
+                FROM 
+                    Person person,
+                    Card_Presenter card_presenter
+                WHERE 
+                    card_presenter.id_presenter = person.id
+                GROUP BY card_presenter.id_card
+            ) prsntr
+            ON prsntr.id_card=card.id
+
+            ------------------
+            --- REPORTERS  ---
+            ------------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) reporters,  card_reporter.id_card
+                FROM 
+                    Person person,
+                    Card_Reporter card_reporter
+                WHERE 
+                    card_reporter.id_reporter = person.id
+                GROUP BY card_reporter.id_card
+            ) rprtr
+            ON rprtr.id_card=card.id
+
+            ------------------
+            --- PERFORMER  ---
+            ------------------
+            LEFT JOIN    
+            (
+                SELECT group_concat(person.name) performers,  card_performer.id_card
+                FROM 
+                    Person person,
+                    Card_Performer card_performer
+                WHERE 
+                    card_performer.id_performer = person.id
+                GROUP BY card_performer.id_card
+            ) prfrmr
+            ON prfrmr.id_card=card.id            
+
+            --- WHERE ---
+            
+            WHERE 
+                card.isappendix == 0
+                AND category.id=card.id_category
+                
+                -------------------
+                --- Conditional ---
+                --- Pre-filter  ---
+                -------------------
+
+                --- WHERE CATEGORY ---
+                AND category.name = :category
+
+                ''' + ('''
+                --- WHERE DECADE ---
+                AND card.decade = :decade''' if decade else '') + '''
+
+                ''' + ('''
+                --- WHERE THEMES - conditional ---
+                ''' + themes_where if themes else '') + '''
+
+                ''' + ('''
+                --- WHERE GENRES - conditional ---
+                ''' + genres_where if genres else '') + '''
+
+                ''' + ('''
+                --- WHERE DIRECTORS - conditional ---
+                ''' + directors_where if directors else '') + '''
+
+                ''' + ('''
+                --- WHERE ACTORS - conditional ---
+                ''' + actors_where if actors else '') + '''
+
+                ''' + ('''
+                --- WHERE ORIGINS - conditional ---
+                ''' + origins_where if origins else '') + '''
+
+                ''' + ('''
+                --- WHERE LECTURER - conditional ---
+                ''' + lecturers_where if lecturers else '') + '''
+
+            UNION ALL
+
+            SELECT 
+                card.id,
+                card.id_higher_card,
+                card.level,
+                card.source_path,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+            FROM
+                rec,
+                Card card
+            WHERE
+                rec.id_higher_card=card.id
+        )
+    SELECT id, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    
+    FROM
+        rec
+    WHERE
+        id_higher_card IS NULL
+    GROUP BY id
+    ) mixed_id_list,
+    
+    ---------------------------
+    --- unioned  with title ---
+    ---------------------------
+    (
+    SELECT 
+        unioned.id id,
+        unioned.level level,
+                
+        MAX(title_req) title_req, 
+        MAX(title_orig) title_orig, 
+        MAX(lang_orig) lang_orig,
+        MAX(lang_req) lang_req,
+
+        unioned.title_on_thumbnail,
+        unioned.title_show_sequence,
+
+        unioned.decade,
+        unioned.date,
+        unioned.length,
+                            
+        unioned.source_path,
+        unioned.id_category
+    FROM 
+        (
+        SELECT 
+            card.id id, 
+            card.level level,
+            card.id_category id_category,
+            NULL title_req, 
+            NULL lang_req, 
+            tcl.text title_orig, 
+            lang.name lang_orig,
+
+            title_on_thumbnail,
+            title_show_sequence,
+
+            card.decade decade,
+            card.date date,
+            card.length length,
+                                
+            card.source_path source_path
+        FROM                     
+            Card card,
+            Text_Card_Lang tcl, 
+            Language lang                    
+        WHERE                
+            tcl.id_card=card.id
+            AND tcl.id_language=lang.id
+            AND tcl.type="T"
+            AND card.id_title_orig=lang.id
+
+            AND card.isappendix = 0
+            AND lang.name <> :lang
+        UNION
+
+        SELECT 
+            card.id id,
+            card.level level,
+            card.id_category id_category,
+            tcl.text title_req, 
+            lang.name lang_req, 
+            NULL title_orig, 
+            NULL lang_orig,
+
+            title_on_thumbnail,
+            title_show_sequence,
+
+            card.decade decade,
+            card.date date,
+            card.length length,
+                                
+            card.source_path source_path
+        FROM               
+            Card card,
+            Text_Card_Lang tcl, 
+            Language lang                    
+        WHERE               
+            tcl.id_card=card.id
+            AND tcl.id_language=lang.id
+            AND tcl.type="T"
  
+            AND card.isappendix = 0
+            AND lang.name = :lang
+        ) unioned
+
+    -- because of the title required and origin
+    GROUP BY unioned.id               
+
+    ) core
+  
+    -----------------
+    --- STORYLINE ---
+    -----------------
+    LEFT JOIN
+    (
+        SELECT ord, storyline, id_card
+        FROM
+        (
+
+            --- Select the storyline on the requested language, not the original ---
+
+            SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+            FROM
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE
+                tcl.type = "S" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                language.name = :lang AND
+                card.id_title_orig<>language.id AND
+                tcl.text IS NOT NULL
+                
+            UNION
+
+            --- Select the storyline on the original language ---
+
+            SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+            FROM 
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE 
+                tcl.type = "S" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                card.id_title_orig=language.id AND        
+                tcl.text IS NOT NULL
+        )
+        GROUP BY id_card
+--        HAVING MIN(ord)
+--        ORDER BY ord
+    )strl
+    ON strl.id_card=core.id
+   
+    --------------
+    --- LYRICS ---
+    --------------
+    LEFT JOIN
+    (
+        SELECT ord, lyrics, id_card
+        FROM
+        (
+
+            --- Select the lyrics on the requested language, not the original ---
+
+            SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+            FROM
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE
+                tcl.type = "L" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                language.name = :lang AND
+                card.id_title_orig<>language.id AND
+                tcl.text IS NOT NULL
+                
+            UNION
+
+            --- Select the lyrics on the original language ---
+
+            SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+            FROM 
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE 
+                tcl.type = "L" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                card.id_title_orig=language.id AND        
+                tcl.text IS NOT NULL
+        )
+        GROUP BY id_card
+    )lrx
+    ON lrx.id_card=core.id       
+   
+    --------------
+    --- MEDIUM ---
+    --------------
+    LEFT JOIN
+    (
+        SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
+        FROM
+            MediaType media_type,
+            Card_Media card_media
+        WHERE
+            card_media.id_mediatype=media_type.id
+        GROUP BY card_media.id_card
+    )mdt
+    ON mdt.id_card=core.id
+   
+    ----------------
+    --- APPENDIX ---
+    ----------------
+     LEFT JOIN    
+    (    
+        SELECT
+            card_id,
+            group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
+        FROM
+        
+            (
+            SELECT                
+                merged_appendix.id,
+                merged_appendix.card_id,
+                MAX(merged_appendix.title_req) title_req, 
+                MAX(merged_appendix.title_orig) title_orig,
+                merged_appendix.show,
+                merged_appendix.download,
+                merged_appendix.source_path,
+                mt.name media_type,
+                cm.name contact_media                
+            FROM
+                (
+                SELECT 
+                    app_card.id id,
+                    id_higher_card card_id,
+                    app_card.isappendix,
+                    app_card.show,
+                    app_card.download,
+                    app_card.source_path,
+                    "" title_req, 
+                    tcl.text title_orig
+                FROM 
+                    CARD app_card,
+                    TEXT_CARD_LANG tcl, 
+                    LANGUAGE lang                    
+                WHERE                
+                    app_card.isappendix=1
+                    AND tcl.id_card=app_card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND app_card.id_title_orig=lang.id
+                    AND lang.name <> :lang
+
+                UNION
+
+                SELECT 
+                    app_card.id id,
+                    id_higher_card card_id,
+                    app_card.isappendix,
+                    app_card.show,
+                    app_card.download,
+                    app_card.source_path,
+                    tcl.text title_req, 
+                    "" title_orig
+                FROM 
+                    CARD app_card,
+                    TEXT_CARD_LANG tcl, 
+                    LANGUAGE lang                    
+                WHERE
+                    app_card.isappendix=1
+                    AND tcl.id_card=app_card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND lang.name=:lang
+                ) merged_appendix,
+                Card_Media cm,
+                MediaType mt
+                
+            WHERE
+                cm.id_card=merged_appendix.id
+                AND mt.id=cm.id_mediatype
+                
+            GROUP BY merged_appendix.id
+            )
+        GROUP BY card_id
+    ) pndx
+    ON pndx.card_id=core.id    
+   
+WHERE
+    mixed_id_list.id=core.id
+    
+ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+
+LIMIT :limit; '''
+
+            query_parameters = {'category': category, 'decade': decade, 'lang': lang, 'limit': limit}            
+
+            logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = self.get_converted_query_to_json(records, lang)
+
+
+                # records = [{key: record[key] for key in record.keys()} for record in records]
+
+                # #
+                # # Translate and Convert
+                # #
+
+                # trans = Translator.getInstance(lang)
+
+                # for record in records:
+
+                #     # Lang Orig
+                #     lang_orig = record["lang_orig"]
+                #     lang_orig_translated = trans.translate_language_short(lang_orig)
+                #     record["lang_orig"] = lang_orig_translated
+
+                #     # Lang Req
+                #     lang_req = record["lang_req"]
+                #     lang_req_translated = trans.translate_language_short(lang_req)
+                #     record["lang_req"] = lang_req_translated
+
+                #     # Media
+                #     medium_string = record["medium"]
+                #     media_dict = {}
+                #     if medium_string:
+                #         medium_string_list = medium_string.split(',')
+                #         for medium_string in medium_string_list:
+                #             (media_type, media) = medium_string.split("=")
+                #             if not media_type in media_dict:
+                #                 media_dict[media_type] = []
+                #             media_dict[media_type].append(media)
+                #     record["medium"] = media_dict
+
+                #     # Appendix
+                #     appendix_string = record["appendix"]
+                #     appendix_list = []
+                #     if appendix_string:
+                #         text_list = appendix_string.split(',')
+                #         for appendix_string in text_list:
+                #             var_list = appendix_string.split(";")
+                #             appendix_dict = {}
+                #             for var_pair in var_list:
+                #                 (key, value) = var_pair.split("=")
+                #                 appendix_dict[key] = value
+                #             appendix_list.append(appendix_dict)
+                #     record["appendix"] = appendix_list
+
+                #     # Writers
+                #     writers_string = record["writers"]
+                #     writers_list = []
+                #     if writers_string:
+                #         writers_list = writers_string.split(',')
+                #     record["writers"] = writers_list
+    
+                #     # Directors
+                #     directors_string = record["directors"]
+                #     directors_list = []
+                #     if directors_string:
+                #         directors_list = directors_string.split(',')
+                #     record["directors"] = directors_list
+    
+                #     # Stars
+                #     stars_string = record["stars"]
+                #     stars_list = []
+                #     if stars_string:
+                #         stars_list = stars_string.split(',')
+                #     record["stars"] = stars_list
+    
+                #     # Actors
+                #     actors_string = record["actors"]
+                #     actors_list = []
+                #     if actors_string:
+                #         actors_list = actors_string.split(',')
+                #     record["actors"] = actors_list
+    
+                #     # Voices
+                #     voices_string = record["voices"]
+                #     voices_list = []
+                #     if voices_string:
+                #         voices_list = voices_string.split(',')
+                #     record["voices"] = voices_list
+    
+                #     # Host
+                #     hosts_string = record.get("hosts")
+                #     hosts_list = []
+                #     if hosts_string:
+                #         hosts_list = hosts_string.split(',')
+                #     record["hosts"] = hosts_list
+    
+                #     # Guests
+                #     guests_string = record.get("guests")
+                #     guests_list = []
+                #     if guests_string:
+                #         guests_list = guests_string.split(',')
+                #     record["guests"] = guests_list
+    
+                #     # Interviewers
+                #     interviewers_string = record.get("interviewers")
+                #     interviewers_list = []
+                #     if interviewers_string:
+                #         interviewers_list = interviewers_string.split(',')
+                #     record["interviewers"] = interviewers_list
+    
+                #     # Interviewees
+                #     interviewees_string = record.get("interviewees")
+                #     interviewees_list = []
+                #     if interviewees_string:
+                #         interviewees_list = interviewees_string.split(',')
+                #     record["interviewees"] = interviewees_list
+    
+                #     # Presenters
+                #     presenters_string = record.get("presenters")
+                #     presenters_list = []
+                #     if presenters_string:
+                #         presenters_list = presenters_string.split(',')
+                #     record["presenters"] = presenters_list
+    
+                #     # Lecturers
+                #     lecturers_string = record.get("lecturers")
+                #     lecturers_list = []
+                #     if lecturers_string:
+                #         lecturers_list = lecturers_string.split(',')
+                #     record["lecturers"] = lecturers_list
+    
+                #     # Performers
+                #     performers_string = record.get("performers")
+                #     performers_list = []
+                #     if performers_string:
+                #         performers_list = performers_string.split(',')
+                #     record["performers"] = performers_list
+    
+                #     # Reporters
+                #     reporters_string = record.get("reporters")
+                #     reporters_list = []
+                #     if reporters_string:
+                #         reporters_list = reporters_string.split(',')
+                #     record["reporters"] = reporters_list
+    
+                #     # Genre
+                #     genres_string = record.get("genres")
+                #     genres_list = []
+                #     if genres_string:
+                #         genres_list = genres_string.split(',')
+                #         genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+                #     record["genres"] = genres_list
+    
+                #     # Theme
+                #     themes_string = record["themes"]
+                #     themes_list = []
+                #     if themes_string:
+                #         themes_list = themes_string.split(',')
+                #         themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+                #     record["themes"] = themes_list
+    
+                #     # Origin
+                #     origins_string = record["origins"]
+                #     origins_list = []
+                #     if origins_string:
+                #         origins_list = origins_string.split(',')
+                #         origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+                #     record["origins"] = origins_list
+    
+                #     # Sub
+                #     subs_string = record["subs"]
+                #     subs_list = []
+                #     if subs_string:
+                #         subs_list = subs_string.split(',')
+                #         subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+                #     record["subs"] = subs_list
+    
+                #     # Sounds
+                #     sounds_string = record["sounds"]
+    
+                #     sounds_list = []
+                #     if sounds_string:
+                #         sounds_list = sounds_string.split(',')
+                #         sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+                #     record["sounds"] = sounds_list
+    
+                # logging.debug("Converted records: '{0}'".format(records))
+
+            return records
+
+
+# ---
+
+
+
+
+
+
+    def get_next_level_cards(self, card_id, category, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+        """
+        FULL QUERY for the children cards of the given card
+        Returns the next child cards which could ne:                                           
+          - media card        
+          - level cards
+                                                                       
+        Parameters for filtering:
+          - category                                                   
+          - decade                                                     
+          - language                                                   
+                                                                       
+          logical operands (_AND_, _NOT_) in                           
+          - genres                                                     
+          - themes                                                     
+          - actors                                                     
+          - directors                                                  
+          - lecturers                                                 
+          - origins                                                    
+        """
+        with self.lock:
+            where = ''
+
+            genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
+            themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
+            actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+            directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
+            lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+            origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+            # # Generate and Convert GENRE conditions
+            # genre_list =             [] if genres == None else genres.split('_AND_')
+            # genre_in_list =          [] if genres == None else [genre for genre in genre_list if not genre.startswith("_NOT_")]
+            # genre_not_in_list =      [] if genres == None else [genre.removeprefix("_NOT_") for genre in genre_list if genre.startswith("_NOT_")]
+            # genres_where =           '' if genres == None else 'AND ' + ' AND '.join(["',' || genres || ',' " + ("NOT " if genre.startswith("_NOT_") else "") + "LIKE '%," + genre.removeprefix("_NOT_") + ",%'" for genre in genre_list])
+            # logging.error("GENRE IN LIST: {}".format(genre_in_list))
+            # logging.error("GENRE NOT IN LIST: {}".format(genre_not_in_list))
+            # logging.error("GENRE WHERE: {}".format(genres_where))
+
+            # # Generate and Convert THEME conditions
+            # theme_list =             [] if themes == None else themes.split('_AND_')
+            # theme_in_list =          [] if themes == None else [theme for theme in theme_list if not theme.startswith("_NOT_")]
+            # theme_not_in_list =      [] if themes == None else [theme.removeprefix("_NOT_") for theme in theme_list if theme.startswith("_NOT_")]
+            # themes_where =           '' if themes == None else 'AND ' + ' AND '.join(["',' || themes || ',' " + ("NOT " if theme.startswith("_NOT_") else "") + "LIKE '%," + theme.removeprefix("_NOT_") + ",%'" for theme in theme_list])
+            # logging.error("THEME IN LIST: {}".format(theme_in_list))
+            # logging.error("THEME NOT IN LIST: {}".format(theme_not_in_list))
+            # logging.error("THEME WHERE: {}".format(themes_where))
+
+            # # Generate and Convert ACTORS conditions
+            # actor_list =            [] if actors == None else actors.split('_AND_')
+            # actor_in_list =         [] if actors == None else [actor for actor in actor_list if not actor.startswith("_NOT_")]
+            # actor_not_in_list =     [] if actors == None else [actor.removeprefix("_NOT_") for actor in actor_list if actor.startswith("_NOT_")]
+            # actors_where =          '' if actors == None else 'AND ' + ' AND '.join(["',' || actors || ',' " + ("NOT " if actor.startswith("_NOT_") else "") + "LIKE '%," + actor.removeprefix("_NOT_") + ",%'" for actor in actor_list])
+            # logging.error("ACTOR IN LIST: {}".format(actor_in_list))
+            # logging.error("ACTOR NOT IN LIST: {}".format(actor_not_in_list))
+            # logging.error("ACTOR WHERE: {}".format(actors_where))
+
+            # # Generate and Convert DIRECTOR conditions
+            # director_list =         [] if directors == None else directors.split('_AND_')
+            # director_in_list =      [] if directors == None else [director for director in director_list if not director.startswith("_NOT_")]
+            # director_not_in_list =  [] if directors == None else [director.removeprefix("_NOT_") for director in director_list if director.startswith("_NOT_")]
+            # directors_where =       '' if directors == None else 'AND' + ' AND '.join(["',' || directors || ',' " + ("NOT " if director.startswith("_NOT_") else "") + "LIKE '%," + director.removeprefix("_NOT_") + ",%'" for director in director_list])
+            # logging.error("DIRECTOR IN LIST: {}".format(director_in_list))
+            # logging.error("DIRECTOR NOT IN LIST: {}".format(director_not_in_list))
+            # logging.error("DIRECTOR WHERE: {}".format(directors_where))
+
+            # # Generate and Convert LECTURER conditions
+            # lecturer_list =         [] if lecturers == None else lecturers.split('_AND_')
+            # lecturer_in_list =      [] if lecturers == None else [lecturer for lecturer in lecturer_list if not lecturer.startswith("_NOT_")]
+            # lecturer_not_in_list =  [] if lecturers == None else [lecturer.removeprefix("_NOT_") for lecturer in lecturer_list if lecturer.startswith("_NOT_")]
+            # lecturers_where =       '' if lecturers == None else 'AND' + ' AND '.join(["',' || lecturers || ',' " + ("NOT " if lecturer.startswith("_NOT_") else "") + "LIKE '%," + lecturer.removeprefix("_NOT_") + ",%'" for lecturer in lecturer_list])
+            # logging.error("LECTURER IN LIST: {}".format(lecturer_in_list))
+            # logging.error("LECTURER NOT IN LIST: {}".format(lecturer_not_in_list))
+            # logging.error("LECTURER WHERE: {}".format(lecturers_where))
+
+            # # Generate and Convert ORIGIN conditions
+            # origin_list =            [] if origins == None else origins.split('_AND_')
+            # origin_in_list =         [] if origins == None else [origin for origin in origin_list if not origin.startswith("_NOT_")]
+            # origin_not_in_list =     [] if origins == None else [origin.removeprefix("_NOT_") for origin in origin_list if origin.startswith("_NOT_")]
+            # origins_where =          '' if origins == None else 'AND ' + ' AND '.join(["',' || origins || ',' " + ("NOT " if origin.startswith("_NOT_") else "") + "LIKE '%," + origin.removeprefix("_NOT_") + ",%'" for origin in origin_list])
+            # logging.error("ORIGIN IN LIST: {}".format(theme_in_list))
+            # logging.error("ORIGIN NOT IN LIST: {}".format(origin_not_in_list))
+            # logging.error("ORIGIN WHERE: {}".format(origins_where))
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+
+SELECT
+    core.*,
+    mixed_id_list.themes,
+    mixed_id_list.genres,
+    mixed_id_list.origins,
+    mixed_id_list.directors,
+    mixed_id_list.actors,
+    
+    mixed_id_list.sounds,
+    mixed_id_list.subs,
+    mixed_id_list.writers,
+    mixed_id_list.voices,
+    mixed_id_list.stars,
+    mixed_id_list.lecturers,
+    
+    mixed_id_list.hosts,
+    mixed_id_list.guests,
+    mixed_id_list.interviewers,
+    mixed_id_list.interviewees,
+    mixed_id_list.presenters,
+    mixed_id_list.reporters,
+    mixed_id_list.performers,
+
+    storyline,
+    lyrics,
+    medium,
+    appendix
+  
+FROM
+
+    --- mixed level id list ---
+    (
+    SELECT                 
+        card.id, 
+        card.id_higher_card, 
+        card.level,
+        card.source_path,
+        themes,
+        genres,
+        origins,
+        directors,
+        actors,        
+        lecturers,
+
+        sounds,
+        subs,
+        writers,
+        voices,
+        stars,        
+        hosts,
+        guests,
+        interviewers,
+        interviewees,
+        presenters,
+        reporters,
+        performers        
+        
+    FROM 
+        Card card,
+        Category category
+
+        -------------
+        --- GENRE ---
+        -------------
+        LEFT JOIN 
+        (
+            SELECT group_concat(genre.name) genres, card_genre.id_card
+            FROM
+                Genre genre,
+                Card_Genre card_genre
+            WHERE            
+                card_genre.id_genre=genre.id
+            GROUP BY card_genre.id_card
+        )gnr
+        ON gnr.id_card=card.id
+            
+        -------------
+        --- THEME ---
+        -------------
+        LEFT JOIN 
+        (
+            SELECT group_concat(theme.name) themes, card_theme.id_card
+            FROM
+                Theme theme,
+                Card_Theme card_theme
+            WHERE            
+                card_theme.id_theme=theme.id
+            GROUP BY card_theme.id_card
+        )thm
+        ON thm.id_card=card.id
+    
+        ---------------
+        --- ORIGINS ---
+        ---------------
+        LEFT JOIN
+        (
+            SELECT group_concat(origin.name) origins, card_origin.id_card
+            FROM
+                Country origin,
+                Card_Origin card_origin
+            WHERE
+                card_origin.id_origin=origin.id
+            GROUP BY card_origin.id_card
+        )rgn
+        ON rgn.id_card=card.id    
+    
+        -----------------
+        --- DIRECTORS ---
+        -----------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) directors,  card_dir.id_card
+            FROM 
+                Person person,
+                Card_Director card_dir
+            WHERE 
+                card_dir.id_director = person.id
+            GROUP BY card_dir.id_card
+        ) dr
+        ON dr.id_card=card.id
+
+        --------------
+        --- ACTORS ---
+        --------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) actors,  card_actor.id_card
+            FROM 
+                Person person,
+                Card_Actor card_actor
+            WHERE 
+                card_actor.id_actor = person.id
+            GROUP BY card_actor.id_card
+        ) act
+        ON act.id_card=card.id
+
+        ----------------
+        --- LECTURER ---
+        ----------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+            FROM 
+                Person person,
+                Card_Lecturer card_lecturer
+            WHERE 
+                card_lecturer.id_lecturer = person.id
+            GROUP BY card_lecturer.id_card
+        ) lctr
+        ON lctr.id_card=card.id       
+       
+        --- No filter ---
+       
+        --------------
+        --- SOUNDS ---
+        --------------
+        LEFT JOIN 
+        (
+            SELECT group_concat(language.name) sounds, card_sound.id_card
+            FROM 
+                Language language,
+                Card_Sound card_sound
+            WHERE 
+                card_sound.id_sound=language.id 
+            GROUP BY card_sound.id_card
+        ) snd
+        ON snd.id_card=card.id
+
+        ----------------
+        --- SUBTITLE ---
+        ----------------
+        LEFT JOIN
+        (
+            SELECT group_concat(language.name) subs, card_sub.id_card
+            FROM 
+                Language language,
+                Card_Sub card_sub
+            WHERE 
+                card_sub.id_sub=language.id
+            GROUP BY card_sub.id_card
+        ) sb
+        ON sb.id_card=card.id
+
+        ---------------
+        --- WRITERS ---
+        ---------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) writers,  card_writer.id_card
+            FROM 
+                Person person,
+                Card_Writer card_writer
+            WHERE 
+                card_writer.id_writer = person.id
+            GROUP BY card_writer.id_card
+        ) wr
+        ON wr.id_card=card.id
+
+        --------------
+        --- VOICES ---
+        --------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) voices,  card_voice.id_card
+            FROM 
+                Person person,
+                Card_Voice card_voice
+            WHERE 
+                card_voice.id_voice = person.id
+            GROUP BY card_voice.id_card
+        ) vc
+        ON vc.id_card=card.id
+
+        -------------
+        --- STARS ---
+        -------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) stars,  card_star.id_card
+            FROM 
+                Person person,
+                Card_Star card_star
+            WHERE 
+                card_star.id_star = person.id
+            GROUP BY card_star.id_card
+        ) str
+        ON str.id_card=card.id
+
+        -------------
+        --- HOSTS ---
+        -------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) hosts,  card_host.id_card
+            FROM 
+                Person person,
+                Card_Host card_host
+            WHERE 
+                card_host.id_host = person.id
+            GROUP BY card_host.id_card
+        ) hst
+        ON hst.id_card=card.id
+    
+        --------------
+        --- GUESTS ---
+        --------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) guests,  card_guest.id_card
+            FROM 
+                Person person,
+                Card_Guest card_guest
+            WHERE 
+                card_guest.id_guest = person.id
+            GROUP BY card_guest.id_card
+        ) gst
+        ON gst.id_card=card.id
+
+        ---------------------
+        --- INTERWIEVERS  ---
+        ---------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+            FROM 
+                Person person,
+                Card_Interviewer card_interviewer
+            WHERE 
+                card_interviewer.id_interviewer = person.id
+            GROUP BY card_interviewer.id_card
+        ) ntrvwr
+        ON ntrvwr.id_card=card.id
+
+        ---------------------
+        --- INTERVIEWEES  ---
+        ---------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+            FROM 
+                Person person,
+                Card_Interviewee card_interviewee
+            WHERE 
+                card_interviewee.id_interviewee = person.id
+            GROUP BY card_interviewee.id_card
+        ) ntrw
+        ON ntrw.id_card=card.id
+
+        -------------------
+        --- PRESENTERS  ---
+        -------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) presenters,  card_presenter.id_card
+            FROM 
+                Person person,
+                Card_Presenter card_presenter
+            WHERE 
+                card_presenter.id_presenter = person.id
+            GROUP BY card_presenter.id_card
+        ) prsntr
+        ON prsntr.id_card=card.id
+
+        ------------------
+        --- REPORTERS  ---
+        ------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) reporters,  card_reporter.id_card
+            FROM 
+                Person person,
+                Card_Reporter card_reporter
+            WHERE 
+                card_reporter.id_reporter = person.id
+            GROUP BY card_reporter.id_card
+        ) rprtr
+        ON rprtr.id_card=card.id
+
+        ------------------
+        --- PERFORMER  ---
+        ------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) performers,  card_performer.id_card
+            FROM 
+                Person person,
+                Card_Performer card_performer
+            WHERE 
+                card_performer.id_performer = person.id
+            GROUP BY card_performer.id_card
+        ) prfrmr
+        ON prfrmr.id_card=card.id        
+        
+        --- WHERE ---
+        
+        WHERE 
+            card.isappendix == 0
+            AND category.id=card.id_category
+            AND card.id_higher_card = :card_id
+
+            -------------------
+            --- Conditional ---
+            --- Pre-filter  ---
+            -------------------
+
+            --- WHERE CATEGORY ---
+            AND category.name = :category
+            
+            ''' + ('''    
+            --- WHERE DECADE ---
+            AND card.decade = :decade''' if decade else '') + '''
+                
+            ''' + ('''
+            --- WHERE THEMES - conditional ---
+            ''' + themes_where if themes else '') + '''
+
+            ''' + ('''
+            --- WHERE GENRES - conditional ---
+            ''' + genres_where if genres else '') + '''                
+
+            ''' + ('''                
+            --- WHERE DIRECTORS - conditional ---
+            ''' + directors_where if directors else '') + '''            
+
+            ''' + ('''
+            --- WHERE ACTORS - conditional ---
+            ''' + actors_where if actors else '') + '''
+
+            ''' + ('''
+            --- WHERE ORIGINS - conditional ---
+            ''' + origins_where if origins else '') + '''
+
+            ''' + ('''
+            --- WHERE LECTURERS - conditional ---
+            ''' + lecturers_where if lecturers else '') + '''
+
+    ) mixed_id_list,
+    
+    --- unioned  with title ---
+    (
+    SELECT 
+        unioned.id id,
+        unioned.level level,
+                
+        MAX(title_req) title_req, 
+        MAX(title_orig) title_orig, 
+        MAX(lang_orig) lang_orig,
+        MAX(lang_req) lang_req,
+
+        unioned.title_on_thumbnail,
+        unioned.title_show_sequence,
+
+        unioned.decade,
+        unioned.date,
+        unioned.length,
+                            
+        unioned.source_path,
+--        unioned.id_category,
+        unioned.basename basename
+    FROM 
+        (
+        SELECT 
+            card.id id, 
+            card.level level,
+            card.id_category id_category,
+            NULL title_req, 
+            NULL lang_req, 
+            tcl.text title_orig, 
+            lang.name lang_orig,
+
+            title_on_thumbnail,
+            title_show_sequence,
+
+            card.decade decade,
+            card.date date,
+            card.length length,
+                                
+            card.source_path source_path,
+            card.basename basename
+        FROM                     
+            Card card,
+            Text_Card_Lang tcl, 
+            Language lang                    
+        WHERE                
+            tcl.id_card=card.id
+            AND tcl.id_language=lang.id
+            AND tcl.type="T"
+            AND card.id_title_orig=lang.id
+
+            AND card.isappendix = 0
+            AND lang.name <> :lang
+        UNION
+
+        SELECT 
+            card.id id,
+            card.level level,
+            card.id_category id_category,
+            tcl.text title_req, 
+            lang.name lang_req, 
+            NULL title_orig, 
+            NULL lang_orig,
+
+            title_on_thumbnail,
+            title_show_sequence,
+
+            card.decade decade,
+            card.date date,
+            card.length length,
+                                
+            card.source_path source_path,
+            card.basename basename
+        FROM               
+            Card card,
+            Text_Card_Lang tcl, 
+            Language lang                    
+        WHERE               
+            tcl.id_card=card.id
+            AND tcl.id_language=lang.id
+            AND tcl.type="T"
+ 
+            AND card.isappendix = 0
+            AND lang.name=:lang
+        ) unioned
+
+    -- because of the title required and origin
+    GROUP BY unioned.id               
+
+    ) core
+  
+    -----------------
+    --- STORYLINE ---
+    -----------------
+    LEFT JOIN
+    (
+        SELECT ord, storyline, id_card
+        FROM
+        (
+
+            --- Select the storyline on the requested language, not the original ---
+
+            SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+            FROM
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE
+                tcl.type = "S" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                language.name = :lang AND
+                card.id_title_orig<>language.id AND
+                tcl.text IS NOT NULL
+                
+            UNION
+
+            --- Select the storyline on the original language ---
+
+            SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+            FROM 
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE 
+                tcl.type = "S" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                card.id_title_orig=language.id AND        
+                tcl.text IS NOT NULL
+        )
+        GROUP BY id_card
+--        HAVING MIN(ord)
+--        ORDER BY ord
+    )strl
+    ON strl.id_card=core.id
+   
+    --------------
+    --- LYRICS ---
+    --------------
+    LEFT JOIN
+    (
+        SELECT ord, lyrics, id_card
+        FROM
+        (
+
+            --- Select the lyrics on the requested language, not the original ---
+
+            SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+            FROM
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE
+                tcl.type = "L" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                language.name = :lang AND
+                card.id_title_orig<>language.id AND
+                tcl.text IS NOT NULL
+                
+            UNION
+
+            --- Select the lyrics on the original language ---
+
+            SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+            FROM 
+                Text_Card_Lang tcl,
+                Language language,
+                Card card
+            WHERE 
+                tcl.type = "L" AND
+                tcl.id_language = language.id AND
+                tcl.id_card = card.id AND
+                card.id_title_orig=language.id AND        
+                tcl.text IS NOT NULL
+        )
+        GROUP BY id_card
+    )lrx
+    ON lrx.id_card=core.id       
+   
+    --------------
+    --- MEDIUM ---
+    --------------
+    LEFT JOIN
+    (
+        SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
+        FROM
+            MediaType media_type,
+            Card_Media card_media
+        WHERE
+            card_media.id_mediatype=media_type.id
+        GROUP BY card_media.id_card
+    )mdt
+    ON mdt.id_card=core.id
+   
+    ----------------
+    --- APPENDIX ---
+    ----------------
+     LEFT JOIN    
+    (    
+        SELECT
+            card_id,
+            group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
+        FROM
+        
+            (
+            SELECT                
+                merged_appendix.id,
+                merged_appendix.card_id,
+                MAX(merged_appendix.title_req) title_req, 
+                MAX(merged_appendix.title_orig) title_orig,
+                merged_appendix.show,
+                merged_appendix.download,
+                merged_appendix.source_path,
+                mt.name media_type,
+                cm.name contact_media                
+            FROM
+                (
+                SELECT 
+                    app_card.id id,
+                    id_higher_card card_id,
+                    app_card.isappendix,
+                    app_card.show,
+                    app_card.download,
+                    app_card.source_path,
+                    "" title_req, 
+                    tcl.text title_orig
+                FROM 
+                    CARD app_card,
+                    TEXT_CARD_LANG tcl, 
+                    LANGUAGE lang                    
+                WHERE                
+                    app_card.isappendix=1
+                    AND tcl.id_card=app_card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND app_card.id_title_orig=lang.id
+                    AND lang.name <> :lang
+
+                UNION
+
+                SELECT 
+                    app_card.id id,
+                    id_higher_card card_id,
+                    app_card.isappendix,
+                    app_card.show,
+                    app_card.download,
+                    app_card.source_path,
+                    tcl.text title_req, 
+                    "" title_orig
+                FROM 
+                    CARD app_card,
+                    TEXT_CARD_LANG tcl, 
+                    LANGUAGE lang                    
+                WHERE
+                    app_card.isappendix=1
+                    AND tcl.id_card=app_card.id
+                    AND tcl.id_language=lang.id
+                    AND tcl.type="T"
+                    AND lang.name=:lang
+                ) merged_appendix,
+                Card_Media cm,
+                MediaType mt
+                
+            WHERE
+                cm.id_card=merged_appendix.id
+                AND mt.id=cm.id_mediatype
+                
+            GROUP BY merged_appendix.id
+            )
+        GROUP BY card_id
+    ) pndx
+    ON pndx.card_id=core.id    
+   
+WHERE
+    mixed_id_list.id=core.id
+ORDER BY CASE 
+    WHEN title_show_sequence IS NULL AND title_req IS NOT NULL THEN title_req
+    WHEN title_show_sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+    WHEN title_show_sequence<0 THEN basename
+    WHEN title_show_sequence>=0 THEN title_show_sequence
+END 
+
+LIMIT :limit; '''
+
+            query_parameters = {'card_id': card_id, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}            
+
+            logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = self.get_converted_query_to_json(records, lang)
+
+                # records = [{key: record[key] for key in record.keys()} for record in records]
+
+                # #
+                # # Translate and Convert
+                # #
+
+                # trans = Translator.getInstance(lang)
+
+                # for record in records:
+
+                #     # Lang Orig
+                #     lang_orig = record["lang_orig"]
+                #     lang_orig_translated = trans.translate_language_short(lang_orig)
+                #     record["lang_orig"] = lang_orig_translated
+
+                #     # Lang Req
+                #     lang_req = record["lang_req"]
+                #     lang_req_translated = trans.translate_language_short(lang_req)
+                #     record["lang_req"] = lang_req_translated
+
+                #     # Media
+                #     medium_string = record["medium"]
+                #     media_dict = {}
+                #     if medium_string:
+                #         medium_string_list = medium_string.split(',')
+                #         for medium_string in medium_string_list:
+                #             (media_type, media) = medium_string.split("=")
+                #             if not media_type in media_dict:
+                #                 media_dict[media_type] = []
+                #             media_dict[media_type].append(media)
+                #     record["medium"] = media_dict
+
+                #     # Appendix
+                #     appendix_string = record["appendix"]
+                #     appendix_list = []
+                #     if appendix_string:
+                #         text_list = appendix_string.split(',')
+                #         for appendix_string in text_list:
+                #             var_list = appendix_string.split(";")
+                #             appendix_dict = {}
+                #             for var_pair in var_list:
+                #                 (key, value) = var_pair.split("=")
+                #                 appendix_dict[key] = value
+                #             appendix_list.append(appendix_dict)
+                #     record["appendix"] = appendix_list
+
+                #     # Writers
+                #     writers_string = record["writers"]
+                #     writers_list = []
+                #     if writers_string:
+                #         writers_list = writers_string.split(',')
+                #     record["writers"] = writers_list
+    
+                #     # Directors
+                #     directors_string = record["directors"]
+                #     directors_list = []
+                #     if directors_string:
+                #         directors_list = directors_string.split(',')
+                #     record["directors"] = directors_list
+    
+                #     # Stars
+                #     stars_string = record["stars"]
+                #     stars_list = []
+                #     if stars_string:
+                #         stars_list = stars_string.split(',')
+                #     record["stars"] = stars_list
+    
+                #     # Actors
+                #     actors_string = record["actors"]
+                #     actors_list = []
+                #     if actors_string:
+                #         actors_list = actors_string.split(',')
+                #     record["actors"] = actors_list
+    
+                #     # Voices
+                #     voices_string = record["voices"]
+                #     voices_list = []
+                #     if voices_string:
+                #         voices_list = voices_string.split(',')
+                #     record["voices"] = voices_list
+    
+                #     # Host
+                #     hosts_string = record.get("hosts")
+                #     hosts_list = []
+                #     if hosts_string:
+                #         hosts_list = hosts_string.split(',')
+                #     record["hosts"] = hosts_list
+    
+                #     # Guests
+                #     guests_string = record.get("guests")
+                #     guests_list = []
+                #     if guests_string:
+                #         guests_list = guests_string.split(',')
+                #     record["guests"] = guests_list
+    
+                #     # Interviewers
+                #     interviewers_string = record.get("interviewers")
+                #     interviewers_list = []
+                #     if interviewers_string:
+                #         interviewers_list = interviewers_string.split(',')
+                #     record["interviewers"] = interviewers_list
+    
+                #     # Interviewees
+                #     interviewees_string = record.get("interviewees")
+                #     interviewees_list = []
+                #     if interviewees_string:
+                #         interviewees_list = interviewees_string.split(',')
+                #     record["interviewees"] = interviewees_list
+    
+                #     # Presenters
+                #     presenters_string = record.get("presenters")
+                #     presenters_list = []
+                #     if presenters_string:
+                #         presenters_list = presenters_string.split(',')
+                #     record["presenters"] = presenters_list
+    
+                #     # Lecturers
+                #     lecturers_string = record.get("lecturers")
+                #     lecturers_list = []
+                #     if lecturers_string:
+                #         lecturers_list = lecturers_string.split(',')
+                #     record["lecturers"] = lecturers_list
+    
+                #     # Performers
+                #     performers_string = record.get("performers")
+                #     performers_list = []
+                #     if performers_string:
+                #         performers_list = performers_string.split(',')
+                #     record["performers"] = performers_list
+    
+                #     # Reporters
+                #     reporters_string = record.get("reporters")
+                #     reporters_list = []
+                #     if reporters_string:
+                #         reporters_list = reporters_string.split(',')
+                #     record["reporters"] = reporters_list
+    
+                #     # Genre
+                #     genres_string = record.get("genres")
+                #     genres_list = []
+                #     if genres_string:
+                #         genres_list = genres_string.split(',')
+                #         genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+                #     record["genres"] = genres_list
+    
+                #     # Theme
+                #     themes_string = record["themes"]
+                #     themes_list = []
+                #     if themes_string:
+                #         themes_list = themes_string.split(',')
+                #         themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+                #     record["themes"] = themes_list
+    
+                #     # Origin
+                #     origins_string = record["origins"]
+                #     origins_list = []
+                #     if origins_string:
+                #         origins_list = origins_string.split(',')
+                #         origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+                #     record["origins"] = origins_list
+    
+                #     # Sub
+                #     subs_string = record["subs"]
+                #     subs_list = []
+                #     if subs_string:
+                #         subs_list = subs_string.split(',')
+                #         subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+                #     record["subs"] = subs_list
+    
+                #     # Sounds
+                #     sounds_string = record["sounds"]
+    
+                #     sounds_list = []
+                #     if sounds_string:
+                #         sounds_list = sounds_string.split(',')
+                #         sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+                #     record["sounds"] = sounds_list
+    
+                # logging.debug("Converted records: '{0}'".format(records))
+
+            return records
+
+
+    def get_sql_where_condition_from_text_filter(text_filter, field_name):
+
+        filter_list =        [] if text_filter == None else text_filter.split('_AND_')
+        filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
+        filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
+        filter_where =       '' if text_filter == None else 'AND ' + ' AND '.join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list])
+
+        logging.error("{} IN LIST: {}".format(field_name, filter_in_list))
+        logging.error("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
+        logging.error("{} WHERE: {}".format(field_name, filter_where))
+
+        return filter_where
+
+
+    def get_converted_query_to_json(sql_record_list, lang):
+        """
+        Convert and translate the given SQL card-response
+        """
+
+        records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
+
+        trans = Translator.getInstance(lang)
+        for record in records:
+            # Lang Orig
+            lang_orig = record["lang_orig"]
+            lang_orig_translated = trans.translate_language_short(lang_orig)
+            record["lang_orig"] = lang_orig_translated
+            # Lang Req
+            lang_req = record["lang_req"]
+            lang_req_translated = trans.translate_language_short(lang_req)
+            record["lang_req"] = lang_req_translated
+            # Media
+            medium_string = record["medium"]
+            media_dict = {}
+            if medium_string:
+                medium_string_list = medium_string.split(',')
+                for medium_string in medium_string_list:
+                    (media_type, media) = medium_string.split("=")
+                    if not media_type in media_dict:
+                        media_dict[media_type] = []
+                    media_dict[media_type].append(media)
+            record["medium"] = media_dict
+            # Appendix
+            appendix_string = record["appendix"]
+            appendix_list = []
+            if appendix_string:
+                text_list = appendix_string.split(',')
+                for appendix_string in text_list:
+                    var_list = appendix_string.split(";")
+                    appendix_dict = {}
+                    for var_pair in var_list:
+                        (key, value) = var_pair.split("=")
+                        appendix_dict[key] = value
+                    appendix_list.append(appendix_dict)
+            record["appendix"] = appendix_list
+            # Writers
+            writers_string = record["writers"]
+            writers_list = []
+            if writers_string:
+                writers_list = writers_string.split(',')
+            record["writers"] = writers_list
+            # Directors
+            directors_string = record["directors"]
+            directors_list = []
+            if directors_string:
+                directors_list = directors_string.split(',')
+            record["directors"] = directors_list
+            # Stars
+            stars_string = record["stars"]
+            stars_list = []
+            if stars_string:
+                stars_list = stars_string.split(',')
+            record["stars"] = stars_list
+            # Actors
+            actors_string = record["actors"]
+            actors_list = []
+            if actors_string:
+                actors_list = actors_string.split(',')
+            record["actors"] = actors_list
+            # Voices
+            voices_string = record["voices"]
+            voices_list = []
+            if voices_string:
+                voices_list = voices_string.split(',')
+            record["voices"] = voices_list
+            # Host
+            hosts_string = record.get("hosts")
+            hosts_list = []
+            if hosts_string:
+                hosts_list = hosts_string.split(',')
+            record["hosts"] = hosts_list
+            # Guests
+            guests_string = record.get("guests")
+            guests_list = []
+            if guests_string:
+                guests_list = guests_string.split(',')
+            record["guests"] = guests_list
+            # Interviewers
+            interviewers_string = record.get("interviewers")
+            interviewers_list = []
+            if interviewers_string:
+                interviewers_list = interviewers_string.split(',')
+            record["interviewers"] = interviewers_list
+            # Interviewees
+            interviewees_string = record.get("interviewees")
+            interviewees_list = []
+            if interviewees_string:
+                interviewees_list = interviewees_string.split(',')
+            record["interviewees"] = interviewees_list
+            # Presenters
+            presenters_string = record.get("presenters")
+            presenters_list = []
+            if presenters_string:
+                presenters_list = presenters_string.split(',')
+            record["presenters"] = presenters_list
+            # Lecturers
+            lecturers_string = record.get("lecturers")
+            lecturers_list = []
+            if lecturers_string:
+                lecturers_list = lecturers_string.split(',')
+            record["lecturers"] = lecturers_list
+            # Performers
+            performers_string = record.get("performers")
+            performers_list = []
+            if performers_string:
+                performers_list = performers_string.split(',')
+            record["performers"] = performers_list
+            # Reporters
+            reporters_string = record.get("reporters")
+            reporters_list = []
+            if reporters_string:
+                reporters_list = reporters_string.split(',')
+            record["reporters"] = reporters_list
+            # Genre
+            genres_string = record.get("genres")
+            genres_list = []
+            if genres_string:
+                genres_list = genres_string.split(',')
+                genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+            record["genres"] = genres_list
+            # Theme
+            themes_string = record["themes"]
+            themes_list = []
+            if themes_string:
+                themes_list = themes_string.split(',')
+                themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+            record["themes"] = themes_list
+            # Origin
+            origins_string = record["origins"]
+            origins_list = []
+            if origins_string:
+                origins_list = origins_string.split(',')
+                origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+            record["origins"] = origins_list
+            # Sub
+            subs_string = record["subs"]
+            subs_list = []
+            if subs_string:
+                subs_list = subs_string.split(',')
+                subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+            record["subs"] = subs_list
+            # Sounds
+            sounds_string = record["sounds"]
+            sounds_list = []
+            if sounds_string:
+                sounds_list = sounds_string.split(',')
+                sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+            record["sounds"] = sounds_list
+        logging.debug("Converted records: '{0}'".format(records))
+
+        return records

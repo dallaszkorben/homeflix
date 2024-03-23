@@ -23,25 +23,26 @@ SELECT
     mixed_id_list.directors,
     mixed_id_list.actors,
     
+    mixed_id_list.sounds,
+    mixed_id_list.subs,
+    mixed_id_list.writers,
+    mixed_id_list.voices,
+    mixed_id_list.stars,
+    mixed_id_list.lecturers,
+    
+    mixed_id_list.hosts,
+    mixed_id_list.guests,
+    mixed_id_list.interviewers,
+    mixed_id_list.interviewees,
+    mixed_id_list.presenters,
+    mixed_id_list.reporters,
+    mixed_id_list.performers,
+
     storyline,
     lyrics,
     medium,
-    appendix,
-    
-    sounds,
-    subs,
-    writers,
-    voices,
-    stars,
-    hosts,
-    guests    
-
---        interviewers,
---        interviewees,
---        presenters,
---        reporters,
---        lecturers,
---        performers, 
+    appendix
+  
 FROM
 
     --- mixed level id list ---
@@ -55,12 +56,29 @@ FROM
         genres,
         origins,
         directors,
-        actors                
+        actors,        
+        lecturers,
+
+        sounds,
+        subs,
+        writers,
+        voices,
+        stars,        
+        hosts,
+        guests,
+        interviewers,
+        interviewees,
+        presenters,
+        reporters,
+        performers        
+        
     FROM 
         Card card,
         Category category
 
+        -------------
         --- GENRE ---
+        -------------
         LEFT JOIN 
         (
             SELECT group_concat(genre.name) genres, card_genre.id_card
@@ -73,7 +91,9 @@ FROM
         )gnr
         ON gnr.id_card=card.id
             
+        -------------
         --- THEME ---
+        -------------
         LEFT JOIN 
         (
             SELECT group_concat(theme.name) themes, card_theme.id_card
@@ -86,7 +106,9 @@ FROM
         )thm
         ON thm.id_card=card.id
     
+        ---------------
         --- ORIGINS ---
+        ---------------
         LEFT JOIN
         (
             SELECT group_concat(origin.name) origins, card_origin.id_card
@@ -99,7 +121,9 @@ FROM
         )rgn
         ON rgn.id_card=card.id    
     
+        -----------------
         --- DIRECTORS ---
+        -----------------
         LEFT JOIN    
         (
             SELECT group_concat(person.name) directors,  card_dir.id_card
@@ -112,7 +136,9 @@ FROM
         ) dr
         ON dr.id_card=card.id
 
+        --------------
         --- ACTORS ---
+        --------------
         LEFT JOIN    
         (
             SELECT group_concat(person.name) actors,  card_actor.id_card
@@ -124,7 +150,206 @@ FROM
             GROUP BY card_actor.id_card
         ) act
         ON act.id_card=card.id
+
+        ----------------
+        --- LECTURER ---
+        ----------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+            FROM 
+                Person person,
+                Card_Lecturer card_lecturer
+            WHERE 
+                card_lecturer.id_lecturer = person.id
+            GROUP BY card_lecturer.id_card
+        ) lctr
+        ON lctr.id_card=card.id       
+       
+        --- No filter ---
+       
+        --------------
+        --- SOUNDS ---
+        --------------
+        LEFT JOIN 
+        (
+            SELECT group_concat(language.name) sounds, card_sound.id_card
+            FROM 
+                Language language,
+                Card_Sound card_sound
+            WHERE 
+                card_sound.id_sound=language.id 
+            GROUP BY card_sound.id_card
+        ) snd
+        ON snd.id_card=card.id
+
+        ----------------
+        --- SUBTITLE ---
+        ----------------
+        LEFT JOIN
+        (
+            SELECT group_concat(language.name) subs, card_sub.id_card
+            FROM 
+                Language language,
+                Card_Sub card_sub
+            WHERE 
+                card_sub.id_sub=language.id
+            GROUP BY card_sub.id_card
+        ) sb
+        ON sb.id_card=card.id
+
+        ---------------
+        --- WRITERS ---
+        ---------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) writers,  card_writer.id_card
+            FROM 
+                Person person,
+                Card_Writer card_writer
+            WHERE 
+                card_writer.id_writer = person.id
+            GROUP BY card_writer.id_card
+        ) wr
+        ON wr.id_card=card.id
+
+        --------------
+        --- VOICES ---
+        --------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) voices,  card_voice.id_card
+            FROM 
+                Person person,
+                Card_Voice card_voice
+            WHERE 
+                card_voice.id_voice = person.id
+            GROUP BY card_voice.id_card
+        ) vc
+        ON vc.id_card=card.id
+
+        -------------
+        --- STARS ---
+        -------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) stars,  card_star.id_card
+            FROM 
+                Person person,
+                Card_Star card_star
+            WHERE 
+                card_star.id_star = person.id
+            GROUP BY card_star.id_card
+        ) str
+        ON str.id_card=card.id
+
+        -------------
+        --- HOSTS ---
+        -------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) hosts,  card_host.id_card
+            FROM 
+                Person person,
+                Card_Host card_host
+            WHERE 
+                card_host.id_host = person.id
+            GROUP BY card_host.id_card
+        ) hst
+        ON hst.id_card=card.id
     
+        --------------
+        --- GUESTS ---
+        --------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) guests,  card_guest.id_card
+            FROM 
+                Person person,
+                Card_Guest card_guest
+            WHERE 
+                card_guest.id_guest = person.id
+            GROUP BY card_guest.id_card
+        ) gst
+        ON gst.id_card=card.id
+
+        ---------------------
+        --- INTERWIEVERS  ---
+        ---------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+            FROM 
+                Person person,
+                Card_Interviewer card_interviewer
+            WHERE 
+                card_interviewer.id_interviewer = person.id
+            GROUP BY card_interviewer.id_card
+        ) ntrvwr
+        ON ntrvwr.id_card=card.id
+
+        ---------------------
+        --- INTERVIEWEES  ---
+        ---------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+            FROM 
+                Person person,
+                Card_Interviewee card_interviewee
+            WHERE 
+                card_interviewee.id_interviewee = person.id
+            GROUP BY card_interviewee.id_card
+        ) ntrw
+        ON ntrw.id_card=card.id
+
+        -------------------
+        --- PRESENTERS  ---
+        -------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) presenters,  card_presenter.id_card
+            FROM 
+                Person person,
+                Card_Presenter card_presenter
+            WHERE 
+                card_presenter.id_presenter = person.id
+            GROUP BY card_presenter.id_card
+        ) prsntr
+        ON prsntr.id_card=card.id
+
+        ------------------
+        --- REPORTERS  ---
+        ------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) reporters,  card_reporter.id_card
+            FROM 
+                Person person,
+                Card_Reporter card_reporter
+            WHERE 
+                card_reporter.id_reporter = person.id
+            GROUP BY card_reporter.id_card
+        ) rprtr
+        ON rprtr.id_card=card.id
+
+        ------------------
+        --- PERFORMER  ---
+        ------------------
+        LEFT JOIN    
+        (
+            SELECT group_concat(person.name) performers,  card_performer.id_card
+            FROM 
+                Person person,
+                Card_Performer card_performer
+            WHERE 
+                card_performer.id_performer = person.id
+            GROUP BY card_performer.id_card
+        ) prfrmr
+        ON prfrmr.id_card=card.id        
+        
+        --- WHERE ---
+        
         WHERE 
             card.isappendix == 0
             AND category.id=card.id_category
@@ -137,6 +362,10 @@ FROM
 
             --- WHERE CATEGORY ---
             AND category.name = :category
+            
+                
+            --- WHERE DECADE ---
+            AND card.decade = :decade
                 
             --- WHERE THEMES - conditional ---
             AND ',' || themes || ',' LIKE '%,' || :theme || ',%'
@@ -152,6 +381,9 @@ FROM
 
             --- WHERE ORIGINS - conditional ---
 --            AND ',' || origins || ',' LIKE '%,' || :origin || ',%'
+
+            --- WHERE LECTURERS - conditional ---
+--            AND ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%'
 
     ) mixed_id_list,
     
@@ -429,111 +661,7 @@ FROM
         GROUP BY card_id
     ) pndx
     ON pndx.card_id=core.id    
-  
-    --------------
-    --- SOUNDS ---
-    --------------
-    LEFT JOIN 
-    (
-        SELECT group_concat(language.name) sounds, card_sound.id_card
-        FROM 
-            Language language,
-            Card_Sound card_sound
-        WHERE 
-            card_sound.id_sound=language.id 
-        GROUP BY card_sound.id_card
-    ) snd
-    ON snd.id_card=core.id
-
-    ----------------
-    --- SUBTITLE ---
-    ----------------
-    LEFT JOIN
-    (
-        SELECT group_concat(language.name) subs, card_sub.id_card
-        FROM 
-            Language language,
-            Card_Sub card_sub
-        WHERE 
-            card_sub.id_sub=language.id
-        GROUP BY card_sub.id_card
-    ) sb
-    ON sb.id_card=core.id
-
-    ---------------
-    --- WRITERS ---
-    ---------------
-    LEFT JOIN    
-    (
-        SELECT group_concat(person.name) writers,  card_writer.id_card
-        FROM 
-            Person person,
-            Card_Writer card_writer
-        WHERE 
-            card_writer.id_writer = person.id
-        GROUP BY card_writer.id_card
-    ) wr
-    ON wr.id_card=core.id
-
-    --------------
-    --- VOICES ---
-    --------------
-    LEFT JOIN    
-    (
-        SELECT group_concat(person.name) voices,  card_voice.id_card
-        FROM 
-            Person person,
-            Card_Voice card_voice
-        WHERE 
-            card_voice.id_voice = person.id
-        GROUP BY card_voice.id_card
-    ) vc
-    ON vc.id_card=core.id    
-
-    -------------
-    --- STARS ---
-    -------------
-    LEFT JOIN    
-    (
-        SELECT group_concat(person.name) stars,  card_star.id_card
-        FROM 
-            Person person,
-            Card_Star card_star
-        WHERE 
-            card_star.id_star = person.id
-        GROUP BY card_star.id_card
-    ) str
-    ON str.id_card=core.id
-
-    -------------
-    --- HOSTS ---
-    -------------
-    LEFT JOIN    
-    (
-        SELECT group_concat(person.name) hosts,  card_host.id_card
-        FROM 
-            Person person,
-            Card_Host card_host
-        WHERE 
-            card_host.id_host = person.id
-        GROUP BY card_host.id_card
-    ) hst
-    ON hst.id_card=core.id    
-    
-    --------------
-    --- GUESTS ---
-    --------------
-    LEFT JOIN    
-    (
-        SELECT group_concat(person.name) guests,  card_guest.id_card
-        FROM 
-            Person person,
-            Card_Guest card_guest
-        WHERE 
-            card_guest.id_guest = person.id
-        GROUP BY card_guest.id_card
-    ) gst
-    ON gst.id_card=core.id   
+   
 WHERE
     mixed_id_list.id=core.id
 ORDER BY CASE 
@@ -543,14 +671,11 @@ ORDER BY CASE
     WHEN title_show_sequence>=0 THEN title_show_sequence
 END    
 
-''', {'card_id': 472, 'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'lang': 'en'}).fetchall()
-
+''', {'card_id': 472, 'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '2010s', 'lang': 'en'}).fetchall()
 
 
 [
-  (477,  None,  'Prometheus',  None,  None,  'en',  0,  '',  None,  '2012',  '2:02:00',  'MEDIA/01.Movie/04.Sequels/Alien/Alien5.Prometheus-2012',  'Alien5.Prometheus-2012',  'fear,ai,search_god,faith,alien',  'horror,scifi,thriller',  'us',  'Ridley Scott',  'Benedict Wong,Guy Pearce,Charlize Theron,Rafe Spall,Noomi Rapace,Logan Marshall-Green,Michael Fassbender,Idris Elba,Sean Harris,Emun Elliott,Kate Dickie',
-  'Following clues to the origin of mankind, a team finds a structure on a distant moon, but they soon realize they are not alone.\n',  None,  'video=Alien5-Prometheus-2012.mkv',  None,  'hu,en',  'hu,en',  "Damon Lindelof,Dan O'Bannon,Jon Spaihts",  None,  'Noomi Rapace,Logan Marshall-Green,Michael Fassbender',  None,  None),
-  
-  (478,  None,  'Alien: Covenant',  None,  None,  'en',  0,  '',  None,  '2017',  '2:02:00',  'MEDIA/01.Movie/04.Sequels/Alien/Alien6.Covenant-2017',  'Alien6.Covenant-2017',  'fear,ai,alien',  'horror,scifi,thriller',  'us',  'Ridley Scott',  'Danny McBride,Michael Fassbender,Katherine Waterston,Billy Crudup,Demián Bichir,Carmen Ejogo,Jussie Smollett,Callie Hernandez,Amy Seimetz,Nathaniel Dean,Alexander England,Benjamin Rigby,Uli Latukefu,Tess Haubrich,Lorelei King,Goran D. Kleut',
-  'Almost eleven years after the disastrous expedition to the distant moon LV-223, the deep-space colonisation vessel Covenant, with more than 2,000 colonists in cryogenic hibernation, is on course for the remote planet Origae-6 with the intention to build a new world. Instead, a rogue transmission entices the crew to a nearby habitable planet which resembles Earth. The unsuspecting crewmembers of the Covenant will have to cope with biological foes beyond human comprehension.\nUltimately, what was intended as a peaceful exploratory mission, will soon turn into a desperate rescue operation in uncharted space.\n',  None,  'video=Alien.Covenant-2017.mkv',  None,  'hu,en',  'hu,en',  "Dan O'Bannon,Ronald Shusett,Jack Paglen",  None,  'Michael Fassbender,Katherine Waterston,Billy Crudup',  None,  None)
+(477, None, 'Prometheus', None, None, 'en', 0, '', None, '2012', '2:02:00', 'MEDIA/01.Movie/04.Sequels/Alien/Alien5.Prometheus-2012', 'Alien5.Prometheus-2012', 'fear,ai,search_god,faith,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Benedict Wong,Guy Pearce,Charlize Theron,Rafe Spall,Noomi Rapace,Logan Marshall-Green,Michael Fassbender,Idris Elba,Sean Harris,Emun Elliott,Kate Dickie', 'hu,en', 'hu,en', "Damon Lindelof,Dan O'Bannon,Jon Spaihts", None, 'Noomi Rapace,Logan Marshall-Green,Michael Fassbender', None, None, None, None, None, None, None, None, 'Following clues to the origin of mankind, a team finds a structure on a distant moon, but they soon realize they are not alone.\n', None, 'video=Alien5-Prometheus-2012.mkv', None), 
+
+(478, None, 'Alien: Covenant', None, None, 'en', 0, '', None, '2017', '2:02:00', 'MEDIA/01.Movie/04.Sequels/Alien/Alien6.Covenant-2017', 'Alien6.Covenant-2017', 'fear,ai,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Danny McBride,Michael Fassbender,Katherine Waterston,Billy Crudup,Demián Bichir,Carmen Ejogo,Jussie Smollett,Callie Hernandez,Amy Seimetz,Nathaniel Dean,Alexander England,Benjamin Rigby,Uli Latukefu,Tess Haubrich,Lorelei King,Goran D. Kleut', 'hu,en', 'hu,en', "Dan O'Bannon,Ronald Shusett,Jack Paglen", None, 'Michael Fassbender,Katherine Waterston,Billy Crudup', None, None, None, None, None, None, None, None, 'Almost eleven years after the disastrous expedition to the distant moon LV-223, the deep-space colonisation vessel Covenant, with more than 2,000 colonists in cryogenic hibernation, is on course for the remote planet Origae-6 with the intention to build a new world. Instead, a rogue transmission entices the crew to a nearby habitable planet which resembles Earth. The unsuspecting crewmembers of the Covenant will have to cope with biological foes beyond human comprehension.\nUltimately, what was intended as a peaceful exploratory mission, will soon turn into a desperate rescue operation in uncharted space.\n', None, 'video=Alien.Covenant-2017.mkv', None)
 ]
