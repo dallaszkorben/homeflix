@@ -505,7 +505,7 @@ WHERE
 --- Returns mixed standalone media and level cards ---
 --- With filters category/genre                    ---
 ---                                                ---
---- get_highest_level_mixed()                      ---
+--- gurey_highest_level_mixed()                      ---
 ------------------------------------------------------
 
 con.execute('''
@@ -538,7 +538,9 @@ SELECT
 --        performers, 
 FROM
 
+    ---------------------------
     --- mixed level id list ---
+    ---------------------------
     (
     WITH RECURSIVE
         rec(id,id_higher_card,level,source_path, themes, genres, origins, directors, actors) AS
@@ -678,7 +680,9 @@ FROM
     GROUP BY id
     ) mixed_id_list,
     
+    ---------------------------
     --- unioned  with title ---
+    ---------------------------
     (
     SELECT 
         unioned.id id,
@@ -1059,7 +1063,8 @@ FROM
 WHERE
     mixed_id_list.id=core.id
     
-
+ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+    
 ''', {'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'lang': 'en'}).fetchall()
 
 
@@ -1069,20 +1074,5 @@ WHERE
 
 
 
----------------------------------------------------------------
---- FULL QUERY for lowest (medium) level list               ---
---- Returns only medium level cards level cards             ---
---- With filters category/genre/theme/origin/director/actor ---
----                                                         ---
---- get_lowest_level()                                      ---
----------------------------------------------------------------
 
 
-
----------------------------------------------------------------
---- FULL QUERY for next down level list of a card id        ---
---- Returns mixed standalone media and level cards          ---
---- With filters category/genre/theme/origin/director/actor ---
----                                                         ---
---- get_next_down_level_mixed()                             ---
----------------------------------------------------------------
