@@ -20,42 +20,61 @@ import sqlite3
 con = sqlite3.connect("/home/akoel/.playem/playem.db")
 
 
-------------------------------------------------------
---- FULL QUERY for highest level list              ---
---- Returns mixed standalone media and level cards ---
---- With filters category/genre                    ---
----                                                ---
---- gurey_highest_level_mixed()                    ---
-------------------------------------------------------
+--------------------------------------------------------
+--- FULL QUERY for highest level list                ---
+--- Returns mixed standalone media and level cards   ---
+--- With filters category/genre                      ---
+---                                                  ---
+--- Why need to use recursive search?                ---
+--- Because I filter by the lower level card (media) ---
+--- but I show the highest                           ---
+---                                                  ---
+--- gurey_highest_level_mixed()                      ---
+--------------------------------------------------------
 
 con.execute('''
 SELECT
     core.*,
+
+    mixed_id_list.id_higher_card, 
+    mixed_id_list.level,
+    mixed_id_list.source_path,
+    mixed_id_list.basename,        
+    mixed_id_list.sequence,
+    
+    mixed_id_list.title_on_thumbnail,
+    mixed_id_list.title_show_sequence,
+
+    mixed_id_list.decade,
+    mixed_id_list.date,
+    mixed_id_list.length,     
+    
+    
     mixed_id_list.themes,
     mixed_id_list.genres,
     mixed_id_list.origins,
     mixed_id_list.directors,
     mixed_id_list.actors,
+
+    mixed_id_list.sounds,
+    mixed_id_list.subs,
+    mixed_id_list.writers,
+    mixed_id_list.voices,
+    mixed_id_list.stars,
+    mixed_id_list.lecturers,
     
+    mixed_id_list.hosts,
+    mixed_id_list.guests,
+    mixed_id_list.interviewers,
+    mixed_id_list.interviewees,
+    mixed_id_list.presenters,
+    mixed_id_list.reporters,
+    mixed_id_list.performers,
+
     storyline,
     lyrics,
     medium,
-    appendix,
-    
-    sounds,
-    subs,
-    writers,
-    voices,
-    stars,
-    hosts,
-    guests,    
-
-    interviewers,
-    interviewees,
-    presenters,
-    reporters,
-    lecturers,
-    performers
+    appendix
 FROM
 
     ---------------------------
@@ -63,13 +82,24 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id,id_higher_card,level,source_path, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card,level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        
         (
             SELECT                 
                 card.id, 
                 card.id_higher_card, 
                 card.level,
                 card.source_path,
+                
+                card.basename,
+                card.sequence,
+                card.title_on_thumbnail,
+                card.title_show_sequence,
+                
+                card.decade,
+                card.date,
+                card.length,     
+                
                 themes,
                 genres,
                 origins,
@@ -368,41 +398,73 @@ FROM
             ) prfrmr
             ON prfrmr.id_card=card.id            
 
-            --- WHERE ---
+            ------------------------
+            --- Initial WHERE    ---
+            --- the lowest level ---
+            ------------------------
             
             WHERE 
+                -- card can not be appendix --
                 card.isappendix == 0
+
+                -- connect card to category --
                 AND category.id=card.id_category
-                
+
+                -- Find the lowest level --
+                AND card.level IS NULL
+               
+                -- Select the given category --
+                AND category.name = :category
+
+                -------------------
                 -------------------
                 --- Conditional ---
-                --- Pre-filter  ---
+                ---   filter    ---
+                -------------------
                 -------------------
 
-                --- WHERE CATEGORY ---
-                AND category.name = :category
-                
                 --- WHERE DECADE ---
-                AND card.decade = :decade
+                -- AND card.decade = :decade
+                AND CASE
+                    WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
+                END
                 
                 --- WHERE THEMES - conditional ---
---                AND ',' || themes || ',' LIKE '%,' || :theme || ',%'
-
+                -- AND ',' || themes || ',' LIKE '%,' || :theme || ',%'
+                AND CASE
+                    WHEN :theme IS NOT NULL THEN ',' || themes || ',' LIKE '%,' || :theme || ',%' ELSE 1
+                END
+                
                 --- WHERE GENRES - conditional ---
-                AND ',' || genres || ',' LIKE '%,' || :genre || ',%'                
+                -- AND ',' || genres || ',' LIKE '%,' || :genre || ',%'
+                AND CASE
+                    WHEN :genre IS NOT NULL THEN ',' || genres || ',' LIKE '%,' || :genre || ',%' ELSE 1
+                END
                 
                 --- WHERE DIRECTORS - conditional ---
---                AND ',' || directors || ',' LIKE '%,' || :director || ',%'
+                -- AND ',' || directors || ',' LIKE '%,' || :director || ',%'
+                AND CASE
+                    WHEN :director IS NOT NULL THEN ',' || directors || ',' LIKE '%,' || :director || ',%' ELSE 1
+                END
                 
                 --- WHERE ACTORS - conditional ---
---                AND ',' || actors || ',' LIKE '%,' || :actor || ',%'
+                -- AND ',' || actors || ',' LIKE '%,' || :actor || ',%'
+                AND CASE
+                    WHEN :actor IS NOT NULL THEN ',' || actors || ',' LIKE '%,' || :actor || ',%' ELSE 1
+                END
 
                 --- WHERE ORIGINS - conditional ---
---                AND ',' || origins || ',' LIKE '%,' || :origin || ',%'
+                -- AND ',' || origins || ',' LIKE '%,' || :origin || ',%'
+                AND CASE
+                    WHEN :origin IS NOT NULL THEN ',' || origins || ',' LIKE '%,' || :origin || ',%' ELSE 1
+                END
 
                 --- WHERE LECTURERS - conditional ---
---                AND ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%'
-
+                -- AND ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%'
+                AND CASE
+                    WHEN :lecturer IS NOT NULL THEN ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%' ELSE 1
+                END
+                
             UNION ALL
 
             SELECT 
@@ -410,80 +472,85 @@ FROM
                 card.id_higher_card,
                 card.level,
                 card.source_path,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL
+                
+                card.basename,
+                card.sequence,
+                card.title_on_thumbnail,
+                card.title_show_sequence,
+                
+                NULL decade,
+                NULL date,
+                NULL length,
+                
+                NULL themes,
+                NULL genres,
+                NULL origins,
+                NULL directors,
+                NULL actors,
+                NULL lecturers,
+                NULL sounds,
+                NULL subs,
+                NULL writers,
+                NULL voices,
+                NULL stars,
+                NULL hosts,
+                NULL guests,
+                NULL interviewers,
+                NULL interviewees,
+                NULL presenters,
+                NULL reporters,
+                NULL performers
+                
             FROM
                 rec,
                 Card card
             WHERE
                 rec.id_higher_card=card.id
+                
         )
-    SELECT id, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
     
     FROM
         rec
     WHERE
-        id_higher_card IS NULL
+
+        -------------------
+        -------------------
+        --- Conditional ---
+        ---   filter    ---
+        -------------------
+        -------------------
+    
+        --- if :level is set, then takes that specific level as highest level
+        --- if :level is NOT set, then takes the highest level
+        CASE
+            WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
+        END
+
     GROUP BY id
     ) mixed_id_list,
     
-    ---------------------------
-    --- unioned  with title ---
-    ---------------------------
+    --------------------------
+    --- unioned with title ---
+    --------------------------
     (
     SELECT 
         unioned.id id,
-        unioned.level level,
                 
         MAX(title_req) title_req, 
         MAX(title_orig) title_orig, 
         MAX(lang_orig) lang_orig,
-        MAX(lang_req) lang_req,
+        MAX(lang_req) lang_req
 
-        unioned.title_on_thumbnail,
-        unioned.title_show_sequence,
-
-        unioned.decade,
-        unioned.date,
-        unioned.length,
-                            
-        unioned.source_path,
-        unioned.id_category
     FROM 
         (
         SELECT 
             card.id id, 
-            card.level level,
-            card.id_category id_category,
+
             NULL title_req, 
             NULL lang_req, 
             tcl.text title_orig, 
-            lang.name lang_orig,
-
-            title_on_thumbnail,
-            title_show_sequence,
-
-            card.decade decade,
-            card.date date,
-            card.length length,
-                                
-            card.source_path source_path
+            lang.name lang_orig
         FROM                     
             Card card,
             Text_Card_Lang tcl, 
@@ -500,21 +567,11 @@ FROM
 
         SELECT 
             card.id id,
-            card.level level,
-            card.id_category id_category,
+
             tcl.text title_req, 
             lang.name lang_req, 
             NULL title_orig, 
-            NULL lang_orig,
-
-            title_on_thumbnail,
-            title_show_sequence,
-
-            card.decade decade,
-            card.date date,
-            card.length length,
-                                
-            card.source_path source_path
+            NULL lang_orig
         FROM               
             Card card,
             Text_Card_Lang tcl, 
@@ -715,18 +772,21 @@ FROM
             )
         GROUP BY card_id
     ) pndx
-    ON pndx.card_id=core.id    
-  
-      
-   
-   
+    ON pndx.card_id=core.id
+
 WHERE
     mixed_id_list.id=core.id
                     
-ORDER BY CASE WHEN title_req IS NOT NULL THEN title_req ELSE title_orig END
+ORDER BY CASE 
+    WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+    WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+    WHEN sequence<0 THEN basename
+    WHEN sequence>=0 THEN sequence
+END
 
-''', {'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '90s', 'lang': 'en'}).fetchall()
+''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 
+--''', {'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '90s', 'lang': 'en'}).fetchall()
 --''', {'category': 'entertainment', 'genre': 'speech', 'theme': '*', 'origin': '*', 'director': '*', 'actor': '*', 'lecturer': '*', 'decade': '60s', 'lang': 'en'}).fetchall()
 
 

@@ -1,5 +1,22 @@
 
 
+sudo mount /dev/sda1 /media/pi -o uid=pi,gid=pi
+
+sudo mount -o bind /home/pi/Projects/playem/var/www/playem/ /var/www/playem
+sudo mount -o bind  /media/pi/MEDIA /var/www/playem/MEDIA/
+
+sudo service apache2 restart
+
+sudo umount /var/www/playem/MEDIA
+sudo umount /var/www/playem
+  
+source ~/Projects/python/playem/var/www/playem/python/env/bin/activate
+cd /home/akoel/Projects/python/playem/var/www/playem/python
+python3
+
+from playem.card.database import SqlDatabase as DB
+db=DB()
+
 import sqlite3
 con = sqlite3.connect("/home/akoel/.playem/playem.db")
 
@@ -17,12 +34,27 @@ con = sqlite3.connect("/home/akoel/.playem/playem.db")
 con.execute('''
 SELECT
     core.*,
+
+    mixed_id_list.id_higher_card, 
+    mixed_id_list.level,
+    mixed_id_list.source_path,
+    mixed_id_list.basename,        
+    mixed_id_list.sequence,
+    
+    mixed_id_list.title_on_thumbnail,
+    mixed_id_list.title_show_sequence,
+
+    mixed_id_list.decade,
+    mixed_id_list.date,
+    mixed_id_list.length,     
+    
+    
     mixed_id_list.themes,
     mixed_id_list.genres,
     mixed_id_list.origins,
     mixed_id_list.directors,
     mixed_id_list.actors,
-    
+
     mixed_id_list.sounds,
     mixed_id_list.subs,
     mixed_id_list.writers,
@@ -52,13 +84,23 @@ FROM
         card.id_higher_card, 
         card.level,
         card.source_path,
+                
+        card.basename,
+        card.sequence,
+        card.title_on_thumbnail,
+        card.title_show_sequence,
+                
+        card.decade,
+        card.date,
+        card.length,     
+                
         themes,
         genres,
         origins,
         directors,
-        actors,        
+        actors,
         lecturers,
-
+                
         sounds,
         subs,
         writers,
@@ -70,7 +112,7 @@ FROM
         interviewees,
         presenters,
         reporters,
-        performers        
+        performers
         
     FROM 
         Card card,
@@ -348,86 +390,96 @@ FROM
         ) prfrmr
         ON prfrmr.id_card=card.id        
         
+        -------------
         --- WHERE ---
+        -------------
         
         WHERE 
+
+            -- card can not be appendix --
             card.isappendix == 0
+            
+            -- connect card to category --
             AND category.id=card.id_category
+
+            -- take the child cards --
             AND card.id_higher_card = :card_id
-                
+
+            -- Select the given category --
+            AND category.name = :category            
+
+            -------------------
             -------------------
             --- Conditional ---
-            --- Pre-filter  ---
+            ---   filter    ---
+            -------------------
             -------------------
 
-            --- WHERE CATEGORY ---
-            AND category.name = :category
-            
-                
             --- WHERE DECADE ---
-            AND card.decade = :decade
+            -- AND card.decade = :decade
+            AND CASE
+                WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
+            END
                 
             --- WHERE THEMES - conditional ---
-            AND ',' || themes || ',' LIKE '%,' || :theme || ',%'
-
+            -- AND ',' || themes || ',' LIKE '%,' || :theme || ',%'
+            AND CASE
+                WHEN :theme IS NOT NULL THEN ',' || themes || ',' LIKE '%,' || :theme || ',%' ELSE 1
+            END
+                
             --- WHERE GENRES - conditional ---
-            AND ',' || genres || ',' LIKE '%,' || :genre || ',%'                
+            -- AND ',' || genres || ',' LIKE '%,' || :genre || ',%'
+            AND CASE
+                WHEN :genre IS NOT NULL THEN ',' || genres || ',' LIKE '%,' || :genre || ',%' ELSE 1
+            END
                 
             --- WHERE DIRECTORS - conditional ---
---            AND ',' || directors || ',' LIKE '%,' || :director || ',%'
+            -- AND ',' || directors || ',' LIKE '%,' || :director || ',%'
+            AND CASE
+                WHEN :director IS NOT NULL THEN ',' || directors || ',' LIKE '%,' || :director || ',%' ELSE 1
+            END
                 
             --- WHERE ACTORS - conditional ---
---            AND ',' || actors || ',' LIKE '%,' || :actor || ',%'
+            -- AND ',' || actors || ',' LIKE '%,' || :actor || ',%'
+            AND CASE
+                WHEN :actor IS NOT NULL THEN ',' || actors || ',' LIKE '%,' || :actor || ',%' ELSE 1
+            END
 
             --- WHERE ORIGINS - conditional ---
---            AND ',' || origins || ',' LIKE '%,' || :origin || ',%'
+            -- AND ',' || origins || ',' LIKE '%,' || :origin || ',%'
+            AND CASE
+                WHEN :origin IS NOT NULL THEN ',' || origins || ',' LIKE '%,' || :origin || ',%' ELSE 1
+            END
 
             --- WHERE LECTURERS - conditional ---
---            AND ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%'
+            -- AND ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%'
+            AND CASE
+                WHEN :lecturer IS NOT NULL THEN ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%' ELSE 1
+            END            
 
     ) mixed_id_list,
     
-    --- unioned  with title ---
+    --------------------------
+    --- unioned with title ---
+    --------------------------
     (
     SELECT 
         unioned.id id,
-        unioned.level level,
                 
         MAX(title_req) title_req, 
         MAX(title_orig) title_orig, 
         MAX(lang_orig) lang_orig,
-        MAX(lang_req) lang_req,
+        MAX(lang_req) lang_req
 
-        unioned.title_on_thumbnail,
-        unioned.title_show_sequence,
-
-        unioned.decade,
-        unioned.date,
-        unioned.length,
-                            
-        unioned.source_path,
---        unioned.id_category,
-        unioned.basename basename
     FROM 
         (
         SELECT 
             card.id id, 
-            card.level level,
-            card.id_category id_category,
+
             NULL title_req, 
             NULL lang_req, 
             tcl.text title_orig, 
-            lang.name lang_orig,
-
-            title_on_thumbnail,
-            title_show_sequence,
-
-            card.decade decade,
-            card.date date,
-            card.length length,
-                                
-            card.source_path source_path,
-            card.basename basename
+            lang.name lang_orig
         FROM                     
             Card card,
             Text_Card_Lang tcl, 
@@ -444,22 +496,11 @@ FROM
 
         SELECT 
             card.id id,
-            card.level level,
-            card.id_category id_category,
+
             tcl.text title_req, 
             lang.name lang_req, 
             NULL title_orig, 
-            NULL lang_orig,
-
-            title_on_thumbnail,
-            title_show_sequence,
-
-            card.decade decade,
-            card.date date,
-            card.length length,
-                                
-            card.source_path source_path,
-            card.basename basename
+            NULL lang_orig
         FROM               
             Card card,
             Text_Card_Lang tcl, 
@@ -664,14 +705,15 @@ FROM
    
 WHERE
     mixed_id_list.id=core.id
-ORDER BY CASE 
-    WHEN title_show_sequence IS NULL AND title_req IS NOT NULL THEN title_req
-    WHEN title_show_sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
-    WHEN title_show_sequence<0 THEN basename
-    WHEN title_show_sequence>=0 THEN title_show_sequence
-END    
 
-''', {'card_id': 472, 'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '2010s', 'lang': 'en'}).fetchall()
+ORDER BY CASE 
+    WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+    WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+    WHEN sequence<0 THEN basename
+    WHEN sequence>=0 THEN sequence
+END
+
+''', {'card_id': 472, 'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 
 
 [
