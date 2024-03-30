@@ -244,6 +244,19 @@
             result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
             translated_categories = result.responseJSON;
 
+            // Load Translated Genre: Music
+            rq_method = "GET";
+            rq_url = "http://" + host + port + "/translate/genres/category/music/lang/" + languageCode;
+            rq_assync = false;
+            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+            translated_genre_music = result.responseJSON;
+
+
+
+
+
+
+
             let mainMenuGenerator = new MainMenuGenerator(languageCode);
             let oThumbnailController = new ThumbnailController(mainMenuGenerator);
             let oScrollSection = oThumbnailController.getScrollSection();

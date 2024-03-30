@@ -8,6 +8,15 @@ from flask_classful import FlaskView, route, request
 from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
+
+from playem.restserver.endpoints.ep_collect_highest_mixed_card import EPCollectHighestMixed
+from playem.restserver.endpoints.ep_collect_next_mixed_card import EPCollectNextMixed
+from playem.restserver.endpoints.ep_collect_lowest_card import EPCollectLowest
+
+
+
+# ---
+
 from playem.restserver.endpoints.ep_collect_media_by_card_id import EPCollectMediaByCardId
 
 #from playem.restserver.endpoints.ep_collect_standalone_movies_by_genre import EPCollectStandaloneMoviesByGenre
@@ -23,6 +32,12 @@ from playem.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCol
 # -----------------------------------
 #
 # GET info
+#
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/highest/mixed/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/next/mixed/card_id/<card_id>/category/<category>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
+#
+#
 #
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/level/band/category/music_video/genre/new_wave/theme/*/origin/*/decade/80s/lang/en
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/general/standalone/category/movie/genre/drama/theme/*/director/*/actor/*/origin/*/decade/80s/lang/en
@@ -44,8 +59,9 @@ class CollectView(FlaskView):
 
         self.web_gadget = web_gadget
 
-#        self.epCollectStandaloneMoviesByGenre = EPCollectStandaloneMoviesByGenre(web_gadget)
         self.epCollectMediumByCardId = EPCollectMediumByCardId(web_gadget)
+
+# ---
 
         self.epCollectGeneralLevel = EPCollectGeneralLevel(web_gadget)
         self.epCollectGeneralStandalone = EPCollectGeneralStandalone(web_gadget)
@@ -53,11 +69,73 @@ class CollectView(FlaskView):
         self.epCollectMediaByCardId = EPCollectMediaByCardId(web_gadget)
         self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
 
+# ---
+
+        self.epCollectHighestMixed = EPCollectHighestMixed(web_gadget)
+        self.epCollectNextMixed = EPCollectNextMixed(web_gadget)
+        self.epCollectLowest = EPCollectLowest(web_gadget)
+
+
     #
     # GET http://localhost:5000/collect/
     #
     def index(self):
         return {}
+
+
+# === collect with general filter on the highest level ===
+
+    #
+    # Gives back filtered list of mixed records of the highest levels
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/highest/mixed/category/<category>/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    #
+    #@route('/highest/mixed/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    @route(EPCollectHighestMixed.PATH_PAR_URL, methods=[EPCollectHighestMixed.METHOD])
+    def collectHighestMixedWithParameter(self, category, level, genres, themes, directors, actors, lecturers, origins, decade, lang):
+
+        out = self.epCollectHighestMixed.executeByParameters(category, level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        return out
+
+
+# === collect with general filter on the next level ===
+
+    #
+    # Gives back filtered list of mixed records of the next levels
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/next/mixed/card_id/<card_id>/category/<category>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    #
+    #@route('/highest/mixed/card_id/<card_id>/category/<category>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    @route(EPCollectNextMixed.PATH_PAR_URL, methods=[EPCollectNextMixed.METHOD])
+    def collectNextMixedWithParameter(self, card_id, category, genres, themes, directors, actors, lecturers, origins, decade, lang):
+
+        out = self.epCollectNextMixed.executeByParameters(card_id, category, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        return out
+
+
+# === collect with general filter on the lowest level ===
+
+    #
+    # Gives back filtered list of the lowest levels
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    #
+    #@route('/lowest/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    @route(EPCollectLowest.PATH_PAR_URL, methods=[EPCollectLowest.METHOD])
+    def collectLowestWithParameter(self, category, level, genres, themes, directors, actors, lecturers, origins, decade, lang):
+
+        out = self.epCollectLowest.executeByParameters(category, level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        return out
+
+
+
+
+
+
+
+
+
+
 
 
 

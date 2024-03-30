@@ -92,7 +92,6 @@ country:
         hr: Horvát
         ar: Argentína
 
-
 category:
     movie: Mozi
     music_video: Zene (video)
@@ -406,15 +405,29 @@ title:
     recipetype: Recept típus
 
     movies: Mozi
+    movie_filter: Mozi szűrés
     movie_series: Sorozatok
+
     series: Sorozatok
     movie_sequels: Folytatásos filmek
     movie_remakes: Feldolgozások
     movie_individual: Filmek
     movie_documentaries: Dokumentumfilmek
     movie_hungarian: Magyar
+
+    movie_by_genre: Műfaj
+    movie_by_theme: Téma
+    movie_by_director: Rendező
+    movie_by_actor: Szereplő
+    
     music: Zene
+    music_level_band: Együttes szint
+    music_level_record: Zeneszám szint
+
     music_video: Zene-Video
+    music_by_decade: Szűrés Évtizedek szerint
+    music_by_genre: Szűrés Műfaj szerint
+    
     music_audio: Zene-Audio
     music_hungarian: Magyar
     radioplay: Rádiójáték

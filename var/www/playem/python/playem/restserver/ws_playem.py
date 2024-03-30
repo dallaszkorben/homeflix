@@ -43,7 +43,6 @@ class WSPlayem(Flask):
         self.mediaAbsolutePath = self.cg["media-absolute-path"]
         self.mediaRelativePath = self.cg["media-relative-path"]
 
-
         # LOG 
         self.logPath = os.path.join(self.configPath, self.logFileName)
         logging.basicConfig(
@@ -64,15 +63,15 @@ class WSPlayem(Flask):
         # TODO: at every start I recreate the table. Has to be fixed
 
 # Uncommented: regenerate db        
-#        self.db.drop_tables()
-#        self.db.create_tables()
+        self.db.drop_tables()
+        self.db.create_tables()
 
         self.cardHandle = CardHandle(self)
         print("Started to collect media...")
         start = time.time()
 
 # Uncommented: regenerate db        
-#        self.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
+        self.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
 
         end = time.time()
         diff = end-start

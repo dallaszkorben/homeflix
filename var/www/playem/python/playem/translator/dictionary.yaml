@@ -405,16 +405,30 @@ title:
     recipetype: Recipe type
 
     movies: Movies
+    movies_filter: Movie Filter
     movie_series: Movie Series
+
     series: Series
     movie_sequels: Movie Sequels
     movie_remakes: Movie Remakes
     movie_individual: Movie Individual
     movie_documentaries: Documentaries
     movie_hungarian: Hungarian
+
+    movie_by_genre: Genre
+    movie_by_theme: Theme
+    movie_by_director: Director
+    movie_by_actor: Actor
+
     music: Music
+    music_level_band: Band level
+    music_level_record: Record level
+
     music_video: Music Video
-    music_audio: Music Audio
+    music_by_decade: Filtered by Decade
+    music_by_genre: Filtered by Genre
+
+    music_audio: Music Audio    
     music_hungarian: Hungarian
     radioplay: Radioplay
     audiobook: Audiobook

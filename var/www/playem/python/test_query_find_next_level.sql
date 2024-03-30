@@ -35,7 +35,8 @@ con.execute('''
 SELECT
     core.*,
 
-    mixed_id_list.id_higher_card, 
+    mixed_id_list.id_higher_card,
+    mixed_id_list.category,
     mixed_id_list.level,
     mixed_id_list.source_path,
     mixed_id_list.basename,        
@@ -81,7 +82,8 @@ FROM
     (
     SELECT                 
         card.id, 
-        card.id_higher_card, 
+        card.id_higher_card,
+        category.name category,
         card.level,
         card.source_path,
                 
@@ -713,7 +715,7 @@ ORDER BY CASE
     WHEN sequence>=0 THEN sequence
 END
 
-''', {'card_id': 472, 'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
+''', {'card_id': 513, 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 
 
 [

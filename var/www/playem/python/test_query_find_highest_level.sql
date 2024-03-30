@@ -36,7 +36,8 @@ con.execute('''
 SELECT
     core.*,
 
-    mixed_id_list.id_higher_card, 
+    mixed_id_list.id_higher_card,
+    mixed_id_list.category,
     mixed_id_list.level,
     mixed_id_list.source_path,
     mixed_id_list.basename,        
@@ -82,12 +83,13 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id, id_higher_card,level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
         
         (
             SELECT                 
                 card.id, 
-                card.id_higher_card, 
+                card.id_higher_card,
+                category.name category,
                 card.level,
                 card.source_path,
                 
@@ -470,6 +472,7 @@ FROM
             SELECT 
                 card.id,
                 card.id_higher_card,
+                category.name category,
                 card.level,
                 card.source_path,
                 
@@ -503,12 +506,13 @@ FROM
                 
             FROM
                 rec,
-                Card card
+                Card card,
+                Category category
             WHERE
                 rec.id_higher_card=card.id
-                
+                AND category.id=card.id_category
         )
-    SELECT id, id_higher_card, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
     
     FROM
         rec

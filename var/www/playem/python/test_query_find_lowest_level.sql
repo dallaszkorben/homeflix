@@ -14,6 +14,7 @@ con.execute('''
 SELECT 
     recursive_list.*,
 
+    category.name category,
     themes,
     genres,
     origins,
@@ -270,7 +271,8 @@ FROM
     GROUP BY id
    
     ) recursive_list,
-    Card card
+    Card card,
+    Category category
     
     -------------
     --- GENRE ---
@@ -732,6 +734,7 @@ FROM
 
 WHERE
     card.id=recursive_list.id
+    AND category.id=card.id_category
     
     -------------------
     -------------------

@@ -365,6 +365,7 @@ body {
 }
 
 .thumbnail-container-title{
+    color: white;
     font-family: 'Brush Script MT', cursive;
     font-weight: bold;
     font-size: 30px;
