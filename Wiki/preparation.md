@@ -163,6 +163,11 @@ Check if the apache configuration is OK
 sudo apachectl configtest
 ```
 
+Restart the apache
+```sh
+sudo systemctl restart apache2.service
+```
+
 ### Mount the media
 Mount your playem media folder to the /var/www/playem/MEDIA folder
 1. connect the device
