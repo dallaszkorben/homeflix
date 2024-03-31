@@ -158,6 +158,11 @@ The critical part is this
 ```
 If you do not do that, the os.listdir() in the code will fail in case of UTF-8 characters in the file name
 
+Check if the apache configuration is OK
+```sh
+sudo apachectl configtest
+```
+
 ### Mount the media
 Mount your playem media folder to the /var/www/playem/MEDIA folder
 1. connect the device
