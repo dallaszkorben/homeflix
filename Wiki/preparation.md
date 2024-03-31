@@ -145,6 +145,19 @@ python -m pip install pyyaml
 
 ```
 
+### Mount the media
+Mount your playem media folder to the /var/www/playem/MEDIA folder
+1. connect the device
+2. mount the device:
+```sh
+$ sudo mount /dev/sda1 /media/akoel
+```
+3. mount the media folder to the MEDIA folder
+```sh
+$ sudo mount -o bind /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
+$ sudo mount -o bind  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
+```
+
 ### Configure Apache
 copy the playem/etc/apache2/site-available folder to the /etc/apache2 folder
 copy the playem/etc/apache2/envvars file to the /etc/apache2 folder
@@ -168,18 +181,26 @@ Restart the apache
 sudo systemctl restart apache2.service
 ```
 
-### Mount the media
-Mount your playem media folder to the /var/www/playem/MEDIA folder
-1. connect the device
-2. mount the device:
+### Automate the mount and Apache start
+
+Create shell script
 ```sh
-$ sudo mount /dev/sda1 /media/akoel
+sudo touch /usr/local/bin/startplayem.sh
+sudo bash -c 'echo -e "#!/bin/bash" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo mount -o bind /media/pi/vegyes/MEDIA /var/www/playem/MEDIA/" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
 ```
-3. mount the media folder to the MEDIA folder
+
+Modify the crontab config file to make the script run after the reboot automatically
 ```sh
-$ sudo mount -o bind /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
-$ sudo mount -o bind  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
+(crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/startplayem.sh  >> /home/pi/.playem/startplayem.log 2>&1") | crontab -
 ```
+
+
+
 ### Umount the media
 ```sh
 $ sudo umount /var/www/playem/MEDIA
