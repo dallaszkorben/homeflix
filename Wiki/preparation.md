@@ -119,8 +119,10 @@ sudo ln -s  /etc/apache2/sites-available/playem.conf /etc/apache2/sites-enabled/
 
 ### Create file system for your code - Before the project was pushed first time - Skip it
 ```sh
+sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 python3 -m pip install virtualenv
-cd /var/www/playem
+echo "PATH=$PARH:/home/pi/.local/bin"
+cd /home/pi/Projects/playem/var/www/playem/pyton
 virtualenv --python=python3 env
 ```
 
