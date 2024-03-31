@@ -119,6 +119,8 @@ mediatype:
 level:
     series: Series
     season: Season
+    sequel: Sequel
+    remake: Remake
     band: Band
     concert: Concert
     lp: LP

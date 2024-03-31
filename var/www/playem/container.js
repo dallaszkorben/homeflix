@@ -370,42 +370,6 @@ class ObjThumbnailContainer {
         this.domThumbnailContainer.empty();
     }
 
-    /**
-     * Builds up new DOM for ThumbnailContainer
-     * Called from the ScrollSection after it was taken out from the history
-     */
-    buildUpDom() {
-        this.resetDom();
-
-        for (let thumbnailIndex = 0; thumbnailIndex < this.thumbnailList.length; thumbnailIndex++) {
-            let objThumbnail = this.thumbnailList[thumbnailIndex];
-
-            let title_thumb = objThumbnail.getThumbnailTitle();
-            let thumbnail_src = objThumbnail.getThumbnailImageSource();
-
-            let domThumbnail = $("<div>", {
-                class: "thumbnail",
-                id: "container-{???}-thumbnail-" + thumbnailIndex
-            });
-            let domThumbnailTextWrapper = $("<div>", {
-                class: "thumbnail-text-wrapper",
-            });
-            let domThumbnailText = $("<div>", {
-                class: "thumbnail-text",
-                text: title_thumb
-            });
-            let domImg = $("<img>", {
-                src: thumbnail_src,
-                alt: "Image"
-            });
-            domThumbnailTextWrapper.append(domThumbnailText);
-            domThumbnail.append(domThumbnailTextWrapper);
-            domThumbnail.append(domImg);
-
-            this.domThumbnailContainer.append(domThumbnail);
-        }
-    }
-
     getDom() {
         return this.domThumbnailContainer;
     }
@@ -423,6 +387,25 @@ class ObjThumbnailContainer {
     }
 
     /**
+     * Builds up new DOM for ThumbnailContainer
+     * Called from the ScrollSection after it was taken out from the history
+     * In short, it is called when you click on ESC
+     */
+    buildUpDom() {
+        this.resetDom();
+
+        for (let thumbnailIndex = 0; thumbnailIndex < this.thumbnailList.length; thumbnailIndex++) {
+            let objThumbnail = this.thumbnailList[thumbnailIndex];
+
+            this.coreDomeBuild(thumbnailIndex, objThumbnail);
+        }
+    }
+
+    /**
+     * 
+     * Add a new Thumbnail to the DOM
+     * It is called at the beginning. 
+     * In short, it is called when you click on ENTER
      * 
      * @param {Number} recordId 
      * @param {Dict} thumbnail 
@@ -460,12 +443,26 @@ class ObjThumbnailContainer {
      *   <img src="images/categories/movie.jpg" alt="Image">
      * </div>
      */
-    addThumbnail(recordId, thumbnail) {
-        let title_thumb = thumbnail.getThumbnailTitle();
-        let thumbnail_src = thumbnail.getThumbnailImageSource();
-
+    addThumbnail(recordId, objThumbnail) {
         let thumbnailIndex = this.thumbnailList.length;
-        this.thumbnailList.push(thumbnail);
+        this.thumbnailList.push(objThumbnail);
+
+        this.coreDomeBuild(thumbnailIndex, objThumbnail);
+    }
+
+    /**
+     * Buld up one Thumbnail
+     * It is called from 'addThumbnail()' and from 'buildUpDom()'
+     * This is a common part of creating Thumbnail
+     * 
+     * @param {*} thumbnailIndex 
+     * @param {*} objThumbnail 
+     */
+    coreDomeBuild(thumbnailIndex, objThumbnail){
+        let title_thumb = objThumbnail.getThumbnailTitle();
+        let thumbnail_src = objThumbnail.getThumbnailImageSource();
+        let extras = objThumbnail.getExtras();
+        let level = extras["level"];
 
         let domThumbnail = $("<div>", {
             class: "thumbnail",
@@ -484,12 +481,21 @@ class ObjThumbnailContainer {
         });
         domThumbnailTextWrapper.append(domThumbnailText);
         domThumbnail.append(domThumbnailTextWrapper);
+
+        // Add LEVEL RIBBON if necessary
+        if(level && ( level == "series" || level =="remake" || level == "sequel" )){
+            let domLevelRib = $("<div>",{
+                class: "ribbon-level",
+                text: get_translated_level(level)
+            });
+            domThumbnail.append(domLevelRib);
+        }
+
         domThumbnail.append(domImg);
 
         this.domThumbnailContainer.append(domThumbnail);
-
-        //        this.thumbnailDomList.push(domThumbnail);
     }
+
 }
 
 class Thumbnail {
@@ -614,7 +620,7 @@ class Thumbnail {
         }
     }
 
-    setExtras({ medium_path = undefined, download = undefined, length = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined }) {
+    setExtras({ medium_path = undefined, download = undefined, length = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined }) {
         this.thumbnailDict["extras"] = {}
 
         // TODO: This is not the best choice to store 'medium_path' in the 'extras', but that is what I chose. It could be changed
@@ -632,6 +638,8 @@ class Thumbnail {
         this.thumbnailDict["extras"]["genres"] = genres;
 
         this.thumbnailDict["extras"]["themes"] = themes;
+
+        this.thumbnailDict["extras"]["level"] = level;
 
     }
 

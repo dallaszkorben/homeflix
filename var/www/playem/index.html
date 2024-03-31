@@ -204,6 +204,14 @@
             return rand;
         }
 
+        function get_translated_level(level){
+            if (translated_levels.hasOwnProperty(level)) {
+                return translated_levels[level];
+            } else {
+                return level;
+            }
+        }
+
         $(document).ready(function () {
 
             //
@@ -251,11 +259,12 @@
             result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
             translated_genre_music = result.responseJSON;
 
-
-
-
-
-
+            // Load Translated Levels
+            rq_method = "GET";
+            rq_url = "http://" + host + port + "/translate/levels/lang/" + languageCode;
+            rq_assync = false;
+            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+            translated_levels = result.responseJSON;
 
             let mainMenuGenerator = new MainMenuGenerator(languageCode);
             let oThumbnailController = new ThumbnailController(mainMenuGenerator);

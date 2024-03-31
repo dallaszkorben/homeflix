@@ -107,6 +107,20 @@ class Translator( Property ):
             output[theme] = self.translate_theme(theme)
         return output
 
+    def translate_level(self, level):
+        try:        
+            tr = self.actual_dictionary['level'][level]
+        except KeyError:
+            tr = level
+        return tr
+
+    def translate_levels(self):
+        output = {}
+        level_list = self.actual_dictionary['level']
+        for level in level_list:
+            output[level] = self.translate_level(level)
+        return output
+
     def translate_mediatype(self, mediatype):
         try:        
             tr = self.actual_dictionary['mediatype'][mediatype]

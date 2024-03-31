@@ -340,6 +340,7 @@ class CardHandle:
                     date=date,
                     decade=decade,
                     category=category,
+                    storylines=storylines,
                     level=level,
                     genres=genres, 
                     themes=themes, 

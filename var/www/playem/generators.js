@@ -244,7 +244,7 @@ class RestGenerator extends Generator{
                 let appendix_dic = {};
                 appendix_dic["id"] = appendix['id'];
 
-                if ( appendix["rt"] != null ){
+                if ( appendix["rt"]){
                     appendix_dic["title"] = appendix["rt"];
                 }else{
                     appendix_dic["title"] = appendix["ot"];
@@ -295,6 +295,13 @@ class RestGenerator extends Generator{
             thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
+            console.log(hit["storyline"]);
+
+            thumbnail.setTextCard({storyline:hit["storyline"], lyrics:hit["lyrics"]});
+            thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"]});
+//            thumbnail.setExtras({ level: hit["level"]});
+    
+
             thumbnail.setFunctionForSelection({
                 "single": 
                     {
@@ -309,11 +316,6 @@ class RestGenerator extends Generator{
             });
 
         }else{
-
-            // Read the details 
-//            let card_id = hit["id"];
-//            let card_request_url = "http://" + host + port + "/collect/media/card_id/" + card_id + "/lang/" + this.language_code
-//            let card = RestGenerator.sendRestRequest("GET", card_request_url)[0];
 
             let card = hit
 
@@ -371,7 +373,7 @@ class RestGenerator extends Generator{
 
             // TODO: fix it
             // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I chose. It could be changed
-            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"]});
+            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"]});
     
             thumbnail.setFunctionForSelection({
                 "single": 
@@ -996,7 +998,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
         let series_filter = {category: 'movie', level: 'series', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: translated_genre_movie['drama'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_filter}
+            {title: this.container_title, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_filter}
         ];
 
         containerList = this.generateContainers(requestList);
@@ -1376,212 +1378,6 @@ class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
         return containerList;
     }  
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//// ==========
-//// MUSIC MENU
-//// ==========
-////
-//class MusicMenuGenerator extends Generator{  
-//    getContainerList(){
-//        let refToThis = this;
-//        let containerList = [];
-//
-//        let oContainer = new ObjThumbnailContainer(translated_titles['music']);
-//
-//        // Video music
-//        let thumbnail = new Thumbnail();
-//        let main,thumb,history,thumbnail_src,description_src;
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/music_video.jpg", description_src: "images/categories/music_video.jpg"});
-//        thumbnail.setTitles({main: translated_titles['music_video'], thumb: translated_titles['music_video'], history: translated_titles['music_video']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                        (function(blabla){
-//                            return function(){
-//                                return new MusicVideoLevelRestGenerator(refToThis.language_code, translated_titles['music_video']);
-//                            }
-//                        })("blabla")                    
-//                },
-//            "continuous": []
-//        });
-//        oContainer.addThumbnail(1, thumbnail);
-//
-//        // Audio music
-//        thumbnail = new Thumbnail();
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/music_audio.jpg", description_src: "images/categories/music_audio.jpg"});
-//        thumbnail.setTitles({main: translated_titles['music_audio'], thumb: translated_titles['music_audio'], history: translated_titles['music_audio']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                    (function(){
-//                        return function(){
-//                            return new MusicAudioLevelRestGenerator(refToThis.language_code, translated_titles['music_audio']);
-//                        }
-//                    })()                    
-//                },
-//            "continuous": []
-//        });
-//        oContainer.addThumbnail(2, thumbnail);
-// 
-//        containerList.push(oContainer);
-// 
-//        return containerList;
-//    }  
-//}
-
-
-//class MusicVideoLevelRestGenerator extends  GeneralRestGenerator{
-//
-//    getContainerList(){
-//        let refToThis = this;
-//        let containerList = [];
-//
-//        // === On Band ===
-//
-//        let oContainerBand = new ObjThumbnailContainer(translated_titles['music_filter_on_band_level']);
-//
-//        // Decade
-//        let thumbnail = new Thumbnail();
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_decade.jpg", description_src: "images/categories/music_by_decade.jpg"});
-//        thumbnail.setTitles({main: translated_titles['music_by_decade'], thumb: translated_titles['music_by_decade'], history: translated_titles['music_by_decade']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                        (function(movie_type) {
-//                            return function() {
-//                                return new MusicVideoFilterDecadeOnBandRestGenerator(refToThis.language_code);
-//                            };
-//                        })("blabla")
-//                },
-//            "continuous": []
-//        });
-//        oContainerBand.addThumbnail(1, thumbnail);
-//
-//        // Genre
-//        thumbnail = new Thumbnail();
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_genre.jpg", description_src: "images/categories/music_by_genre.jpg"});
-//        thumbnail.setTitles({main: translated_titles['music_by_genre'], thumb: translated_titles['movie_by_genre'], history: translated_titles['movie_by_genre']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                        (function(movie_type) {
-//                            return function() {
-//                                return new MusicVideoFilterGenreOnBandRestGenerator(refToThis.language_code);
-//                            };
-//                        })("blabla")
-//                },
-//            "continuous": []
-//        });
-//        oContainerBand.addThumbnail(1, thumbnail);        
-//
-//        // === On Record ===
-//
-//        let oContainerRecord = new ObjThumbnailContainer(translated_titles['music_filter_on_record_level']);
-//
-//        // Decade
-//        thumbnail = new Thumbnail();
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_decade.jpg", description_src: "images/categories/music_by_decade.jpg"});
-//        thumbnail.setTitles({main: translated_titles['music_by_decade'], thumb: translated_titles['music_by_decade'], history: translated_titles['music_by_decade']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                        (function(movie_type) {
-//                            return function() {
-//                                return new MusicVideoFilterDecadeOnRecordRestGenerator(refToThis.language_code);
-//                            };
-//                        })("blabla")
-//                },
-//            "continuous": []
-//        });
-//        oContainerRecord.addThumbnail(1, thumbnail);
-//
-//        // Genre
-//        thumbnail = new Thumbnail();
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_genre.jpg", description_src: "images/categories/music_by_genre.jpg"});
-//        thumbnail.setTitles({main: translated_titles['music_by_genre'], thumb: translated_titles['movie_by_genre'], history: translated_titles['movie_by_genre']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                        (function(movie_type) {
-//                            return function() {
-//                                return new MusicVideoFilterGenreOnRecordRestGenerator(refToThis.language_code);
-//                            };
-//                        })("blabla")
-//                },
-//            "continuous": []
-//        });
-//        oContainerRecord.addThumbnail(1, thumbnail);      
-//
-//
-//        // ===
-//
-//        containerList.push(oContainerBand);
-//        containerList.push(oContainerRecord);
-// 
-//        return containerList;
-//    }  
-//}
-
-
-
-
-
 
 
 

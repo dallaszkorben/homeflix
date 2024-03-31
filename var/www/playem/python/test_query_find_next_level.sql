@@ -715,7 +715,7 @@ ORDER BY CASE
     WHEN sequence>=0 THEN sequence
 END
 
-''', {'card_id': 513, 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
+''', {'card_id': 1212, 'category': 'entertainment', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'hu'}).fetchall()
 
 
 [

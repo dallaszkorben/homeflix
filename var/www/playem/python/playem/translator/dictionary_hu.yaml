@@ -117,8 +117,10 @@ mediatype:
     ebook: Ebook
 
 level:
-    series: Sorozat
+    series: Sorozat    
     season: Évad
+    sequel: Folytatásos
+    remake: Feldolgozás
     band: Együttes
     concert: Koncert
     lp: Lemez

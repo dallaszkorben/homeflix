@@ -72,7 +72,8 @@ SELECT
     mixed_id_list.reporters,
     mixed_id_list.performers,
 
-    storyline,
+    strl.ord,
+    strl.storyline,
     lyrics,
     medium,
     appendix
@@ -788,15 +789,12 @@ ORDER BY CASE
     WHEN sequence>=0 THEN sequence
 END
 
-''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
+''', {'level': 'series', 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'it'}).fetchall()
 
+--''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 --''', {'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '90s', 'lang': 'en'}).fetchall()
 --''', {'category': 'entertainment', 'genre': 'speech', 'theme': '*', 'origin': '*', 'director': '*', 'actor': '*', 'lecturer': '*', 'decade': '60s', 'lang': 'en'}).fetchall()
 
-
-[(2, None, '2001: A Space Odyssey', None, None, 'en', 1, '', '60s', '1968', '2:29:00', 'MEDIA/01.Movie/01.Standalone/2001.Space.Odyssey-1968', 1, 'ai,meaning_of_life,origin_of_life', 'scifi,adventure', 'us', 'Stanley Kubrick', 'Keir Dullea,Gary Lockwood,William Sylvester,Daniel Richter,Leonard Rossiter,Margaret Tyzack,Robert Beatty,Sean Sullivan,Douglas Rain,Frank Miller,Bill Weston,Ed Bishop,Glenn Beck,Alan Gifford,Ann Gillis,Edwina Carroll,Penny Brahms,Heather Downham', '"\'2001\' is a story of evolution.\nSometime in the distant past, someone or something nudged evolution by placing a monolith on Earth (presumably elsewhere throughout the universe as well).\nEvolution then enabled humankind to reach the moon\'s surface, where yet another monolith is found, one that signals the monolith placers that humankind has evolved that far.\nNow a race begins between computers (HAL) and human (Bowman) to reach the monolith placers. \nThe winner will achieve the next step in evolution, whatever that may be."\n', None, 'video=2001.A.Space.Odyssey-1968.mkv', 'id=3;mt=picture;cm=poster-1.jpg;sw=1;dl=1;rt=Poster 1;ot=;sp=MEDIA/01.Movie/01.Standalone/2001.Space.Odyssey-1968/appendix-poster-1,id=4;mt=picture;cm=poster-2.jpg;sw=1;dl=1;rt=Poster 2;ot=;sp=MEDIA/01.Movie/01.Standalone/2001.Space.Odyssey-1968/appendix-poster-2', 'hu,en', 'hu,en', 'Stanley Kubrick,Arthur C. Clarke', None, 'Keir Dullea,Gary Lockwood,William Sylvester', None, None), (117, None, 'Saturn 3', None, None, 'en', 1, '', '80s', '1980', '1:27:28', 'MEDIA/01.Movie/01.Standalone/Saturn.3', 1, 'ai', 'trash,scifi', 'gb', 'John Barry,Stanley Donen', 'Ed Bishop,Farrah Fawcett,Kirk Douglas,Harvey Keitel,Christopher Muncke', 'Two lovers stationed at a remote base in the asteroid fields of Saturn are intruded upon by a retentive technocrat from Earth and his charge: a malevolent 8-ft robot.\nRemember, in space no one can hear you scream...\n', None, 'video=Harmas.Szamu.Urbazis-1980.mkv', None, 'hu,en', 'hu,en', 'Martin Amis,John Barry', None, 'Farrah Fawcett,Kirk Douglas,Harvey Keitel', None, None), 
-(472, 'sequel', 'Alien', None, None, 'en', 1, '', None, '', None, 'MEDIA/01.Movie/04.Sequels/Alien', 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None), 
-(487, 'sequel', 'Blade Runner', None, None, 'en', 1, '', None, '', None, 'MEDIA/01.Movie/04.Sequels/Blade.Runner', 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)]
 
 
 

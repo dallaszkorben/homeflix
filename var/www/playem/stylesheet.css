@@ -2,6 +2,12 @@
     --thumbnail-border-width: 0px;
     --thumbnail-container-height: 250px;
     --thumbnail_background: rgb(33, 134, 43);
+
+    --thumbnail-ribbon-level-height: 1.2em;
+    --thumbnail-ribbon-level-background: rgb(255, 0, 0);
+    --thumbnail-ribbon-level-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-font-size: 1em;
+
     --thumbnail-image-width: 100px;
     --thumbnail-image-height: 100px;
     --thumbnail-text-font-size: 30px;
@@ -404,6 +410,26 @@ body {
     display: flex;                                              /* flex box layout model */
     position: relative;                                         /* This made the animation with text work. I do not know how */
     cursor: pointer;
+}
+
+.ribbon-level {
+    height: var(--thumbnail-ribbon-level-height);               /* I had to configure it to be able to make the clip-path */
+/*    height: calc(4 + var(--thumbnail-ribbon-level-font-size));               /* I had to configure it to be able to make the clip-path */
+    position: absolute;
+    clip-path: polygon(0% 100%, 100% 100%, calc(100% - var(--thumbnail-ribbon-level-height)) 0%, var(--thumbnail-ribbon-level-height) 0%);
+
+    font-family: 'Brush Script MT', cursive;
+    font-weight: bold;
+    font-size: var(--thumbnail-ribbon-level-font-size);
+    color: var(--thumbnail-ribbon-level-font-color);
+
+    background-color: var(--thumbnail-ribbon-level-background); 
+    top: 0;
+    right: 0;
+    padding: 0 2em;
+    text-align: center;
+    transform: translateY(-100%) rotate(90deg) translateX(70.71067811865476%) rotate(-45deg);
+    transform-origin: bottom right;
 }
 
 .thumbnail img {
