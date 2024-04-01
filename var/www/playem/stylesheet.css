@@ -3,7 +3,6 @@
     --thumbnail-container-height: 250px;
     --thumbnail_background: rgb(33, 134, 43);
 
-    --thumbnail-ribbon-level-height: 1.2em;
     --thumbnail-ribbon-level-background: rgb(255, 0, 0);
     --thumbnail-ribbon-level-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-font-size: 1em;
@@ -401,7 +400,14 @@ body {
 
 .thumbnail {
     box-sizing:border-box;                                      /* element and padding and border are included in the width and height */
-    height: 100%;                                               /* occupies the full height of the .thumbnail-container */       
+    height: 100%;                                               /* occupies the full height of the .thumbnail-container */
+
+/* new */
+    width: calc(var(--thumbnail-image-width) + var(--thumbnail-border-width) + var(--thumbnail-border-width));
+    height: calc(var(--thumbnail-image-height) + var(--thumbnail-border-width) + var(--thumbnail-border-width));
+    overflow: hidden;
+/* new */
+
     margin-right: 5px;
     margin-left: 5px;
 
@@ -413,20 +419,22 @@ body {
 }
 
 .ribbon-level {
-    height: var(--thumbnail-ribbon-level-height);               /* I had to configure it to be able to make the clip-path */
+/*    height: var(--thumbnail-ribbon-level-height);               /* I had to configure it to be able to make the clip-path */
 /*    height: calc(4 + var(--thumbnail-ribbon-level-font-size));               /* I had to configure it to be able to make the clip-path */
-    position: absolute;
-    clip-path: polygon(0% 100%, 100% 100%, calc(100% - var(--thumbnail-ribbon-level-height)) 0%, var(--thumbnail-ribbon-level-height) 0%);
+/*    clip-path: polygon(0% 100%, 100% 100%, calc(100% - var(--thumbnail-ribbon-level-height)) 0%, var(--thumbnail-ribbon-level-height) 0%); */
+/*    clip-path: polygon(0% 1.2em, 100% 100%, calc(100% - 1.2em) 0%, 1.2em 0%); */
 
+    position: absolute;
     font-family: 'Brush Script MT', cursive;
     font-weight: bold;
     font-size: var(--thumbnail-ribbon-level-font-size);
-    color: var(--thumbnail-ribbon-level-font-color);
 
-    background-color: var(--thumbnail-ribbon-level-background); 
+    color: var(--thumbnail-ribbon-level-font-color);
+    background-color: var(--thumbnail-ribbon-level-background);
+
     top: 0;
     right: 0;
-    padding: 0 2em;
+    padding: 0 1em;
     text-align: center;
     transform: translateY(-100%) rotate(90deg) translateX(70.71067811865476%) rotate(-45deg);
     transform-origin: bottom right;
