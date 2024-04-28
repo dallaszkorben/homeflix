@@ -15,6 +15,8 @@ language:
         ko: Kor
         hr: Hrv
         ga: Ír
+        zh: Chi
+        nl: Dut
 
     long:
         hu: Magyar
@@ -32,6 +34,8 @@ language:
         ko: Koreai
         hr: Horvát
         ga: Ír
+        zh: Kínai
+        nl: Holland
 
 country:
     short:
@@ -62,6 +66,8 @@ country:
         ie: IE
         hr: HR
         ar: Arg
+        cn: Chi
+        nl: Nld
 
     long:
         eu: Europai Unió
@@ -91,6 +97,8 @@ country:
         ie: Ír
         hr: Horvát
         ar: Argentína
+        cn: Kínai
+        nl: Holland
 
 category:
     movie: Mozi
@@ -157,6 +165,10 @@ genre:
         funk: Funk
         folk: Folk
         punk: Punk
+        hip-hop: Hip-Hop
+        reggae: Reggae
+        dance: Dance
+        noclassical_dark_wave: Neoclassical dark wave
 
     movie:
         <<: *common

@@ -955,6 +955,7 @@ class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
         let filter_kevin_spacey      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Kevin Spacey',     lecturers: '*', origins: '*', decade: '*'};
         let filter_joaquin_phoenix   = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Joaquin Phoenix',  lecturers: '*', origins: '*', decade: '*'};
         let filter_jonah_hill        = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Jonah Hill',       lecturers: '*', origins: '*', decade: '*'};
+        let filter_simon_pegg        = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Simon Pegg',       lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
             {title: "Robert De Niro",      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_robert_de_Niro},
@@ -968,6 +969,7 @@ class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
             {title: "Kevin Spacey",        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_kevin_spacey},
             {title: "Joaquin Phoenix",     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_joaquin_phoenix},
             {title: "Jonah Hill",          rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_jonah_hill},
+            {title: "Simon Pegg",          rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_simon_pegg},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -1581,13 +1583,13 @@ class MusicAudioFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_new_wave    = {category: 'music_video', level: 'band', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_electronic  = {category: 'music_video', level: 'band', genres:'electronic',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_pop         = {category: 'music_video', level: 'band', genres:'pop',         themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_synth       = {category: 'music_video', level: 'band', genres:'synth',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_rorck       = {category: 'music_video', level: 'band', genres:'rock',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_alternative = {category: 'music_video', level: 'band', genres:'alternative', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_punk        = {category: 'music_video', level: 'band', genres:'punk',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_new_wave    = {category: 'music_audio', level: 'band', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_electronic  = {category: 'music_audio', level: 'band', genres:'electronic',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_pop         = {category: 'music_audio', level: 'band', genres:'pop',         themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_synth       = {category: 'music_audio', level: 'band', genres:'synth',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_rorck       = {category: 'music_audio', level: 'band', genres:'rock',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_alternative = {category: 'music_audio', level: 'band', genres:'alternative', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_punk        = {category: 'music_audio', level: 'band', genres:'punk',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
             {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_new_wave},
@@ -1686,7 +1688,7 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
 
 
 // ==============
-// Audiobook MENU
+// E-book MENU
 // ==============
 //
 class EbookMenuGenerator extends  GeneralRestGenerator{
@@ -1698,7 +1700,7 @@ class EbookMenuGenerator extends  GeneralRestGenerator{
         
         let requestList = [
 //            {title: translated_titles['ebook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/ebook/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
-            {title: translated_titles['audiobook'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_ebook},
+            {title: translated_titles['ebook'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_ebook},
         ];
 
         containerList = this.generateContainers(requestList);

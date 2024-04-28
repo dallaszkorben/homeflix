@@ -404,6 +404,7 @@ body {
 
 /* new */
     width: calc(var(--thumbnail-image-width) + var(--thumbnail-border-width) + var(--thumbnail-border-width));
+    min-width: calc(var(--thumbnail-image-width) + var(--thumbnail-border-width) + var(--thumbnail-border-width));
     height: calc(var(--thumbnail-image-height) + var(--thumbnail-border-width) + var(--thumbnail-border-width));
     overflow: hidden;
 /* new */
