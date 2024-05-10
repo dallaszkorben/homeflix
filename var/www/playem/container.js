@@ -254,6 +254,7 @@ class ObjScrollSection {
         this.oDescriptionContainer.escapeOfCode();
     }
 
+    // Take the next thumbnail
     arrowRight() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -266,6 +267,7 @@ class ObjScrollSection {
         this.showDetails();
     }
 
+    // Take the previous thumbail
     arrowLeft() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -1550,8 +1552,12 @@ class ThumbnailController {
     }
 
 
-    // ---
-
+    /**
+     * Makes decision if the next media should be played, and start to play it if needed
+     * 
+     * @param {*} event 
+     * @param {*} continuous_list 
+     */
     finishedPlaying(event, continuous_list) {
 
         let player = $("#video_player")[0];
@@ -1560,6 +1566,7 @@ class ThumbnailController {
         // Remove the playing list
         domPlayer.children("source").remove();
 
+        // Play the next media
         if (event == 'ended' && continuous_list.length > 0) {
 
             let path = continuous_list.shift();
@@ -1578,12 +1585,17 @@ class ThumbnailController {
             } else {
                 player.poster = "";
             }
+
             player.load();
             player.play();
 
             // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
             domPlayer.focus();
 
+            // next focus on the thumbnails
+            this.objScrollSection.arrowRight()
+
+        // Stop playing
         } else {
 
             // Remove the listeners

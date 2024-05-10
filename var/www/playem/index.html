@@ -34,9 +34,12 @@
         let host = location.hostname;
         let port = ":80";
 
-        let languageCode = "hu";
-        let always_show_origin_title = false;
-        let show_lyrics_anyway = true;
+        let language_dict = {"hu": "Magyar", "en": "English"};
+
+        let languageCode = getCookie("playem-language-code", "hu");
+        let always_show_origin_title = getCookie("playem-show-origin-title", false);
+        let show_lyrics_anyway = getCookie("playem-show-lyrics-anyway", true);
+        let continuous_play = getCookie("playem-continous-play", true);
 
         /*
         Substitute substrings, similar to "Hello {0}".format("world") mechanizm
@@ -62,6 +65,36 @@
             var separator = sep || '/';
             var replace = new RegExp(separator + '{1,}', 'g');
             return parts.join(separator).replace(replace, separator);
+        }
+
+        function getExistingCookie(key){
+            let name = key + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return value = c.substring(name.length, c.length);
+                }
+            }
+            return null;
+        }
+
+        function getCookie(key, defaultValue){
+
+            let value = getExistingCookie(key);
+            if( value == null ){
+                value = defaultValue;
+                document.cookie = name + "=" + value;
+            }
+            return value;
+        }
+
+        function setCookie(key, value){
+            document.cookie = key + "=" + value;
         }
 
         //
@@ -355,12 +388,95 @@
                     touchYPos = newTouchYPos;
                 }
             });
+
+            /*      */
+            /* MENU */
+            /*      */
+
+            let openDropdown = false;
+
+            // Set the default language in the menu
+            selectedLanguage = language_dict[languageCode];
+            $('.main-menu.language-menu .main-menu-text' ).text(selectedLanguage);
+
+
+            // If the mouse is close to the top, the menu appears
+            $(document).on('mousemove', function(event) {
+                var mouseY = event.clientY;
+                if (mouseY <= 30) {
+                    $('#menu-line').addClass('show');
+                } else if(!openDropdown){
+                    $('#menu-line').removeClass('show');
+                }
+            });
+
+            // If the mouse is over the language menu, the dropdown appears
+            //    $('.main-menu.language-menu').on('click', function() {
+            //      $('.language-dropdown').slideToggle(200);
+            //    });                
+            $('.main-menu.language-menu').hover(function() {
+                $('.language-dropdown').slideToggle(200);
+            });
+
+            // If the mouse is over the setting menu, the dropdown appears
+            $('.main-menu.setting-menu').hover(function() {
+                $('.setting-dropdown').slideToggle(200);
+            });
+
+
+
+
+            // If I hover on the language menu dropdown, the mouse can lower than 30 pxs
+            $('.main-menu.language-menu').hover(
+                function() {
+                    openDropdown = true;
+                },
+                function(){
+                    openDropdown = false;
+                }
+            );
+
+
+
+
+
+
+
+            // Select on language from the dropdown list
+            $('.language-option').on('click', function() {
+                var selectedLanguage = $(this).text();
+                $('.main-menu.language-menu .main-menu-text' ).text(selectedLanguage);
+                // $('.language-dropdown').slideUp(200); // To bring back the menu
+                
+                languageCode = setCookie("playem-language-code", $(this).attr("value"));
+                window.location.reload();
+            });
+
         });
 
     </script>
 </head>
 
 <body>
+  
+    <div id="menu-line">
+        <div class="main-menu setting-menu">
+            <div class="main-menu-text">Settings</div>
+            <ul class="setting-dropdown">
+                <li class="setting-option">Re-build</li>
+            </ul>
+        </div>
+        <div class="main-menu language-menu">
+            <div class="main-menu-text">English</div>
+            <ul class="language-dropdown">
+                <li class="language-option" value="en">English</li>
+                <li class="language-option" value="hu">Magyar </li>
+            </ul>
+        </div>
+        <div class="main-menu empty">
+            <div class="main-menu-text">&nbsp; &nbsp; &nbsp; </div>
+        </div>
+    </div>
 
     <div id="viewport">
 

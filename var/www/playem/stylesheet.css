@@ -118,7 +118,7 @@ body {
     justify-content: space-between;
 
     width: var(--description-text-storyline-width);
-    text-shadow: 0px 0px 10px rgb(187, 189, 255);
+    text-shadow: 0px 0px 10px rgb(0, 0, 0);
     font-weight: bold;
     font-size: var(--description-text-extra-font-size);
     color: rgb(187, 189, 255);
@@ -150,7 +150,7 @@ body {
     display: inline-block;
     position: relative;
     flex-wrap: wrap;
-    text-shadow: 0px 0px 10px rgb(190, 253, 250);
+    text-shadow: 0px 0px 10px rgb(0, 0, 0);
     font-weight: bold;
     font-size: var(--description-text-storyline-font-size);
     color: rgb(190, 253, 250);
@@ -548,3 +548,107 @@ body {
 }
 
 
+/*      */
+/* MENU */
+/*      */
+
+#menu-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    color: #fff;
+    padding: 0px;
+    transition: height 0.5s ease-in-out;
+    z-index: 10;
+
+    display: none;
+    /* display:flex; */
+    gap: 0.5em;
+
+    font-family: 'Brush Script MT', cursive;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+  
+#menu-line.show {
+    display:inline-flex;
+    flex-direction: row; 
+    justify-content: flex-end;
+}
+  
+.main-menu {
+    cursor: pointer;
+}
+
+.main-menu-text{
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.main-menu:hover {
+    background-color: #fd0000;
+}
+
+
+
+.setting-dropdown {
+    display: none;
+    position: absolute;
+/*    top: 30px;*/
+/*    right: 0;*/
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 1px 0;
+    list-style: none;
+    z-index: 1;
+    margin: 0px;
+}
+
+.setting-dropdown li {
+    padding: 5px 10px;
+    color: #000;
+}
+  
+.setting-dropdown li:hover {
+    background-color: #f2f2f2;
+}
+  
+.setting-dropdown li.selected {
+    background-color: #ccc;
+    color: #fff;
+}
+
+
+.language-dropdown {
+    display: none;
+    position: absolute;
+/*    top: 30px;*/
+/*    right: 0;*/
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 1px 0;
+    list-style: none;
+    z-index: 1;
+    margin: 0px;
+}
+
+
+
+
+.language-dropdown li {
+    padding: 5px 10px;
+    color: #000;
+}
+  
+.language-dropdown li:hover {
+    background-color: #f2f2f2;
+}
+  
+.language-dropdown li.selected {
+    background-color: #ccc;
+    color: #fff;
+}
+
+  
