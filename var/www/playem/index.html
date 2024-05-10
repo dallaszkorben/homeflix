@@ -15,12 +15,6 @@
     <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
     <script src="script/highlight/highlight.min.js"></script>
 
-    <!--        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
--->
-    <!--        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
--->
-
     <script src="container.js"></script>
     <script src="generators.js"></script>
 
@@ -39,6 +33,7 @@
         let languageCode = getCookie("playem-language-code", "hu");
         let always_show_origin_title = getCookie("playem-show-origin-title", false);
         let show_lyrics_anyway = getCookie("playem-show-lyrics-anyway", true);
+        let show_storyline_anyway = getCookie("playem-show-storyline-anyway", true);
         let continuous_play = getCookie("playem-continous-play", true);
 
         /*
@@ -148,9 +143,9 @@
         const description_section_border_color = 'rgb(9, 60, 41)';
         const description_section_background = 'rgb(171, 253, 176)';
 
-        const description_text_extra_font_size = 25;
-        const description_text_storyline_font_size = 20;
-        const description_text_credentials_font_size = 20;
+        const description_text_extra_font_size = 1.6;
+        const description_text_storyline_font_size = 1.3;
+        const description_text_credentials_font_size = 1.3;
 
         const description_text_storyline_width = 45;
 
@@ -209,9 +204,9 @@
 
         t.style.setProperty('--description-text-wrapper-top', description_text_wrapper_top + 'px');
         t.style.setProperty('--description-text-wrapper-left', description_text_wrapper_left + 'px');
-        t.style.setProperty('--description-text-extra-font-size', description_text_extra_font_size + 'px');
-        t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
-        t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
+        t.style.setProperty('--description-text-extra-font-size', description_text_extra_font_size + 'em');
+        t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'em');
+        t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'em');
 
         t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
 
@@ -397,13 +392,12 @@
 
             // Set the default language in the menu
             selectedLanguage = language_dict[languageCode];
-            $('.main-menu.language-menu .main-menu-text' ).text(selectedLanguage);
-
+            $('#language-menu .main-menu-text' ).text(selectedLanguage);
 
             // If the mouse is close to the top, the menu appears
             $(document).on('mousemove', function(event) {
                 var mouseY = event.clientY;
-                if (mouseY <= 30) {
+                if (mouseY <= 60) {
                     $('#menu-line').addClass('show');
                 } else if(!openDropdown){
                     $('#menu-line').removeClass('show');
@@ -411,23 +405,13 @@
             });
 
             // If the mouse is over the language menu, the dropdown appears
-            //    $('.main-menu.language-menu').on('click', function() {
-            //      $('.language-dropdown').slideToggle(200);
-            //    });                
-            $('.main-menu.language-menu').hover(function() {
-                $('.language-dropdown').slideToggle(200);
-            });
-
             // If the mouse is over the setting menu, the dropdown appears
-            $('.main-menu.setting-menu').hover(function() {
-                $('.setting-dropdown').slideToggle(200);
+            $('.main-menu').hover(function() {
+                $(this).find('.dropdown').slideToggle(200);
             });
 
-
-
-
-            // If I hover on the language menu dropdown, the mouse can lower than 30 pxs
-            $('.main-menu.language-menu').hover(
+            // If I hover on the dropdown menu, the mouse can lower than 30 pxs
+            $('.main-menu').hover(
                 function() {
                     openDropdown = true;
                 },
@@ -436,21 +420,55 @@
                 }
             );
 
-
-
-
-
-
+            //
+            // Control menu
+            //
 
             // Select on language from the dropdown list
-            $('.language-option').on('click', function() {
-                var selectedLanguage = $(this).text();
-                $('.main-menu.language-menu .main-menu-text' ).text(selectedLanguage);
-                // $('.language-dropdown').slideUp(200); // To bring back the menu
+            $('.option.language').on('click', function() {
+                let selectedLanguage = $(this).text();
+                $('#language-menu .main-menu-text' ).text(selectedLanguage);
+                // $('#language-dropdown').slideUp(200); // To bring back the menu
                 
                 languageCode = setCookie("playem-language-code", $(this).attr("value"));
                 window.location.reload();
             });
+
+            // Select on language from the dropdown list
+            $('.option.setting').on('click', function() {
+                let setting = $(this).attr("value");
+
+                if(setting=="rebuild"){
+
+                    // startSpinner();
+                    $("#spinner").show();
+                    $("#spinner").attr("width", "100%");    
+                    $("#spinner").attr("height", "100%");    
+
+                    setTimeout(function(){                    
+                        rq_method = "POST";
+                        rq_url = "http://" + host + port + "/control/rebuild";
+                        rq_assync = false;
+                        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+                        rebuild_result = result.responseJSON;
+
+                        window.location.reload(true);
+                    }, 100);
+
+                    // Wait 3 seconds and then reload the page
+//                    setTimeout(function(){ 
+                        // rq_method = "GET";
+                        // rq_url = "http://" + host + port + "/playem/";
+                        // rq_assync = false;
+                        // result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+                        // console.log(result.responseJSON);
+//                    }, 2000);  
+                }
+            });
+
+
+
+
 
         });
 
@@ -460,17 +478,17 @@
 <body>
   
     <div id="menu-line">
-        <div class="main-menu setting-menu">
+        <div id="setting-menu" class="main-menu">
             <div class="main-menu-text">Settings</div>
-            <ul class="setting-dropdown">
-                <li class="setting-option">Re-build</li>
+            <ul id="setting-dropdown" class="dropdown">
+                <li class="option setting" value="rebuild">Re-build</li>
             </ul>
         </div>
-        <div class="main-menu language-menu">
+        <div id="language-menu" class="main-menu">
             <div class="main-menu-text">English</div>
-            <ul class="language-dropdown">
-                <li class="language-option" value="en">English</li>
-                <li class="language-option" value="hu">Magyar </li>
+            <ul id="language-dropdown" class="dropdown">
+                <li class="option language" value="en">English</li>
+                <li class="option language" value="hu">Magyar </li>
             </ul>
         </div>
         <div class="main-menu empty">

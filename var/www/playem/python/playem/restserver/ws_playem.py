@@ -24,6 +24,7 @@ from playem.config.config import getConfig
 from playem.restserver.view_info import InfoView
 from playem.restserver.view_collect import CollectView
 from playem.restserver.view_translate import TranslateView
+from playem.restserver.view_control import ControlView
 
 class WSPlayem(Flask):
 
@@ -57,29 +58,21 @@ class WSPlayem(Flask):
         InfoView.register(self.app, init_argument=self)
         CollectView.register(self.app, init_argument=self)
         TranslateView.register(self.app, init_argument=self)
-
-        self.db=DB()
-
-        # TODO: at every start I recreate the table. Has to be fixed
-
-# Uncommented: regenerate db        
-        self.db.drop_tables()
-        self.db.create_tables()
+        ControlView.register(self.app, init_argument=self)
 
         self.cardHandle = CardHandle(self)
-        print("Started to collect media...")
+
+        # Create database if it is corrupted
         start = time.time()
-
-# Uncommented: regenerate db        
-        self.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self.db )
-
+        self.db=DB(self)
         end = time.time()
         diff = end-start
+
         records = self.db.get_numbers_of_records_in_card()
         print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))
-   
         print("The FQDN of the main file: %s" % (__name__))
         print("Web access: http://localhost{0}".format(self.webRelativePath))
+
 
     def getThreadControllerStatus(self):
         return self.gradualThreadController.getStatus()

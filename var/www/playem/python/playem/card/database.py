@@ -45,9 +45,12 @@ class SqlDatabase:
     TABLE_ROLE = "Role"
     TABLE_ACTOR_ROLE = "Actor_Role"
 
-    def __init__(self):
+    def __init__(self, web_gadget):
+        self.web_gadget = web_gadget
+
         config = getConfig()
         self.db_path = os.path.join(config["path"], config['card-db-name'])
+        self.mediaAbsolutePath = config["media-absolute-path"]
         self.translator = Translator.getInstance("en")
 
         self.language = self.translator.get_actual_language_code()
@@ -104,7 +107,7 @@ class SqlDatabase:
             # TODO: handle this case
             exit()
 
-        # check if the databases are correct
+        # check if the databases is corrupted
         if not self.is_dbs_ok():
             self.recreate_dbs()
 
@@ -134,10 +137,15 @@ class SqlDatabase:
         return True
 
     def recreate_dbs(self):
+
+        # Create new empty databases
         self.drop_all_existing_tables()
         logging.debug("All tables are dropped")            
         self.create_tables()
         logging.debug("All tables are recreated")            
+
+        # Fill up the database
+        self.web_gadget.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self )
 
     # TODO: figure out what the difference between drop_all_existing_tables and drop_tables
 
@@ -151,7 +159,8 @@ class SqlDatabase:
             try:
                 self.conn.execute("DROP TABLE {0}".format(table[0]))
             except sqlite3.OperationalError as e:
-                print(e)
+                logging.error("Error while DROP TABLE ({0}): {1}".format(table[0], e))
+
 
     def drop_tables(self):
 
@@ -480,11 +489,6 @@ class SqlDatabase:
                PRIMARY KEY (id_actor, id_role)
            );
         ''' )
-
-
-
-
-
 
         self.fill_up_theme_table_from_dict()
         self.fill_up_genre_table_from_dict()

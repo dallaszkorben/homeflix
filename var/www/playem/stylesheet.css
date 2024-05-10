@@ -106,7 +106,7 @@ body {
 #description-text-title{
         text-shadow: 0px 0px 20px black;
         font-weight: bold;
-        font-size: 80px;
+        font-size: 6em;
         color: white;
         white-space: wrap;
         border: 10px solid transparent;                         /* Needed to make margin to the text */
@@ -554,50 +554,45 @@ body {
 
 #menu-line {
     position: fixed;
-    top: 0;
+    top: -3.6em;
     left: 0;
     width: 100%;
     background-color: #333;
     color: #fff;
     padding: 0px;
-    transition: height 0.5s ease-in-out;
+    transition: top 0.3s ease-in-out;
     z-index: 10;
 
-    display: none;
-    /* display:flex; */
+    display:inline-flex;
+    flex-direction: row; 
+    justify-content: flex-end;
     gap: 0.5em;
 
     font-family: 'Brush Script MT', cursive;
-    font-size: 1.5em;
+    font-size: 2em;
     font-weight: bold;
 }
   
 #menu-line.show {
-    display:inline-flex;
-    flex-direction: row; 
-    justify-content: flex-end;
-}
-  
-.main-menu {
-    cursor: pointer;
+    top: 0;
 }
 
 .main-menu-text{
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 0.8em;
+    padding-bottom: 0.8em;
+}
+
+.main-menu {
+    cursor: pointer;
 }
 
 .main-menu:hover {
     background-color: #fd0000;
 }
 
-
-
-.setting-dropdown {
+.main-menu .dropdown {
     display: none;
     position: absolute;
-/*    top: 30px;*/
-/*    right: 0;*/
     background-color: #fff;
     border: 1px solid #ccc;
     padding: 1px 0;
@@ -606,49 +601,17 @@ body {
     margin: 0px;
 }
 
-.setting-dropdown li {
+.main-menu .dropdown li {
     padding: 5px 10px;
     color: #000;
 }
   
-.setting-dropdown li:hover {
-    background-color: #f2f2f2;
+.main-menu .dropdown li:hover {
+    background-color: #9f9f9f;
 }
   
-.setting-dropdown li.selected {
-    background-color: #ccc;
+.main-menu .dropdown li.selected {
+    background-color: #ddd;
     color: #fff;
 }
-
-
-.language-dropdown {
-    display: none;
-    position: absolute;
-/*    top: 30px;*/
-/*    right: 0;*/
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 1px 0;
-    list-style: none;
-    z-index: 1;
-    margin: 0px;
-}
-
-
-
-
-.language-dropdown li {
-    padding: 5px 10px;
-    color: #000;
-}
-  
-.language-dropdown li:hover {
-    background-color: #f2f2f2;
-}
-  
-.language-dropdown li.selected {
-    background-color: #ccc;
-    color: #fff;
-}
-
-  
+ 

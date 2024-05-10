@@ -295,7 +295,7 @@ class RestGenerator extends Generator{
             thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
-            console.log(hit["storyline"]);
+//            console.log(hit["storyline"]);
 
             thumbnail.setTextCard({storyline:hit["storyline"], lyrics:hit["lyrics"]});
             thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"]});

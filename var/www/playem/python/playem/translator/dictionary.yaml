@@ -37,7 +37,7 @@ language:
         zh: Chinese
         nl: Dutch
 
-    selection:
+    in_native:
         hu: Magyar
         en: English
         sv: Svenska
@@ -438,7 +438,7 @@ title:
     recipetype: Recipe type
 
     movies: Movies
-    movies_filter: Movie Filter
+    movie_filter: Movie Filter
     movie_series: Movie Series
 
     series: Series

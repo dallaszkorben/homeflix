@@ -37,6 +37,25 @@ language:
         zh: Kínai
         nl: Holland
 
+    in_native:
+        hu: Magyar
+        en: English
+        sv: Svenska
+        fr: Français
+        es: Español
+        it: Italiano
+        de: Deutsch
+        ru: Русский язык
+        pl: Polski
+        'no': Norsk
+        dk: Dansk
+        cs: čeština
+        ko: 한국어
+        hr: Hrvatski
+        ga: Gaeilge
+        zh: 广州话
+        nl: Nederlands
+
 country:
     short:
         eu: Eu
