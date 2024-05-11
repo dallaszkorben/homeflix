@@ -150,6 +150,30 @@ python -m pip install pyyaml
 sudo apt-get install yq
 ```
 
+### Create .playem folder 
+On the /home/pi folder dreate .playem folder
+```sh
+$ mkdir /home/pi/.playem
+```
+
+Create the configuration file in the .playem folder
+```sh
+$ echo "---
+log:
+    file-name: playem.log
+    level: DEBUG
+media:
+    absolute-path: /media/pi/MEDIA
+    relative-path: MEDIA
+web:
+    absolute-path: /var/www/playem
+    relative-path: /playem
+card:
+    db-name: playem.db
+...
+" > /home/pi/.playem/config.yaml
+```
+
 ### Mount the media
 Mount your playem media folder to the /var/www/playem/MEDIA folder
 1. connect the device
