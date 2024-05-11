@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
     <script src="script/highlight/highlight.min.js"></script>
 
+    <link rel="stylesheet" href="script/blurt/css/blurt.min.css">
+    <script src="script/blurt/js/blurt.min.js"></script>
+
     <script src="container.js"></script>
     <script src="generators.js"></script>
 
@@ -463,10 +466,7 @@
 
                 if(setting=="update"){
 
-                    // startSpinner();
-                    $("#spinner").show();
-                    $("#spinner").attr("width", "100%");    
-                    $("#spinner").attr("height", "100%");    
+                    Generator.startSpinner();
 
                     setTimeout(function(){                    
                         rq_method = "POST";
@@ -475,7 +475,17 @@
                         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
                         rebuild_result = result.responseJSON;
                         console.log(rebuild_result);
-//                        window.location.reload(true);
+
+                        Generator.stopSpinner();
+
+                        if(rebuild_result['result'] != "SUCCESS"){
+                            blurt({
+                                title: "Warning", 
+                                text: "Update failed.   " + rebuild_result['error'] + " Command: " + rebuild_result['command'][0], 
+                                type: 'warning'}); //success/error/info/warning
+                        }else{
+                            window.location.reload(true);
+                        }
                     }, 100);
                 }
             });

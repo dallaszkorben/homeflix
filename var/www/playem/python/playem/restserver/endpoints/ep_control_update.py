@@ -55,26 +55,4 @@ class EPControlUpdate(EP):
             output["error"] = process.stderr
             output["command"] = process.args
 
-
-            # print("Apache restarted successfully")
-
-#            process = subprocess.run(['sudo /usr/sbin/service apache2 restart'], capture_output=True,text=True, shell=True, check=False)
-#            # process = subprocess.run(["sudo /usr/bin/pwd"], capture_output=True,text=True, shell=True, check=True)
-#            #process = subprocess.run(["whoami"], capture_output=True,text=True, shell=True, check=True)
-#
-#            logging.debug("Apache restarted successfully: {0}".format(str(process)))
-#            output["result"] = "SUCCESS"
-#            # print("Apache restarted successfully")
-#        except subprocess.CalledProcessError as e:
-#            logging.debug("Error restarting Apache: {0}".format(str(e)))
-#            # print("Error restarting Apache: {0}".format(str(e)))
-#            output["result"] = "EXCEPTION"
-#            output["error"] = str(e)
-#        # except Exception as f:
-#        #     logging.debug("Other error. Error restarting Apache: {0}".format(str(f)))
-#        #     print("Error restarting Apache: {0}".format(str(f)))
-#        #     output["result"] = "EXCEPTION"
-#        #     output["error"] = str(f)
-
-
         return output_json(output, EP.CODE_OK)
