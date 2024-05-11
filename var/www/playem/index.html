@@ -443,10 +443,7 @@
 
                 if(setting=="rebuild"){
 
-                    // startSpinner();
-                    $("#spinner").show();
-                    $("#spinner").attr("width", "100%");    
-                    $("#spinner").attr("height", "100%");    
+                    Generator.startSpinner();
 
                     setTimeout(function(){                    
                         rq_method = "POST";
@@ -484,12 +481,15 @@
                                 text: "Update failed.   " + rebuild_result['error'] + " Command: " + rebuild_result['command'][0], 
                                 type: 'warning'}); //success/error/info/warning
                         }else{
+                            blurt({
+                                title: "Success", 
+                                text: "Successfully updated", 
+                                type: 'success'}); //success/error/info/warning
                             window.location.reload(true);
                         }
                     }, 100);
                 }
             });
-
 
 
 
