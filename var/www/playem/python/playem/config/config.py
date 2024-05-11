@@ -21,6 +21,8 @@ class Config( Property ):
 
     DEFAULT_CARD_DB_NAME = "playem.db"
 
+    DEFAULT_PROJECT_PATH = "/home/pi/Projects/python/playem"
+
     __instance = None
 
     def __new__(cls):
@@ -61,6 +63,9 @@ class Config( Property ):
         confDict['card'] = {}
         confDict['card']['db-name'] = Config.DEFAULT_CARD_DB_NAME
 
+        confDict['project'] = {}
+        confDict['project']['path'] = Config.DEFAULT_PROJECT_PATH
+
         self.writeDict(confDict)
         return confDict
 
@@ -88,6 +93,9 @@ class Config( Property ):
     def getCardDBName(self):
         return self.confDict['card']['db-name']
 
+    def getProjectPath(self):
+        return self.confDict['project']['path']
+
 def getConfig():
     cb = Config.getInstance()
     config = {}
@@ -104,5 +112,7 @@ def getConfig():
     config["media-relative-path"] = cb.getMediaRelativePath()
 
     config["card-db-name"] = cb.getCardDBName()
+
+    config["project-path"] = cb.getProjectPath()
 
     return config

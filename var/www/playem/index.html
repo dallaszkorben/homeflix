@@ -434,7 +434,7 @@
                 window.location.reload();
             });
 
-            // Select on language from the dropdown list
+            // Select Rebuild from the dropdown list
             $('.option.setting').on('click', function() {
                 let setting = $(this).attr("value");
 
@@ -454,18 +454,31 @@
 
                         window.location.reload(true);
                     }, 100);
-
-                    // Wait 3 seconds and then reload the page
-//                    setTimeout(function(){ 
-                        // rq_method = "GET";
-                        // rq_url = "http://" + host + port + "/playem/";
-                        // rq_assync = false;
-                        // result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-                        // console.log(result.responseJSON);
-//                    }, 2000);  
                 }
             });
 
+            // Select Update from the dropdown list
+            $('.option.setting').on('click', function() {
+                let setting = $(this).attr("value");
+
+                if(setting=="update"){
+
+                    // startSpinner();
+                    $("#spinner").show();
+                    $("#spinner").attr("width", "100%");    
+                    $("#spinner").attr("height", "100%");    
+
+                    setTimeout(function(){                    
+                        rq_method = "POST";
+                        rq_url = "http://" + host + port + "/control/update";
+                        rq_assync = false;
+                        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+                        rebuild_result = result.responseJSON;
+                        console.log(rebuild_result);
+//                        window.location.reload(true);
+                    }, 100);
+                }
+            });
 
 
 
@@ -479,9 +492,10 @@
   
     <div id="menu-line">
         <div id="setting-menu" class="main-menu">
-            <div class="main-menu-text">Settings</div>
+            <div class="main-menu-text">Server Settings</div>
             <ul id="setting-dropdown" class="dropdown">
-                <li class="option setting" value="rebuild">Re-build</li>
+                <li class="option setting" value="rebuild">Re-build DB</li>
+                <li class="option setting" value="update">Update SW</li>
             </ul>
         </div>
         <div id="language-menu" class="main-menu">

@@ -43,6 +43,7 @@ class WSPlayem(Flask):
         self.webAbsolutePath = self.cg["web-absolute-path"]
         self.mediaAbsolutePath = self.cg["media-absolute-path"]
         self.mediaRelativePath = self.cg["media-relative-path"]
+        self.projectPath = self.cg["project-path"]
 
         # LOG 
         self.logPath = os.path.join(self.configPath, self.logFileName)
