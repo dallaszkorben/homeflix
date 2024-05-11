@@ -115,6 +115,9 @@ sudo ln -s  /home/pi/Projects/playem/var/www/playem/ /var/www/playem
 sudo ln -s  /home/pi/Projects/playem/etc/apache2/sites-available/playem.conf /etc/apache2/sites-available/
 sudo rm /etc/apache2/sites-enabled/*.conf
 sudo ln -s  /etc/apache2/sites-available/playem.conf /etc/apache2/sites-enabled/
+
+# I need the MEDIA folder, but I can not keep it in the project - must be created manually (empty folder is ignored by git)
+mkdir /home/pi/Projects/python/playem/var/www/playem/MEDIA
 ```
 
 ### Create virtual environment
