@@ -179,7 +179,7 @@ Mount your playem media folder to the /var/www/playem/MEDIA folder
 1. connect the device
 2. mount the device:
 ```sh
-$ sudo mount /dev/sda1 /media/pi
+$ sudo mount /dev/sda1/MEDIA /media/pi
 ```
 3. mount the media folder to the MEDIA folder
 ```sh
@@ -215,8 +215,17 @@ sudo systemctl restart apache2.service
 
 Create shell script
 ```sh
+sudo touch /usr/local/bin/startplayem.sh
+sudo bash -c 'echo -e "ABSOLUTE_PATH=\$(yq -r '"'"'.media[\"absolute-path\"]'"'"' /home/pi/.playem/config.yaml)" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "RELATIVE_PATH=\$(yq -r '"'"'.media[\"relative-path\"]'"'"' /home/pi/.playem/config.yaml)" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo mount -o bind \$ABSOLUTE_PATH /var/www/playem/\$RELATIVE_PATH/" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
+sudo chmod 755 /usr/local/bin/startplayem.sh
 
-
+### --- ignore this part ---
 sudo touch /usr/local/bin/startplayem.sh
 sudo bash -c 'echo -e "#!/bin/bash" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
@@ -225,6 +234,17 @@ sudo bash -c 'echo -e "sudo mount -o bind /media/pi/vegyes/MEDIA /var/www/playem
 sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
 ```
+Reason of using '"'"'
+You are not allowed to escape single quote inside single quote.
+Explanation of how '"'"' is interpreted as just ':
+
+' End first quotation which uses single quotes.
+" Start second quotation, using double-quotes.
+' Quoted character.
+" End second quotation, using double-quotes.
+' Start third quotation, using single quotes.
+
+
 
 Modify the crontab config file to make the script run after the reboot automatically
 ```sh
