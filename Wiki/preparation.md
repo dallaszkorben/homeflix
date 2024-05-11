@@ -179,7 +179,8 @@ Mount your playem media folder to the /var/www/playem/MEDIA folder
 1. connect the device
 2. mount the device:
 ```sh
-$ sudo mount /dev/sda1/MEDIA /media/pi
+# --- most probably the pi mounted it automatically. that case ignore this step ---
+$ udisksctl mount --block-device /dev/sda1 --no-user-interaction  /media/pi/MEDIA
 ```
 3. mount the media folder to the MEDIA folder
 ```sh
@@ -225,7 +226,7 @@ sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
 sudo chmod 755 /usr/local/bin/startplayem.sh
 
-### --- ignore this part ---
+# --- ignore this part ---
 sudo touch /usr/local/bin/startplayem.sh
 sudo bash -c 'echo -e "#!/bin/bash" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
