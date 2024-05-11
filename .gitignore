@@ -9,8 +9,7 @@ __pycache__/
 # C extensions
 *.so
 
-#MEDIA
-
+MEDIA
 
 # Distribution / packaging
 .Python
