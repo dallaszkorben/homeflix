@@ -147,7 +147,7 @@ python -m pip install pyyaml
 
 ### Install extra packages
 ```sh
-sudo apt-get install yp
+sudo apt-get install yq
 ```
 
 ### Mount the media
