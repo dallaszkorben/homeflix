@@ -262,5 +262,16 @@ $ sudo umount /var/www/playem
 $ sudo umount /dev/sda1
 ```
 
+### TEMPORARILY I NEED THIS INFO 
+```sh
+sudo mount -o bind /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
+sudo mount -o bind  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
+# ---
+$ sudo umount /var/www/playem/MEDIA
+$ sudo systemctl stop apache2
+$ sudo umount /var/www/playem
+$ sudo umount /dev/sda1
+
+```
 
 
