@@ -12,11 +12,12 @@
     <link href="script/fancybox/jquery.fancybox.min.css" rel="stylesheet" />
     <script src="script/fancybox/jquery.fancybox.min.js"></script>
 
+<!--    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css"> -->
+    <link rel="stylesheet" href="script/jquery-ui/jquery-ui.css">
+    <script src="script/jquery-ui/jquery-ui.js"></script>
+
     <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
     <script src="script/highlight/highlight.min.js"></script>
-
-    <link rel="stylesheet" href="script/blurt/css/blurt.min.css">
-    <script src="script/blurt/js/blurt.min.js"></script>
 
     <script src="container.js"></script>
     <script src="generators.js"></script>
@@ -301,8 +302,6 @@
             let oThumbnailController = new ThumbnailController(mainMenuGenerator);
             let oScrollSection = oThumbnailController.getScrollSection();
 
-//            oScrollSection.focusDefault();
-
             // -----------------------
             // Listener configurations
             // -----------------------
@@ -476,16 +475,36 @@
                         Generator.stopSpinner();
 
                         if(rebuild_result['result'] != "SUCCESS"){
-                            blurt({
-                                title: "Warning", 
-                                text: "Update failed.   " + rebuild_result['error'] + " Command: " + rebuild_result['command'][0], 
-                                type: 'warning'}); //success/error/info/warning
+
+                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + rebuild_result['message'] + "<br><br>Command: " + rebuild_result['command'][0]);
+                            $("#dialog-warning-update-failed" ).dialog({
+                                resizable: false,
+                                height: "auto",
+                                width: 400,
+                                modal: true,
+                                buttons: {
+                                    "OK": function() {
+                                        $( this ).dialog( "close" );
+                                        window.location.reload(true);
+                                    }
+                                }
+                            });
+
                         }else{
-                            blurt({
-                                title: "Success", 
-                                text: "Successfully updated", 
-                                type: 'success'}); //success/error/info/warning
-                            window.location.reload(true);
+
+                            $("#dialog-success-update-success p").html("Successfully updated");
+                            $("#dialog-success-update-success" ).dialog({
+                                resizable: false,
+                                height: "auto",
+                                width: 400,
+                                modal: true,
+                                buttons: {
+                                    "OK": function() {
+                                        $( this ).dialog( "close" );
+                                        window.location.reload(true);
+                                    }
+                                }
+                            });
                         }
                     }, 100);
                 }
@@ -500,6 +519,14 @@
 
 <body>
   
+
+    <div id="dialog-warning-update-failed" title="Failure" style="display:none">
+        <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
+    </div>
+    <div id="dialog-success-update-success" title="Success" style="display:none">
+        <div class="ui-icon ui-icon-check" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
+    </div>    
+
     <div id="menu-line">
         <div id="setting-menu" class="main-menu">
             <div class="main-menu-text">Server Settings</div>
@@ -581,6 +608,8 @@
             <pre><code id="text-content"></code></pre>
         </div>
     </div>
+
+
 </body>
 
 </html>

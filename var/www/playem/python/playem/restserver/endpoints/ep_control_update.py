@@ -48,11 +48,13 @@ class EPControlUpdate(EP):
             logging.debug("Update finished successfully: {0}".format(process.stdout))
             print("Update code finished")
             output["result"] = "SUCCESS"
+            output["message"] = process.stdout
+            output["command"] = process.args
         else:
             logging.debug("Update failed: {0}. Command: {1}".format(process.stderr, process.args))
             print("Update code failed: {0}. Command: {1}".format(process.stderr, process.args))
             output["result"] = "EXCEPTION"
-            output["error"] = process.stderr
+            output["message"] = process.stderr
             output["command"] = process.args
 
         return output_json(output, EP.CODE_OK)
