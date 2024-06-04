@@ -837,7 +837,7 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         containerList.push(oContainer);
  
         return containerList;
-    }  
+    }
 }
 
 
@@ -997,16 +997,38 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let series_filter = {category: 'movie', level: 'series', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let series_tail_filter         = {category: 'movie', level: 'series', genres:'tale',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let series_comedy_filter       = {category: 'movie', level: 'series', genres:'comedy',      themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let series_drama_filter        = {category: 'movie', level: 'series', genres:'drama',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let series_thriller_filter     = {category: 'movie', level: 'series', genres:'thriller',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let series_scifi_filter        = {category: 'movie', level: 'series', genres:'scifi',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let series_documentary_filter  = {category: 'movie', level: 'series', genres:'documentary', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        // let series_filter        = {category: 'movie', level: 'series', genres:'*',      themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: this.container_title, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_filter}
+            {title: this.container_title + "-" + translated_genre_movie['tale'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_tail_filter},
+            {title: this.container_title + "-" + translated_genre_movie['drama'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_drama_filter},
+            {title: this.container_title + "-" + translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_comedy_filter},
+            {title: this.container_title + "-" + translated_genre_movie['thriller'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_thriller_filter},           
+            {title: this.container_title + "-" + translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_scifi_filter},
+            {title: this.container_title + "-" + translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_documentary_filter},
+          
+        //    {title: this.container_title + "-", rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_filter}
         ];
 
         containerList = this.generateContainers(requestList);
         return containerList;
     }
 }
+
+
+
+
+
+
+
+
 
 
 class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
@@ -1019,16 +1041,37 @@ class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let sequel_filter = {category: 'movie', level: 'sequel', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let sequel_drama_filter    = {category: 'movie', level: 'sequel', genres:'drama',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let sequel_comedy_filter   = {category: 'movie', level: 'sequel', genres:'comedy',   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let sequel_thriller_filter = {category: 'movie', level: 'sequel', genres:'thriller', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let sequel_action_filter   = {category: 'movie', level: 'sequel', genres:'action',   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let sequel_scifi_filter    = {category: 'movie', level: 'sequel', genres:'scifi',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        // let sequel_filter = {category: 'movie', level: 'sequel', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_filter}
+            {title: this.container_title + "-" + translated_genre_movie['drama'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_drama_filter},
+            {title: this.container_title + "-" + translated_genre_movie['comedy'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_comedy_filter},
+            {title: this.container_title + "-" + translated_genre_movie['thriller'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_thriller_filter},
+            {title: this.container_title + "-" + translated_genre_movie['action'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_action_filter},
+            {title: this.container_title + "-" + translated_genre_movie['scifi'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_scifi_filter},
+
+        //    {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_filter}
         ];
 
         containerList = this.generateContainers(requestList);
         return containerList;
     }
 }
+
+
+
+
+
+
+
+
+
 
 
 class MovieRemakesLevelRestGenerator extends  GeneralRestGenerator{
