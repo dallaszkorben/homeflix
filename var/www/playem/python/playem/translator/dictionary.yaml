@@ -17,6 +17,7 @@ language:
         ga: Irish
         zh: Chi
         nl: Dut
+        fi: FIN
 
     long:
         hu: Hungarian
@@ -36,6 +37,7 @@ language:
         ga: Irish
         zh: Chinese
         nl: Dutch
+        fi: Finnish
 
     in_native:
         hu: Magyar
@@ -55,6 +57,7 @@ language:
         ga: Gaeilge
         zh: 广州话
         nl: Nederlands
+        fi: Suomi
 
 country:
     short:
@@ -87,6 +90,7 @@ country:
         ar: Arg
         cn: Chi
         nl: Nld
+        fi: FIN
 
     long:
         eu: Europian Union
@@ -118,6 +122,7 @@ country:
         ar: Argentina
         cn: China
         nl: Netherlands
+        fi: Finland
 
 category:
     movie: Movie
@@ -214,6 +219,7 @@ genre:
         trash: Trash
         police: Police
         political: Political
+        teen: Teen
 
     audiobook:
         <<: *common
@@ -347,6 +353,7 @@ theme:
     virtual_reality: Virtual Reality
     godless_world: Godless World
     inhumanity: Inhumanity
+    human_nature: Human Nature
     prejudice: Prejudice
     opportunism: Opportunism
     talent_mediocrity: Talent and Mediocrity
@@ -407,6 +414,7 @@ theme:
     ufo: UFO
     iot: IoT
     it: IT
+    technology: Technology
     light: Light
     jewellery: Jewellery
     eu: European Union
@@ -414,7 +422,6 @@ theme:
     cathastroph: Catastrophe
     collapse: Collapse
     boat: Boat
-    apocalipse: Apocalipse
     bank: Bank
     broker: Broker
     propaganda: Propaganda

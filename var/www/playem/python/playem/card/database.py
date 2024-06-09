@@ -103,7 +103,7 @@ class SqlDatabase:
             self.conn.row_factory = sqlite3.Row 
         except Error as e:
             logging.error( "Connection to {0} SQLite failed. Error: {1}".format(self.db_path, e))
-            
+
             # TODO: handle this case
             exit()
 

@@ -17,6 +17,7 @@ language:
         ga: Ír
         zh: Chi
         nl: Dut
+        fi: FIN
 
     long:
         hu: Magyar
@@ -36,6 +37,7 @@ language:
         ga: Ír
         zh: Kínai
         nl: Holland
+        fi: Finn
 
     in_native:
         hu: Magyar
@@ -55,6 +57,7 @@ language:
         ga: Gaeilge
         zh: 广州话
         nl: Nederlands
+        fi: Suomi
 
 country:
     short:
@@ -87,6 +90,7 @@ country:
         ar: Arg
         cn: Chi
         nl: Nld
+        fi: FIN
 
     long:
         eu: Europai Unió
@@ -118,6 +122,7 @@ country:
         ar: Argentína
         cn: Kínai
         nl: Holland
+        fi: Finn
 
 category:
     movie: Mozi
@@ -214,6 +219,7 @@ genre:
         trash: Szemét
         police: Rendőrség
         political: Politikai
+        teen: Ifjúsági
 
     audiobook:
         <<: *common
@@ -347,11 +353,12 @@ theme:
     virtual_reality: Virtuális valóság
     godless_world: Istentelen világ
     inhumanity: Embertelenség
+    human_nature: Emberi természet
     prejudice: Előitélet
     opportunism: Megalkuvás
     talent_mediocrity: Tehetség és középszer harca
     envy: Irigység
-    jealousy: Féltékenysg
+    jealousy: Féltékenység
     pc: PC kritika
     gender: Gender
     alien: Idegenek
@@ -407,6 +414,7 @@ theme:
     ufo: UFO
     iot: IoT
     it: IT
+    technology: Technológia
     light: Fény
     jewellery: Ékszerek
     eu: Europai Unió
@@ -414,7 +422,6 @@ theme:
     cathastroph: Katasztrófa
     collapse: Összeomlás
     boat: Hajó
-    apocalipse: Apokalipszis
     bank: Bank
     broker: Bróker
     propaganda: Propaganda
@@ -535,7 +542,7 @@ title:
 
     sequence:
         part: '{0}. rész'
-        season: '{0}. sorozat'
+        season: '{0}. évad'
         record: '{0}. szám'
         simple: '{0}'
         general: '#{0}'

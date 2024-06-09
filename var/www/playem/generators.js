@@ -845,18 +845,19 @@ class MovieFilterGenreRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_drama    = {category: 'movie', level: '*', genres:'drama',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_scifi    = {category: 'movie', level: '*', genres:'scifi',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_fantasy  = {category: 'movie', level: '*', genres:'fantasy',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_comedy   = {category: 'movie', level: '*', genres:'comedy',   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_satire   = {category: 'movie', level: '*', genres:'satire',   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_crime    = {category: 'movie', level: '*', genres:'crime',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_action   = {category: 'movie', level: '*', genres:'action',   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_thriller = {category: 'movie', level: '*', genres:'thriller', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_western  = {category: 'movie', level: '*', genres:'western',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_war      = {category: 'movie', level: '*', genres:'war',      themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_music    = {category: 'movie', level: '*', genres:'music',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_trash    = {category: 'movie', level: '*', genres:'trash',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_drama    = {category: 'movie', level: '*', genres:'drama',                  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_scifi    = {category: 'movie', level: '*', genres:'scifi',                  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_fantasy  = {category: 'movie', level: '*', genres:'fantasy',                themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_comedy   = {category: 'movie', level: '*', genres:'comedy_AND__NOT_teen',   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_teen     = {category: 'movie', level: '*', genres:'teen',                   themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_satire   = {category: 'movie', level: '*', genres:'satire',                 themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_crime    = {category: 'movie', level: '*', genres:'crime',                  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_action   = {category: 'movie', level: '*', genres:'action',                 themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_thriller = {category: 'movie', level: '*', genres:'thriller',               themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_western  = {category: 'movie', level: '*', genres:'western',                themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_war      = {category: 'movie', level: '*', genres:'war',                    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_music    = {category: 'movie', level: '*', genres:'music',                  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_trash    = {category: 'movie', level: '*', genres:'trash',                  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
 
         let requestList = [
@@ -864,6 +865,7 @@ class MovieFilterGenreRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_scifi},
             {title: translated_genre_movie['fantasy'],     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_fantasy},
             {title: translated_genre_movie['comedy'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_comedy},
+            {title: translated_genre_movie['teen'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_teen},
             {title: translated_genre_movie['satire'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_satire},
             {title: translated_genre_movie['crime'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_crime},
             {title: translated_genre_movie['action'],      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_action},
@@ -944,24 +946,26 @@ class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_robert_de_Niro    = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Robert De Niro',   lecturers: '*', origins: '*', decade: '*'};
-        let filter_al_pacino         = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Al Pacino',        lecturers: '*', origins: '*', decade: '*'};
-        let filter_johnny_depp       = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Johnny Depp',      lecturers: '*', origins: '*', decade: '*'};
-        let filter_benicio_del_toro  = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Benicio Del Toro', lecturers: '*', origins: '*', decade: '*'};
-        let filter_robert_loggia     = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Robert Loggia',    lecturers: '*', origins: '*', decade: '*'};
-        let filter_gene_hackman      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Gene Hackman',     lecturers: '*', origins: '*', decade: '*'};
-        let filter_michael_douglas   = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Michael Douglas',  lecturers: '*', origins: '*', decade: '*'};
-        let filter_peter_greene      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Peter Greene',     lecturers: '*', origins: '*', decade: '*'};
-        let filter_kevin_spacey      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Kevin Spacey',     lecturers: '*', origins: '*', decade: '*'};
-        let filter_joaquin_phoenix   = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Joaquin Phoenix',  lecturers: '*', origins: '*', decade: '*'};
-        let filter_jonah_hill        = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Jonah Hill',       lecturers: '*', origins: '*', decade: '*'};
-        let filter_simon_pegg        = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Simon Pegg',       lecturers: '*', origins: '*', decade: '*'};
+        let filter_robert_de_Niro    = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Robert De Niro',      lecturers: '*', origins: '*', decade: '*'};
+        let filter_al_pacino         = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Al Pacino',           lecturers: '*', origins: '*', decade: '*'};
+        let filter_johnny_depp       = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Johnny Depp',         lecturers: '*', origins: '*', decade: '*'};
+        let filter_benicio_del_toro  = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Benicio Del Toro',    lecturers: '*', origins: '*', decade: '*'};
+        let filter_nicole_kidman     = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Nicole Kidman',       lecturers: '*', origins: '*', decade: '*'};
+        let filter_robert_loggia     = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Robert Loggia',       lecturers: '*', origins: '*', decade: '*'};
+        let filter_gene_hackman      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Gene Hackman',        lecturers: '*', origins: '*', decade: '*'};
+        let filter_michael_douglas   = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Michael Douglas',     lecturers: '*', origins: '*', decade: '*'};
+        let filter_peter_greene      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Peter Greene',        lecturers: '*', origins: '*', decade: '*'};
+        let filter_kevin_spacey      = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Kevin Spacey',        lecturers: '*', origins: '*', decade: '*'};
+        let filter_joaquin_phoenix   = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Joaquin Phoenix',     lecturers: '*', origins: '*', decade: '*'};
+        let filter_jonah_hill        = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Jonah Hill',          lecturers: '*', origins: '*', decade: '*'};
+        let filter_simon_pegg        = {category: 'movie', level: '*', genres:'*', themes: '*', directors: '*', actors: 'Simon Pegg',          lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
             {title: "Robert De Niro",      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_robert_de_Niro},
             {title: "Al Pacino",           rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_al_pacino},
             {title: "Johnny Depp",         rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_johnny_depp},
             {title: "Benicio Del Toro",    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_benicio_del_toro},
+            {title: "Nicole Kidman",       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_nicole_kidman},
             {title: "Robert Loggia",       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_robert_loggia},
             {title: "Gene Hackman",        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_gene_hackman},
             {title: "Michael Douglas",     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_michael_douglas},
