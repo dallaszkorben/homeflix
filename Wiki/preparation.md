@@ -193,7 +193,7 @@ network={
 ```
 
 2. configure the interface
-Edit the */etc/network/interfaces file
+Edit the */etc/network/interfaces* file
 ```sh
 source /etc/network/interfaces.d/*
 
@@ -210,10 +210,10 @@ iface wlan inet dhcp
 3. configure the wpa
 Create the service file
 ```sh
-$ touch /etc/systemd/system/wpa_supplicant.service
+$ touch */etc/systemd/system/wpa_supplicant.service*
 ```
 
-Edit the /etc/systemd/system/wpa_supplicant.service file
+Edit the */etc/systemd/system/wpa_supplicant.service* file
 ```sh
 [Unit]
 Description=WPA supplicant
