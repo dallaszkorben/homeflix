@@ -177,6 +177,92 @@ card:
 " > /home/pi/.playem/config.yaml
 ```
 
+### Configure automatic connection to wifi
+1. configure the connection
+Edit the */etc/wpa_supplicant/wpa_supplicant.conf* file
+```sh
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=US
+network={
+    ssid="your_wifi_ssid"
+    psk="password"
+    key_mgmt=WPA-PSK
+    id_str='AP1"
+}
+```
+
+2. configure the interface
+Edit the */etc/network/interfaces file
+```sh
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+iface eth0 inet manual
+
+auto wlan0
+allow-hotplug wlan0
+iface wlan inet dhcp
+    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+3. configure the wpa
+Create the service file
+```sh
+$ touch /etc/systemd/system/wpa_supplicant.service
+```
+
+Edit the /etc/systemd/system/wpa_supplicant.service file
+```sh
+[Unit]
+Description=WPA supplicant
+Wants=network.target
+After=network.target
+[Service]
+Type=simple
+ExecStartPre=/sbin/ifconfig wlan0 up
+ExecStart=/sbin/wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target
+```
+
+4. Test it
+```sh
+$ sudo ifdown wlan0
+$ sudo ifup wlan0
+
+Shows ERROR:
+Failed to initialize control interface
+you may have another wpa_supplicant process already running
+```
+
+Stop and disable the other wpa_supplicant processes if you have the error
+```sh
+$ sudo systemctl stop NetworkManager
+$ sudo killall wpasupplicant
+$ sudo killall wpa_supplicant
+$ sudo systemctl disable NetworkManager
+```
+
+Try again
+```sh
+$ sudo ifup wlan0
+```
+
+5. reboot
+```sh
+$ sudo reboot
+```
+
+6. test the network
+```sh
+$ iwconfig
+$ ifconfig
+```
+
+
 ### Mount the media
 Mount your playem media folder to the /var/www/playem/MEDIA folder
 1. connect the device
