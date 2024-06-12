@@ -228,7 +228,7 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 ```
 
-4. Test it
+4.a Test it
 ```sh
 $ sudo ifdown wlan0
 $ sudo ifup wlan0
@@ -236,6 +236,10 @@ $ sudo ifup wlan0
 Shows ERROR:
 Failed to initialize control interface
 you may have another wpa_supplicant process already running
+
+# in case of ifdown wlan0/ifup wlan0 does not work:
+$ ip link set wlan0 down
+$ ip link set wlan0 up
 ```
 
 Stop and disable the other wpa_supplicant processes if you have the error
