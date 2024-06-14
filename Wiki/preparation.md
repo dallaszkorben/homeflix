@@ -210,7 +210,7 @@ iface wlan inet dhcp
 3. configure the wpa
 Create the service file
 ```sh
-$ touch */etc/systemd/system/wpa_supplicant.service*
+$ touch /etc/systemd/system/wpa_supplicant.service
 ```
 
 Edit the */etc/systemd/system/wpa_supplicant.service* file
@@ -248,6 +248,12 @@ $ sudo systemctl stop NetworkManager
 $ sudo killall wpasupplicant
 $ sudo killall wpa_supplicant
 $ sudo systemctl disable NetworkManager
+```
+
+Ensure the service file is enabled and started
+```sh
+$ sudo systemctl enable wpa_supplicant.service
+$ sudo systemctl start wpa_supplicant.service
 ```
 
 Try again
