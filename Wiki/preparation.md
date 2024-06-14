@@ -203,7 +203,7 @@ iface eth0 inet manual
 
 auto wlan0
 allow-hotplug wlan0
-iface wlan inet dhcp
+iface wlan0 inet dhcp
     wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 ```
 
