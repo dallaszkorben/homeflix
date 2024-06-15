@@ -337,7 +337,15 @@ sudo systemctl restart apache2.service
 
 Create shell script
 ```sh
-sudo touch /usr/local/bin/startplayem.sh
+sudo bash -c 'echo -e "sudo touch /usr/local/bin/startplayem.sh" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "" >> /usr/local/bin/startplayem.sh'" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo systemctl stop apache2" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "# I got an error before: mount: (hint) your fstab has been modified, but systemd still uses the old version; use `systemctl daemon-reload` to reload" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo systemctl daemon-reload" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "# reload the /etc/network/interfaces" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo systemctl restart networking" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "ABSOLUTE_PATH=\$(yq -r '"'"'.media[\"absolute-path\"]'"'"' /home/pi/.playem/config.yaml)" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "RELATIVE_PATH=\$(yq -r '"'"'.media[\"relative-path\"]'"'"' /home/pi/.playem/config.yaml)" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
@@ -348,13 +356,13 @@ sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startpl
 sudo chmod 755 /usr/local/bin/startplayem.sh
 
 # --- ignore this part ---
-sudo touch /usr/local/bin/startplayem.sh
+~~sudo touch /usr/local/bin/startplayem.sh
 sudo bash -c 'echo -e "#!/bin/bash" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sudo mount -o bind /media/pi/vegyes/MEDIA /var/www/playem/MEDIA/" >> /usr/local/bin/startplayem.sh'
 sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
+sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'~~
 ```
 Reason of using '"'"'
 You are not allowed to escape single quote inside single quote.
