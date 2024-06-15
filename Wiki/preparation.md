@@ -178,21 +178,19 @@ card:
 ```
 
 ### Configure automatic connection to wifi
-1. configure the connection
+### 1. configure the connection
 Edit the */etc/wpa_supplicant/wpa_supplicant.conf* file
 ```sh
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=US
 network={
-    ssid="your_wifi_ssid"
-    psk="password"
-    key_mgmt=WPA-PSK
-    id_str='AP1"
+    ssid="<your_wifi_ssid>"
+    psk="<password>"
 }
 ```
 
-2. configure the interface
+### 2. configure the interface
 Edit the */etc/network/interfaces* file
 ```sh
 source /etc/network/interfaces.d/*
@@ -203,46 +201,50 @@ iface eth0 inet manual
 
 auto wlan0
 allow-hotplug wlan0
+
+# ! In case of dynamic IP from dhcp server select this
 iface wlan0 inet dhcp
-    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+# ! In case of static IP select this
+iface wlan0 inet static
+address 192.168.0.200
+netmask 255.255.255.0
+gateway 192.168.0.1
+
+wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+iface default inet dhcp
 ```
 
-3. configure the wpa
+### 3. configure the wpa
 Create the service file
 ```sh
 $ touch /etc/systemd/system/wpa_supplicant.service
 ```
 
-Edit the */etc/systemd/system/wpa_supplicant.service* file
+Edit the /etc/systemd/system/wpa_supplicant.service file
 ```sh
 [Unit]
-Description=WPA supplicant
 Wants=network.target
 After=network.target
+
 [Service]
 Type=simple
 ExecStartPre=/sbin/ifconfig wlan0 up
 ExecStart=/sbin/wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
 RemainAfterExit=yes
+
 [Install]
 WantedBy=multi-user.target
 ```
 
-4.a Test it
-```sh
-$ sudo ifdown wlan0
-$ sudo ifup wlan0
+### 4. Control the automation
+There are 2 ways to control the networking
+- wpa_supplicant
+- networking
 
-Shows ERROR:
-Failed to initialize control interface
-you may have another wpa_supplicant process already running
+For some reason the wpa_suplicant solution causes error. So instead of this, use the "networking" way
 
-# in case of ifdown wlan0/ifup wlan0 does not work:
-$ ip link set wlan0 down
-$ ip link set wlan0 up
-```
-
-Stop and disable the other wpa_supplicant processes if you have the error
 ```sh
 $ sudo systemctl stop NetworkManager
 $ sudo killall wpasupplicant
@@ -250,27 +252,47 @@ $ sudo killall wpa_supplicant
 $ sudo systemctl disable NetworkManager
 ```
 
-Ensure the service file is enabled and started
+#### 4.a. wpa_supplicant solution
+This solution here is for exaple only. It did not work for me, so I disabled the wpa_supplicant
+
 ```sh
 $ sudo systemctl enable wpa_supplicant.service
 $ sudo systemctl start wpa_supplicant.service
 ```
 
-Try again
+#### 4.b. networking solution
+
 ```sh
-$ sudo ifup wlan0
+$ sudo systemctl stop wpa_supplicant.service
+$ sudo systemctl disable wpa_supplicant.service
+
+$ sudo systemctl enable networking
+$ sudo systemctl start networking
 ```
 
-5. reboot
-```sh
-$ sudo reboot
-```
+#### Test the result
 
-6. test the network
 ```sh
 $ iwconfig
 $ ifconfig
 ```
+in the iwconfig result you are supposed to see the Access Point and ESSID
+in the ifconfig result you are supposed to see the IP of the wlan0 interface
+
+```sh
+$ sudo ifdown wlan0
+ifconfig
+$ sudo ifup wlan0
+ifconfig
+```
+the first ifconfig result should show NO IP anymore
+the second ifconfig result should show the IP again
+
+```sh
+$ sudo systemctl restart networking
+ifconfig
+```
+after you restart the networking service, it reloads the configuration and starts it again
 
 
 ### Mount the media
