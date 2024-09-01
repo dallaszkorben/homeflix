@@ -3,6 +3,7 @@ import sqlite3
 import logging
 from threading import Lock
 from sqlite3 import Error
+from datetime import datetime, timedelta
 
 from playem.config.config import getConfig
 from playem.translator.translator import Translator
@@ -18,7 +19,7 @@ class SqlDatabase:
     TABLE_GENRE = "Genre"
     TABLE_THEME = "Theme"
     TABLE_MEDIATYPE = "MediaType"
-    
+
     TABLE_CARD = "Card"
 
     TABLE_CARD_GENRE = "Card_Genre"
@@ -45,6 +46,10 @@ class SqlDatabase:
     TABLE_ROLE = "Role"
     TABLE_ACTOR_ROLE = "Actor_Role"
 
+    TABLE_USER = "User"
+    TABLE_HISTORY = "History"
+    TABLE_TAG = "Tag"
+
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
@@ -55,7 +60,7 @@ class SqlDatabase:
 
         self.language = self.translator.get_actual_language_code()
 
-        self.table_list = [
+        self.table_static_list = [
             SqlDatabase.TABLE_TEXT_CARD_LANG,
             SqlDatabase.TABLE_CARD_MEDIA,
             SqlDatabase.TABLE_CARD_VOICE,
@@ -90,7 +95,13 @@ class SqlDatabase:
             SqlDatabase.TABLE_CATEGORY,
 
             SqlDatabase.TABLE_ROLE,
-            SqlDatabase.TABLE_ACTOR_ROLE
+            SqlDatabase.TABLE_ACTOR_ROLE,
+        ]
+
+        self.table_personal_list = [
+            SqlDatabase.TABLE_USER,
+            SqlDatabase.TABLE_HISTORY,
+            SqlDatabase.TABLE_TAG,
         ]
 
         self.lock = Lock()
@@ -107,26 +118,31 @@ class SqlDatabase:
             # TODO: handle this case
             exit()
 
-        # check if the databases is corrupted
-        if not self.is_dbs_ok():
-            self.recreate_dbs()
+        # check if the static databases are corrupted/not existed
+        if not self.is_static_dbs_ok():
+            self.recreate_static_dbs()
+
+        # check if the personal databases are corrupted/not existed
+        if not self.is_personal_dbs_ok():
+            self.recreate_personal_dbs()
 
         self.fill_up_constant_dicts()
 
     def __del__(self):
         self.conn.close()
 
-    def is_dbs_ok(self):
+
+    def is_static_dbs_ok(self):
         error_code = 1001
         cur = self.conn.cursor()
-        cur.execute("begin")        
+        cur.execute("begin")
 
         try:
-            for table in self.table_list:
+            for table in self.table_static_list:
                 query ="SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{0}' ".format(table)
-                records = cur.execute(query).fetchone()                
+                records = cur.execute(query).fetchone()
                 if records[0] != 1:
-                    raise NotExistingTable("{0} table does not exist. All tables must be recreated".format(table), error_code)
+                    raise NotExistingTable("{0} 'Static' table does not exist. All 'Static' tables will be recreated".format(table), error_code)
 
         except NotExistingTable as e:
             logging.debug(e.message)   
@@ -136,43 +152,122 @@ class SqlDatabase:
             cur.execute("commit")
         return True
 
-    def recreate_dbs(self):
+
+    def is_personal_dbs_ok(self):
+        error_code = 1001
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        try:
+            for table in self.table_personal_list:
+                query ="SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{0}' ".format(table)
+                records = cur.execute(query).fetchone()
+                if records[0] != 1:
+                    raise NotExistingTable("{0} 'Personal' table does not exist. All 'Personal' tables will be recreated".format(table), error_code)
+
+        except NotExistingTable as e:
+            logging.debug(e.message)   
+            return False
+
+        finally:
+            cur.execute("commit")
+        return True
+
+
+    def recreate_static_dbs(self):
 
         # Create new empty databases
-        self.drop_all_existing_tables()
-        logging.debug("All tables are dropped")            
-        self.create_tables()
-        logging.debug("All tables are recreated")            
+        self.drop_static_tables()
+        logging.debug("All static tables are dropped")
+        self.create_static_tables()
+        logging.debug("All static tables are recreated")
 
         # Fill up the database
         self.web_gadget.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self )
 
-    # TODO: figure out what the difference between drop_all_existing_tables and drop_tables
 
-    def drop_all_existing_tables(self):
+    def recreate_personal_dbs(self):
+
+        # Create new empty databases
+        self.drop_personal_tables()
+        logging.debug("All personal tables are dropped")
+        self.create_personal_tables()
+        logging.debug("All personal tables are recreated")
+
+
+    def drop_static_tables(self):
         cur = self.conn.cursor()
-        cur.execute("begin")    
-        tables = list(cur.execute("SELECT name FROM sqlite_master WHERE type is 'table'"))
+        cur.execute("begin")
+#        tables_all = list(cur.execute("SELECT name FROM sqlite_master WHERE type is 'table'"))
         cur.execute("commit")
 
-        for table in tables:
+#        for table in tables_all:
+        for table in self.table_static_list:
             try:
-                self.conn.execute("DROP TABLE {0}".format(table[0]))
+#                self.conn.execute("DROP TABLE {0}".format(table[0]))
+                self.conn.execute("DROP TABLE {0}".format(table))
             except sqlite3.OperationalError as e:
-                logging.error("Error while DROP TABLE ({0}): {1}".format(table[0], e))
+#                logging.error("Error while DROP TABLE ({0}): {1}".format(table[0], e))
+                logging.error("Wanted to Drop '{0}' 'Static' table, but error happened: {1}".format(table, e))
 
-
-    def drop_tables(self):
-
-        for table in self.table_list:
+    def drop_personal_tables(self):
+        for table in self.table_personal_list:
             try:
-                self.conn.execute("DROP TABLE {0};".format(table))
+                self.conn.execute("DROP TABLE {0}".format(table))
             except sqlite3.OperationalError as e:
-                logging.error("Wanted to Drop '{0}' table, but error happened: {1}".format(table, e))
+                logging.error("Wanted to Drop '{0}' 'Personal' table, but error happened: {1}".format(table, e))
 
-#        self.conn.create_function('translate_method', 2, translate)
 
-    def create_tables(self):
+    def create_personal_tables(self):
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_USER + '''(
+                id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                name          TEXT  NOT NULL,
+                created_epoch INTEGER NOT NULL,
+                UNIQUE(name)
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_HISTORY + '''(
+                start_epoch   INTEGER NOT NULL,
+                last_epoch    INTEGER NOT NULL,
+                last_position TEXT    NOT NULL,
+                id_card       INTEGER NOT NULL,
+                id_user       INTEGER NOT NULL,
+                FOREIGN KEY   (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY   (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
+                PRIMARY KEY   (id_card, id_user, start_epoch)
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_TAG + '''(
+                name          TEXT  NOT NULL,
+                id_card       INTEGER NOT NULL,
+                id_user       INTEGER NOT NULL,
+                FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
+                PRIMARY KEY (id_card, id_user, name)
+            );
+        ''')
+
+        self.fill_up_user_table()
+
+
+    def fill_up_user_table(self):
+        cur = self.conn.cursor()
+        cur.execute("begin")
+
+        user_name = "admin"
+        id = self.append_user(cur, user_name)
+        self.user = user_name
+
+        cur.execute("commit")
+
+
+    def create_static_tables(self):
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CATEGORY + '''(
@@ -625,6 +720,14 @@ class SqlDatabase:
             self.country_id_name_dict[id] = country
         cur.execute("commit")
 
+
+    def append_user(self, cur, user):
+        created_epoch = int(datetime.now().timestamp())
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_USER + ' (name, created_epoch) VALUES (?, ?) RETURNING id', (user, created_epoch))
+        record = cur.fetchone()
+        (user_id, ) = record if record else (None,)
+        return user_id
+
     def append_category(self, cur, category):
         #cur = self.conn.cursor()
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_CATEGORY + ' (name) VALUES (?) RETURNING id', (category,))
@@ -663,7 +766,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, card_id=None, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -678,13 +781,19 @@ class SqlDatabase:
             #
             # INSERT into CARD
             #
-            # if higher_card_id:             
+            # if higher_card_id:
+
+#            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+#                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+#                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+#                    RETURNING id;
+#            '''
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
                     (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
                     VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -717,7 +826,7 @@ class SqlDatabase:
             # INSERT into TABLE_CARD_ACTOR
             #
             if isinstance(actors, list):
-            
+
                 tmp_actors = {}
                 for key in actors:
                     tmp_actors[key] = ""
@@ -769,7 +878,7 @@ class SqlDatabase:
                         (id_actor, id_role) 
                         VALUES (:person_id, :role_id);'''
                     cur.execute(query, {'person_id': person_id, 'role_id': role_id})
-         
+
                     # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. role_id: {3}. Role: {4}.".format(card_id, person_id, actor, role_id, role))
                     # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. Role: {3}.".format(card_id, person_id, actor, role))
 
@@ -1082,7 +1191,7 @@ class SqlDatabase:
                     VALUES (?, ?);
                 '''
                 cur.execute(query, (self.theme_name_id_dict[theme], card_id))
-            
+
             #
             # INSERT into TABLE_CARD_ORIGIN
             #
@@ -1132,10 +1241,10 @@ class SqlDatabase:
 
             for media_type in media:
                 media_list = media[media_type]
-                for medium in media_list:                   
+                for medium in media_list:
                     if media_type in self.mediatype_name_id_dict:
                         mediatype_id = self.mediatype_name_id_dict[media_type]
-                    
+
                         query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_MEDIA + '''
                             (name, id_card, id_mediatype)
                             VALUES (:medium, :card_id, :mediatype_id);
@@ -1226,7 +1335,7 @@ class SqlDatabase:
                     VALUES (?, ?, ?, "S");
                 '''
                 cur.execute(query, (self.language_name_id_dict[lang], hierarchy_id, storyline))
-                
+
         except sqlite3.Error as e:
             logging.error("To append hierarchy failed with: '{0}' while inserting record. Level: {1}, configured in {2} card".format(e, level, card_path))
 
@@ -1249,6 +1358,179 @@ class SqlDatabase:
     #
     # ================
 
+    def update_play_position(self, user_id, card_id, last_position, start_epoch=None):
+        """
+        Updates the player's position of a movie. This method is periodically called from the browser
+        It returns with the start_epoch value if the UPDATE or INSERT was successful
+        If something went wrong, it returns with None
+        user_id:        User ID
+        card_id         Card ID
+        last_position   Player's recent position. Like: 1:18:28
+        start_epoch     Timestamp when the play started. This method generates this value
+        """
+        try:
+            with self.lock:
+
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Verify user existence
+                query = '''
+                    SELECT 
+                        COUNT(*) as user_number
+                FROM 
+                    ''' + SqlDatabase.TABLE_USER + ''' user
+
+                WHERE
+                    user.id=:user_id;
+                '''
+                query_parameters = {'user_id': user_id}
+                record=cur.execute(query, query_parameters).fetchone()
+                (user_number, ) = record if record else (0,)
+                if user_number == 0:
+                    logging.error("The requested user_id({0}) does NOT exist".format(user_id))
+                    return None
+
+                # Verify card existence
+                query = '''
+                    SELECT 
+                        COUNT(*) as card_number
+                    FROM 
+                        ''' + SqlDatabase.TABLE_CARD + ''' card
+                    WHERE
+                        card.id=:card_id
+                '''
+                query_parameters = {'card_id': card_id}
+                record=cur.execute(query, query_parameters).fetchone()
+                (card_number, ) = record if record else (0,)
+                if card_number == 0:
+                    logging.error("The requested card_id({0}) does NOT exist".format(card_id))
+                    return None
+
+                # Verify history existence
+                query = '''
+                    SELECT 
+                        COUNT(*) as history_number
+                    FROM 
+                        ''' + SqlDatabase.TABLE_HISTORY + ''' history
+                    WHERE
+                        history.id_card=:card_id
+                        AND history.id_user=:user_id
+                        AND history.start_epoch=:start_epoch
+                '''
+
+                query_parameters = {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch if start_epoch else 0}
+
+#                logging.debug("refresh_play_position query: '{0} / {1}'".format(query, query_parameters))
+
+                record=cur.execute(query, query_parameters).fetchone()
+                (history_number, ) = record if record else (0,)
+
+#                logging.debug("history number of user({0}), card_id({1}), start_epoch({2}): {3} ".format(user_id, card_id, start_epoch, history_number))
+
+                # New history
+                if history_number == 0 and not start_epoch:
+
+                    start_epoch = int(datetime.now().timestamp())
+                    last_epoch = start_epoch
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_HISTORY + '''
+                        (id_card, id_user, start_epoch, last_epoch, last_position)
+                        VALUES (:card_id, :user_id, :start_epoch, :last_epoch, :last_position);
+                    '''
+                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'last_epoch': last_epoch, 'last_position': last_position})
+                    record = cur.fetchone()                
+
+                # Update history
+                elif history_number == 1 and start_epoch:
+
+                    last_epoch = int(datetime.now().timestamp())
+                    query = '''
+                        UPDATE ''' + SqlDatabase.TABLE_HISTORY + '''
+                        SET last_epoch = :last_epoch, last_position = :last_position
+                        WHERE
+                            history.id_card=:card_id
+                            AND history.id_user=:user_id
+                            AND history.start_epoch=:start_epoch
+                    '''                
+                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'last_epoch': last_epoch, 'last_position': last_position})
+                    record = cur.fetchone()                
+
+                # Something went wrong
+                else:
+                    logging.debug("Something went wrong. The parameter 'start_epoch'={0} but the SELECT in History table returned with value={1}".format(start_epoch, history_number))
+                    return None
+
+                return int(start_epoch)
+
+        finally:
+            cur.execute("commit")
+
+
+    def get_user(self, user_name):
+        try:
+            with self.lock:
+
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Verify user existence
+                query = '''
+                    SELECT 
+                        *
+                FROM 
+                    ''' + SqlDatabase.TABLE_USER + ''' user
+
+                WHERE
+                    user.name=:user_name;
+                '''
+                query_parameters = {'user_name': user_name}
+                record=cur.execute(query, query_parameters).fetchone()
+                return dict(record) if record else record
+
+        finally:
+            cur.execute("commit")
+
+
+    def get_history(self, user_id, card_id=None, limit_days=None, limit_records=None):                  
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                limit_epoch = None
+                if limit_days:
+                    limit_epoch=int((datetime.now() + timedelta(days=limit_days)).timestamp())
+
+                # Verify user existence
+                query = '''
+                    SELECT 
+                        *
+                    FROM 
+                        ''' + SqlDatabase.TABLE_HISTORY + ''' history
+                    WHERE
+                        id_user=:user_id
+                        ''' + ('''
+                        AND id_card=:card_id
+                        ''' if card_id else '') + ('''
+                        AND start_epoch <= :limit_epoch
+                        ''' if limit_days else '') + '''
+                    ORDER BY start_epoch DESC''' + ('''
+                    LIMIT :limit_records
+                        ''' if limit_records else '') + '''
+                ;'''
+                query_parameters = {'user_id': user_id, 'card_id': card_id, 'limit_epoch': limit_epoch, 'limit_records': limit_records}
+                print("{0}/{1}".format(query,query_parameters))
+                records=cur.execute(query, query_parameters).fetchall()
+
+                records = [{key: record[key] for key in record.keys()} for record in records]
+                return records
+
+            finally:
+                cur.execute("commit")
+
+
+
+
 
     def get_numbers_of_records_in_card(self):
         """
@@ -1263,8 +1545,6 @@ class SqlDatabase:
             record=cur.execute(query).fetchone()
             cur.execute("commit")
             return record
-
-
 
 
     #
@@ -1415,7 +1695,7 @@ class SqlDatabase:
                     AND co.id_card = merged.id
                     AND co.id_origin = country.id
             ''' if origin else '') + ('''
-            
+
                     AND country.name = :origin
             ''' if origin else '') + ('''
 
@@ -1460,7 +1740,7 @@ class SqlDatabase:
                     lang_req = record["lang_req"]
                     lang_req_translated = trans.translate_language_short(lang_req)
                     record["lang_req"] = lang_req_translated
-        
+
             return records
 
 

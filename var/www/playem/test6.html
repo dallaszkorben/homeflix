@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Viewer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js"></script>
+  <script src="script/jquery/jquery-3.6.0.min.js"></script>
+
+</head>
+<body>
+  <pre><code id="text-content"></code></pre>
+
+  <script>
+    // Az URL címét itt módosíthatod a megfelelő szövegfájlra
+    const textFileUrl = 'MEDIA/01.Movie/media.ino';
+
+    // Szövegfájl betöltése és megjelenítése a kódtáblázatban
+    fetch(textFileUrl)
+      .then(response => response.text())
+      .then(text => {
+        document.getElementById('text-content').textContent = text;
+        hljs.highlightAll();
+      })
+      .catch(error => console.error('Error loading text file:', error));
+  </script>
+</body>
+</html>
+   
+   
+
+
+
+
+

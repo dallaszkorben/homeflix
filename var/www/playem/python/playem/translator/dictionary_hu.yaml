@@ -240,7 +240,6 @@ genre:
         social_science: Társadalomtudomány
         study_guide: Oktatási segédlet
         graphic_novel: Képregényalbum
-        lecture_notes: Egyetemi jegyzet
 
     music_video:
         <<: *music
@@ -250,26 +249,27 @@ genre:
 
     knowledge:
         lecture: Előadás
+        lecture_notes: Előadás jegyzetek
         e-learning: E-learning
         diy: Barkács
-        datasheet: Datasheet
-        syllabus: Syllabus
-        document: Document
-        tutorial: Tutorial
+        datasheet: Adatlap
+        syllabus: Tananyag
+        document: Dokumentum
+        tutorial: Utmutató
 
     recipe:
-        soup: Soup
-        pasta: Pasta
-        rice: Rice
-        bufet: Bufet
-        beef: Beef
-        cookie: Cookie
-        chicken: Chicken
+        soup: Leves
+        pasta: Tészta
+        rice: Rízs
+        bufet: Büfé
+        beef: Marhahús
+        cookie: Süti
+        chicken: Csirke
 
     entertainment:
         standup: Standup
-        skit: Skit
-        analysis: Analysis
+        skit: Kabaré
+        analysis: Elemzés
         talk: Beszélgetés
         show: Show
         interview: Interjú
@@ -290,9 +290,9 @@ genre:
         science_nature_documentary: Természettudományos dokumentum film
 
     personal:
-        photos: Photos
-        documents: Documents
-        videos: Videos
+        photos: Fotók
+        documents: Dokumentumok
+        videos: Videók
 
 theme:
     hero: Hős
@@ -402,6 +402,8 @@ theme:
     informatics: Informatika
     genetics: Genetika
     global_warming: Globális felmelegedés
+    environment: Környezet
+    polution: Szennyezés
     terrorism: Terrorizmus
     migration: Népvándorlás
     corruption: Korrupció
@@ -414,6 +416,8 @@ theme:
     ufo: UFO
     iot: IoT
     it: IT
+    hardware: Hardware
+    electronics: Elektronika
     technology: Technológia
     light: Fény
     jewellery: Ékszerek
@@ -430,6 +434,8 @@ theme:
     survival: Túlélés
     sex: Szex
     gun: Fegyver
+    society: Társadalom
+    farming: Gazdálkodás
 
 title:
     title: Cím
@@ -465,9 +471,10 @@ title:
     music_level_record: Zeneszám szint
 
     music_video: Zene-Video
-    music_by_decade: Szűrés Évtizedek szerint
-    music_by_genre: Szűrés Műfaj szerint
-    
+    music_by_abc: ABC sorrend
+    music_by_decade: Csoportosítás évtizedek szerint
+    music_by_genre: Csoportosítás Műfaj szerint
+
     music_audio: Zene-Audio
     music_hungarian: Magyar
     radioplay: Rádiójáték

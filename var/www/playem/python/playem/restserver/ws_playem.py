@@ -2,8 +2,6 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
-#from dateutil import parser
-
 from datetime import datetime
 import time
 import distlib
@@ -16,7 +14,6 @@ from flask_classful import FlaskView, route, request
 from flask_cors import CORS
 
 from playem.card.database import SqlDatabase as DB
-#from playem.card.card_handle import collectCardsFromFileSystem
 from playem.card.card_handle import CardHandle
 
 from playem.config.config import getConfig
@@ -25,6 +22,7 @@ from playem.restserver.view_info import InfoView
 from playem.restserver.view_collect import CollectView
 from playem.restserver.view_translate import TranslateView
 from playem.restserver.view_control import ControlView
+from playem.restserver.view_personal import PersonalView
 
 class WSPlayem(Flask):
 
@@ -60,6 +58,7 @@ class WSPlayem(Flask):
         CollectView.register(self.app, init_argument=self)
         TranslateView.register(self.app, init_argument=self)
         ControlView.register(self.app, init_argument=self)
+        PersonalView.register(self.app, init_argument=self)
 
         self.cardHandle = CardHandle(self)
 

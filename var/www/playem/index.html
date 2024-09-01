@@ -202,10 +202,6 @@
         t.style.setProperty('--description-section-border-color', description_section_border_color);
         t.style.setProperty('--description-section-background', description_section_background);
 
-
-
-
-
         t.style.setProperty('--description-text-wrapper-top', description_text_wrapper_top + 'px');
         t.style.setProperty('--description-text-wrapper-left', description_text_wrapper_left + 'px');
         t.style.setProperty('--description-text-extra-font-size', description_text_extra_font_size + 'em');
@@ -444,7 +440,7 @@
 
                     Generator.startSpinner();
 
-                    setTimeout(function(){                    
+                    setTimeout(function(){
                         rq_method = "POST";
                         rq_url = "http://" + host + port + "/control/rebuild";
                         rq_assync = false;

@@ -1,0 +1,92 @@
+<meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+<!DOCTYPE html>
+<html>
+<head>    
+   <link href="https://vjs.zencdn.net/7.19.2/video-js.css" rel="stylesheet" />
+   <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+   <script src="script/jquery/jquery-3.6.0.min.js"></script>
+
+   <script>
+        $(document).ready(function() {
+
+            var vid = document.getElementById("my-video");
+            vid.onloadeddata = function() {
+        
+            // get the current players AudioTrackList object
+            var options = {
+                controls: true,
+                width: 560,
+                height: 300,
+                autoplayMode: 'always',
+            };
+            var player = videojs('my-video', options)
+            let tracks = player.audioTracks();
+    
+            console.log(tracks.length);
+    
+            for (let i = 0; i < tracks.length; i++) {
+                let track = tracks[i];
+                console.log(track);
+                console.log(track.language);
+            }
+        };
+
+
+
+
+
+
+//            var options = {
+//                controls: true,
+//   
+//                
+//                width: 560,
+//                height: 300,
+//                autoplayMode: 'always',   
+//                
+//
+//            };
+//            var player = videojs('my-video', options, function onPlayerReady() {
+//                    videojs.log('Your player is ready!');
+//
+//                    videojs.log(this.textTracks());
+//
+//
+//
+//                    // How about an event listener?
+//                    this.on('ended', function() {
+//                        videojs.log('Awww...over so soon?!');
+//                    });
+//            });
+
+            //player.playlist(["MEDIA/01.Movie/05.Remakes/Dune/Dune-2000/E03/Dune-E03-2000.webm"  ], { autoAdvance: 0 }).play()
+        });
+   </script>
+</head>
+<body>
+    <script>
+//        var player = videojs('my-video', {
+//        });
+//        console.log("hello")
+   </script>
+    <video
+        id="my-video"
+        class="video-js"
+    >
+        <source
+            src="http://192.168.0.21:8080/" 
+            type="video/webm"
+            size="1080"
+        >
+    </video>
+  
+
+</body>
+</html>
+
+controls
+preload="auto"
+width="560"
+height="300"
+data-setup='{}'
+src="MEDIA/01.Movie/05.Remakes/Dune/Dune-2000/E03/Dune-E03-2000.webm" 

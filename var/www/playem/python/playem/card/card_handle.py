@@ -72,13 +72,13 @@ class CardHandle:
 
         # check the source path in the actual directory
         for file_name in file_list:
-        
+
             # find the Card
             if self.getPatternCard().match( file_name ):
                 card_path = os.path.join(actualDir, file_name)
                 card_file_name = file_name
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
-                
+
                 logging.debug("SOURCE path: '{0}'".format(source_path))
 
                 break
@@ -90,6 +90,11 @@ class CardHandle:
             with open(card_path, "r", encoding="utf-8") as file_object:
                 # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
                 data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
+
+            try:
+                card_id = data['id']
+            except:
+                card_id = None
 
             try:
                 category = data['category']
@@ -286,7 +291,7 @@ class CardHandle:
             if not title_orig:
                 logging.error( "CARD - No original language set for title in {0}".format(card_path))
                 card_error = True
-       
+
             if title_orig not in titles:
                 logging.error( "CARD - No title set for original language  in {0}".format(card_path))
                 card_error = True
@@ -321,11 +326,18 @@ class CardHandle:
                 logging.error( "CARD - Decade ({1}) is in unknown form in {0}".format(card_path, decade))
                 card_error = True
 
+#            if not card_error and not card_id and media_dict and not is_appendix:
+#                logging.error( "CARD - id is missing from the card in {0}".format(card_path))
+#                card_error = True
+
+#            if is_appendix:
+#                logging.error( "Appendix:      {0} error: {1}".format(card_path, card_error))
+
  # ---
 
             # this is a level in the hierarchy / not a media
             # if not media and not card_error:
-            if not media_dict and not card_error and not is_appendix:                
+            if not media_dict and not card_error and not is_appendix:
 
                 # create a new Level record + get back the id
                 card_id=db.append_hierarchy(
@@ -348,12 +360,14 @@ class CardHandle:
                     basename=basename,
                     source_path=source_path,
                     sequence=sequence,
-                    higher_card_id=higher_card_id                
+                    higher_card_id=higher_card_id
                 )
 
 
             # this must be the lowest level or a simple card or appendix
+#            elif not card_error and card_id:
             elif not card_error:
+
                 for lang, text in storylines.items():
                     if lang not in db.language_name_id_dict:
                         logging.error( "CARD - Storyline language ({1}) is unknown in {0}".format(card_path, lang))
@@ -390,6 +404,7 @@ class CardHandle:
                         titles=titles,
                         title_on_thumbnail=title_on_thumbnail,
                         title_show_sequence=title_show_sequence,
+#                        card_id=card_id,
                         isappendix=is_appendix,
                         show=show,
                         download=download,
@@ -425,8 +440,9 @@ class CardHandle:
 
                         sequence=sequence,
                         higher_card_id=higher_card_id,
-                    )        
+                    )
 
+#                    logging.debug("    {0}".format(card_id))
 #        logging.error( "TEST - higher_card: {0} for the {1}. dir_list: {2}".format(higher_card_id, card_path, dir_list))
 
         for name in dir_list:

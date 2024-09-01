@@ -84,7 +84,7 @@ body {
 #description-text-div{
     flex-grow: 100;                                             /* grow as wide as it can. On right side the description image lays */
     display:inline-block;
-    font-family: 'Brush Script MT', cursive;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
     border: 0px rgb(0, 255, 247) solid;                        /* for test purpose */
 }
@@ -310,7 +310,7 @@ body {
 /*    width: 100%;                                              /* it occupies the whole .scroll-section horizontally */
     display: block;                                             /* new line */
     
-    font-family: 'Brush Script MT', cursive;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: var(--history-section-font-size);
     color: var(--history-section-font-color);
@@ -371,7 +371,7 @@ body {
 
 .thumbnail-container-title{
     color: white;
-    font-family: 'Brush Script MT', cursive;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: 30px;
 }
@@ -426,7 +426,7 @@ body {
 /*    clip-path: polygon(0% 1.2em, 100% 100%, calc(100% - 1.2em) 0%, 1.2em 0%); */
 
     position: absolute;
-    font-family: 'Brush Script MT', cursive;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: var(--thumbnail-ribbon-level-font-size);
 
@@ -448,10 +448,10 @@ body {
     object-fit: contain;
 }
 
-.thumbnail-text-wrapper{            
+.thumbnail-text-wrapper{
     position: absolute;                                         /* relative to the nearestx positioned ancestor: .thumbnail. That is the reason the .thumbnail has position: relative */
 
-    font-family: 'Brush Script MT', cursive;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: var(--thumbnail-text-font-size);
     color: var(--thumbnail-text-font-color);
@@ -568,7 +568,7 @@ body {
     justify-content: flex-end;
     gap: 0.5em;
 
-    font-family: 'Brush Script MT', cursive;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-size: 2em;
     font-weight: bold;
 }

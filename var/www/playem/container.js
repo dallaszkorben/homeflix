@@ -944,15 +944,21 @@ class ObjDescriptionContainer {
                 // --- Appendix ---
                 // ----------------
                 for (let i in appendix_list) {
+
+                    // Unfortunately the Appendix, does not gives back the same structure as the Card
+                    // So I have to convert it to be compatible a little bit in case of PLAY
+
+                    let card_id = appendix_list[i]['id'];
                     let show = appendix_list[i]['show'];
                     let download = appendix_list[i]['download'];
                     let source_path = appendix_list[i]['source_path'];
                     let media_dict = appendix_list[i]['media'];
+                    let title = appendix_list[i]['title'];
 
                     // Every media in the appendix, will be shown, one by one, as download button
                     if (download == 1) {
                         // Unicode Character: 📥
-                        let title = '\u{1F4E5}' + " " + appendix_list[i]['title'];
+                        let title_with_icon = '\u{1F4E5}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
                         Object.entries(media_dict).forEach(([media_type, medium]) => {
@@ -964,31 +970,10 @@ class ObjDescriptionContainer {
                                     class: "description-appendix-download-button",
                                     href: file_path,
                                     download: "download",   // This is needed to download
-                                    text: title
+                                    text: title_with_icon
                             });
                             descAppendixDownload.append(link);
                         });
-
-//                        // Through the keys: mediaTypes: text/picture/ebook
-//                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
-//
-//                            // Through the media_list - most probably only one media
-//                            // I do not care about the type of the media, just want to download
-//                            for (let media of media_list) {
-//
-//                                // I'm expecting only one media here. TODO: get if there are others
-//                                let file_path = pathJoin([source_path, "media", media]);
-//
-//                                let link = $('<a/>', {
-//                                    class: "description-appendix-download-button",
-//                                    href: file_path,
-//                                    download: "download",   // This is needed to download
-//                                    text: title
-//                                });
-//                                descAppendixDownload.append(link);
-//                            }
-//                        });
-
                     }
 
                     // TODO: rename "show" to "play"
@@ -996,95 +981,36 @@ class ObjDescriptionContainer {
                     // All media with media_type=picture in one appendix will be shown as ONE show/play button
                     if (show == 1) {
                         // Unicode Character: 25B6 ▶, 23EF ⏯, 
-                        let title = '\u{25B6}' + " " + appendix_list[i]['title'];
+                        let title_with_icon = '\u{25B6}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
                         Object.entries(media_dict).forEach(([media_type, medium]) => {
 
-                            let medium_path;
-
-
-                            if(media_type == "picture"){
-                                
-                                // create a list for medium path
-                                medium_path = [];
-                                medium_path.push(pathJoin([source_path, "media", medium]));
+                                // The following structure tries to pretend it was a Card
+                                let hit = {}
+                                hit["media_type"] = media_type;
+                                hit["id"] = card_id;
+                                hit["source_path"] = source_path;
+                                hit["title_req"] = title;
+                                hit["title_orig"] = title;
+                                let key = media_type;
+                                let value = [medium];
+                                hit["medium"] = {};
+                                hit["medium"][key] = value;
+                                hit["is_appendix"] = true;
+                                let medium_dict = refToObjThumbnailController.getMediumDict(hit);
 
                                 let link = $('<a/>', {
                                     class: "description-appendix-play-button",
-                                    text: title
+                                    text: title_with_icon
                                 });
-                                link.click(function (my_media_type, my_file_path) {
+                                link.click(function (my_medium_dict) {
                                     return function () {
-                                        refToObjThumbnailController.playMedia(my_media_type, my_file_path);
+                                        refToObjThumbnailController.playAppendixMedia(my_medium_dict);
                                     }
-                                }(media_type, medium_path));
+                                }(medium_dict));
                                 descAppendixPlay.append(link);
-
-                            }else{
-
-                                // create single value for every medium path
-                                medium_path = pathJoin([source_path, "media", medium]);
-                                let link = $('<a/>', {
-                                    class: "description-appendix-play-button",
-                                    text: title
-                                });
-                                link.click(function (my_media_type, my_file_path) {
-                                    return function () {
-                                        refToObjThumbnailController.playMedia(my_media_type, my_file_path);
-                                    }
-                                }(media_type, medium_path));
-                                descAppendixPlay.append(link);
-                            }
                         });
-
-
-//                        // Through the keys: mediaTypes: text/picture/ebook
-//                        Object.entries(media_dict).forEach(([media_type, media_list]) => {
-//
-//                            let medium_path;
-//
-//
-//                            if(media_type == "picture"){
-//                                
-//                                // create a list for medium path
-//                                medium_path = [];
-//                                for (let medium of media_list) {
-//                                    medium_path.push(pathJoin([source_path, "media", medium]));
-//                                }
-//
-//                                let link = $('<a/>', {
-//                                    class: "description-appendix-play-button",
-//                                    text: title
-//                                });
-//                                link.click(function (my_media_type, my_file_path) {
-//                                    return function () {
-//                                        refToObjThumbnailController.playMedia(my_media_type, my_file_path);
-//                                    }
-//                                }(media_type, medium_path));
-//                                descAppendixPlay.append(link);
-//
-//                            }else{
-//
-//                                for (let media of media_list) {
-//
-//                                    // create single value for every medium path
-//                                    medium_path = pathJoin([source_path, "media", media]);
-//
-//                                    let link = $('<a/>', {
-//                                        class: "description-appendix-play-button",
-//                                        text: title
-//                                    });
-//                                    link.click(function (my_media_type, my_file_path) {
-//                                        return function () {
-//                                            refToObjThumbnailController.playMedia(my_media_type, my_file_path);
-//                                        }
-//                                    }(media_type, medium_path));
-//                                    descAppendixPlay.append(link);
-//                                }
-//                            }
-//                        });
-
                     }
                 }
 
@@ -1295,95 +1221,98 @@ class ThumbnailController {
 
             } else if ("audio" in functionSingle || "video" in functionSingle) {
 
-                let continuous_list = []
+                let play_list = []
 
                 // If continuous play needed
-                if (true) {
+                for (let hit of functionContinuous) {
 
-                    for (let hit of functionContinuous) {
-                        let card_id = hit["id"];
-
-                        let screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
-                        let medium_path;
-                        let media;
-                        if ("audio" in hit["medium"]) {
-                            media = hit["medium"]["audio"][0]
-                        } else if ("video" in hit["medium"]) {
-                            media = hit["medium"]["video"][0]
-                        }
-
-                        if (media) {
-                            medium_path = pathJoin([hit["source_path"], "media", media]);
-                            continuous_list.push({ "medium_path": medium_path, "screenshot_path": screenshot_path, "medium": hit["medium"] });
-                        }
-                    }
+                    play_list.push(this.getMediumDict(hit));
                 }
 
-                let getCardIdFunction;
-                if ("audio" in functionSingle) {
-                    getCardIdFunction = functionSingle["audio"];
-                } else {
-                    getCardIdFunction = functionSingle["video"];
-                }
-
-                let medium_path = getCardIdFunction();
-
-                this.playMediaAudioVideo(functionSingle, continuous_list, medium_path);
+                this.playMediaAudioVideo(play_list);
 
             } else if ("picture" in functionSingle) {
-
-                // take the getCardId function
-                let getCardIdFunction = functionSingle["picture"];
-                let medium_path = getCardIdFunction();
-
-                this.playMediaPicture(medium_path);
+                let medium_dict = functionSingle["medium_dict"];
+                this.playMediaPicture(medium_dict);
 
             } else if ("pdf" in functionSingle) {
-
-                // take the getCardId function
-                let getCardIdFunction = functionSingle["pdf"];
-                let medium_path = getCardIdFunction();
-
-                this.playMediaPdf(medium_path);
+                let medium_dict = functionSingle["medium_dict"];
+                this.playMediaPdf(medium_dict);
 
             } else if ("txt" in functionSingle) {
-
-                // take the getCardId function
-                let getCardIdFunction = functionSingle["txt"];
-                let medium_path = getCardIdFunction();
-                
-                this.playMediaText(medium_path);
+                let medium_dict = functionSingle["medium_dict"];                
+                this.playMediaText(medium_dict);
 
             } else if ("code" in functionSingle) {
-
-                // take the getCardId function
-                let getCardIdFunction = functionSingle["code"];
-                let medium_path = getCardIdFunction();
-                
-                this.playMediaCode(medium_path);
-
+                let medium_dict = functionSingle["medium_dict"];                
+                this.playMediaCode(medium_dict);
             }
         }
     }
 
+
+    getMediumDict(hit){
+                       
+        let media;
+        let medium_dict = {};
+        let screenshot_path = null;
+        
+        if(!hit["is_appendix"]){
+            screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
+        }
+
+        let media_type = Object.keys(hit["medium"])[0]
+
+        //if( hit["media_type"] == "picture"){
+        if( media_type == "picture" ){
+            media = hit["medium"][media_type][0]
+            medium_dict["medium_path_list"] = [pathJoin([hit["source_path"], "media", media])];
+        }else{
+            media = hit["medium"][media_type][0]
+            medium_dict["medium_path"] = pathJoin([hit["source_path"], "media", media]);
+        }
+
+        medium_dict["media_type"] = media_type;
+        medium_dict["screenshot_path"] = screenshot_path,
+        medium_dict["medium"] = hit["medium"];
+        medium_dict["card_id"] = hit["id"];
+        medium_dict["title"] = RestGenerator.getMainTitle(hit)
+        
+        return medium_dict;
+    }
+
+
     // ---
 
-    playMedia(media_type, medium_path){
+    // Play Appendix Media
+    playAppendixMedia(medium_dict){
+        let media_type = medium_dict["media_type"];
+        
         if(media_type == "audio" || media_type == "video"){
-            this.playMediaAudioVideo({}, [], medium_path);
+            this.playMediaAudioVideo([medium_dict]);
         }else if(media_type == "pdf"){
-            this.playMediaPdf(medium_path);
+            this.playMediaPdf(medium_dict);
         }else if(media_type == "picture"){
-            this.playMediaPicture(medium_path);
+            this.playMediaPicture(medium_dict);
         }else if(media_type == "text"){
-            this.playMediaText(medium_path)
+            this.playMediaText(medium_dict)
         }else if(media_type == "code"){
-            this.playMediaCode(medium_path)
+            this.playMediaCode(medium_dict)
         }
     }
 
 
-    playMediaAudioVideo(functionSingle, continuous_list, medium_path){
+    playMediaAudioVideo(continuous_list){
+        
+        let medium_dict = continuous_list.shift();
+
+        let medium_path = medium_dict["medium_path"];
+        let screenshot_path = medium_dict["screenshot_path"];
+        let card_id = medium_dict["card_id"];
+        let title = medium_dict["title"];
+
+console.log("id: " + card_id + ", title: "+ title);
+
         if (medium_path != null) {
 
             let refToThis = this;
@@ -1404,7 +1333,6 @@ class ThumbnailController {
 //
 //                isInFullScreen = (document.fullScreenElement && document.fullScreenElement !== null) ||  (document.mozFullScreen || document.webkitIsFullScreen);
 //            }
-//
 //            console.log("fullscreen: " + isInFullScreen);
 
             if (player.requestFullscreen) {
@@ -1417,6 +1345,13 @@ class ThumbnailController {
                 player.webkitRequestFullscreen();
             }
 
+            if( screenshot_path != null){
+                player.poster = screenshot_path;
+            }else{
+                player.poster = "";
+            }
+
+            /*
             // Poster only if audio media
             if ("audio" in functionSingle) {
                 let screenshot_path = functionSingle["screenshot_path"];
@@ -1424,6 +1359,22 @@ class ThumbnailController {
             } else {
                 player.poster = "";
             }
+*/
+
+var vplayer = cld.videoPlayer("my-video", { playedEventTimes: [60, 120, 180] })
+
+            $("#video_player").bind('timeplayed', (event) => {
+                console.log(event.eventData.time + " seconds played") 
+            });
+
+            // $("#video_player").bind("progress", function (par) {
+            //     console.log("progress: " + par.timeStamp + " - " + medium_path);
+            // });
+
+
+
+
+
             player.load();
             player.controls = true;
             player.autoplay = true;
@@ -1435,13 +1386,13 @@ class ThumbnailController {
             });
 
             // FULLSCREENCHANGE event listener
-            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
-                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-                // If exited of full screen
-                if (!state) {
-                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
-                }
-            });
+//            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
+//                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+//                // If exited of full screen
+//                if (!state) {
+//                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
+//                }
+//            });
             player.style.display = 'block';
 
             // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
@@ -1452,7 +1403,9 @@ class ThumbnailController {
     }
 
 
-    playMediaPdf(medium_path){        
+    playMediaPdf(medium_dict){
+        let medium_path = medium_dict["medium_path"];
+
         if (medium_path != null) {
             let retToThis = this;
             this.focusTask = FocusTask.Text;
@@ -1480,12 +1433,14 @@ class ThumbnailController {
 
 
     // It can play list of pictures => medium_path = List
-    playMediaPicture(medium_path){
-        if (medium_path != null) {
+    playMediaPicture(medium_dict){
+        let medium_path_list = medium_dict["medium_path_list"];
+
+        if (medium_path_list != null) {
             let refToThis = this;
             this.focusTask = FocusTask.Player;
             let fancybox_list = [];
-            for (let media_path of medium_path) {
+            for (let media_path of medium_path_list) {
                 let opts = {
                     // caption: media_path,
                     thumb: media_path,
@@ -1510,14 +1465,17 @@ class ThumbnailController {
         }
     }
     
-    playMediaText(medium_path){
-        this.playMediaCode(medium_path)
+    playMediaText(medium_dict){
+        let medium_path = medium_dict["medium_path"];
+
+        this.playMediaCode(medium_path);
     }
 
-    playMediaCode(medium_path){
+    playMediaCode(medium_dict){
+        let medium_path = medium_dict["medium_path"];
 
         if (medium_path != null) {
-
+            let retToThis = this;
             this.focusTask = FocusTask.Code;
 
             // Text load and show in a modal window
@@ -1546,7 +1504,7 @@ class ThumbnailController {
                 $('#text-content').empty();
                 $('#text-content').removeAttr("data-highlighted");
 
-                this.focusTask = FocusTask.Menu;
+                retToThis.focusTask = FocusTask.Menu;
             });
         }        
     }
@@ -1569,10 +1527,15 @@ class ThumbnailController {
         // Play the next media
         if (event == 'ended' && continuous_list.length > 0) {
 
-            let path = continuous_list.shift();
+            let medium_dict = continuous_list.shift();
 
-            let medium_path = path["medium_path"];
-            let screenshot_path = path["screenshot_path"];
+            let medium_path = medium_dict["medium_path"];
+            let screenshot_path = medium_dict["screenshot_path"];
+            let card_id = medium_dict["card_id"];
+            let title = medium_dict["title"];
+    
+    console.log("id: " + card_id + ", title: "+ title);
+
 
             // Creates a new source element
             let sourceElement = $('<source>');
@@ -1580,7 +1543,7 @@ class ThumbnailController {
             domPlayer.append(sourceElement);
 
             // Poster only if audio medium
-            if ("audio" in path["medium"]) {
+            if ("audio" in medium_dict["medium"]) {
                 player.poster = screenshot_path;
             } else {
                 player.poster = "";

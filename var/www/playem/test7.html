@@ -1,0 +1,138 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Viewer</title>
+  <style>
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    #modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-height: 80%;
+      overflow-y: auto;
+      width: 80%;
+    }
+
+    #close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+    }
+
+    #text-content {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background-color: rgb(3, 3, 3); 
+      border-radius: 5px;
+    }
+
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+  <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
+  <script src="script/highlight/highlight.min.js"></script>
+
+  
+</head>
+<body>
+
+  <button id="open-text-popup">Open Text</button>
+
+  <div id="overlay"></div>
+  <div id="modal">
+    <div id="close-button">❌</div>
+    <pre><code id="text-content"></code></pre>
+  </div>
+
+
+  <script>
+ 
+ 
+ 
+    // Az URL címét itt módosíthatod a megfelelő szövegfájlra
+    const textFileUrl = 'MEDIA/01.Movie/media.ino';
+
+    function isHighlighted(element) {
+      return Array.from(element.classList).includes('hljs');
+    }
+
+    // Szövegfájl betöltése és megjelenítése a modal ablakban
+    $('#open-text-popup').on('click', function () {
+      $.ajax({
+        url: textFileUrl,
+        dataType: 'text',
+        success: function (text) {
+
+          $('#text-content').text(text);
+          $('#modal, #overlay').show();
+
+          // Highlight.js initialization after modal is shown
+          hljs.highlightAll();
+          // hljs.highlightBlock($('#text-content')[0]);
+          
+                    
+          
+        },
+        error: function (error) {
+          console.error('Error loading text file:', error);
+        }
+      });
+    });
+
+    // Bezárás gomb eseménykezelő
+    $('#close-button').on('click', function () {      
+      $('#modal').hide();
+      $('#overlay').hide();
+      
+      $('#text-content').empty();
+      $('#text-content').removeAttr("data-highlighted");
+    });
+
+    $(document).on('keydown',function(e){
+      function clickOnEscape(){
+        $('#close-button').trigger('click');
+      }
+      function arrowLeft(){
+        $('#close-button').trigger('click');
+      }
+      function arrowRight(){
+        $('#close-button').trigger('click');
+      }
+      var act={27:clickOnEscape, 37:arrowLeft, 39:arrowRight};
+      if(act[e.keyCode])
+        var a=new act[e.keyCode];
+    });
+
+
+  </script>
+</body>
+</html>
+
+
+
+

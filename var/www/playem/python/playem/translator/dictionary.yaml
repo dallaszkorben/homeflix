@@ -240,7 +240,6 @@ genre:
         social_science: Social Science
         study_guide: Study Guide
         graphic_novel: Graphic Novel
-        lecture_notes: Lecture Notes
 
     music_video:
         <<: *music
@@ -250,6 +249,7 @@ genre:
 
     knowledge:
         lecture: Lecture
+        lecture_notes: Lecture Notes
         e-learning: E-learning
         diy: DIY
         datasheet: Datasheet
@@ -402,6 +402,8 @@ theme:
     informatics: Informatics
     genetics: Genetics
     global_warming: Global Warming
+    environment: Environment
+    polution: Polution
     terrorism: Terrorism
     migration: Migration
     corruption: Corruption
@@ -414,6 +416,8 @@ theme:
     ufo: UFO
     iot: IoT
     it: IT
+    hardware: Hardware
+    electronics: Electronics
     technology: Technology
     light: Light
     jewellery: Jewellery
@@ -430,6 +434,8 @@ theme:
     survival: Survival
     sex: Sex
     gun: Gun
+    society: Society
+    farming: Farming
 
 title:
     title: Title
@@ -465,10 +471,11 @@ title:
     music_level_record: Record level
 
     music_video: Music Video
-    music_by_decade: Filtered by Decade
-    music_by_genre: Filtered by Genre
+    music_by_abc: ABC
+    music_by_decade: Grouped by Decade
+    music_by_genre: Grouped by Genre
 
-    music_audio: Music Audio    
+    music_audio: Music Audio
     music_hungarian: Hungarian
     radioplay: Radioplay
     audiobook: Audiobook

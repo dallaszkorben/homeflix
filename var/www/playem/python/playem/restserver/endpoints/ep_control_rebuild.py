@@ -32,7 +32,7 @@ class EPControlRebuild(EP):
         remoteAddress = request.remote_addr
 
         logging.debug( "WEB request {1} {0} {2})".format(
-                    remoteAddress, EPControlRebuild.METHOD, EPControlRebuild.URL                    
+                    remoteAddress, EPControlRebuild.METHOD, EPControlRebuild.URL
                 )
         )
 
@@ -41,7 +41,7 @@ class EPControlRebuild(EP):
         logging.debug("Database rebuild started...")
         print("===========================")
         print("Database rebuild started...")
-        self.web_gadget.db.drop_all_existing_tables()
+        self.web_gadget.db.drop_static_tables()
         start = time.time()
         self.web_gadget.db=DB(self.web_gadget)
         end = time.time()

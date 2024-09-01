@@ -1,0 +1,114 @@
+<meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="script/jquery/jquery-3.6.0.min.js"></script>
+        <script src="script/js-jaml/js-yaml.js"></script>
+        <link href="//vjs.zencdn.net/8.3.0/video-js.min.css" rel="stylesheet">
+        <script src="//vjs.zencdn.net/8.3.0/video.min.js"></script>
+
+        <style>
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#menu-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #000;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  transition: height 0.5s ease-in-out;
+}
+
+.language-menu {
+  display: none;
+}
+
+.language-menu.show {
+  display: block;
+}
+
+.current-language {
+  display: inline-block;
+  float: right; /* Move current language to the right */
+  max-width: calc(100% - 120px); /* Adjust maximum width to prevent overflow */
+  overflow: hidden; /* Hide any overflow */
+  text-overflow: ellipsis; /* Show ellipsis for text overflow */
+}
+
+.language-dropdown {
+  display: none;
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 5px 0;
+  list-style: none;
+  z-index: 1;
+}
+
+.language-dropdown li {
+  padding: 5px 10px;
+  color: #000;
+}
+
+.language-dropdown li:hover {
+  background-color: #f2f2f2;
+}
+
+.language-dropdown li.selected {
+  background-color: #ccc;
+  color: #fff;
+}
+        </style>
+        
+        <script>
+
+
+$(document).ready(function() {
+  $(document).on('mousemove', function(event) {
+    var mouseY = event.clientY;
+    if (mouseY <= 130) {
+      $('#menu-line').addClass('show');
+    } else {
+      $('#menu-line').removeClass('show');
+    }
+  });
+
+  $('#menu-line').on('click', function() {
+    $('.language-dropdown').slideToggle(200);
+  });
+
+  $('.language-option').on('click', function() {
+    var selectedLanguage = $(this).text();
+    $('.current-language').text(selectedLanguage);
+    $('.language-dropdown').slideUp(200);
+  });
+});
+ 
+        </script>
+
+    </head>
+    
+    <body>
+      <div id="menu-line" class="language-menu">
+        <div class="current-language">English</div>
+        <ul class="language-dropdown">
+          <li class="language-option">English</li>
+          <li class="language-option">Swedish</li>
+          <li class="language-option">Hungarian</li>
+        </ul>
+      </div>
+
+      <div style="background: yellow; width: 100%; height: 100%">
+
+      </div>
+    </body>
+</html>

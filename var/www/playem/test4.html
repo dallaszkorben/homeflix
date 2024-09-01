@@ -1,0 +1,61 @@
+<meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+<!DOCTYPE html>
+<html>
+<head>         
+
+    <link href="https://vjs.zencdn.net/7.19.2/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+    <script src="script/jquery/jquery-3.6.0.min.js"></script>
+    <link href="script/fancybox/jquery.fancybox.min.css" rel="stylesheet" />
+    <script src="script/fancybox/jquery.fancybox.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>    
+    <script src="script/epub/epub.min.js"></script>
+
+
+    <script>
+        $(document).ready(function() {
+
+            var book = ePub("MEDIA/01.Movie/media.epub");
+            var rendition = book.renderTo("viewer", {width: 600, height: 400});
+            var displayed = rendition.display();
+
+//            let fancybox_list = [];
+//            let medium_path = "MEDIA/01.Movie/media.pdf";
+//            let opts ={
+//                // caption: media_path,
+//                thumb: medium_path,
+//                width: $(window).width(),
+//                // fitToView: true,                            // does not work
+//                // autoSize: true,                             // does not work
+//                afterShow: function(instance, current){},
+//            }
+//            let src = medium_path;
+//            fancybox_list.push({
+//                src: src,
+//                opts: opts
+//            })
+//            $.fancybox.open(fancybox_list, {
+//                loop: false,
+//                fitToView: true,
+//                afterClose: function(instance, current) {
+//                    refToThis.focusTask = FocusTask.Menu;
+//                }
+//            });           
+        });
+   </script>
+</head>
+<body>
+   
+    <select id="toc"></select>
+    <div id="viewer" class="spreads"></div>
+    <a id="prev" href="#prev" class="arrow">‹</a>
+    <a id="next" href="#next" class="arrow">›</a>
+
+    <div id="area"></div>
+  
+
+</body>
+</html>
+

@@ -6,6 +6,8 @@ con.execute('SELECT * from Level').fetchall()
 con.execute('SELECT * from Card').fetchall()
 con.execute('SELECT * from Text_Card_Language WHERE type="T"').fetchall()
 
+con.execute('SELECT * FROM sqlite_master WHERE type="table";').fetchall()
+
 =================================
 
 --- get all standalone movies ---

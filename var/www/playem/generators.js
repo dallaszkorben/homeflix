@@ -56,7 +56,7 @@ class RestGenerator extends Generator{
         return result.responseJSON;
     }
 
-    generateThumbnail(hit, type){
+    generateThumbnail(filter, play_list){
         throw new Error("Implement generateThumbnails() method in the " + this.constructor.name + " class!");
     }
     
@@ -85,15 +85,16 @@ class RestGenerator extends Generator{
             for(let index=0; index<request_result.length; index++){
 
                 let line = request_result[index];
-                let sub_lines = []
+                let play_list = [];
 
-                // TODO: check !if(line["level"])
-                // Tricky thing for continous play
-                // collects all lines (cards) which are after the recent line (card)
-                for(let sub_index=index+1; sub_index<request_result.length; sub_index++){
-                    sub_lines.push(request_result[sub_index]);
+                //
+                // Collects all media which needs to continuous play
+                //
+                for(let sub_index=index; sub_index<request_result.length; sub_index++){
+                    play_list.push(request_result[sub_index]);
                 }
-                let thumbnail = this.generateThumbnail(line, sub_lines, request['filter']);
+
+                let thumbnail = this.generateThumbnail(request['filter'], play_list);
 
                 oContainer.addThumbnail(line["id"], thumbnail);
             }
@@ -124,7 +125,7 @@ class RestGenerator extends Generator{
             title = this.getTruncatedTitle(title, max_length);
         }
 
-        title = this.getTitleWithPart(hit, title, " ");
+        title = RestGenerator.getTitleWithPart(hit, title, " ");
         return title;
     }
 
@@ -142,15 +143,15 @@ class RestGenerator extends Generator{
             title = hit["title_orig"];
         }
 
-        title = this.getTitleWithPart(hit, title, " ");
+        title = RestGenerator.getTitleWithPart(hit, title, " ");
         return title;
 
     }
 
-    getMainTitle(hit){
+    static getMainTitle(hit){
         let title;
 
-        let lang_orig = hit['lang_orig']
+//        let lang_orig = hit['lang_orig']
 
         //                                                                requested title    original title    original language    requested language
         // requested = original                                                        ✔               ❌                    ❌                    ✔
@@ -179,16 +180,17 @@ class RestGenerator extends Generator{
             title = hit["title_req"];
         }
 
-        title = this.getTitleWithPart(hit, title, " - ");
+        title = RestGenerator.getTitleWithPart(hit, title, " - ");
+//        title = this.getTitleWithPart(hit, title, " - ");
         return title
     }
 
-    getTitleWithPart(hit, title, separator=" "){
+    static getTitleWithPart(hit, title, separator=" "){
         let result_title = title;
         let show_sequence = hit['title_show_sequence'];
         if(show_sequence != "" && hit['sequence'] && hit['sequence'] > 0){
             let part = translated_titles['sequence'][show_sequence].format("0", hit['sequence']);
-        
+
             if(result_title){
                 result_title = result_title + separator + part;
             }
@@ -225,13 +227,15 @@ class RestGenerator extends Generator{
         return path;
     }
 
-    generateThumbnail(hit, all_hits, filters){
+    generateThumbnail(filters, play_list){
+        let hit = play_list[0];
+
         let refToThis = this;
         let thumbnail = new Thumbnail();
 
         let thumbnail_title = this.getThumbnailTitle(hit);
         let history_title = this.getHistoryTitle(hit);
-        let main_title = this.getMainTitle(hit);
+        let main_title = RestGenerator.getMainTitle(hit);
 
         let card_id = hit["id"];
 
@@ -259,34 +263,10 @@ class RestGenerator extends Generator{
                 appendix_list.push(appendix_dic);                
             }
 
-            // let appendix_request_url = "http://" + host + port + "/collect/all/appendix/card_id/" + card_id + "/lang/" +  this.language_code
-            // let appendix_title_response = RestGenerator.sendRestRequest("GET", appendix_request_url);
-
-            // let appendix_list = [];
-            // for(let appendix of appendix_title_response){
-
-            //     let appendix_dic = {};
-            //     appendix_dic["id"] = appendix['id'];
-
-            //     // This request is to fetch the title
-            //     if ( appendix["title_req"] != null ){
-            //         appendix_dic["title"] = appendix["title_req"];
-            //     }else{
-            //         appendix_dic["title"] = appendix["title_orig"];
-            //     }
-
-            //     appendix_dic["show"] = appendix["show"];
-            //     appendix_dic["download"] = appendix["download"];
-            //     appendix_dic["source_path"] = appendix["source_path"];
-            //     appendix_dic["media"] = appendix["media"];
-
-            //     appendix_list.push(appendix_dic);
-            // }
-
             // save the appendix list
             thumbnail.setAppendix(appendix_list);
         }
-      
+
         if(hit["level"]){
 
             let thumbnail_path = RestGenerator.getRandomSnapshotPath(hit["source_path"]);
@@ -295,12 +275,8 @@ class RestGenerator extends Generator{
             thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
-//            console.log(hit["storyline"]);
-
             thumbnail.setTextCard({storyline:hit["storyline"], lyrics:hit["lyrics"]});
             thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"]});
-//            thumbnail.setExtras({ level: hit["level"]});
-    
 
             thumbnail.setFunctionForSelection({
                 "single": 
@@ -326,17 +302,28 @@ class RestGenerator extends Generator{
             let media;
             let mode;
             let medium_path;
+            let medium_dict = {};
+
+            let thumbnail_path = RestGenerator.getRandomSnapshotPath(card["source_path"]);
+            let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
+
             if("audio" in card["medium"]){
                 media=card["medium"]["audio"][0]
                 mode = "audio";
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
+                    medium_dict["medium_path"] = medium_path;
+                    medium_dict["screenshot_path"] = screenshot_path;
+                    medium_dict["card_id"] = card["id"];
                 }
             }else if("video" in card["medium"]){
                 media=card["medium"]["video"][0]
                 mode = "video";
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
+                    medium_dict["medium_path"] = medium_path;
+                    medium_dict["screenshot_path"] = null;
+                    medium_dict["card_id"] = card["id"];
                 }
             }else if("picture" in card["medium"]){
                 media=card["medium"]["picture"]
@@ -346,24 +333,31 @@ class RestGenerator extends Generator{
                 // For picture it creates a list
 
                 for(let medium of media){
-                    medium_path.push(pathJoin([card["source_path"], "media", medium]));
+                    medium_path.push(pathJoin([card["source_path"], "media", medium])); //*
                 }
+                medium_dict["medium_path_list"] = medium_path;
+                medium_dict["screenshot_path"] = screenshot_path;
+                medium_dict["card_id"] = card["id"];
+
             }else if("text" in card["medium"]){
                 media=card["medium"]["text"][0]
                 mode = "text";
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
+                    medium_dict["medium_path"] = medium_path;
+                    medium_dict["screenshot_path"] = screenshot_path;
+                    medium_dict["card_id"] = card["id"];
                 }
             }else if("pdf" in card["medium"]){
                 media=card["medium"]["pdf"][0]
                 mode = "pdf";
                 if(media){
                     medium_path = pathJoin([card["source_path"], "media", media]);
+                    medium_dict["medium_path"] = medium_path;
+                    medium_dict["screenshot_path"] = screenshot_path;
+                    medium_dict["card_id"] = card["id"];
                 }
             }
-
-            let thumbnail_path = RestGenerator.getRandomSnapshotPath(card["source_path"]);
-            let screenshot_path = RestGenerator.getRandomScreenshotPath(card["source_path"]);
 
             thumbnail.setImageSources({thumbnail_src: thumbnail_path, description_src: screenshot_path});
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
@@ -372,21 +366,17 @@ class RestGenerator extends Generator{
             thumbnail.setCredentials({directors: card["directors"], writers: card["writers"], stars: card["stars"], actors: card["actors"], voices: card["voices"], hosts: card["hosts"], guests: card["guests"], interviewers: card["interviewers"], interviewees: card["interviewees"], presenters: card["presenters"], lecturers: card["lecturers"], performers: card["performers"], reporters: card["reporters"]});
 
             // TODO: fix it
-            // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I chose. It could be changed
+            // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I choose. It could be changed
             thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"]});
     
             thumbnail.setFunctionForSelection({
                 "single": 
                     {
-                        [mode]: 
-                            (function(medium_path) {
-                                return function() {
-                                    return medium_path
-                                };
-                            })(medium_path),
-                        "screenshot_path": screenshot_path
+                        [mode]: null,
+                        "medium_dict": medium_dict
                     },
-                "continuous": all_hits
+//                "continuous": all_hits
+                "continuous": play_list
             });
         }
         return thumbnail;
@@ -545,7 +535,7 @@ class MainMenuGenerator extends Generator{
             "continuous": []
         });
         oContainer.addThumbnail(1, thumbnail);
-        
+
         // Dia
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/dia.jpg", description_src: "images/categories/dia.jpg"});
@@ -686,7 +676,7 @@ class MovieMenuGenerator extends GeneralRestGenerator{
                             return function() {
                                 return new MovieRemakesLevelRestGenerator(refToThis.language_code, translated_titles['movie_remakes']);
                             };
-                        })("movies")                    
+                        })("movies")
                 },
             "continuous": []
         });
@@ -705,22 +695,23 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         for (const [key, value] of Object.entries(request['filter'])) {
             request['rq_url'] = request['rq_url'].format(key, value);
         }
-        
+
         let request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);      
 
         for(let index=0; index<request_result.length; index++){
-    
+
             let line = request_result[index];
-            let sub_lines = []
-        
+            let play_list = [];
+
             // TODO: check !if(line["level"])
-            for(let sub_index=index+1; sub_index<request_result.length; sub_index++){
-                sub_lines.push(request_result[sub_index]);
+            for(let sub_index=index; sub_index<request_result.length; sub_index++){
+                play_list.push(request_result[sub_index]);
             }
-            let thumbnail = this.generateThumbnail(line, sub_lines, documentary_filter);
-        
+
+            let thumbnail = this.generateThumbnail(documentary_filter, play_list);
+
             oContainer.addThumbnail(line["id"], thumbnail);
-        }  
+        }
 
  
 
@@ -1017,7 +1008,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
             {title: this.container_title + "-" + translated_genre_movie['thriller'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_thriller_filter},           
             {title: this.container_title + "-" + translated_genre_movie['scifi'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_scifi_filter},
             {title: this.container_title + "-" + translated_genre_movie['documentary'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_documentary_filter},
-          
+
         //    {title: this.container_title + "-", rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_filter}
         ];
 
@@ -1036,7 +1027,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
 
 
 class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
-    
+
     constructor(language_code, container_title){
         super(language_code);
         this.container_title = container_title;
