@@ -90,8 +90,11 @@ class RestGenerator extends Generator{
                 //
                 // Collects all media which needs to continuous play
                 //
+                // TODO: check !if(line["level"])
                 for(let sub_index=index; sub_index<request_result.length; sub_index++){
-                    play_list.push(request_result[sub_index]);
+//                    if(!request_result[sub_index]["level"]){
+                        play_list.push(request_result[sub_index]);
+//                    }
                 }
 
                 let thumbnail = this.generateThumbnail(request['filter'], play_list);
@@ -705,7 +708,9 @@ class MovieMenuGenerator extends GeneralRestGenerator{
 
             // TODO: check !if(line["level"])
             for(let sub_index=index; sub_index<request_result.length; sub_index++){
-                play_list.push(request_result[sub_index]);
+//                if(!request_result[sub_index]["level"]){
+                    play_list.push(request_result[sub_index]);
+//                }
             }
 
             let thumbnail = this.generateThumbnail(documentary_filter, play_list);

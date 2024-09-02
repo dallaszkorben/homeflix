@@ -1250,7 +1250,9 @@ class ThumbnailController {
         }
     }
 
-
+    /*
+    Generates the actual media_dict for the player_list
+    */
     getMediumDict(hit){
                        
         let media;
@@ -1262,23 +1264,32 @@ class ThumbnailController {
         }
 
         let media_type = Object.keys(hit["medium"])[0]
-
-        //if( hit["media_type"] == "picture"){
+          
+        // if picture
         if( media_type == "picture" ){
             media = hit["medium"][media_type][0]
             medium_dict["medium_path_list"] = [pathJoin([hit["source_path"], "media", media])];
+
+        // otherwise
         }else{
-            media = hit["medium"][media_type][0]
-            medium_dict["medium_path"] = pathJoin([hit["source_path"], "media", media]);
-        }
+            if (hit["medium"][media_type] != undefined && hit["medium"][media_type].length > 0) {
+                media = hit["medium"][media_type][0]
+                medium_dict["medium_path"] = pathJoin([hit["source_path"], "media", media]);
+
+            // if the actual card is a level, then it is not possible to play (in the ist)
+            }else{
+                medium_dict["medium_path"] = null
+            }
+        }   
 
         medium_dict["media_type"] = media_type;
         medium_dict["screenshot_path"] = screenshot_path,
         medium_dict["medium"] = hit["medium"];
         medium_dict["card_id"] = hit["id"];
         medium_dict["title"] = RestGenerator.getMainTitle(hit)
-        
+
         return medium_dict;
+            
     }
 
 
@@ -1351,30 +1362,6 @@ console.log("id: " + card_id + ", title: "+ title);
                 player.poster = "";
             }
 
-            /*
-            // Poster only if audio media
-            if ("audio" in functionSingle) {
-                let screenshot_path = functionSingle["screenshot_path"];
-                player.poster = screenshot_path;
-            } else {
-                player.poster = "";
-            }
-*/
-
-var vplayer = cld.videoPlayer("my-video", { playedEventTimes: [60, 120, 180] })
-
-            $("#video_player").bind('timeplayed', (event) => {
-                console.log(event.eventData.time + " seconds played") 
-            });
-
-            // $("#video_player").bind("progress", function (par) {
-            //     console.log("progress: " + par.timeStamp + " - " + medium_path);
-            // });
-
-
-
-
-
             player.load();
             player.controls = true;
             player.autoplay = true;
@@ -1386,13 +1373,14 @@ var vplayer = cld.videoPlayer("my-video", { playedEventTimes: [60, 120, 180] })
             });
 
             // FULLSCREENCHANGE event listener
-//            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
-//                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-//                // If exited of full screen
-//                if (!state) {
-//                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
-//                }
-//            });
+            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
+                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+
+                // If exited of full screen
+                if (!state) {
+                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
+                }
+            });
             player.style.display = 'block';
 
             // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
@@ -1409,26 +1397,26 @@ var vplayer = cld.videoPlayer("my-video", { playedEventTimes: [60, 120, 180] })
         if (medium_path != null) {
             let retToThis = this;
             this.focusTask = FocusTask.Text;
-             let fancybox_list = [];
-             let opts = {
-                 // caption: media_path,
-                 thumb: medium_path,
-                 width: $(window).width(),
-                 afterShow: function (instance, current) { },
-             }
-             let src = medium_path;
-             fancybox_list.push({
-                 src: src,
-                 opts: opts
-             })
-             $.fancybox.open(fancybox_list, {
-                 loop: false,
-                 fitToView: true,
-                 afterClose: function (instance, current) {
+            let fancybox_list = [];
+            let opts = {
+                // caption: media_path,
+                thumb: medium_path,
+                width: $(window).width(),
+                afterShow: function (instance, current) { },
+            }
+            let src = medium_path;
+            fancybox_list.push({
+                src: src,
+                opts: opts
+            })
+            $.fancybox.open(fancybox_list, {
+                loop: false,
+                fitToView: true,
+                afterClose: function (instance, current) {
                     retToThis.focusTask = FocusTask.Menu;
-                 }
-             });
-         }    
+                }
+            });
+        }    
     }
 
 
@@ -1524,63 +1512,83 @@ var vplayer = cld.videoPlayer("my-video", { playedEventTimes: [60, 120, 180] })
         // Remove the playing list
         domPlayer.children("source").remove();
 
-        // Play the next media
+        // if I'm here because the player ended and there is at least 1 element in the play_list
         if (event == 'ended' && continuous_list.length > 0) {
 
-            let medium_dict = continuous_list.shift();
+            let medium_dict
+            let medium_path;
+            let screenshot_path;
+            let card_id;
+            let title;
 
-            let medium_path = medium_dict["medium_path"];
-            let screenshot_path = medium_dict["screenshot_path"];
-            let card_id = medium_dict["card_id"];
-            let title = medium_dict["title"];
-    
-    console.log("id: " + card_id + ", title: "+ title);
+            // takes the next element until it is a media
+            do {
+                medium_dict = continuous_list.shift();
+                medium_path = medium_dict["medium_path"];
+                screenshot_path = medium_dict["screenshot_path"];
+                card_id = medium_dict["card_id"];
+                title = medium_dict["title"];
+                                
+                // next focus on the thumbnails
+                this.objScrollSection.arrowRight()
 
+            // takes the next element until it is media or empty play_list
+            } while(medium_path == null && continuous_list.length > 0);
+            
+            // if the recent element is media
+            if(medium_path != null){
+            
+console.log("id: " + card_id + ", title: "+ title);
 
-            // Creates a new source element
-            let sourceElement = $('<source>');
-            sourceElement.attr('src', medium_path);
-            domPlayer.append(sourceElement);
+                // Creates a new source element
+                let sourceElement = $('<source>');
+                sourceElement.attr('src', medium_path);
+                domPlayer.append(sourceElement);
 
-            // Poster only if audio medium
-            if ("audio" in medium_dict["medium"]) {
-                player.poster = screenshot_path;
-            } else {
-                player.poster = "";
+                // Poster only if audio medium
+                if ("audio" in medium_dict["medium"]) {
+                    player.poster = screenshot_path;
+                } else {
+                    player.poster = "";
+                }
+
+                player.load();
+                player.play();
+
+                // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
+                domPlayer.focus();
+
+            }else{
+                this.stop_playing(player, domPlayer, event);
             }
-
-            player.load();
-            player.play();
-
-            // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
-            domPlayer.focus();
-
-            // next focus on the thumbnails
-            this.objScrollSection.arrowRight()
 
         // Stop playing
         } else {
-
-            // Remove the listeners
-            domPlayer.off('fullscreenchange');
-            domPlayer.off('mozfullscreenchange');
-            domPlayer.off('webkitfullscreenchange');
-            domPlayer.off('ended');
-
-            domPlayer.hide();
-            player.pause();
-            player.height = 0;
-
-            this.focusTask = FocusTask.Menu;
-
-            if (event == 'fullscreenchange') {
-
-            } else if (event == 'ended') {
-                $('video')[0].webkitExitFullScreen();
-            }
-
-            player.load();
+            this.stop_playing(player, domPlayer, event);
         }
+    }
+
+    stop_playing(player, domPlayer, event){
+
+        // Remove the listeners
+        domPlayer.off('fullscreenchange');
+        domPlayer.off('mozfullscreenchange');
+        domPlayer.off('webkitfullscreenchange');
+        domPlayer.off('ended');
+
+        domPlayer.hide();
+        player.pause();
+        player.height = 0;
+
+        this.focusTask = FocusTask.Menu;
+
+        if (event == 'fullscreenchange') {
+
+        } else if (event == 'ended') {
+            $('video')[0].webkitExitFullScreen();
+        }
+
+        player.load();
     }
 
     escape() {
