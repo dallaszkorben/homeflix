@@ -90,11 +90,8 @@ class RestGenerator extends Generator{
                 //
                 // Collects all media which needs to continuous play
                 //
-                // TODO: check !if(line["level"])
                 for(let sub_index=index; sub_index<request_result.length; sub_index++){
-//                    if(!request_result[sub_index]["level"]){
-                        play_list.push(request_result[sub_index]);
-//                    }
+                    play_list.push(request_result[sub_index]);
                 }
 
                 let thumbnail = this.generateThumbnail(request['filter'], play_list);
@@ -171,7 +168,7 @@ class RestGenerator extends Generator{
             title = hit["title_orig"]; // + " (" + lang_orig + ")";
 
         // There IS title configured on the requested language but I want to see the original title as well if it is different
-        }else if(always_show_origin_title){
+        }else if(always_show_original_title){
             if(hit["title_req"] != hit["title_orig"]){
                 title = hit["title_req"] + " (" + hit["title_orig"] + ")";
             }else{
@@ -378,7 +375,6 @@ class RestGenerator extends Generator{
                         [mode]: null,
                         "medium_dict": medium_dict
                     },
-//                "continuous": all_hits
                 "continuous": play_list
             });
         }
@@ -418,7 +414,7 @@ class SubLevelRestGenerator extends  RestGenerator{
     getContainerList(){
         let containerList = [];
 
-        // TODO: we just udded the filter in the constructor. Now I add it again
+        // TODO: we just added the filter in the constructor. Now I add it again
 
         let requestList = [
             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed/card_id/" + this.hierarchy_id + "/category/{category}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: this.filters},
@@ -593,6 +589,24 @@ class MainMenuGenerator extends Generator{
         });
         oContainer.addThumbnail(6, thumbnail);
 
+        // Personal
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/personal.jpg", description_src: "images/categories/personal.jpg"});
+        thumbnail.setTitles({main: translated_titles['personal'], thumb: translated_titles['personal'], history: translated_titles['personal']});
+        thumbnail.setFunctionForSelection({
+            "single": 
+                {
+                    "menu": 
+                        (function(){
+                            return function(){
+                                return new PersonalLevelRestGenerator(refToThis.language_code, translated_titles['personal']);
+                            }
+                        })()
+                },
+            "continuous": []
+        });
+        oContainer.addThumbnail(6, thumbnail);
+
         containerList.push(oContainer);
  
         return containerList;
@@ -706,11 +720,8 @@ class MovieMenuGenerator extends GeneralRestGenerator{
             let line = request_result[index];
             let play_list = [];
 
-            // TODO: check !if(line["level"])
             for(let sub_index=index; sub_index<request_result.length; sub_index++){
-//                if(!request_result[sub_index]["level"]){
-                    play_list.push(request_result[sub_index]);
-//                }
+                play_list.push(request_result[sub_index]);
             }
 
             let thumbnail = this.generateThumbnail(documentary_filter, play_list);
@@ -1148,6 +1159,24 @@ class MusicMenuGenerator extends Generator{
         });
         oContainerVideo.addThumbnail(1, thumbnail);        
 
+        // ABC
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_band_abc.jpg", description_src: "images/categories/music_by_band_abc.jpg"});
+        thumbnail.setTitles({main: translated_titles['music_by_band_abc'], thumb: translated_titles['music_by_band_abc'], history: translated_titles['music_by_band_abc']});
+        thumbnail.setFunctionForSelection({
+            "single": 
+                {
+                    "menu": 
+                        (function(movie_type) {
+                            return function() {
+                                return new MusicVideoFilterGroupAbcRestGenerator(refToThis.language_code);
+                            };
+                        })("blabla")
+                },
+            "continuous": []
+        });
+        oContainerVideo.addThumbnail(1, thumbnail);        
+
         // === Music-Audio ===
 
         let oContainerAudio = new ObjThumbnailContainer(translated_titles['music_audio']);
@@ -1277,7 +1306,7 @@ class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
                     "menu": 
                         (function(movie_type) {
                             return function() {
-                                return new MusicVideoFilterDecadeOnRecordRestGenerator(refToThis.language_code);
+                                return new MusicVideoFilterGenreOnBandRestGenerator(refToThis.language_code);
                             };
                         })("blabla")
                 },
@@ -1308,9 +1337,11 @@ class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
         containerList.push(oContainerGenre);
  
         return containerList;
-    }  
+    } 
 }
 
+
+!!!!!!!!!!!!!!!!!!!111
 
 // === Music-Audio ===
 // ===   Decade    ===
@@ -1390,7 +1421,7 @@ class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
                     "menu": 
                         (function(movie_type) {
                             return function() {
-                                return new MusicAudioFilterDecadeOnRecordRestGenerator(refToThis.language_code);
+                                return new MusicAudioFilterGenreOnBandRestGenerator(refToThis.language_code);
                             };
                         })("blabla")
                 },
@@ -1538,6 +1569,30 @@ class MusicVideoFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
 }
 
 
+class AAAAMusicVideoFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
+
+    //
+    // TODO: need REST request to select by Name*
+    //
+    getContainerList(){
+        let containerList = [];
+
+        let filter_a    = {category: 'music_video', level: 'band', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        let requestList = [
+            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_a},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+   }
+}
+
+
+
+
+
+
 // === Music-Audio ===
 class MusicAudioFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
 
@@ -1649,7 +1704,25 @@ class MusicAudioFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
    }
 }
 
+class AAAMusicAudioFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
 
+    //
+    // TODO: need REST request to select by Name*
+    //
+
+    getContainerList(){
+        let containerList = [];
+
+        let filter_a    = {category: 'music_audio', level: 'band', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        let requestList = [
+            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_a},
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+   }
+}
 
 
 
@@ -1820,3 +1893,23 @@ class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
    }
 }
 
+
+// ==============
+// Personal MENU
+// ==============
+//
+class PersonalLevelRestGenerator extends  GeneralRestGenerator{
+
+    getContainerList(){
+        let containerList = [];
+
+        let filter_knowledge = {category: 'personal', level: 'menu', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        let requestList = [
+            {title: this.container_title, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},                        
+        ];
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+   }
+}

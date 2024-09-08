@@ -6,10 +6,10 @@ import logging
 from pathlib import Path
 
 class CardManipulator:
-"""
-This class is about to generate IDs into the card.
-This class is a fix, so it needs to be run only once to fix the missing IDs
-"""
+    """
+    This class is about to generate IDs into the card.
+    This class is a fix, so it needs to be run only once to fix the missing IDs
+    """
     CARD_FILE_NAME = "card.yaml"
     MEDIA_FOLDER = "media"
     SCREENSHOT_FOLDER = "screenshots"
@@ -112,20 +112,21 @@ This class is a fix, so it needs to be run only once to fix the missing IDs
             titles=dict((language, title) for language, title in titles.items() if title)
 
             # This is the lowest level
-            if media_dict and not is_appendix:
+#            if media_dict and not is_appendix:
 
                 # delete the tag keys, if there is any
-                data.pop("tag", None)
+                # data.pop("tag", None)
 
-                # convert negative value to positive
-                id_hash = hash(actualDir) & ((1<<sys.hash_info.width)-1)
-                id = id_hash>>1
-
-                print( "{0}, {1}, {2}, {3}".format(id, titles, actualDir, id_hash))
-
-                data['id'] = id
-                with open(card_path, "w", encoding="utf-8") as file_object:
-                    yaml.dump(data, file_object)
+            # convert negative value to positive
+            id_hash = hash(actualDir) & ((1<<sys.hash_info.width)-1)
+            #id = id_hash>>1
+#            id_str=str(id_hash)[-18:]
+            id_str=str(id_hash)[0:18]
+            id = int(id_str)
+            print( "{0}, {1}, {2}, {3}".format(id, titles, actualDir, id_hash))
+            data['id'] = id
+            with open(card_path, "w", encoding="utf-8") as file_object:
+                yaml.dump(data, file_object)
 
         for name in dir_list:
             subfolder_path_os = os.path.join(actualDir, name)

@@ -436,6 +436,7 @@ theme:
     gun: Fegyver
     society: Társadalom
     farming: Gazdálkodás
+    family: Család
 
 title:
     title: Cím
@@ -471,9 +472,9 @@ title:
     music_level_record: Zeneszám szint
 
     music_video: Zene-Video
-    music_by_abc: ABC sorrend
-    music_by_decade: Csoportosítás évtizedek szerint
-    music_by_genre: Csoportosítás Műfaj szerint
+    music_by_decade: Évtizedek
+    music_by_genre: Műfajok
+    music_by_band_abc: Együttesek ABC-ben
 
     music_audio: Zene-Audio
     music_hungarian: Magyar
@@ -484,6 +485,7 @@ title:
     entertainment: Szórakoztatás
     entertainments: Szórakoztatás
     knowledge: Ismeretek
+    personal: Személyes
 
     performer: Előadó
     writer: Író

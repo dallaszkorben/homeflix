@@ -122,11 +122,12 @@ class SqlDatabase:
         if not self.is_static_dbs_ok():
             self.recreate_static_dbs()
 
+        self.fill_up_constant_dicts()
+
         # check if the personal databases are corrupted/not existed
         if not self.is_personal_dbs_ok():
             self.recreate_personal_dbs()
 
-        self.fill_up_constant_dicts()
 
     def __del__(self):
         self.conn.close()
@@ -223,8 +224,14 @@ class SqlDatabase:
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_USER + '''(
                 id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
-                name          TEXT  NOT NULL,
-                created_epoch INTEGER NOT NULL,
+                name                   TEXT    NOT NULL,
+                id_language            INTEGER NOT NULL ,
+                show_original_title    BOOLEAN NOT NULL CHECK (show_original_title IN (0, 1)),
+                show_lyrics_anyway     BOOLEAN NOT NULL CHECK (show_lyrics_anyway IN (0, 1)),
+                show_storyline_anyway  BOOLEAN NOT NULL CHECK (show_storyline_anyway IN (0, 1)),
+                play_continuously      BOOLEAN NOT NULL CHECK (play_continuously IN (0, 1)),
+                created_epoch          INTEGER NOT NULL,
+                FOREIGN KEY (id_language) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
                 UNIQUE(name)
             );
         ''')
@@ -260,9 +267,17 @@ class SqlDatabase:
         cur = self.conn.cursor()
         cur.execute("begin")
 
+        # admin
         user_name = "admin"
-        id = self.append_user(cur, user_name)
-        self.user = user_name
+        user_id = 1234
+        language_code = 'en'
+        show_original_title = True
+        show_lyrics_anyway = True
+        show_storyline_anyway = True
+        play_continuously = True
+
+        id = self.append_user(cur, user_name, user_id=user_id, language_code=language_code, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously)
+        self.user_name = user_name
 
         cur.execute("commit")
 
@@ -720,10 +735,13 @@ class SqlDatabase:
             self.country_id_name_dict[id] = country
         cur.execute("commit")
 
-
-    def append_user(self, cur, user):
+    def append_user(self, cur, user_name, user_id=None, language_code="en", show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True):
         created_epoch = int(datetime.now().timestamp())
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_USER + ' (name, created_epoch) VALUES (?, ?) RETURNING id', (user, created_epoch))
+        id_language = self.language_name_id_dict[language_code]
+        if user_id:
+            cur.execute('INSERT INTO ' + SqlDatabase.TABLE_USER + ' (name, id, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously) VALUES (:user_name, :user_id, :created_epoch, :id_language, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously) RETURNING id', (user_name, user_id, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously))
+        else:
+            cur.execute('INSERT INTO ' + SqlDatabase.TABLE_USER + ' (name, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously) VALUES (:user_name, :created_epoch, :id_language, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously) RETURNING id', (user_name, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously))
         record = cur.fetchone()
         (user_id, ) = record if record else (None,)
         return user_id
@@ -781,18 +799,20 @@ class SqlDatabase:
             #
             # INSERT into CARD
             #
-            # if higher_card_id:
+            # if the card has its own ID, meaning it is media card
+            if card_id:
 
-#            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-#                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-#                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
-#                    RETURNING id;
-#            '''
-            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                    VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
-                    RETURNING id;
-            '''
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                        (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+                        VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                        RETURNING id;
+                '''
+            else:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                        (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+                        VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                        RETURNING id;
+                '''
             cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
@@ -1261,7 +1281,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, card_id=None, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1276,13 +1296,19 @@ class SqlDatabase:
             #
 
             # if higher_card_id:
-
-            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+            if card_id:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                    (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
+                    VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+                    RETURNING id;
+                '''
+            else:
+                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
                     (level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
                     VALUES (:level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
-            '''
-            cur.execute(query, {'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+                '''
+            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             record = cur.fetchone()
             (hierarchy_id, ) = record if record else (None,)
 
@@ -1476,12 +1502,20 @@ class SqlDatabase:
                 # Verify user existence
                 query = '''
                     SELECT 
-                        *
+                        user.id as id,
+                        user.name as name,
+                        lang.name as language_code,
+                        lang.id as language_id,
+                        user.show_original_title   as show_original_title,
+                        user.show_lyrics_anyway    as show_lyrics_anyway,
+                        user.show_storyline_anyway as show_storyline_anyway,
+                        user.play_continuously     as play_continuously 
                 FROM 
-                    ''' + SqlDatabase.TABLE_USER + ''' user
-
+                    ''' + SqlDatabase.TABLE_USER + ''' user,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
-                    user.name=:user_name;
+                    user.name=:user_name
+                    AND user.id_language=lang.id;
                 '''
                 query_parameters = {'user_name': user_name}
                 record=cur.execute(query, query_parameters).fetchone()
@@ -1490,6 +1524,109 @@ class SqlDatabase:
         finally:
             cur.execute("commit")
 
+
+    def update_user_data(self, user_id, language_code=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None):
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                #
+                # Verify user existence
+                #
+                # User
+                query = '''
+                    SELECT 
+                        COUNT(*) as user_number
+                FROM 
+                    ''' + SqlDatabase.TABLE_USER + ''' user
+
+                WHERE
+                    user.id=:user_id;
+                '''
+                query_parameters = {'user_id': user_id}
+                record=cur.execute(query, query_parameters).fetchone()
+                (user_number, ) = record if record else (0,)
+                if user_number == 0:
+                    logging.error("The requested user_id({0}) does NOT exist".format(user_id))
+                    return None
+
+                # Language
+                language_id = None
+                if language_code:
+                    query = '''
+                        SELECT 
+                            id
+                    FROM 
+                        ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
+
+                    WHERE
+                        lang.name = :language_code;
+                    '''
+                    query_parameters = {'language_code': language_code}
+                    record=cur.execute(query, query_parameters).fetchone()
+                    (language_id, ) = record if record else (None,)
+                    if language_id is None:
+                        logging.error("The requested language_code({0}) does NOT exist".format(language_code))
+                        return None
+
+                #
+                # Update
+                #
+                set_list = []
+                if language_code:
+                    set_list.append("'id_language' = :language_id")
+
+                if show_original_title is not None:
+                    set_list.append("'show_original_title' = :show_original_title")
+
+                if show_lyrics_anyway is not None:
+                    set_list.append("'show_lyrics_anyway' = :show_lyrics_anyway")
+
+                if show_storyline_anyway is not None:
+                    set_list.append("'show_storyline_anyway' = :show_storyline_anyway")
+
+                query = '''
+                        UPDATE ''' + SqlDatabase.TABLE_USER + '''
+                        SET 
+                            ''' + ", ".join(set_list) + '''
+                        WHERE
+                            user.id=:user_id
+                    '''
+
+                cur.execute(query, {'user_id': user_id, 'language_id': language_id, 'show_original_title': show_original_title, 'show_lyrics_anyway': show_lyrics_anyway, 'show_storyline_anyway': show_storyline_anyway, 'play_continuously': play_continuously})
+                record = cur.fetchone()
+
+                #
+                # Get recent values
+                #
+                # Ugly: code repeating
+                # TODO: fix it
+                #
+                query = '''
+                    SELECT 
+                        user.id as id,
+                        user.name as name,
+                        lang.name as language_code,
+                        lang.id as language_id,
+                        user.show_original_title   as show_original_title,
+                        user.show_lyrics_anyway    as show_lyrics_anyway,
+                        user.show_storyline_anyway as show_storyline_anyway,
+                        user.play_continuously     as play_continuously 
+                FROM 
+                    ''' + SqlDatabase.TABLE_USER + ''' user,
+                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
+                WHERE
+                    user.id=:user_id
+                    AND user.id_language=lang.id;
+                '''
+                query_parameters = {'user_id': user_id}
+                record=cur.execute(query, query_parameters).fetchone()
+                return dict(record) if record else record
+
+            finally:
+                cur.execute("commit")
+    
 
     def get_history(self, user_id, card_id=None, limit_days=None, limit_records=None):                  
         with self.lock:
@@ -4154,679 +4291,6 @@ LIMIT :limit; '''
 
             query = '''
 
--- SELECT
---     core.*,
--- 
---     mixed_id_list.id_higher_card,
---     mixed_id_list.category,
---     mixed_id_list.level,
---     mixed_id_list.source_path,
---     mixed_id_list.basename,        
---     mixed_id_list.sequence,
---     
---     mixed_id_list.title_on_thumbnail,
---     mixed_id_list.title_show_sequence,
--- 
---     mixed_id_list.decade,
---     mixed_id_list.date,
---     mixed_id_list.length,     
---     
---     
---     mixed_id_list.themes,
---     mixed_id_list.genres,
---     mixed_id_list.origins,
---     mixed_id_list.directors,
---     mixed_id_list.actors,
--- 
---     mixed_id_list.sounds,
---     mixed_id_list.subs,
---     mixed_id_list.writers,
---     mixed_id_list.voices,
---     mixed_id_list.stars,
---     mixed_id_list.lecturers,
---     
---     mixed_id_list.hosts,
---     mixed_id_list.guests,
---     mixed_id_list.interviewers,
---     mixed_id_list.interviewees,
---     mixed_id_list.presenters,
---     mixed_id_list.reporters,
---     mixed_id_list.performers,
--- 
---     storyline,
---     lyrics,
---     medium,
---     appendix
---   
--- FROM
--- 
---     --- mixed level id list ---
---     (
---     SELECT                 
---         card.id, 
---         card.id_higher_card,
---         category.name category,
---         card.level,
---         card.source_path,
---                 
---         card.basename,
---         card.sequence,
---         card.title_on_thumbnail,
---         card.title_show_sequence,
---                 
---         card.decade,
---         card.date,
---         card.length,     
---                 
---         themes,
---         genres,
---         origins,
---         directors,
---         actors,
---         lecturers,
---                 
---         sounds,
---         subs,
---         writers,
---         voices,
---         stars,        
---         hosts,
---         guests,
---         interviewers,
---         interviewees,
---         presenters,
---         reporters,
---         performers
---         
---     FROM 
---         Card card,
---         Category category
--- 
---         -------------
---         --- GENRE ---
---         -------------
---         LEFT JOIN 
---         (
---             SELECT group_concat(genre.name) genres, card_genre.id_card
---             FROM
---                 Genre genre,
---                 Card_Genre card_genre
---             WHERE            
---                 card_genre.id_genre=genre.id
---             GROUP BY card_genre.id_card
---         )gnr
---         ON gnr.id_card=card.id
---             
---         -------------
---         --- THEME ---
---         -------------
---         LEFT JOIN 
---         (
---             SELECT group_concat(theme.name) themes, card_theme.id_card
---             FROM
---                 Theme theme,
---                 Card_Theme card_theme
---             WHERE            
---                 card_theme.id_theme=theme.id
---             GROUP BY card_theme.id_card
---         )thm
---         ON thm.id_card=card.id
---     
---         ---------------
---         --- ORIGINS ---
---         ---------------
---         LEFT JOIN
---         (
---             SELECT group_concat(origin.name) origins, card_origin.id_card
---             FROM
---                 Country origin,
---                 Card_Origin card_origin
---             WHERE
---                 card_origin.id_origin=origin.id
---             GROUP BY card_origin.id_card
---         )rgn
---         ON rgn.id_card=card.id    
---     
---         -----------------
---         --- DIRECTORS ---
---         -----------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) directors,  card_dir.id_card
---             FROM 
---                 Person person,
---                 Card_Director card_dir
---             WHERE 
---                 card_dir.id_director = person.id
---             GROUP BY card_dir.id_card
---         ) dr
---         ON dr.id_card=card.id
--- 
---         --------------
---         --- ACTORS ---
---         --------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) actors,  card_actor.id_card
---             FROM 
---                 Person person,
---                 Card_Actor card_actor
---             WHERE 
---                 card_actor.id_actor = person.id
---             GROUP BY card_actor.id_card
---         ) act
---         ON act.id_card=card.id
--- 
---         ----------------
---         --- LECTURER ---
---         ----------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
---             FROM 
---                 Person person,
---                 Card_Lecturer card_lecturer
---             WHERE 
---                 card_lecturer.id_lecturer = person.id
---             GROUP BY card_lecturer.id_card
---         ) lctr
---         ON lctr.id_card=card.id       
---        
---         --- No filter ---
---        
---         --------------
---         --- SOUNDS ---
---         --------------
---         LEFT JOIN 
---         (
---             SELECT group_concat(language.name) sounds, card_sound.id_card
---             FROM 
---                 Language language,
---                 Card_Sound card_sound
---             WHERE 
---                 card_sound.id_sound=language.id 
---             GROUP BY card_sound.id_card
---         ) snd
---         ON snd.id_card=card.id
--- 
---         ----------------
---         --- SUBTITLE ---
---         ----------------
---         LEFT JOIN
---         (
---             SELECT group_concat(language.name) subs, card_sub.id_card
---             FROM 
---                 Language language,
---                 Card_Sub card_sub
---             WHERE 
---                 card_sub.id_sub=language.id
---             GROUP BY card_sub.id_card
---         ) sb
---         ON sb.id_card=card.id
--- 
---         ---------------
---         --- WRITERS ---
---         ---------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) writers,  card_writer.id_card
---             FROM 
---                 Person person,
---                 Card_Writer card_writer
---             WHERE 
---                 card_writer.id_writer = person.id
---             GROUP BY card_writer.id_card
---         ) wr
---         ON wr.id_card=card.id
--- 
---         --------------
---         --- VOICES ---
---         --------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) voices,  card_voice.id_card
---             FROM 
---                 Person person,
---                 Card_Voice card_voice
---             WHERE 
---                 card_voice.id_voice = person.id
---             GROUP BY card_voice.id_card
---         ) vc
---         ON vc.id_card=card.id
--- 
---         -------------
---         --- STARS ---
---         -------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) stars,  card_star.id_card
---             FROM 
---                 Person person,
---                 Card_Star card_star
---             WHERE 
---                 card_star.id_star = person.id
---             GROUP BY card_star.id_card
---         ) str
---         ON str.id_card=card.id
--- 
---         -------------
---         --- HOSTS ---
---         -------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) hosts,  card_host.id_card
---             FROM 
---                 Person person,
---                 Card_Host card_host
---             WHERE 
---                 card_host.id_host = person.id
---             GROUP BY card_host.id_card
---         ) hst
---         ON hst.id_card=card.id
---     
---         --------------
---         --- GUESTS ---
---         --------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) guests,  card_guest.id_card
---             FROM 
---                 Person person,
---                 Card_Guest card_guest
---             WHERE 
---                 card_guest.id_guest = person.id
---             GROUP BY card_guest.id_card
---         ) gst
---         ON gst.id_card=card.id
--- 
---         ---------------------
---         --- INTERWIEVERS  ---
---         ---------------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
---             FROM 
---                 Person person,
---                 Card_Interviewer card_interviewer
---             WHERE 
---                 card_interviewer.id_interviewer = person.id
---             GROUP BY card_interviewer.id_card
---         ) ntrvwr
---         ON ntrvwr.id_card=card.id
--- 
---         ---------------------
---         --- INTERVIEWEES  ---
---         ---------------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
---             FROM 
---                 Person person,
---                 Card_Interviewee card_interviewee
---             WHERE 
---                 card_interviewee.id_interviewee = person.id
---             GROUP BY card_interviewee.id_card
---         ) ntrw
---         ON ntrw.id_card=card.id
--- 
---         -------------------
---         --- PRESENTERS  ---
---         -------------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) presenters,  card_presenter.id_card
---             FROM 
---                 Person person,
---                 Card_Presenter card_presenter
---             WHERE 
---                 card_presenter.id_presenter = person.id
---             GROUP BY card_presenter.id_card
---         ) prsntr
---         ON prsntr.id_card=card.id
--- 
---         ------------------
---         --- REPORTERS  ---
---         ------------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) reporters,  card_reporter.id_card
---             FROM 
---                 Person person,
---                 Card_Reporter card_reporter
---             WHERE 
---                 card_reporter.id_reporter = person.id
---             GROUP BY card_reporter.id_card
---         ) rprtr
---         ON rprtr.id_card=card.id
--- 
---         ------------------
---         --- PERFORMER  ---
---         ------------------
---         LEFT JOIN    
---         (
---             SELECT group_concat(person.name) performers,  card_performer.id_card
---             FROM 
---                 Person person,
---                 Card_Performer card_performer
---             WHERE 
---                 card_performer.id_performer = person.id
---             GROUP BY card_performer.id_card
---         ) prfrmr
---         ON prfrmr.id_card=card.id        
---         
---         -------------
---         --- WHERE ---
---         -------------
---         
---         WHERE 
--- 
---             -- card can not be appendix --
---             card.isappendix == 0
---             
---             -- connect card to category --
---             AND category.id=card.id_category
--- 
---             -- take the child cards --
---             AND card.id_higher_card = :card_id
--- 
---             -- Select the given category --
---             AND category.name = :category            
--- 
---             -------------------
---             -------------------
---             --- Conditional ---
---             ---   filter    ---
---             -------------------
---             -------------------
--- 
---             --- WHERE DECADE ---
---             AND CASE
---                 WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
---             END
--- 
---             ''' + ('''                
---             --- WHERE THEMES - conditional ---
---             AND ''' + themes_where if themes_where else '') + '''
---                 
---             ''' + ('''
---             --- WHERE GENRES - conditional ---
---             AND ''' + genres_where if genres_where else '') + '''
--- 
---             ''' + ('''               
---             --- WHERE DIRECTORS - conditional ---
---             AND ''' + directors_where if directors_where else '') + '''
---                
---             ''' + ('''
---             --- WHERE ACTORS - conditional ---
---             AND ''' + actors_where if actors_where else '') + '''
--- 
---             ''' + ('''
---             --- WHERE ORIGINS - conditional ---
---             AND ''' + origins_where if origins_where else '') + '''
--- 
---             ''' + ('''
---             --- WHERE LECTURERS - conditional ---
---             AND ''' + lecturers_where if lecturers_where else '') + '''           
--- 
---     ) mixed_id_list,
---     
---     --------------------------
---     --- unioned with title ---
---     --------------------------
---     (
---     SELECT 
---         unioned.id id,
---                 
---         MAX(title_req) title_req, 
---         MAX(title_orig) title_orig, 
---         MAX(lang_orig) lang_orig,
---         MAX(lang_req) lang_req
--- 
---     FROM 
---         (
---         SELECT 
---             card.id id, 
--- 
---             NULL title_req, 
---             NULL lang_req, 
---             tcl.text title_orig, 
---             lang.name lang_orig
---         FROM                     
---             Card card,
---             Text_Card_Lang tcl, 
---             Language lang                    
---         WHERE                
---             tcl.id_card=card.id
---             AND tcl.id_language=lang.id
---             AND tcl.type="T"
---             AND card.id_title_orig=lang.id
--- 
---             AND card.isappendix = 0
---             AND lang.name <> :lang
---         UNION
--- 
---         SELECT 
---             card.id id,
--- 
---             tcl.text title_req, 
---             lang.name lang_req, 
---             NULL title_orig, 
---             NULL lang_orig
---         FROM               
---             Card card,
---             Text_Card_Lang tcl, 
---             Language lang                    
---         WHERE               
---             tcl.id_card=card.id
---             AND tcl.id_language=lang.id
---             AND tcl.type="T"
---  
---             AND card.isappendix = 0
---             AND lang.name=:lang
---         ) unioned
--- 
---     -- because of the title required and origin
---     GROUP BY unioned.id               
--- 
---     ) core
---   
---     -----------------
---     --- STORYLINE ---
---     -----------------
---     LEFT JOIN
---     (
---         SELECT ord, storyline, id_card
---         FROM
---         (
--- 
---             --- Select the storyline on the requested language, not the original ---
--- 
---             SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
---             FROM
---                 Text_Card_Lang tcl,
---                 Language language,
---                 Card card
---             WHERE
---                 tcl.type = "S" AND
---                 tcl.id_language = language.id AND
---                 tcl.id_card = card.id AND
---                 language.name = :lang AND
---                 card.id_title_orig<>language.id AND
---                 tcl.text IS NOT NULL
---                 
---             UNION
--- 
---             --- Select the storyline on the original language ---
--- 
---             SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
---             FROM 
---                 Text_Card_Lang tcl,
---                 Language language,
---                 Card card
---             WHERE 
---                 tcl.type = "S" AND
---                 tcl.id_language = language.id AND
---                 tcl.id_card = card.id AND
---                 card.id_title_orig=language.id AND        
---                 tcl.text IS NOT NULL
---         )
---         GROUP BY id_card
--- --        HAVING MIN(ord)
--- --        ORDER BY ord
---     )strl
---     ON strl.id_card=core.id
---    
---     --------------
---     --- LYRICS ---
---     --------------
---     LEFT JOIN
---     (
---         SELECT ord, lyrics, id_card
---         FROM
---         (
--- 
---             --- Select the lyrics on the requested language, not the original ---
--- 
---             SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
---             FROM
---                 Text_Card_Lang tcl,
---                 Language language,
---                 Card card
---             WHERE
---                 tcl.type = "L" AND
---                 tcl.id_language = language.id AND
---                 tcl.id_card = card.id AND
---                 language.name = :lang AND
---                 card.id_title_orig<>language.id AND
---                 tcl.text IS NOT NULL
---                 
---             UNION
--- 
---             --- Select the lyrics on the original language ---
--- 
---             SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
---             FROM 
---                 Text_Card_Lang tcl,
---                 Language language,
---                 Card card
---             WHERE 
---                 tcl.type = "L" AND
---                 tcl.id_language = language.id AND
---                 tcl.id_card = card.id AND
---                 card.id_title_orig=language.id AND        
---                 tcl.text IS NOT NULL
---         )
---         GROUP BY id_card
---     )lrx
---     ON lrx.id_card=core.id       
---    
---     --------------
---     --- MEDIUM ---
---     --------------
---     LEFT JOIN
---     (
---         SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
---         FROM
---             MediaType media_type,
---             Card_Media card_media
---         WHERE
---             card_media.id_mediatype=media_type.id
---         GROUP BY card_media.id_card
---     )mdt
---     ON mdt.id_card=core.id
---    
---     ----------------
---     --- APPENDIX ---
---     ----------------
---      LEFT JOIN    
---     (    
---         SELECT
---             card_id,
---             group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
---         FROM
---         
---             (
---             SELECT                
---                 merged_appendix.id,
---                 merged_appendix.card_id,
---                 MAX(merged_appendix.title_req) title_req, 
---                 MAX(merged_appendix.title_orig) title_orig,
---                 merged_appendix.show,
---                 merged_appendix.download,
---                 merged_appendix.source_path,
---                 mt.name media_type,
---                 cm.name contact_media                
---             FROM
---                 (
---                 SELECT 
---                     app_card.id id,
---                     id_higher_card card_id,
---                     app_card.isappendix,
---                     app_card.show,
---                     app_card.download,
---                     app_card.source_path,
---                     "" title_req, 
---                     tcl.text title_orig
---                 FROM 
---                     CARD app_card,
---                     TEXT_CARD_LANG tcl, 
---                     LANGUAGE lang                    
---                 WHERE                
---                     app_card.isappendix=1
---                     AND tcl.id_card=app_card.id
---                     AND tcl.id_language=lang.id
---                     AND tcl.type="T"
---                     AND app_card.id_title_orig=lang.id
---                     AND lang.name <> :lang
--- 
---                 UNION
--- 
---                 SELECT 
---                     app_card.id id,
---                     id_higher_card card_id,
---                     app_card.isappendix,
---                     app_card.show,
---                     app_card.download,
---                     app_card.source_path,
---                     tcl.text title_req, 
---                     "" title_orig
---                 FROM 
---                     CARD app_card,
---                     TEXT_CARD_LANG tcl, 
---                     LANGUAGE lang                    
---                 WHERE
---                     app_card.isappendix=1
---                     AND tcl.id_card=app_card.id
---                     AND tcl.id_language=lang.id
---                     AND tcl.type="T"
---                     AND lang.name=:lang
---                 ) merged_appendix,
---                 Card_Media cm,
---                 MediaType mt
---                 
---             WHERE
---                 cm.id_card=merged_appendix.id
---                 AND mt.id=cm.id_mediatype
---                 
---             GROUP BY merged_appendix.id
---             )
---         GROUP BY card_id
---     ) pndx
---     ON pndx.card_id=core.id    
---    
--- WHERE
---     mixed_id_list.id=core.id
--- 
--- ORDER BY CASE 
---     WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
---     WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
---     WHEN sequence<0 THEN basename
---     WHEN sequence>=0 THEN sequence
--- END
--- LIMIT :limit; 
-
-
-
 SELECT
     core.*,
 
@@ -6433,6 +5897,12 @@ LIMIT :limit; '''
 
         trans = Translator.getInstance(lang)
         for record in records:
+
+            # It is needed to convert ID to string, otherwise I got back a different value in the jquery response if it is too high
+            # I could not figure out how this mechanizm works
+            # IMPORTANT !!!
+            record["id"] = str(record["id"])
+
             # Lang Orig
             lang_orig = record["lang_orig"]
             lang_orig_translated = trans.translate_language_short(lang_orig)

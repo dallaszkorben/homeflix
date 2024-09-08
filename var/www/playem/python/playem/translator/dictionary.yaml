@@ -436,6 +436,7 @@ theme:
     gun: Gun
     society: Society
     farming: Farming
+    family: Family
 
 title:
     title: Title
@@ -471,9 +472,9 @@ title:
     music_level_record: Record level
 
     music_video: Music Video
-    music_by_abc: ABC
     music_by_decade: Grouped by Decade
     music_by_genre: Grouped by Genre
+    music_by_band_abc: Bands group by ABC
 
     music_audio: Music Audio
     music_hungarian: Hungarian
@@ -484,6 +485,7 @@ title:
     entertainment: Entertainment
     entertainments: Entertainments
     knowledge: Knowledge
+    personal: Personal
 
     performer: Performer
     writer: Writer(s)

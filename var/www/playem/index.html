@@ -33,12 +33,76 @@
         let port = ":80";
 
         let language_dict = {"hu": "Magyar", "en": "English"};
+        let user_name = "admin";
 
-        let languageCode = getCookie("playem-language-code", "hu");
-        let always_show_origin_title = getCookie("playem-show-origin-title", false);
-        let show_lyrics_anyway = getCookie("playem-show-lyrics-anyway", true);
-        let show_storyline_anyway = getCookie("playem-show-storyline-anyway", true);
-        let continuous_play = getCookie("playem-continous-play", true);
+        // Fetch user specific data from DB
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/personal/user_data/request/by/name/" + user_name;
+        let rq_assync = false;
+        let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        let user_data = result.responseJSON;
+        let languageCode = user_data.language_code
+        let languageId = user_data.language_id
+        let user_id = user_data.id;
+        let always_show_original_title = user_data.show_original_title;
+        let show_lyrics_anyway = user_data.show_lyrics_anyway;
+        let show_storyline_anyway = user_data.show_storyline_anyway;
+        let play_continuously = user_data.play_continuously;
+
+        let translated_titles;
+        let translated_genre_movie;
+        let translated_categories;
+        let translated_themes;
+        
+        // Load Translated Titles
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/titles/lang/" + languageCode;
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_titles = result.responseJSON;
+        
+        // Load Translated Genre: Movie
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + languageCode;
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_genre_movie = result.responseJSON;
+        
+        // Load Translated Themes
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/themes/lang/" + languageCode;
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_themes = result.responseJSON;
+     
+        // Load Translated Categories
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/categories/lang/" + languageCode;
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_categories = result.responseJSON;
+     
+        // Load Translated Genre: Music
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/genres/category/music/lang/" + languageCode;
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_genre_music = result.responseJSON;
+     
+        // Load Translated Levels
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/levels/lang/" + languageCode;
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_levels = result.responseJSON;
+
+
+//TODO: remove cookies, use DB User instead        
+//        let languageCode = getCookie("playem-language-code", "hu");
+//        let always_show_origin_title = getCookie("playem-show-origin-title", false);
+//        let show_lyrics_anyway = getCookie("playem-show-lyrics-anyway", true);
+//        let show_storyline_anyway = getCookie("playem-show-storyline-anyway", true);
+//        let continuous_play = getCookie("playem-continous-play", true);
 
         /*
         Substitute substrings, similar to "Hello {0}".format("world") mechanizm
@@ -210,11 +274,6 @@
 
         t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
 
-        let translated_titles;
-        let translated_genre_movie;
-        let translated_categories;
-        let translated_themes;
-
         function generateRandom(min = 0, max = 100) {
 
             // find diff
@@ -251,48 +310,6 @@
 
             //
             //
-
-            // Load Translated Titles
-            let rq_method = "GET";
-            let rq_url = "http://" + host + port + "/translate/titles/lang/" + languageCode;
-            let rq_assync = false;
-            let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-            translated_titles = result.responseJSON;
-
-            // Load Translated Genre: Movie
-            rq_method = "GET";
-            rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + languageCode;
-            rq_assync = false;
-            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-            translated_genre_movie = result.responseJSON;
-
-            // Load Translated Themes
-            rq_method = "GET";
-            rq_url = "http://" + host + port + "/translate/themes/lang/" + languageCode;
-            rq_assync = false;
-            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-            translated_themes = result.responseJSON;
-
-            // Load Translated Categories
-            rq_method = "GET";
-            rq_url = "http://" + host + port + "/translate/categories/lang/" + languageCode;
-            rq_assync = false;
-            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-            translated_categories = result.responseJSON;
-
-            // Load Translated Genre: Music
-            rq_method = "GET";
-            rq_url = "http://" + host + port + "/translate/genres/category/music/lang/" + languageCode;
-            rq_assync = false;
-            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-            translated_genre_music = result.responseJSON;
-
-            // Load Translated Levels
-            rq_method = "GET";
-            rq_url = "http://" + host + port + "/translate/levels/lang/" + languageCode;
-            rq_assync = false;
-            result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-            translated_levels = result.responseJSON;
 
             let mainMenuGenerator = new MainMenuGenerator(languageCode);
             let oThumbnailController = new ThumbnailController(mainMenuGenerator);
@@ -418,17 +435,27 @@
                 }
             );
 
+            // ////////////
             //
             // Control menu
             //
+            // ////////////
 
             // Select on language from the dropdown list
             $('.option.language').on('click', function() {
                 let selectedLanguage = $(this).text();
                 $('#language-menu .main-menu-text' ).text(selectedLanguage);
                 // $('#language-dropdown').slideUp(200); // To bring back the menu
-                
-                languageCode = setCookie("playem-language-code", $(this).attr("value"));
+
+
+                // Update the language in the DB
+                let rq_method = "PUT";
+                let rq_url = "http://" + host + port + "/personal/user_data/update";
+                let rq_assync = false;
+                let data = {"user_id": user_id, "language_code": $(this).attr("value")}
+                let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
+
+                // Restart the browser
                 window.location.reload();
             });
 

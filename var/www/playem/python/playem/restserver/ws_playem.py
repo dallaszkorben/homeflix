@@ -47,7 +47,7 @@ class WSPlayem(Flask):
         self.logPath = os.path.join(self.configPath, self.logFileName)
         logging.basicConfig(
             handlers=[RotatingFileHandler(self.logPath, maxBytes=5*1024*1024, backupCount=5)],
-            format='%(asctime)s %(levelname)8s - %(message)s' , 
+            format="%(asctime)s %(levelname)8s - %(message)s", 
             level = logging.ERROR if logLevel == 'ERROR' else logging.WARNING if logLevel == 'WARNING' else logging.INFO if logLevel == 'INFO' else logging.DEBUG if logLevel == 'DEBUG' else 'CRITICAL' )
 
         # This will enable CORS for all routes

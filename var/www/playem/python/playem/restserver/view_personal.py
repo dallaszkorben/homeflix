@@ -10,6 +10,7 @@ from playem.restserver.representations import output_json
 
 
 from playem.restserver.endpoints.ep_personal_user_data_request_by_name import EPPersonalUserDataRequestByName
+from playem.restserver.endpoints.ep_personal_user_data_update import EPPersonalUserDataUpdate
 from playem.restserver.endpoints.ep_personal_history_request import EPPersonalHistoryRequest
 from playem.restserver.endpoints.ep_personal_history_update import EPPersonalHistoryUpdate
 
@@ -19,7 +20,13 @@ from playem.restserver.endpoints.ep_personal_history_update import EPPersonalHis
 # Personal data
 #
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request/by/name/<user_name>
-# curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/history/request/by/user/<user_id>/card/<card_id>/days/<limit_days>/records/<limit_records>
+#
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/history/request/by/user_id/<user_id>/card_id/<card_id>/limit_days/<limit_days>/limit_records/<limit_records>
+# curl  --header "Content-Type: application/json" --request GET --data '{ "user_id": 1, "card_id": 1056064754705651379, "limit_days": 5, "limit_records": 5}' http://localhost:80/personal/history/request
+#
+# curl  --header "Content-Type: application/json" --request POST http://localhost:80/personal/history/update/by/user_id/<user_id>/card_id/<card_id>/last_position/<last_position>/start_epoch/<start_epoch>
+# curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
+#
 #
 # -----------------------------------
 #
@@ -31,6 +38,7 @@ class PersonalView(FlaskView):
         self.web_gadget = web_gadget
 
         self.epPersonalUserDataRequestByName = EPPersonalUserDataRequestByName(web_gadget)
+        self.ePPersonalUserDataUpdate = EPPersonalUserDataUpdate(web_gadget)
         self.ePPersonalHistoryRequest = EPPersonalHistoryRequest(web_gadget)
         self.ePPersonalHistoryUpdate= EPPersonalHistoryUpdate(web_gadget)
 
@@ -51,13 +59,60 @@ class PersonalView(FlaskView):
     # example:
     #    curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request/by/name/admin
     # response: 
-    #    {"id": 1, "name": "admin", "created_epoch": 1725116768}
+    #   {
+    #       id: 1234
+    #       language_code: "en"
+    #       language_id: 2
+    #       name: "admin"
+    #       play_continuously: 1
+    #       show_lyrics_anyway: 1
+    #       show_original_title: 1
+    #       show_storyline_anyway: 1
+    #   }
     #
     #@route('/user_data/request/by/name<user_name>')
     @route(EPPersonalUserDataRequestByName.PATH_PAR_URL, methods=[EPPersonalUserDataRequestByName.METHOD])
     def personalUserdataByName(self, user_name):
 
         out = self.epPersonalUserDataRequestByName.executeByParameters(user_name)
+        return out
+
+
+#=== PUT user data by user name ===
+
+    #
+    # Update User data identified by the given user id
+    #
+    # curl  --header "Content-Type: application/json" --request PUT --data '{ "user_id": 1, "language_code": "hu"}' http://localhost:80/personal/user_data/update
+    #
+    # example:
+    #    curl  --header "Content-Type: application/json" --request PUT --data '{ "user_id": 1, "language_code": "hu"}' http://localhost:80/personal/user_data/update
+    # response:
+    #     { 
+    #        "user_id": 1,
+    #        "language_code": "hu",
+    #        "show_original_title": true,
+    #        "show_lyrics_anyway": true,
+    #        "show_storyline_anyway: true,
+    #        "play_continuously: false
+    #      }
+    #
+    #@route('/user_data/update', methods=['PUT'])
+    @route(EPPersonalUserDataUpdate.PATH_PAR_PAYLOAD, methods=[EPPersonalUserDataUpdate.METHOD])
+    def personalUserDataUpdateWithPayload(self):
+
+        # WEB
+        if request.form:
+            json_data = request.form
+
+        # CURL
+        elif request.json:
+            json_data = request.json
+
+        else:
+            return "Not valid request", EP.CODE_BAD_REQUEST
+
+        out = self.ePPersonalUserDataUpdate.executeByPayload(json_data)
         return out
 
 
