@@ -41,13 +41,24 @@
         let rq_assync = false;
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         let user_data = result.responseJSON;
-        let languageCode = user_data.language_code
-        let languageId = user_data.language_id
-        let user_id = user_data.id;
-        let always_show_original_title = user_data.show_original_title;
-        let show_lyrics_anyway = user_data.show_lyrics_anyway;
-        let show_storyline_anyway = user_data.show_storyline_anyway;
-        let play_continuously = user_data.play_continuously;
+
+        let languageCode = "en";
+        let languageId = 1;
+        let user_id = 1234;
+        let always_show_original_title = true;
+        let show_lyrics_anyway = true;
+        let show_storyline_anyway = true;
+        let play_continuously = true;
+
+        if(user_data != undefined){
+            languageCode = user_data.language_code
+            languageId = user_data.language_id
+            user_id = user_data.id;
+            always_show_original_title = user_data.show_original_title;
+            show_lyrics_anyway = user_data.show_lyrics_anyway;
+            show_storyline_anyway = user_data.show_storyline_anyway;
+            play_continuously = user_data.play_continuously;
+        }
 
         let translated_titles;
         let translated_genre_movie;
@@ -95,14 +106,6 @@
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_levels = result.responseJSON;
-
-
-//TODO: remove cookies, use DB User instead        
-//        let languageCode = getCookie("playem-language-code", "hu");
-//        let always_show_origin_title = getCookie("playem-show-origin-title", false);
-//        let show_lyrics_anyway = getCookie("playem-show-lyrics-anyway", true);
-//        let show_storyline_anyway = getCookie("playem-show-storyline-anyway", true);
-//        let continuous_play = getCookie("playem-continous-play", true);
 
         /*
         Substitute substrings, similar to "Hello {0}".format("world") mechanizm
@@ -298,6 +301,13 @@
                 return level;
             }
         }
+
+
+// TODO with the other translated_???? dictionaries
+
+
+
+
 
         $(document).ready(function () {
 
