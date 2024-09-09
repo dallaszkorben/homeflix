@@ -488,6 +488,7 @@ class ObjThumbnailContainer {
         if(level && ( level == "series" || level =="remake" || level == "sequel" )){
             let domLevelRib = $("<div>",{
                 class: "ribbon-level",
+                level: level,
                 text: get_translated_level(level)
             });
             domThumbnail.append(domLevelRib);

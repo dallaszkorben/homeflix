@@ -3,9 +3,16 @@
     --thumbnail-container-height: 250px;
     --thumbnail_background: rgb(33, 134, 43);
 
-    --thumbnail-ribbon-level-background: rgb(255, 0, 0);
-    --thumbnail-ribbon-level-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-font-size: 1em;
+
+    --thumbnail-ribbon-level-series-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-series-background: rgb(255, 0, 0);
+
+    --thumbnail-ribbon-level-remake-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-remake-background: rgb(0, 0, 255);
+
+    --thumbnail-ribbon-level-sequel-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-sequel-background: rgb(0, 102, 0);
 
     --thumbnail-image-width: 100px;
     --thumbnail-image-height: 100px;
@@ -419,19 +426,31 @@ body {
     cursor: pointer;
 }
 
-.ribbon-level {
-/*    height: var(--thumbnail-ribbon-level-height);               /* I had to configure it to be able to make the clip-path */
-/*    height: calc(4 + var(--thumbnail-ribbon-level-font-size));               /* I had to configure it to be able to make the clip-path */
-/*    clip-path: polygon(0% 100%, 100% 100%, calc(100% - var(--thumbnail-ribbon-level-height)) 0%, var(--thumbnail-ribbon-level-height) 0%); */
-/*    clip-path: polygon(0% 1.2em, 100% 100%, calc(100% - 1.2em) 0%, 1.2em 0%); */
+/**********/
+/* Ribbon */
+/**********/
 
+/* different ribbon color for different level */
+[level="series"]{
+    color: var(--thumbnail-ribbon-level-series-font-color);
+    background-color: var(--thumbnail-ribbon-level-series-background);
+}
+
+[level="remake"]{
+    color: var(--thumbnail-ribbon-level-remake-font-color);
+    background-color: var(--thumbnail-ribbon-level-remake-background);
+}
+
+[level="sequel"]{
+    color: var(--thumbnail-ribbon-level-sequel-font-color);
+    background-color: var(--thumbnail-ribbon-level-sequel-background);
+}
+
+.ribbon-level {
     position: absolute;
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: var(--thumbnail-ribbon-level-font-size);
-
-    color: var(--thumbnail-ribbon-level-font-color);
-    background-color: var(--thumbnail-ribbon-level-background);
 
     top: 0;
     right: 0;
