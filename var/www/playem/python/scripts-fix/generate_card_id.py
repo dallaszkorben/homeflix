@@ -114,8 +114,8 @@ class CardManipulator:
             # This is the lowest level
 #            if media_dict and not is_appendix:
 
-                # delete the tag keys, if there is any
-                # data.pop("tag", None)
+            # delete the tag keys, if there is any
+            data.pop("tag", None)
 
             # convert negative value to positive
             id_hash = hash(actualDir) & ((1<<sys.hash_info.width)-1)
