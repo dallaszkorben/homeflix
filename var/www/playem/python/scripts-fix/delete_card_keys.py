@@ -111,12 +111,13 @@ class CardManipulator:
             # filter out empty titles
             titles=dict((language, title) for language, title in titles.items() if title)
 
-            # create 'id' key
-            id_hash = hash(actualDir) & ((1<<sys.hash_info.width)-1)
-            id_str=str(id_hash)[0:18]
-            id = int(id_str)
-            print( "{0}, {1}, {2}, {3}".format(id, titles, actualDir, id_hash))
-            data['id'] = id
+            #
+            # delete the 'tag' keys, if there is any
+            data.pop("tag", None)
+
+            # delete the 'id' key, if there is any
+            data.pop("id", None)
+            #
 
             print( "{0}, {1}".format(titles, actualDir))
 

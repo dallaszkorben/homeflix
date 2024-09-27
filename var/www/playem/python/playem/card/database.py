@@ -1,6 +1,8 @@
 import os
 import sqlite3
 import logging
+import hashlib
+
 from threading import Lock
 from sqlite3 import Error
 from datetime import datetime, timedelta
@@ -344,7 +346,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD + '''(
-                id                  INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                id                  TEXT        NOT NULL,
                 id_title_orig       INTEGER     NOT NULL,
                 id_category         INTEGER     NOT NULL,
                 isappendix          BOOLEAN     NOT NULL CHECK (isappendix IN (0, 1)),
@@ -784,7 +786,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, card_id=None, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -796,23 +798,35 @@ class SqlDatabase:
             title_orig_id = self.language_name_id_dict[title_orig]
             category_id = self.category_name_id_dict[category]
 
+
+###
+#            id_hash = hash(card_path) & ((1<<sys.hash_info.width)-1)
+#            card_id = str(id_hash)[0:18]
+
+            # Generate ID
+            hasher = hashlib.md5()
+            hasher.update(card_path.encode('utf-8'))
+            card_id = hasher.hexdigest()
+
+###
+
+
             #
             # INSERT into CARD
             #
             # if the card has its own ID, meaning it is media card
-            if card_id:
-
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                        (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                        VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
-                        RETURNING id;
-                '''
-            else:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                        (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                        VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
-                        RETURNING id;
-                '''
+#            if card_id:
+            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                    RETURNING id;
+            '''
+#            else:
+#                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+#                        (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
+#                        VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+#                        RETURNING id;
+#                '''
             cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
@@ -1281,7 +1295,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, card_id=None, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1291,23 +1305,33 @@ class SqlDatabase:
             category_id = self.category_name_id_dict[category]
             title_orig_id = self.language_name_id_dict[title_orig]
 
+###
+#            id_hash = hash(card_path) & ((1<<sys.hash_info.width)-1)
+#            card_id = str(id_hash)[0:18]
+
+            # Generate ID
+            hasher = hashlib.md5()
+            hasher.update(card_path.encode('utf-8'))
+            card_id = hasher.hexdigest()
+###
+
             #
             # INSERT into Level
             #
 
-            # if higher_card_id:
-            if card_id:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
-                    RETURNING id;
-                '''
-            else:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-                    VALUES (:level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
-                    RETURNING id;
-                '''
+#            # if higher_card_id:
+#            if card_id:
+            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+                (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
+                VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+                RETURNING id;
+            '''
+#            else:
+#                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
+#                    (level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
+#                    VALUES (:level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+#                    RETURNING id;
+#                '''
             cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             record = cur.fetchone()
             (hierarchy_id, ) = record if record else (None,)

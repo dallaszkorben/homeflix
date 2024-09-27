@@ -130,10 +130,10 @@ class CardHandle:
                     # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
                     data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
 
-                try:
-                    given_card_id = data['id']
-                except:
-                    given_card_id = None
+#                try:
+#                    given_card_id = data['id']
+#                except:
+#                    given_card_id = None
 
                 try:
                     category = data['category']
@@ -389,7 +389,7 @@ class CardHandle:
                         title_on_thumbnail=title_on_thumbnail,
                         title_show_sequence=title_show_sequence,
 
-                        card_id=given_card_id,
+#                        card_id=given_card_id,
 
                         isappendix=is_appendix,
                         show=show,
@@ -455,7 +455,7 @@ class CardHandle:
                             title_on_thumbnail=title_on_thumbnail,
                             title_show_sequence=title_show_sequence,
 #                            
-                            card_id=given_card_id,
+#                            card_id=given_card_id,
                             isappendix=is_appendix,
                             show=show,
                             download=download,
