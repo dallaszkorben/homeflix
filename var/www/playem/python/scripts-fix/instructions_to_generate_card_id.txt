@@ -1,2 +1,0 @@
-Running the generate_card_id.py will add/update the "id" inside all media card.yaml files
-The IDs will be the same, regardles how many time it was run.
