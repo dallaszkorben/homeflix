@@ -35,13 +35,16 @@
         let language_dict = {"hu": "Magyar", "en": "English"};
         let user_name = "admin";
 
+        //
         // Fetch user specific data from DB
+        //
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/user_data/request/by/name/" + user_name;
         let rq_assync = false;
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         let user_data = result.responseJSON;
 
+        // Take the default user data - to be sure
         let languageCode = "en";
         let languageId = 1;
         let user_id = 1234;

@@ -50,7 +50,7 @@ class SqlDatabase:
 
     TABLE_USER = "User"
     TABLE_HISTORY = "History"
-    TABLE_TAG = "Tag"
+    TABLE_RATING = "Rating"
 
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
@@ -103,7 +103,7 @@ class SqlDatabase:
         self.table_personal_list = [
             SqlDatabase.TABLE_USER,
             SqlDatabase.TABLE_HISTORY,
-            SqlDatabase.TABLE_TAG,
+            SqlDatabase.TABLE_RATING,
         ]
 
         self.lock = Lock()
@@ -252,13 +252,14 @@ class SqlDatabase:
         ''')
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_TAG + '''(
-                name          TEXT  NOT NULL,
+            CREATE TABLE ''' + SqlDatabase.TABLE_RATING + '''(
                 id_card       INTEGER NOT NULL,
                 id_user       INTEGER NOT NULL,
+                tag           TEXT,
+                skip          BOOLEAN NOT NULL CHECK (skip IN (0, 1)),
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
-                PRIMARY KEY (id_card, id_user, name)
+                PRIMARY KEY (id_card, id_user)
             );
         ''')
 
@@ -1680,7 +1681,6 @@ class SqlDatabase:
                         ''' if limit_records else '') + '''
                 ;'''
                 query_parameters = {'user_id': user_id, 'card_id': card_id, 'limit_epoch': limit_epoch, 'limit_records': limit_records}
-                print("{0}/{1}".format(query,query_parameters))
                 records=cur.execute(query, query_parameters).fetchall()
 
                 records = [{key: record[key] for key in record.keys()} for record in records]

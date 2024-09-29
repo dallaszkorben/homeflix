@@ -20,12 +20,13 @@ from playem.restserver.endpoints.ep_personal_history_update import EPPersonalHis
 # Personal data
 #
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request/by/name/<user_name>
+# curl  --header "Content-Type: application/json" --request PUT --data '{ "user_id": 1, "language_code": "hu"}' http://localhost:80/personal/user_data/update
 #
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/history/request/by/user_id/<user_id>/card_id/<card_id>/limit_days/<limit_days>/limit_records/<limit_records>
 # curl  --header "Content-Type: application/json" --request GET --data '{ "user_id": 1, "card_id": 1056064754705651379, "limit_days": 5, "limit_records": 5}' http://localhost:80/personal/history/request
 #
 # curl  --header "Content-Type: application/json" --request POST http://localhost:80/personal/history/update/by/user_id/<user_id>/card_id/<card_id>/last_position/<last_position>/start_epoch/<start_epoch>
-# curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
+# curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
 #
 #
 # -----------------------------------
@@ -132,11 +133,11 @@ class PersonalView(FlaskView):
     #      ]
     #
     #@route('/history/request/by/user_id/<user_id>/card_id/<card_id>/limit_days/<limit_days>/limit_records/<limit_records>')
-    @route(EPPersonalHistoryRequest.PATH_PAR_URL, methods=[EPPersonalHistoryRequest.METHOD])
-    def personalHistoryRequestByWithParameter(self, user_id, card_id, limit_days, limit_records):
-
-        out = self.ePPersonalHistoryRequest.executeByParameters(user_id, card_id=card_id, limit_days=limit_days, limit_records=limit_records)
-        return out
+#    @route(EPPersonalHistoryRequest.PATH_PAR_URL, methods=[EPPersonalHistoryRequest.METHOD])
+#    def personalHistoryRequestByWithParameter(self, user_id, card_id, limit_days, limit_records):
+#
+#        out = self.ePPersonalHistoryRequest.executeByParameters(user_id, card_id=card_id, limit_days=limit_days, limit_records=limit_records)
+#        return out
 
     #
     # Gives back the history of a user filtered by the given data
@@ -160,23 +161,55 @@ class PersonalView(FlaskView):
     #       {"start_epoch": 1725142641, "last_epoch": 1725142641, "last_position": "0:01:31", "id_card": 1056064754705651379, "id_user": 1}
     #      ]
     #
-    #@route('/history/request', methods=['POST'])
+    #@route('/history/request', methods=['GET'])
     @route(EPPersonalHistoryRequest.PATH_PAR_PAYLOAD, methods=[EPPersonalHistoryRequest.METHOD])
     def personalHistoryRequestWithPayload(self):
 
-        # WEB
-        if request.form:
-            json_data = request.form
+#        print("!!! Inside the personalHistoryRequestWithPayload() !!! {0}".format(request))
+#        print("check args: {0}".format(request.args))
+#        print("check is_json: {0}".format(request.is_json))
+#        print("check form: {0}".format(request.form))
 
         # CURL
-        elif request.json:
+        if request.is_json:
             json_data = request.json
+        
+        # WEB
+        elif request.form:
+            json_data = request.form
 
+        # ajax
         else:
-            return "Not valid request", EP.CODE_BAD_REQUEST
+            user_id = request.args.get('user_id')
+            card_id = request.args.get('card_id')
+            limit_days = request.args.get('limit_days', None)
+            limit_records = request.args.get('limit_records', None)
+
+            json_data = {'user_id': user_id, 'card_id': card_id, 'limit_days': limit_days, 'limit_records': limit_records}
+
+#        print("json_data: {0}".format(json_data))
+
+#        # WEB
+#        if request.form:
+#            json_data = request.form
+#
+#            print("json_data as request.form: {0}".format(json_data))
+#        # CURL
+#        elif request.json:
+#            json_data = request.json
+#
+#            print("json_data as request.json: {0}".format(json_data))
+#        else:
+#
+#            print("NOT VALID REQUEST")
+#            return "Not valid request", EP.CODE_BAD_REQUEST
 
         out = self.ePPersonalHistoryRequest.executeByPayload(json_data)
         return out
+
+
+
+
 
 
 # === Updates the media position ===
@@ -204,7 +237,7 @@ class PersonalView(FlaskView):
     #
     # curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
     #
-    # GET http://localhost:80/personal/history/update
+    # POST http://localhost:80/personal/history/update
     #      body: {
     #        "user_id": 1,
     #        "card_id": 1056064754705651379,
@@ -222,6 +255,8 @@ class PersonalView(FlaskView):
     #@route('/history/update', methods=['POST'])
     @route(EPPersonalHistoryUpdate.PATH_PAR_PAYLOAD, methods=[EPPersonalHistoryUpdate.METHOD])
     def personalHistoryUpdateWithPayload(self):
+
+        print("!!! Inside the personalHistoryUpdateWithPayload() !!! {0}".format(request))
 
         # WEB
         if request.form:

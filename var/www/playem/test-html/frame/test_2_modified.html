@@ -1,0 +1,295 @@
+<meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+        </style>
+
+        <script src="script/jquery/jquery-3.6.0.min.js"></script>
+        <script src="test_description.js"></script>
+        <script src="test_thumbnail.js"></script>
+
+        <link rel="stylesheet" href="test.css">
+        <link rel="icon" href="favicon.ico">
+
+        <script>
+
+            //
+            // Calculate the containers sizes
+            //
+           
+            var desc_img_height;
+            var desc_img_width;
+
+            const description_section_height_portion = 50;
+            const thumbnail_section_height_portion = 50;
+
+            const thumbnail_section_border_width = 4;
+            const thumbnail_container_block_border_width = 4;
+            const thumbnail_container_border_width = 4
+            const thumbnail_border_width = 7;
+
+            const thumbnail_image_width = 300;
+            const thumbnail_image_height = 300;
+
+            const description_text_extra_font_size = 30;
+            const description_text_storyline_font_size = 30;
+            const description_text_credentials_font_size = 30;
+
+            const thumbnail_container_height = thumbnail_image_height + (2*thumbnail_border_width) + (2*thumbnail_container_border_width)
+
+            const description_text_wrapper_top = thumbnail_section_border_width;
+            const description_text_wrapper_left = thumbnail_section_border_width;
+
+            t = document.querySelector(':root');
+
+            // Default set of the CSS
+            t.style.setProperty('--description-section-height-portion', description_section_height_portion + '%');
+            t.style.setProperty('--thumbnail-section-height-portion', thumbnail_section_height_portion + '%');
+            t.style.setProperty('--thumbnail-section-border-width', thumbnail_section_border_width + 'px');
+            t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
+            t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
+            t.style.setProperty('--thumbnail-border-width', thumbnail_border_width + 'px');
+            t.style.setProperty('--thumbnail-container-height', thumbnail_container_height + 'px');
+            t.style.setProperty('--thumbnail-image-height', thumbnail_image_height + 'px');
+            t.style.setProperty('--thumbnail-image-width', thumbnail_image_width + 'px');
+
+            t.style.setProperty('--description-text-wrapper-top', description_text_wrapper_top + 'px');
+            t.style.setProperty('--description-text-wrapper-left', description_text_wrapper_left + 'px');
+            t.style.setProperty('--description-text-extra-font-size', description_text_extra_font_size + 'px');
+            t.style.setProperty('--description-text-storyline-font-size', description_text_storyline_font_size + 'px');
+            t.style.setProperty('--description-text-credentials-font-size', description_text_credentials_font_size + 'px');
+
+            $(document).ready(function() {                
+
+                //
+                // Default thumbnail control
+                //
+                currentContainerIndex = 0;
+                currentThumbnailIndex = 0;
+                containerNumbers = 3;
+                indexList = [0, 0, 0];
+          
+                domThumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+                thumbnailContainerBlocks = $('#section .thumbnail-container-block');
+
+                // first thumbnail is selected by default
+                domThumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+
+                //
+                // Show Description
+                //
+                let title = "This is a pretty long title. Hopefully it becames 2 or more lines long";
+                let storyline = "This is the storyline of the movie. It can be short or long text.<br>\
+                If it is short, no scrollbar can be seen.<br>\
+                if it is long and the text does not fit to the available space, then the vertical scrollbar will appear.<br>\
+                In this case the storyline is long so you can see the vertical scrollbar on the right side";
+                let credentials = {
+                    "directors": ["Ruben Fleischer"],
+                    "writers": ["Rhett Reese", "Paul Wernick"],
+                    "stars": ["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"],
+                }
+                let extra = {
+                    "length": "01:47:57",
+                    "year": 1989,
+                    "origin": ["Hungary", "Germany", "Australia"],
+                    "genre": ["Action", "Sci-fi"],
+                    "theme": ["war", "AI", "Life"]
+                }
+                refreshDescription(t, "test_screenshot.jpg", title, storyline, credentials, extra);
+
+                //
+                // Listener configuration
+                //
+
+                // Triggered if the size of the description image DIV changed
+                const resizeObserver = new ResizeObserver(entries => {
+
+                    // Change the size of the description Image to be aligned
+                    resizeDescriptionSection(t);
+                });
+                const descSectElement = document.querySelector("#description-section");
+                resizeObserver.observe(descSectElement);
+
+                //
+                // Arrow keyboard event listener
+                //
+
+                $(document).on('keydown',function(e){
+                    var act={13:clickOnThumbnail, 32:clickOnThumbnail, 37:arrowLeft, 38:arrowUp, 39:arrowRight, 40:arrowDown};
+
+                    if(act[e.which]) 
+                        var a=new act[e.which];
+                });
+            });
+
+        </script>
+    </head>
+    <body>
+
+        <div id="description-section">
+            <div id="description-text-div">
+                <div id="description-text-wrapper">
+                    <div id="description-text-title"></div>
+                    <div id="description-text-extra">
+                        <table border="0" id="description-text-extra-table">
+                            <tr>
+                                <td id="description-text-extra-table-year"></td>
+                                <td id="description-text-extra-table-length"></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td id="description-text-extra-table-origin"></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td id="description-text-extra-table-genre"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="description-text-storyline"></div>
+                    <div id="description-text-credentials"></div>
+                </div>
+            </div>
+            <div id="description-image"></div>
+        </div>
+    
+            <div id="thumbnail-section" class="thumbnail-section">
+                <div class="thumbnail-container-block" id="container-block-0">
+                    <div class="thumbnail-container-title">Drama</div>
+                    <div class="thumbnail-container" id="container-0">
+                        <div class="thumbnail" id="container-0_thumbnail-0">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">First box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-1">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Second box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-2">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Third box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Fourth box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Fifth box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Sixth box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Seventh box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                    </div>
+                    <div class="thumbnail-container-space" id="container-space-0"></div>
+                </div>
+
+                <div class="thumbnail-container-block" id="container-block-1">
+                    <div class="thumbnail-container-title">Comedy</div>
+                    <div class="thumbnail-container" id="container-1">
+                        <div class="thumbnail" id="container-1_thumbnail-0">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">1. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-1">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">2. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-2">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">3. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">4. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">5. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                    </div>
+                    <div class="thumbnail-container-space" id="container-space-1"></div>
+                </div>
+
+                <div class="thumbnail-container-block" id="container-block-2">
+                    <div class="thumbnail-container-title">Scifi</div>
+                    <div class="thumbnail-container" id="container-2">
+                        <div class="thumbnail" id="container-2_thumbnail-0">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">1. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-1">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">2. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-2">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">3. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">4. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">5. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">6. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">7. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                    </div>
+                    <div class="thumbnail-container-space" id="container-space-2"></div>
+                </div>
+
+            </div>
+    </body>
+</html>

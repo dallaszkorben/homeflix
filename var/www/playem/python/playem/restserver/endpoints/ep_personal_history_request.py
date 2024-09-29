@@ -30,17 +30,19 @@ class EPPersonalHistoryRequest(EP):
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
-    def executeByParameters(self, user_id, card_id=None, limit_days=None, limit_records=None) -> dict:
-        payload = {}
-        payload[EPPersonalHistoryRequest.ATTR_USER_ID] = user_id
-        payload[EPPersonalHistoryRequest.ATTR_CARD_ID] = card_id
-        payload[EPPersonalHistoryRequest.ATTR_LIMIT_DAYS] = limit_days
-        payload[EPPersonalHistoryRequest.ATTR_LIMIT_RECORDS] = limit_records
-                
-        return self.executeByPayload(payload)
+#    def executeByParameters(self, user_id, card_id=None, limit_days=None, limit_records=None) -> dict:
+#        payload = {}
+#        payload[EPPersonalHistoryRequest.ATTR_USER_ID] = user_id
+#        payload[EPPersonalHistoryRequest.ATTR_CARD_ID] = card_id
+#        payload[EPPersonalHistoryRequest.ATTR_LIMIT_DAYS] = limit_days
+#        payload[EPPersonalHistoryRequest.ATTR_LIMIT_RECORDS] = limit_records
+#                
+#        return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
         remoteAddress = request.remote_addr
+
+        logging.error("itt vagyok az executeByPayloadban.")
 
         user_id = payload[EPPersonalHistoryRequest.ATTR_USER_ID]
         card_id = payload.get(EPPersonalHistoryRequest.ATTR_CARD_ID, None)

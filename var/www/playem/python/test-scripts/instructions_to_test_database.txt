@@ -1,0 +1,40 @@
+# #######################################################
+#
+# test personal DBs directly and through database package
+#
+# ########################################################
+
+
+#
+# start python
+#
+# cd /var/www/playem/python
+$ source /var/www/playem/python/env/bin/activate
+$ python3
+
+
+#
+# intitialization
+#
+import sqlite3
+from playem.card.database import SqlDatabase as DB
+db=DB(None)
+con = sqlite3.connect("/home/akoel/.playem/playem.db")
+
+
+#
+# DB requests:
+#
+con.execute('SELECT * FROM User;').fetchall()
+con.execute('SELECT * FROM History;').fetchall()
+con.execute('DROP TABLE History;').fetchall()
+
+
+#
+# database method calls
+#
+db.refresh_play_position(1725055314, 1056064754705651379, "0:00:00")
+db.recreate_personal_dbs()
+db.is_personal_dbs_ok()
+
+

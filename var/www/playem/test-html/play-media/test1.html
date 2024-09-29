@@ -1,0 +1,98 @@
+<meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="script/jquery/jquery-3.6.0.min.js"></script>
+        <script src="script/js-jaml/js-yaml.js"></script>
+        <link href="//vjs.zencdn.net/8.3.0/video-js.min.css" rel="stylesheet">
+        <script src="//vjs.zencdn.net/8.3.0/video.min.js"></script>
+
+        <style>
+
+
+video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  -o-object-position: center;
+     object-position: center;
+}
+
+
+
+.overlay {
+  /* min-height: 100vh; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay h2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: rgb(255, 42, 4);
+    font-weight: 1000;
+    font-size: 50px;
+    margin: 2rem 3rem 0;
+    /* mix-blend-mode: overlay; */
+    padding: 5px 15px;
+    text-align: center;
+}
+
+
+        </style>
+        
+        <script>
+
+
+            $(document).ready(function() {     
+
+                
+                  elem = document.documentElement;
+                  if (!document.fullscreenElement && !document.mozFullScreenElement &&
+                    !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                    if (elem.requestFullscreen) {
+                      elem.requestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                      elem.msRequestFullscreen();
+                    } else if (elem.mozRequestFullScreen) {
+                      elem.mozRequestFullScreen();
+                    } else if (elem.webkitRequestFullscreen) {
+                      elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                    }
+                  } else {
+                    if (document.exitFullscreen) {
+                      document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                      document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                      document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                      document.webkitExitFullscreen();
+                    }
+                  }
+                
+            });
+        </script>
+
+    </head>
+    
+    <body>
+            <div id="home-top-video">
+                <video height="500" id="video_player" playsinline autoplay muted loop controls>
+                    <source src="../../MEDIA/01.Movie/05.Remakes/Dune/Dune-2000/E03/media/Dune-E03-2000.mkv"></source>
+                </video>
+            </div>
+
+            <div class="overlay">
+                <h2>Meet the crazy-smart women we asked.</h2>
+            </div>
+
+        </div>
+    </body>
+</html>

@@ -1,0 +1,373 @@
+<html>
+    <head>
+        <style>
+            .thumbnail-section {
+                box-sizing:border-box;      /* element and padding and border are included in the width and height */
+                height: 70%;                /* occupies the upper 40% of the browser's screen. if you chnage the browser's height, it changes */
+                width: 100%;                /* occupies the whole browser sceen horizontally */
+                display: flex;              /* flex box layout model */
+                flex-direction: column;     /* stacks the flex items vertically */
+                flex-wrap: nowrap;          /* the flex items will not wrap */
+                overflow: hidden;           /* flex items which does not fit, will be hidden */
+                border: 4px red solid;
+                background-color: rgb(237, 138, 129);
+            }
+
+            .thumbnail-container-block {
+                box-sizing:border-box;      /* element and padding and border are included in the width and height */
+                width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+                display: flex;              /* flex box layout model */
+                flex-direction: column;     /* stacks the flex items vertically */
+                flex-wrap: nowrap;          /* the flex items will not wrap */
+                overflow: visible;           
+                border: 4px rgb(0, 255, 13) solid;
+                background-color: rgb(217, 255, 175);
+            }
+
+            .thumbnail-container-title{
+                font-family: 'Brush Script MT', cursive;
+                font-weight: bold;
+                font-size: 30px;
+            }
+
+            .thumbnail-container {
+                box-sizing:border-box;      /* element and padding and border are included in the width and height */
+                height: 250px;              /* fix height of the container */
+                min-height: 250px;          /* it must be set. ??? */
+                width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+                display: flex;              /* flex box layout model */
+                flex-direction: row;        /* stacks the flex items vertically */
+                flex-wrap: nowrap;          /* the flex items will not wrap */
+                overflow: hidden;           /* flex items which does not fit, will be hidden */
+                border: 1px blue solid;
+                background-color: rgb(148, 192, 249);
+            }
+
+            .thumbnail-container-space {
+                box-sizing:border-box;      /* element and padding and border are included in the width and height */
+                height: 40px;               /* fix height of the container */
+                min-height: 40px;           /* it must be set. ??? */
+                width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
+                display: block;             /* flex box layout model */
+            }
+
+            .thumbnail {
+                box-sizing:border-box;      /* element and padding and border are included in the width and height */
+                height: 100%;               /* occupies the full height of the .thumbnail-container */       
+                margin-right: 5px;
+                margin-left: 5px;
+
+                border: 5px solid transparent; /* for the focus frame */
+                background-color: rgb(35, 140, 135);
+  
+                display: flex;              /* flex box layout model */
+                position: relative;          /* This made the animation with text work. I do not know how */
+            }
+
+            .thumbnail img {
+                width: 300px;
+                height: 238px;              /* .thumbnail-container height:250px -2x1px .thubnail-container border -2x5px .thumbnail border */
+                max-height: 238px;          /* .thumbnail-container height:250px -2x1px .thubnail-container border -2x5px .thumbnail border */
+                object-fit: contain;        /* resize the image: keeps aspect ratio, resize to fit to the dimesion */
+            }
+
+            .thumbnail-text-wrapper{            
+                position: absolute;         /* relative to the nearestx positioned ancestor: .thumbnail. That is the reason the .thumbnail has position: relative */
+                max-width: 300px;           /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+                width: 300px;               /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+                height: 238px;              /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+                max-height: 238px;          /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
+
+                font-family: 'Brush Script MT', cursive;
+                font-weight: bold;
+                font-size: 50px;
+                color: rgb(70, 26, 231);
+                text-shadow: 
+                    -1px -1px 0px black,
+                    1px -1px 0px black,
+                    1px 1px 0px black,
+                    -1px 1px 0px black;
+            }
+
+            .thumbnail-text{                /* needed to centralize horizontally the text*/
+                position: relative;
+                text-align: center;         /* the .thumbail-text-wrapper has position:absolute, so it is not possible to align to center */
+            }
+
+            #left-arrow,
+            #right-arrow {
+                cursor: pointer;
+                font-size: 24px;
+                margin-top: 5px;
+            }
+
+            #left-arrow {
+                margin-right: 10px;
+            }
+
+        </style>
+
+        <script src="script/jquery/jquery-3.6.0.min.js"></script>
+
+        <script>
+            $(document).ready(function() {                
+                // var currentSectionIndex = 0;
+                var currentContainerIndex = 0;
+                var currentThumbnailIndex = 0;
+
+                var containerNumbers = 3;
+          
+                var thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+                var thumbnailContainerBlocks = $('#section .thumbnail-container-block');
+
+                // first thumbnail is selected by default
+                thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+          
+                $('#right-arrow').click(function() {
+                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+                    currentThumbnailIndex = (currentThumbnailIndex + 1) % thumbnails.length;
+                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+                    scrollThumbnails();
+                });
+          
+                $('#left-arrow').click(function() {
+                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+                    currentThumbnailIndex = (currentThumbnailIndex - 1 + thumbnails.length) % thumbnails.length;
+                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+                    scrollThumbnails();
+                });
+          
+                $('#down-arrow').click(function() {
+                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+
+                    currentContainerIndex = (currentContainerIndex + 1) % containerNumbers;
+                    thumbnails = $('#container-' + currentContainerIndex + ' .thumbnail');
+
+                    currentThumbnailIndex = 0;
+                    thumbnails.eq(currentThumbnailIndex).css('border-color', 'red');
+                    scrollThumbnails();
+                });
+
+                function scrollThumbnails() {
+
+                    // Vertical scroll                    
+                    var section = $('#section');
+                    var sectionHeight = section.height();
+                    var thumbnailContainerBlockHeight = thumbnailContainerBlocks.eq(0).outerHeight(true);
+
+                    var sectionScrollTop = section.scrollTop();
+                    var visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
+
+                    console.log(sectionHeight +"/" +thumbnailContainerBlockHeight + "=" + visibleContainers)
+
+                    if (currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
+                        section.animate({ scrollTop: thumbnailContainerBlockHeight * (currentContainerIndex - visibleContainers + 1) }, 200);
+                    } else if (currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
+                        section.animate({ scrollTop: thumbnailContainerBlockHeight * currentContainerIndex }, 200);
+                    }
+
+
+                    
+
+                    // Horizontal scroll
+                    var container = $('#container-' + currentContainerIndex);
+                    var containerWidth = container.width();
+                    var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
+
+                    var containerScrollLeft = container.scrollLeft();
+                    var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
+          
+                    if (currentThumbnailIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
+                        container.animate({ scrollLeft: thumbnailWidth * (currentThumbnailIndex - visibleThumbnails + 1) }, 200);
+                    } else if (currentThumbnailIndex < containerScrollLeft / thumbnailWidth) {
+                        container.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
+                    }
+                }
+
+
+                function scrollThumbnails() {
+
+                    // Vertical scroll                    
+                    var section = $('#section');
+                    var sectionHeight = section.height();
+                    var thumbnailContainerBlockHeight = thumbnailContainerBlocks.eq(0).outerHeight(true);
+
+                    var sectionScrollTop = section.scrollTop();
+                    var visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
+
+                    console.log(sectionHeight +"/" +thumbnailContainerBlockHeight + "=" + visibleContainers)
+
+                    if (currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
+                        section.animate({ scrollTop: thumbnailContainerBlockHeight * (currentContainerIndex - visibleContainers + 1) }, 200);
+                    } else if (currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
+                        section.animate({ scrollTop: thumbnailContainerBlockHeight * currentContainerIndex }, 200);
+                    }
+
+
+                    
+
+                    // Horizontal scroll
+                    var container = $('#container-' + currentContainerIndex);
+                    var containerWidth = container.width();
+                    var thumbnailWidth = thumbnails.eq(0).outerWidth(true);
+
+                    var containerScrollLeft = container.scrollLeft();
+                    var visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
+          
+                    if (currentThumbnailIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
+                        container.animate({ scrollLeft: thumbnailWidth * (currentThumbnailIndex - visibleThumbnails + 1) }, 200);
+                    } else if (currentThumbnailIndex < containerScrollLeft / thumbnailWidth) {
+                        container.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
+                    }
+                }
+            });
+
+        </script>
+    </head>
+    <body>
+
+        <!-- <div id="thumbnail-sections" tabindex="0"> -->
+            <div id="section" class="thumbnail-section">
+                <div class="thumbnail-container-block" id="container-block-0">
+                    <div class="thumbnail-container-title">Drama</div>
+                    <div class="thumbnail-container" id="container-0">
+                        <div class="thumbnail" id="container-0_thumbnail-0">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">First box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-1">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Second box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-2">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Third box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Fourth box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Fifth box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Sixth box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-0_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">Seventh box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                    </div>
+                    <div class="thumbnail-container-space" id="container-space-0"></div>
+                </div>
+
+                <div class="thumbnail-container-block" id="container-block-1">
+                    <div class="thumbnail-container-title">Comedy</div>
+                    <div class="thumbnail-container" id="container-1">
+                        <div class="thumbnail" id="container-1_thumbnail-0">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">1. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-1">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">2. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-2">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">3. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">4. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-1_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">5. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                    </div>
+                    <div class="thumbnail-container-space" id="container-space-1"></div>
+                </div>
+
+                <div class="thumbnail-container-block" id="container-block-2">
+                    <div class="thumbnail-container-title">Scifi</div>
+                    <div class="thumbnail-container" id="container-2">
+                        <div class="thumbnail" id="container-2_thumbnail-0">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">1. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-1">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">2. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-2">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">3. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">4. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">5. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">6. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                        <div class="thumbnail" id="container-2_thumbnail-3">
+                            <div class="thumbnail-text-wrapper">
+                                <div class="thumbnail-text">7. box</div>
+                            </div>
+                            <img src="images/categories/movie.jpg" alt="Image">
+                        </div>
+                    </div>
+                    <div class="thumbnail-container-space" id="container-space-2"></div>
+                </div>
+
+            </div>
+        <!-- </div> -->
+
+        <div id="left-arrow"><</div>
+        <div id="right-arrow">></div>
+        <div id="down-arrow">v</div>
+    </body>
+</html>
