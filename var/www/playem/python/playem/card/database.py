@@ -240,14 +240,14 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_HISTORY + '''(
-                start_epoch   INTEGER NOT NULL,
-                last_epoch    INTEGER NOT NULL,
-                last_position TEXT    NOT NULL,
-                id_card       INTEGER NOT NULL,
-                id_user       INTEGER NOT NULL,
-                FOREIGN KEY   (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
-                FOREIGN KEY   (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
-                PRIMARY KEY   (id_card, id_user, start_epoch)
+                start_epoch     INTEGER       NOT NULL,
+                recent_epoch    INTEGER       NOT NULL,
+                recent_position DECIMAL(10,2) NOT NULL,
+                id_card         INTEGER       NOT NULL,
+                id_user         INTEGER       NOT NULL,
+                FOREIGN KEY     (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY     (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
+                PRIMARY KEY     (id_card, id_user, start_epoch)
             );
         ''')
 
@@ -356,6 +356,8 @@ class SqlDatabase:
                 decade              TEXT,
                 date                TEXT,
                 length              TEXT,
+                full_time           DECIMAL(10,2),
+                net_time            DECIMAL(10,2),
                 source_path         TEXT        NOT NULL,
                 basename            TEXT        NOT NULL,
                 sequence            INTEGER,
@@ -787,7 +789,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -799,36 +801,21 @@ class SqlDatabase:
             title_orig_id = self.language_name_id_dict[title_orig]
             category_id = self.category_name_id_dict[category]
 
-
-###
-#            id_hash = hash(card_path) & ((1<<sys.hash_info.width)-1)
-#            card_id = str(id_hash)[0:18]
-
             # Generate ID
             hasher = hashlib.md5()
             hasher.update(card_path.encode('utf-8'))
             card_id = hasher.hexdigest()
 
-###
-
-
             #
             # INSERT into CARD
             #
             # if the card has its own ID, meaning it is media card
-#            if card_id:
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
+                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_time, basename, source_path, id_higher_card, sequence)
+                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_time, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-#            else:
-#                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-#                        (show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, basename, source_path, id_higher_card, sequence)
-#                        VALUES (:show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :basename, :source_path, :id_higher_card, :sequence)
-#                        RETURNING id;
-#                '''
-            cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_time': net_time, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -1306,33 +1293,20 @@ class SqlDatabase:
             category_id = self.category_name_id_dict[category]
             title_orig_id = self.language_name_id_dict[title_orig]
 
-###
-#            id_hash = hash(card_path) & ((1<<sys.hash_info.width)-1)
-#            card_id = str(id_hash)[0:18]
-
             # Generate ID
             hasher = hashlib.md5()
             hasher.update(card_path.encode('utf-8'))
             card_id = hasher.hexdigest()
-###
 
             #
             # INSERT into Level
             #
 
-#            # if higher_card_id:
-#            if card_id:
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
                 (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
                 VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
                 RETURNING id;
             '''
-#            else:
-#                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-#                    (level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-#                    VALUES (:level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
-#                    RETURNING id;
-#                '''
             cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             record = cur.fetchone()
             (hierarchy_id, ) = record if record else (None,)
@@ -1409,15 +1383,16 @@ class SqlDatabase:
     #
     # ================
 
-    def update_play_position(self, user_id, card_id, last_position, start_epoch=None):
+    def update_play_position(self, user_id, card_id, recent_position, start_epoch=None):
         """
         Updates the player's position of a movie. This method is periodically called from the browser
-        It returns with the start_epoch value if the UPDATE or INSERT was successful
+        It returns with the start_epoch value if the UPDATE or INSERT was successful.
+        If the start_epoch is given, it is an UPDATE, if it is not given, it is INSERT.        
         If something went wrong, it returns with None
-        user_id:        User ID
-        card_id         Card ID
-        last_position   Player's recent position. Like: 1:18:28
-        start_epoch     Timestamp when the play started. This method generates this value
+        user_id:          User ID
+        card_id           Card ID
+        recent_position   Player's recent position in seconds
+        start_epoch       Timestamp when the play started. This method generates this value
         """
         try:
             with self.lock:
@@ -1479,31 +1454,31 @@ class SqlDatabase:
 
 #                logging.debug("history number of user({0}), card_id({1}), start_epoch({2}): {3} ".format(user_id, card_id, start_epoch, history_number))
 
-                # New history
+                # New history - INSERT
                 if history_number == 0 and not start_epoch:
 
                     start_epoch = int(datetime.now().timestamp())
-                    last_epoch = start_epoch
+                    recent_epoch = start_epoch
                     query = '''INSERT INTO ''' + SqlDatabase.TABLE_HISTORY + '''
-                        (id_card, id_user, start_epoch, last_epoch, last_position)
-                        VALUES (:card_id, :user_id, :start_epoch, :last_epoch, :last_position);
+                        (id_card, id_user, start_epoch, recent_epoch, recent_position)
+                        VALUES (:card_id, :user_id, :start_epoch, :recent_epoch, :recent_position);
                     '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'last_epoch': last_epoch, 'last_position': last_position})
+                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'recent_epoch': recent_epoch, 'recent_position': recent_position})
                     record = cur.fetchone()                
 
                 # Update history
                 elif history_number == 1 and start_epoch:
 
-                    last_epoch = int(datetime.now().timestamp())
+                    recent_epoch = int(datetime.now().timestamp())
                     query = '''
                         UPDATE ''' + SqlDatabase.TABLE_HISTORY + '''
-                        SET last_epoch = :last_epoch, last_position = :last_position
+                        SET recent_epoch = :recent_epoch, recent_position = :recent_position
                         WHERE
                             history.id_card=:card_id
                             AND history.id_user=:user_id
                             AND history.start_epoch=:start_epoch
                     '''                
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'last_epoch': last_epoch, 'last_position': last_position})
+                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'recent_epoch': recent_epoch, 'recent_position': recent_position})
                     record = cur.fetchone()                
 
                 # Something went wrong
@@ -2211,6 +2186,8 @@ FROM
         unioned.decade,
         unioned.date,
         unioned.length,
+        unioned.full_time,
+        unioned.net_time,
 
         unioned.source_path,
         unioned.id_category
@@ -2229,6 +2206,8 @@ FROM
             card.decade decade,
             card.date date,
             card.length length,
+            card.full_time full_time,
+            card.net_time net_time,
 
             card.source_path source_path
         FROM                     
@@ -2260,6 +2239,8 @@ FROM
             card.decade decade,
             card.date date,
             card.length length,
+            card.full_time full_time,
+            card.net_time net_time,
 
             card.source_path source_path
         FROM               
@@ -2844,6 +2825,8 @@ LIMIT :limit; '''
                 category.name as category,
                 card.date as date,
                 card.length as length,
+                card.full_time as full_time,
+                card.net_time as net_time,
                 card.source_path as source_path,
                 card.download,
                 medium,
@@ -3534,8 +3517,9 @@ SELECT
 
     mixed_id_list.decade,
     mixed_id_list.date,
-    mixed_id_list.length,     
-    
+    mixed_id_list.length,  
+    mixed_id_list.full_time, 
+    mixed_id_list.net_time,    
     
     mixed_id_list.themes,
     mixed_id_list.genres,
@@ -3569,7 +3553,7 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
         
         (
             SELECT                 
@@ -3586,7 +3570,9 @@ FROM
                 
                 card.decade,
                 card.date,
-                card.length,     
+                card.length,
+                card.full_time,  
+                card.net_time,   
                 
                 themes,
                 genres,
@@ -3957,6 +3943,8 @@ FROM
                 NULL decade,
                 NULL date,
                 NULL length,
+                NULL full_time,
+                NULL net_time,
                 
                 NULL themes,
                 NULL genres,
@@ -3985,7 +3973,7 @@ FROM
                 rec.id_higher_card=card.id
                 AND category.id=card.id_category
         )
-    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
     
     FROM
         rec
@@ -4330,8 +4318,9 @@ SELECT
 
     mixed_id_list.decade,
     mixed_id_list.date,
-    mixed_id_list.length,     
-    
+    mixed_id_list.length,
+    mixed_id_list.full_time,     
+    mixed_id_list.net_time,
     
     mixed_id_list.themes,
     mixed_id_list.genres,
@@ -4365,7 +4354,7 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
         
         (
             SELECT                 
@@ -4382,7 +4371,9 @@ FROM
                 
                 card.decade,
                 card.date,
-                card.length,     
+                card.length, 
+                card.full_time,
+                card.net_time,  
                 
                 themes,
                 genres,
@@ -4753,6 +4744,8 @@ FROM
                 NULL decade,
                 NULL date,
                 NULL length,
+                NULL full_time,
+                NULL net_time,
                 
                 NULL themes,
                 NULL genres,
@@ -4781,7 +4774,7 @@ FROM
                 rec.id_higher_card=card.id
                 AND category.id=card.id_category
         )
-    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
     
     FROM
         rec
@@ -5148,7 +5141,7 @@ SELECT
 FROM
     (
     WITH RECURSIVE
-        rec(id, id_higher_card,level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, ord) AS
+        rec(id, id_higher_card,level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, ord) AS
         
         (
             SELECT
@@ -5171,6 +5164,8 @@ FROM
                 NULL decade,
                 NULL date,
                 NULL length,
+                NULL full_time,
+                NULL net_time,
               
                 CASE 
                     WHEN sequence IS NULL AND core.title_req IS NOT NULL THEN core.title_req
@@ -5287,7 +5282,9 @@ FROM
                 
                 card.decade,
                 card.date,
-                card.length,     
+                card.length, 
+                card.full_time,  
+                card.net_time,  
                 
                 CASE 
                     WHEN card.sequence IS NULL AND core.title_req IS NOT NULL THEN ord || '_' || core.title_req
@@ -5365,7 +5362,7 @@ FROM
                 AND core.id = card.id
 
         )
-    SELECT id, id_higher_card, level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, ord
+    SELECT id, id_higher_card, level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, fulltime, net_time, ord
     
     FROM
         rec

@@ -42,8 +42,6 @@ class EPPersonalHistoryRequest(EP):
     def executeByPayload(self, payload) -> dict:
         remoteAddress = request.remote_addr
 
-        logging.error("itt vagyok az executeByPayloadban.")
-
         user_id = payload[EPPersonalHistoryRequest.ATTR_USER_ID]
         card_id = payload.get(EPPersonalHistoryRequest.ATTR_CARD_ID, None)
         limit_days = payload.get(EPPersonalHistoryRequest.ATTR_LIMIT_DAYS, None)

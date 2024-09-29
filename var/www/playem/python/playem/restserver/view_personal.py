@@ -22,11 +22,10 @@ from playem.restserver.endpoints.ep_personal_history_update import EPPersonalHis
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request/by/name/<user_name>
 # curl  --header "Content-Type: application/json" --request PUT --data '{ "user_id": 1, "language_code": "hu"}' http://localhost:80/personal/user_data/update
 #
-# curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/history/request/by/user_id/<user_id>/card_id/<card_id>/limit_days/<limit_days>/limit_records/<limit_records>
 # curl  --header "Content-Type: application/json" --request GET --data '{ "user_id": 1, "card_id": 1056064754705651379, "limit_days": 5, "limit_records": 5}' http://localhost:80/personal/history/request
 #
-# curl  --header "Content-Type: application/json" --request POST http://localhost:80/personal/history/update/by/user_id/<user_id>/card_id/<card_id>/last_position/<last_position>/start_epoch/<start_epoch>
-# curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
+# curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "536.2", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
+# curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "536.2"}' http://localhost:80/personal/history/update
 #
 #
 # -----------------------------------
@@ -122,26 +121,6 @@ class PersonalView(FlaskView):
     #
     # Gives back the history of a user filtered by the given data
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/history/request/by/user_id/<user_id>/card_id/<card_id>/limit_days/<limit_days>/limit_records/<limit_records>
-    #
-    # example:
-    #     curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/history/request/by/user_id/1/card_id/1056064754705651379/limit_days/1/limit_records/1
-    # response:
-    #     [
-    #       {"start_epoch": 1725117021, "last_epoch": 1725142600, "last_position": "1:48:12", "id_card": 1056064754705651379, "id_user": 1}, 
-    #       {"start_epoch": 1725142641, "last_epoch": 1725142641, "last_position": "0:01:31", "id_card": 1056064754705651379, "id_user": 1}
-    #      ]
-    #
-    #@route('/history/request/by/user_id/<user_id>/card_id/<card_id>/limit_days/<limit_days>/limit_records/<limit_records>')
-#    @route(EPPersonalHistoryRequest.PATH_PAR_URL, methods=[EPPersonalHistoryRequest.METHOD])
-#    def personalHistoryRequestByWithParameter(self, user_id, card_id, limit_days, limit_records):
-#
-#        out = self.ePPersonalHistoryRequest.executeByParameters(user_id, card_id=card_id, limit_days=limit_days, limit_records=limit_records)
-#        return out
-
-    #
-    # Gives back the history of a user filtered by the given data
-    #
     # curl  --header "Content-Type: application/json" --request GET --data '{ "user_id": 1, "card_id": 1056064754705651379, "limit_days": 5, "limit_records": 5}' http://localhost:80/personal/history/request
     #
     # GET http://localhost:80/personal/history/request
@@ -157,8 +136,8 @@ class PersonalView(FlaskView):
     #    curl  --header "Content-Type: application/json" --request GET --data '{ "user_id": 1}' http://localhost:80/personal/history/request
     # response:
     #     [
-    #       {"start_epoch": 1725117021, "last_epoch": 1725142600, "last_position": "1:48:12", "id_card": 1056064754705651379, "id_user": 1}, 
-    #       {"start_epoch": 1725142641, "last_epoch": 1725142641, "last_position": "0:01:31", "id_card": 1056064754705651379, "id_user": 1}
+    #       {"start_epoch": 1725117021, "last_epoch": 1725142600, "recent_position": "3.5125", "id_card": 1056064754705651379, "id_user": 1}, 
+    #       {"start_epoch": 1725142641, "last_epoch": 1725142641, "recent_position": "43.253", "id_card": 1056064754705651379, "id_user": 1}
     #      ]
     #
     #@route('/history/request', methods=['GET'])
@@ -187,23 +166,6 @@ class PersonalView(FlaskView):
 
             json_data = {'user_id': user_id, 'card_id': card_id, 'limit_days': limit_days, 'limit_records': limit_records}
 
-#        print("json_data: {0}".format(json_data))
-
-#        # WEB
-#        if request.form:
-#            json_data = request.form
-#
-#            print("json_data as request.form: {0}".format(json_data))
-#        # CURL
-#        elif request.json:
-#            json_data = request.json
-#
-#            print("json_data as request.json: {0}".format(json_data))
-#        else:
-#
-#            print("NOT VALID REQUEST")
-#            return "Not valid request", EP.CODE_BAD_REQUEST
-
         out = self.ePPersonalHistoryRequest.executeByPayload(json_data)
         return out
 
@@ -217,37 +179,19 @@ class PersonalView(FlaskView):
     #
     # Updates the position of a media
     #
-    # curl  --header "Content-Type: application/json" --request POST http://localhost:80/personal/history/update/by/user_id/<user_id>/card_id/<card_id>/last_position/<last_position>/start_epoch/<start_epoch>
-    #
-    # example:
-    #     curl  --header "Content-Type: application/json" --request POST http://localhost:80/personal/history/update/by/user_id/1/card_id/1056064754705651379/last_position/1:23:52/start_epoch/1725117021
-    # response:
-    #     1725117021
-    #
-    #@route('/history/update/by/user_id/<user_id>/card_id/<card_id>/last_position/<last_position>/start_epoch/<start_epoch>')
-    @route(EPPersonalHistoryUpdate.PATH_PAR_URL, methods=[EPPersonalHistoryUpdate.METHOD])
-    def personalHistoryUpdateByWithParameter(self, user_id, card_id, last_position, start_epoch):
-
-        out = self.ePPersonalHistoryUpdate.executeByParameters(user_id, card_id=card_id, last_position=last_position, start_epoch=start_epoch)
-        return out
-
-
-    #
-    # Updates the position of a media
-    #
-    # curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
+    # curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "recent_position": 123.4, "start_epoch": 1725117021}' http://localhost:80/personal/history/update
     #
     # POST http://localhost:80/personal/history/update
     #      body: {
     #        "user_id": 1,
     #        "card_id": 1056064754705651379,
-    #        "last_position": "1:48:12",
+    #        "recent_position": 123.2,
     #        "start_epoch": 1725117021   
     #      }
     #
     # example:
-    #    curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "last_position": "1:48:12", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
-    #    curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": 1056064754705651379, "last_position": "0:01:31"}' http://localhost:80/personal/history/update
+    # curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "536.2", "start_epoch": 1725117021}' http://localhost:80/personal/history/update
+    # curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "536.2"}' http://localhost:80/personal/history/update
     # response:
     #     1725117021
     #     1725142641
@@ -255,8 +199,6 @@ class PersonalView(FlaskView):
     #@route('/history/update', methods=['POST'])
     @route(EPPersonalHistoryUpdate.PATH_PAR_PAYLOAD, methods=[EPPersonalHistoryUpdate.METHOD])
     def personalHistoryUpdateWithPayload(self):
-
-        print("!!! Inside the personalHistoryUpdateWithPayload() !!! {0}".format(request))
 
         # WEB
         if request.form:

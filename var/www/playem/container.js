@@ -1289,6 +1289,7 @@ class ThumbnailController {
         medium_dict["medium"] = hit["medium"];
         medium_dict["card_id"] = hit["id"];
         medium_dict["title"] = RestGenerator.getMainTitle(hit)
+        medium_dict["net_time"] = hit["net_time"];
 
         return medium_dict;
             
@@ -1323,21 +1324,11 @@ class ThumbnailController {
         let screenshot_path = medium_dict["screenshot_path"];
         let card_id = medium_dict["card_id"];
         let title = medium_dict["title"];
-
-        // console.log("Play media. id: " + card_id + ", title: "+ title);
+        let net_time = medium_dict["net_time"];
 
         if (medium_path != null) {
 
             let refToThis = this;
-
-            // REST request to check if the media was played before but not finished
-            let last_position = this.getLastPositionOfMedia(refToThis, user_id, card_id)
-            let startTime = this.formatTimeCodeToSeconds(last_position)
-console.log("position: " + last_position);
-
-            // REST request to register this media in the History
-            // let last_position = "0:00:00"
-            this.registerMediaInHistory(refToThis, user_id, card_id, last_position);
 
             let player = $("#video_player")[0];
 
@@ -1376,9 +1367,37 @@ console.log("position: " + last_position);
             player.load();
             player.controls = true;
             player.autoplay = true;
-            player.play();
 
-            player.currentTime = startTime;
+            //
+            // After the load, but before the play, I have to check  the history and decide where from start the media
+            //
+
+            // Play only if all metadata loaded. For this, we can use either 'durationchange' or the 'loadedmetadata' listeners
+            // I just realized: we do not need the player.duration, so this block not needed to be inside the listener
+            // TODO: remove the block out of the listener
+            //$("#video_player").bind('loadedmetadata', function() {
+
+                // REST request to check if the media was played before but not finished
+                let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, user_id, card_id)
+                let last_position = player.duration;
+
+                // this media in the list time was stopped after the credits list
+                if (recent_position >= net_time){
+                    // We play the media from the beginning
+                    recent_position = 0;
+                }
+
+                // REST request to register this media in the History
+                refToThis.registerMediaInHistory(refToThis, user_id, card_id, recent_position);
+
+                player.currentTime = recent_position;
+                player.play();
+            //});
+
+
+            
+
+
 
             // ENDED event listener
             $("#video_player").bind("ended", function (par) {
@@ -1659,11 +1678,11 @@ console.log("position: " + last_position);
     /**
      * POST REST request to register the recent media in the History
      */ 
-    registerMediaInHistory(refToThis, user_id, card_id, last_position){
+    registerMediaInHistory(refToThis, user_id, card_id, recent_position){
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
-        let rq_data = {"user_id": user_id, "card_id": card_id, "last_position": last_position}
+        let rq_data = {"user_id": user_id, "card_id": card_id, "recent_position": recent_position}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
         let result_data = result.responseJSON;
 
@@ -1681,57 +1700,33 @@ console.log("position: " + last_position);
     updateMediaHistory(refToThis, start_epoch, user_id, card_id){
         let player = $("#video_player")[0];
         let currentTimeInSeconds = player.currentTime;
-        let last_position = refToThis.formatSecondsToTimeCode(currentTimeInSeconds);
 
-        // console.log("update media history. start_epoch: " + start_epoch + ", card_id: " + card_id + ", last_position: " + last_position);
+console.log("Update media history was called. start_epoch: " + start_epoch + ", card_id: " + card_id + ", user_id: " + user_id + ", recent_position: " + currentTimeInSeconds);
 
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
-        let rq_data = {"user_id": user_id, "card_id": card_id, "last_position": last_position, "start_epoch": start_epoch}
+        let rq_data = {"user_id": user_id, "card_id": card_id, "recent_position": currentTimeInSeconds, "start_epoch": start_epoch}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
 
         // let result_data = result.responseJSON;
         // console.log("  result_data: " + result_data);
     }
 
-    getLastPositionOfMedia(refToThis, user_id, card_id){
+    getMediaPositionInLatestHistory(refToThis, user_id, card_id){
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/history/request";
         let rq_assync = false;
         let rq_data = {"user_id": user_id, "card_id": card_id, "limit_records": "1"}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
-        
-//        let result = $.get(rq_url, rq_data);
-        
+    
         let result_data_list = result.responseJSON;
         if (result_data_list.length > 0){
             let result_data = result_data_list[0]
-            return result_data['last_position']
+            return result_data['recent_position'];
         }else{
-            return "00:00:00"
+            return 0;
         }
-    }
-
-    formatSecondsToTimeCode(seconds) {
-        // Calculate hours, minutes, and seconds
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
-    
-        // Format hours, minutes, and seconds into the desired string
-        const formattedTime = `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    
-        return formattedTime;
-    }
-
-    formatTimeCodeToSeconds(timeCode){
-        const [hours, minutes, seconds] = timeCode.split(':').map(Number);
-    
-        // Convert to seconds
-        const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
-        
-        return totalSeconds;
     }
 }
 

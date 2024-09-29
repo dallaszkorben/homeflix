@@ -81,6 +81,24 @@ class CardHandle:
     def getPatternLength(self):
         return re.compile( r'^(\d{1,2}:\d{2}:\d{2})?$' )
 
+    def format_time_code_to_seconds(self, time_code):
+        try:
+            # Split the time code by ':' and ensure there are 3 parts (hh, mm, ss)
+            parts = time_code.split(':')
+            if len(parts) != 3:
+                return 0
+
+            # Convert to integers
+            hours, minutes, seconds = map(int, parts)
+
+            # Calculate total seconds
+            total_seconds = (hours * 3600) + (minutes * 60) + seconds
+            return total_seconds
+        except ValueError:
+
+            # If conversion to integer fails or any other error occurs, return None
+            return None
+
     def collectCardsFromFileSystem(self, actualDir, db, higher_card_id=None ):
         """ _________________________________________________________________
             Recursive analysis on the the file system
@@ -272,9 +290,22 @@ class CardHandle:
                 # TODO: Makers, Contributors     
 
                 try:
-                    length = data['length']
+                    full_length = data['length']
+                    full_time = self.format_time_code_to_seconds(full_length)
                 except:
-                    length = None
+                    full_length = None
+                    full_time = None
+                try:
+                    net_length = data['netlength']
+                    net_time = self.format_time_code_to_seconds(net_length)
+                except:
+                    if full_length:
+                        net_length = full_length
+                        net_time = full_time
+                    else:
+                        net_length = None
+                        net_time = None
+
                 try:
                     sounds = data['sounds']
                 except:
@@ -427,9 +458,13 @@ class CardHandle:
                         #logging.error( "CARD - Date ({1}) is missing or in unknown form in {0}".format(card_path, date))
                         card_error = "CARD - Date ({1}) is missing or in unknown form in {0}".format(card_path, date)
 
-                    if length and not self.getPatternLength().match(length):
-                        #logging.error( "CARD - Length ({1}) is unknown form in {0}".format(card_path, length))
-                        card_error = "CARD - Length ({1}) is unknown form in {0}".format(card_path, length)
+                    if full_length and not self.getPatternLength().match(full_length):
+                        #logging.error( "CARD - Full Length ({1}) is unknown form in {0}".format(card_path, full_length))
+                        card_error = "CARD - Full Length ({1}) is unknown form in {0}".format(card_path, full_length)
+
+                    if net_length and not self.getPatternLength().match(net_length):
+                        #logging.error( "CARD - Net Length ({1}) is unknown form in {0}".format(card_path, net_length))
+                        card_error = "CARD - Net Length ({1}) is unknown form in {0}".format(card_path, net_length)
 
                     for lang in subs:
                         if lang not in db.language_name_id_dict:
@@ -464,7 +499,9 @@ class CardHandle:
                             lyrics=lyrics,                        
                             decade=decade,
                             date=date, 
-                            length=length,
+                            length=full_length,
+                            full_time=full_time,
+                            net_time=net_time,
                             sounds=sounds, 
                             subs=subs, 
                             genres=genres, 
