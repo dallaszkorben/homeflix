@@ -357,7 +357,8 @@ class SqlDatabase:
                 date                TEXT,
                 length              TEXT,
                 full_time           DECIMAL(10,2),
-                net_time            DECIMAL(10,2),
+                net_start_time      DECIMAL(10,2),
+                net_stop_time       DECIMAL(10,2),
                 source_path         TEXT        NOT NULL,
                 basename            TEXT        NOT NULL,
                 sequence            INTEGER,
@@ -789,7 +790,7 @@ class SqlDatabase:
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -811,11 +812,11 @@ class SqlDatabase:
             #
             # if the card has its own ID, meaning it is media card
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_time, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_time, :basename, :source_path, :id_higher_card, :sequence)
+                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_start_time, net_stop_time, basename, source_path, id_higher_card, sequence)
+                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_start_time, :net_stop_time, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_time': net_time, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_start_time': net_start_time, 'net_stop_time': net_stop_time, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -2187,7 +2188,8 @@ FROM
         unioned.date,
         unioned.length,
         unioned.full_time,
-        unioned.net_time,
+        unioned.net_start_time,
+        umioned.net_stop_time,
 
         unioned.source_path,
         unioned.id_category
@@ -2207,7 +2209,8 @@ FROM
             card.date date,
             card.length length,
             card.full_time full_time,
-            card.net_time net_time,
+            card.net_start_time net_start_time,
+            card.net_stop_time net_stop_time,
 
             card.source_path source_path
         FROM                     
@@ -2240,7 +2243,8 @@ FROM
             card.date date,
             card.length length,
             card.full_time full_time,
-            card.net_time net_time,
+            card.net_start_time net_start_time,
+            card.net_stop_time net_stop_time,
 
             card.source_path source_path
         FROM               
@@ -2826,7 +2830,8 @@ LIMIT :limit; '''
                 card.date as date,
                 card.length as length,
                 card.full_time as full_time,
-                card.net_time as net_time,
+                card.net_start_time as net_start_time,
+                card.net_stop_time as net_stop_time,
                 card.source_path as source_path,
                 card.download,
                 medium,
@@ -3519,7 +3524,8 @@ SELECT
     mixed_id_list.date,
     mixed_id_list.length,  
     mixed_id_list.full_time, 
-    mixed_id_list.net_time,    
+    mixed_id_list.net_start_time,    
+    mixed_id_list.net_stop_time,
     
     mixed_id_list.themes,
     mixed_id_list.genres,
@@ -3553,7 +3559,7 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
         
         (
             SELECT                 
@@ -3572,7 +3578,8 @@ FROM
                 card.date,
                 card.length,
                 card.full_time,  
-                card.net_time,   
+                card.net_start_time,
+                card.net_stop_time,
                 
                 themes,
                 genres,
@@ -3944,7 +3951,8 @@ FROM
                 NULL date,
                 NULL length,
                 NULL full_time,
-                NULL net_time,
+                NULL net_start_time,
+                NULL net_stop_time,
                 
                 NULL themes,
                 NULL genres,
@@ -3973,7 +3981,7 @@ FROM
                 rec.id_higher_card=card.id
                 AND category.id=card.id_category
         )
-    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
     
     FROM
         rec
@@ -4320,7 +4328,8 @@ SELECT
     mixed_id_list.date,
     mixed_id_list.length,
     mixed_id_list.full_time,     
-    mixed_id_list.net_time,
+    mixed_id_list.net_start_time,
+    mixed_id_list.net_stop_time,
     
     mixed_id_list.themes,
     mixed_id_list.genres,
@@ -4354,7 +4363,7 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
         
         (
             SELECT                 
@@ -4373,7 +4382,8 @@ FROM
                 card.date,
                 card.length, 
                 card.full_time,
-                card.net_time,  
+                card.net_start_time,
+                card.net_stop_time,
                 
                 themes,
                 genres,
@@ -4745,7 +4755,8 @@ FROM
                 NULL date,
                 NULL length,
                 NULL full_time,
-                NULL net_time,
+                NULL net_start_time,
+                NULL net_stop_time,
                 
                 NULL themes,
                 NULL genres,
@@ -4774,7 +4785,7 @@ FROM
                 rec.id_higher_card=card.id
                 AND category.id=card.id_category
         )
-    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
     
     FROM
         rec
@@ -5141,7 +5152,7 @@ SELECT
 FROM
     (
     WITH RECURSIVE
-        rec(id, id_higher_card,level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_time, ord) AS
+        rec(id, id_higher_card,level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, ord) AS
         
         (
             SELECT
@@ -5165,7 +5176,8 @@ FROM
                 NULL date,
                 NULL length,
                 NULL full_time,
-                NULL net_time,
+                NULL net_start_time,
+                NULL net_stop_time,
               
                 CASE 
                     WHEN sequence IS NULL AND core.title_req IS NOT NULL THEN core.title_req
@@ -5284,7 +5296,8 @@ FROM
                 card.date,
                 card.length, 
                 card.full_time,  
-                card.net_time,  
+                card.net_start_time,
+                card.net_stop_time,
                 
                 CASE 
                     WHEN card.sequence IS NULL AND core.title_req IS NOT NULL THEN ord || '_' || core.title_req
@@ -5362,7 +5375,7 @@ FROM
                 AND core.id = card.id
 
         )
-    SELECT id, id_higher_card, level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, fulltime, net_time, ord
+    SELECT id, id_higher_card, level, source_path, title_req, title_orig, lang_orig, lang_req, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, fulltime, net_start_time, net_stop_time, ord
     
     FROM
         rec

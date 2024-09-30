@@ -1289,7 +1289,8 @@ class ThumbnailController {
         medium_dict["medium"] = hit["medium"];
         medium_dict["card_id"] = hit["id"];
         medium_dict["title"] = RestGenerator.getMainTitle(hit)
-        medium_dict["net_time"] = hit["net_time"];
+        medium_dict["net_start_time"] = hit["net_start_time"];
+        medium_dict["net_stop_time"] = hit["net_stop_time"];
 
         return medium_dict;
             
@@ -1324,7 +1325,8 @@ class ThumbnailController {
         let screenshot_path = medium_dict["screenshot_path"];
         let card_id = medium_dict["card_id"];
         let title = medium_dict["title"];
-        let net_time = medium_dict["net_time"];
+        let net_start_time = medium_dict["net_start_time"];
+        let net_stop_time = medium_dict["net_stop_time"];
 
         if (medium_path != null) {
 
@@ -1382,7 +1384,7 @@ class ThumbnailController {
                 let last_position = player.duration;
 
                 // this media in the list time was stopped after the credits list
-                if (recent_position >= net_time){
+                if (recent_position >= net_stop_time){
                     // We play the media from the beginning
                     recent_position = 0;
                 }
@@ -1394,14 +1396,9 @@ class ThumbnailController {
                 player.play();
             //});
 
-
-            
-
-
-
             // ENDED event listener
             $("#video_player").bind("ended", function (par) {
-                refToThis.finishedPlaying('ended', continuous_list);
+                refToThis.finishedPlaying('ended', continuous_list, user_id);
             });
 
             // FULLSCREENCHANGE event listener
@@ -1410,7 +1407,7 @@ class ThumbnailController {
 
                 // If exited of full screen
                 if (!state) {
-                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
+                    refToThis.finishedPlaying('fullscreenchange', continuous_list, user_id);
                 }
             });
             player.style.display = 'block';
@@ -1537,10 +1534,11 @@ class ThumbnailController {
      * @param {*} event 
      * @param {*} continuous_list 
      */
-    finishedPlaying(event, continuous_list) {
+    finishedPlaying(event, continuous_list, user_id) {
 
         // Stop updating the current media history
-        clearInterval(this.updateMediaHistoryIntervalId)
+        clearInterval(this.updateMediaHistoryIntervalId);
+        console.log("Stopped Media History Interval: " + this.updateMediaHistoryIntervalId);
 
         let player = $("#video_player")[0];
         let domPlayer = $("#video_player");
@@ -1564,6 +1562,8 @@ class ThumbnailController {
                 screenshot_path = medium_dict["screenshot_path"];
                 card_id = medium_dict["card_id"];
                 title = medium_dict["title"];
+                //net_start_time = medium_dict["net_start_time"];
+                //net_stop_time = medium_dict["net_stop_time"];
                                 
                 // next focus on the thumbnails
                 this.objScrollSection.arrowRight()
@@ -1587,6 +1587,9 @@ class ThumbnailController {
                 } else {
                     player.poster = "";
                 }
+
+                // REST request to register this media in the History
+                this.registerMediaInHistory(this, user_id, card_id, 0);
 
                 player.load();
                 player.play();
@@ -1687,6 +1690,8 @@ class ThumbnailController {
         let result_data = result.responseJSON;
 
         this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, result_data, user_id, card_id);
+        console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
+
     }
 
     /**

@@ -315,7 +315,8 @@ class RestGenerator extends Generator{
                     medium_dict["medium_path"] = medium_path;
                     medium_dict["screenshot_path"] = screenshot_path;
                     medium_dict["card_id"] = card["id"];
-                    medium_dict["net_time"] = card["net_time"];
+                    medium_dict["net_start_time"] = card["net_start_time"];
+                    medium_dict["net_stop_time"] = card["net_stop_time"];
                 }
             }else if("video" in card["medium"]){
                 media=card["medium"]["video"][0]
@@ -325,7 +326,8 @@ class RestGenerator extends Generator{
                     medium_dict["medium_path"] = medium_path;
                     medium_dict["screenshot_path"] = null;
                     medium_dict["card_id"] = card["id"];
-                    medium_dict["net_time"] = card["net_time"];
+                    medium_dict["net_start_time"] = card["net_start_time"];
+                    medium_dict["net_stop_time"] = card["net_stop_time"];
                 }
             }else if("picture" in card["medium"]){
                 media=card["medium"]["picture"]

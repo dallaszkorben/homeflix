@@ -148,11 +148,6 @@ class CardHandle:
                     # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
                     data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
 
-#                try:
-#                    given_card_id = data['id']
-#                except:
-#                    given_card_id = None
-
                 try:
                     category = data['category']
                 except:
@@ -181,11 +176,6 @@ class CardHandle:
                     download = 1 if data['download'] in ['yes', 'Yes', 'true', 'True', 'y', 1] else 0
                 except:
                     download = 0
-
-                # try:
-                #     destination = data['destination'] if data['destination'] in ['show','download'] and is_appendix else None
-                # except:
-                #     destination = None
 
                 try:
                     title_show_sequence = data['title']['showsequence']
@@ -296,16 +286,25 @@ class CardHandle:
                     full_length = None
                     full_time = None
                 try:
-                    net_length = data['netlength']
-                    net_time = self.format_time_code_to_seconds(net_length)
+                    net_start = data['netstart']
+                    net_start_time = self.format_time_code_to_seconds(net_start)
+                except:
+                    net_start = None
+                    net_start_time = 0
+                try:
+                    if full_length:
+                        net_stop = data['netstop']
+                        net_stop_time = self.format_time_code_to_seconds(net_stop)
+                    else:
+                        net_stop = None
+                        net_stop_time = None
                 except:
                     if full_length:
-                        net_length = full_length
-                        net_time = full_time
+                        net_stop = None
+                        net_stop_time = full_time
                     else:
-                        net_length = None
-                        net_time = None
-
+                        net_stop = None
+                        net_stop_time = None
                 try:
                     sounds = data['sounds']
                 except:
@@ -462,9 +461,13 @@ class CardHandle:
                         #logging.error( "CARD - Full Length ({1}) is unknown form in {0}".format(card_path, full_length))
                         card_error = "CARD - Full Length ({1}) is unknown form in {0}".format(card_path, full_length)
 
-                    if net_length and not self.getPatternLength().match(net_length):
-                        #logging.error( "CARD - Net Length ({1}) is unknown form in {0}".format(card_path, net_length))
-                        card_error = "CARD - Net Length ({1}) is unknown form in {0}".format(card_path, net_length)
+                    if net_start and not self.getPatternLength().match(net_start):
+                        #logging.error( "CARD - Net Start Length ({1}) is unknown form in {0}".format(card_path, net_start))
+                        card_error = "CARD - Net Start Length ({1}) is unknown form in {0}".format(card_path, net_start)
+
+                    if net_stop and not self.getPatternLength().match(net_stop):
+                        #logging.error( "CARD - Net Start Length ({1}) is unknown form in {0}".format(card_path, net_stop))
+                        card_error = "CARD - Net Stop Length ({1}) is unknown form in {0}".format(card_path, net_stop)
 
                     for lang in subs:
                         if lang not in db.language_name_id_dict:
@@ -501,7 +504,8 @@ class CardHandle:
                             date=date, 
                             length=full_length,
                             full_time=full_time,
-                            net_time=net_time,
+                            net_start_time=net_start_time,
+                            net_stop_time=net_stop_time,
                             sounds=sounds, 
                             subs=subs, 
                             genres=genres, 
