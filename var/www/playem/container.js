@@ -1316,7 +1316,6 @@ class ThumbnailController {
         }
     }
 
-
     playMediaAudioVideo(continuous_list){
         
         let medium_dict = continuous_list.shift();
@@ -1328,19 +1327,68 @@ class ThumbnailController {
         let net_start_time = medium_dict["net_start_time"];
         let net_stop_time = medium_dict["net_stop_time"];
 
+        let limit_days = 7
+        let refToThis = this;
+
         if (medium_path != null) {
 
-            let refToThis = this;
+            // REST request to check if the media was played before but not finished
+            let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, card_id, limit_days)
 
-            let player = $("#video_player")[0];
+            console.log("recent_position: " + recent_position)
+            if (recent_position < net_stop_time && recent_position != 0){
+                $("#interrupted-dialog > p").text("Playback of this media was interrupted last time. Would you like to resume playback or start from the beginning?");
+                $("#interrupted-dialog").dialog({
+                    //closeOnEscape: false,
+                    resizable: false,
+                    height: "auto",
+                    width: 400,
+                    modal: true,
+                    title: "Interrupted playback",
+                    buttons: {
+                      "Continue": function() {
+                        $( this ).dialog( "close" );
+                        refToThis.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
+                      },
+                      "From beginning": function() {
+                        $( this ).dialog( "close" );
+                        recent_position = 0;
+                        refToThis.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
+                      }
+                    }
+                })
 
-            // Remove all media source from the player befor I add the new
-            $('#video_player').children("source").remove();
+//                .on('keydown', function(evt) {
+//                    console.log("hello");
+//                    if (evt.keyCode === $.ui.keyCode.ESCAPE) {
+//                        dialog.dialog('close');
+//                    }                
+//                    evt.stopPropagation();
+//                });            
+            }else{
+                this.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
+            }
+        }
+    }
 
-            // Creates a new source element
-            let newSourceElement = $('<source>');
-            newSourceElement.attr('src', medium_path);
-            $('#video_player').append(newSourceElement);
+    configurePlayer(refToThis, medium_dict, continuous_list, recent_position){
+
+        let medium_path = medium_dict["medium_path"];
+        let screenshot_path = medium_dict["screenshot_path"];
+        let card_id = medium_dict["card_id"];
+        let title = medium_dict["title"];
+        let net_start_time = medium_dict["net_start_time"];
+        let net_stop_time = medium_dict["net_stop_time"];
+
+        let player = $("#video_player")[0];
+
+        // Remove all media source from the player befor I add the new
+        $('#video_player').children("source").remove();
+
+        // Creates a new source element
+        let newSourceElement = $('<source>');
+        newSourceElement.attr('src', medium_path);
+        $('#video_player').append(newSourceElement);
 
 //            let isInFullScreen = false;
 //            if (document.fullscreenEnabled){
@@ -1350,73 +1398,61 @@ class ThumbnailController {
 //            }
 //            console.log("fullscreen: " + isInFullScreen);
 
-            if (player.requestFullscreen) {
-                player.requestFullscreen();
-            }else if (player.msRequestFullscreen) {
-                player.msRequestFullscreen();
-            } else if (player.mozRequestFullScreen) {
-                player.mozRequestFullScreen();
-            } else if (player.webkitRequestFullscreen) {
-                player.webkitRequestFullscreen();
-            }
-
-            if( screenshot_path != null){
-                player.poster = screenshot_path;
-            }else{
-                player.poster = "";
-            }
-
-            player.load();
-            player.controls = true;
-            player.autoplay = true;
-
-            //
-            // After the load, but before the play, I have to check  the history and decide where from start the media
-            //
-
-            // Play only if all metadata loaded. For this, we can use either 'durationchange' or the 'loadedmetadata' listeners
-            // I just realized: we do not need the player.duration, so this block not needed to be inside the listener
-            // TODO: remove the block out of the listener
-            //$("#video_player").bind('loadedmetadata', function() {
-
-                // REST request to check if the media was played before but not finished
-                let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, user_id, card_id)
-                let last_position = player.duration;
-
-                // this media in the list time was stopped after the credits list
-                if (recent_position >= net_stop_time){
-                    // We play the media from the beginning
-                    recent_position = 0;
-                }
-
-                // REST request to register this media in the History
-                refToThis.registerMediaInHistory(refToThis, user_id, card_id, recent_position);
-
-                player.currentTime = recent_position;
-                player.play();
-            //});
-
-            // ENDED event listener
-            $("#video_player").bind("ended", function (par) {
-                refToThis.finishedPlaying('ended', continuous_list, user_id);
-            });
-
-            // FULLSCREENCHANGE event listener
-            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
-                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-
-                // If exited of full screen
-                if (!state) {
-                    refToThis.finishedPlaying('fullscreenchange', continuous_list, user_id);
-                }
-            });
-            player.style.display = 'block';
-
-            // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
-            $('#video_player').focus();
-
-            this.focusTask = FocusTask.Player;
+        if (player.requestFullscreen) {
+            player.requestFullscreen();
+        }else if (player.msRequestFullscreen) {
+            player.msRequestFullscreen();
+        } else if (player.mozRequestFullScreen) {
+            player.mozRequestFullScreen();
+        } else if (player.webkitRequestFullscreen) {
+            player.webkitRequestFullscreen();
         }
+
+        if( screenshot_path != null){
+            player.poster = screenshot_path;
+        }else{
+            player.poster = "";
+        }
+
+        // REST request to check if the media was played before but not finished
+        // let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, card_id)
+        // let last_position = player.duration;
+
+        // this media in the list time was stopped after the credits list
+        //if (recent_position >= net_stop_time){
+        //    // We play the media from the beginning
+        //    recent_position = 0;
+        //}
+
+        // REST request to register this media in the History
+        refToThis.registerMediaInHistory(refToThis, card_id, recent_position);
+
+        player.load();
+        player.controls = true;
+        player.autoplay = true;
+        player.currentTime = recent_position;
+        player.play();
+
+        // ENDED event listener
+        $("#video_player").bind("ended", function (par) {
+            refToThis.finishedPlaying('ended', continuous_list);
+        });
+
+        // FULLSCREENCHANGE event listener
+        $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
+            var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+
+            // If exited of full screen
+            if (!state) {
+                refToThis.finishedPlaying('fullscreenchange', continuous_list);
+            }
+        });
+        player.style.display = 'block';
+
+        // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
+        $('#video_player').focus();
+
+        this.focusTask = FocusTask.Player;        
     }
 
 
@@ -1534,7 +1570,7 @@ class ThumbnailController {
      * @param {*} event 
      * @param {*} continuous_list 
      */
-    finishedPlaying(event, continuous_list, user_id) {
+    finishedPlaying(event, continuous_list) {
 
         // Stop updating the current media history
         clearInterval(this.updateMediaHistoryIntervalId);
@@ -1589,7 +1625,7 @@ class ThumbnailController {
                 }
 
                 // REST request to register this media in the History
-                this.registerMediaInHistory(this, user_id, card_id, 0);
+                this.registerMediaInHistory(this, card_id, 0);
 
                 player.load();
                 player.play();
@@ -1681,15 +1717,15 @@ class ThumbnailController {
     /**
      * POST REST request to register the recent media in the History
      */ 
-    registerMediaInHistory(refToThis, user_id, card_id, recent_position){
+    registerMediaInHistory(refToThis, card_id, recent_position){
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
-        let rq_data = {"user_id": user_id, "card_id": card_id, "recent_position": recent_position}
+        let rq_data = {"user_id": user['id'], "card_id": card_id, "recent_position": recent_position}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
         let result_data = result.responseJSON;
 
-        this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, result_data, user_id, card_id);
+        this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, result_data, card_id);
         console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
 
     }
@@ -1699,30 +1735,29 @@ class ThumbnailController {
      * 
      * @param {*} refToThis 
      * @param {*} start_epoch 
-     * @param {*} user_id 
      * @param {*} card_id 
      */
-    updateMediaHistory(refToThis, start_epoch, user_id, card_id){
+    updateMediaHistory(refToThis, start_epoch, card_id){
         let player = $("#video_player")[0];
         let currentTimeInSeconds = player.currentTime;
 
-console.log("Update media history was called. start_epoch: " + start_epoch + ", card_id: " + card_id + ", user_id: " + user_id + ", recent_position: " + currentTimeInSeconds);
+console.log("Update media history was called. start_epoch: " + start_epoch + ", card_id: " + card_id + ", user_id: " + user['id'] + ", recent_position: " + currentTimeInSeconds);
 
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
-        let rq_data = {"user_id": user_id, "card_id": card_id, "recent_position": currentTimeInSeconds, "start_epoch": start_epoch}
+        let rq_data = {"user_id": user['id'], "card_id": card_id, "recent_position": currentTimeInSeconds, "start_epoch": start_epoch}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
 
         // let result_data = result.responseJSON;
         // console.log("  result_data: " + result_data);
     }
 
-    getMediaPositionInLatestHistory(refToThis, user_id, card_id){
+    getMediaPositionInLatestHistory(refToThis, card_id, limit_days=30){
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/history/request";
         let rq_assync = false;
-        let rq_data = {"user_id": user_id, "card_id": card_id, "limit_records": "1"}
+        let rq_data = {"user_id": user['id'], "card_id": card_id, "limit_records": "1", "limit_days": limit_days}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
     
         let result_data_list = result.responseJSON;

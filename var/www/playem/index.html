@@ -63,6 +63,18 @@
             play_continuously = user_data.play_continuously;
         }
 
+        let user = {
+            'languageCode'               : languageCode,
+            'languageId'                 : languageId,
+            'id'                         : user_id,
+            'name'                       : user_name,
+            'always_show_original_title' : always_show_original_title,
+            'show_lyrics_anyway'         : show_lyrics_anyway,
+            'show_storyline_anyway'      : show_storyline_anyway,
+            'play_continuously'          : play_continuously
+        }
+
+
         let translated_titles;
         let translated_genre_movie;
         let translated_categories;
@@ -338,6 +350,8 @@
             //
             // 
             //
+
+            $("#interrupted-dialog").hide()
 
             // let languageCode = "hu";
             // let always_show_origin_title = true;
@@ -651,9 +665,11 @@
         <div id="spinner">
             <img src="spinner.gif">
         </div>
-
     </div>
 
+    <div id="interrupted-dialog" title="">
+        <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>Hello</p>
+    </div>
 
     <div id="video-container">
         <video height="0" id="video_player"></video>

@@ -89,11 +89,11 @@ res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recen
 for rec in res.fetchall():
     print(rec)
 
-res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recent_position, last_position FROM History WHERE id_card=:id_card ORDER BY start_epoch;',{'id_card': '067243a51521181250adb9fb52b5adb5'})
+res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recent_position, FROM History WHERE id_card=:id_card ORDER BY start_epoch;',{'id_card': '067243a51521181250adb9fb52b5adb5'})
 for rec in res.fetchall():
     print(rec)
 
-res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recent_position, last_position FROM History WHERE id_card=:id_card ORDER BY start_epoch;',{'id_card': '5583062bccde422e47378450068cc5a2'})
+res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recent_position, FROM History WHERE id_card=:id_card ORDER BY start_epoch;',{'id_card': '5583062bccde422e47378450068cc5a2'})
 for rec in res.fetchall():
     print(rec)
     
@@ -109,10 +109,61 @@ curl  --header "Content-Type: application/json" --request GET --data '{ "user_id
 con.execute('DELETE from History WHERE start_epoch<1727620995').fetchall()
 
 
+SELECT card.source_path, card.full_time, card.net_stop_time
+FROM
+    History as hist,
+    Card as card,
+    User as user
+WHERE
+    history.id_user=user.id
+    AND history.id_card=card.id
+    AND user.id=:user_id
+GROUP BY
+    
+    
+
+#
+# Show the latest played movies (card_id and the start epoch
+#
+res=con.execute('''
+SELECT id_card, recent_position, MAX(start_epoch)
+FROM History
+WHERE 
+    start_epoch >= :limit_epoch
+    AND id_user=:user_id
+GROUP BY id_card
+;''',{'user_id': '1234', 'limit_epoch':1727000000})
+for rec in res.fetchall():
+    print(rec)
 
 
+#
+# Show the interrupted movies 
+#
+res=con.execute('''
+SELECT
+    card.source_path, card.full_time, card.net_stop_time, hist.recent_position, hist.start_epoch
+FROM
+    Card as card,
+    Category as cat,
+    (SELECT id_card, recent_position, MAX(start_epoch) as start_epoch
+    FROM History
+    WHERE 
+        start_epoch >= :limit_epoch
+        AND id_user=:user_id
+    GROUP BY id_card) as hist
+WHERE
+    hist.id_card=card.id
+    AND hist.recent_position < card.net_stop_time
+    AND card.id_category=cat.id
+    AND cat.name = :category
+;''',{'user_id': '1234', 'limit_epoch':1727000000, 'category': 'movie'})
+for rec in res.fetchall():
+    print(rec)
 
+    
+    
 
-
-
-
+res = con.execute('SELECT start_epoch, datetime(start_epoch, "unixepoch", "localtime"), recent_position FROM History WHERE id_card=:id_card ORDER BY start_epoch DESC;',{'id_card': '067243a51521181250adb9fb52b5adb5'})
+for rec in res.fetchall():
+    print(rec)

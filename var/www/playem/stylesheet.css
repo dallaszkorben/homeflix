@@ -633,4 +633,50 @@ body {
     background-color: #ddd;
     color: #fff;
 }
- 
+
+
+/* Disable close X button */
+
+/* configure message */
+/*.ui-widget {
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+}
+.ui-widget-header,.ui-state-default, ui-button{
+   background: rgb(33, 134, 56);
+   border: 3px solid black;
+   color: white;
+   font-weight: 900;
+   letter-spacing: 1px;
+   font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+}
+   
+.ui-dialog-buttonpane
+{
+	text-align:center;
+	font-size: medium;
+	font-weight: bold;
+	color: #00467F; 
+}
+/*
+.ui-dialog-titlebar-close {
+    display: none;
+ }
+*/    
+/*
+#dialog .ui-button-text {
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+}
+*/ 
+/*
+#button{
+   position: absolute;
+   left: 40%;
+   margin: 12px;
+   padding: 12px;
+   border: 2px solid black;
+   font-weight: 900;
+   letter-spacing: 1.5px;
+   font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+}
+*/
+
