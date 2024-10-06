@@ -9,7 +9,7 @@ import distlib
 import json
 from flask import Flask
 from flask import jsonify
-from flask import session
+#from flask import session
 from flask_classful import FlaskView, route, request
 from flask_cors import CORS
 
@@ -23,6 +23,7 @@ from playem.restserver.view_collect import CollectView
 from playem.restserver.view_translate import TranslateView
 from playem.restserver.view_control import ControlView
 from playem.restserver.view_personal import PersonalView
+from playem.restserver.view_auth import AuthView
 
 class WSPlayem(Flask):
 
@@ -31,6 +32,13 @@ class WSPlayem(Flask):
         super().__init__(import_name)
 
         self.app = self
+
+        # Secret for the SESSION
+        #self.secret_key = os.urandom(24)
+        #self.secret_key = "my persistent secret"
+
+        # It stores the logged in user - No User logged in yet
+        self.logged_in_user = {'username': None, 'user_id': None, 'language_id': None}
 
         # Fetch Confiuration variables
         self.cg = getConfig()        # defined in config.py
@@ -59,6 +67,7 @@ class WSPlayem(Flask):
         TranslateView.register(self.app, init_argument=self)
         ControlView.register(self.app, init_argument=self)
         PersonalView.register(self.app, init_argument=self)
+        AuthView.register(self.app, init_argument=self)
 
         self.cardHandle = CardHandle(self)
 
@@ -68,11 +77,16 @@ class WSPlayem(Flask):
         end = time.time()
         diff = end-start
 
+        # TODO: TEMPORARY SOLUTION
+        #       I login with admin, until I develop the login process on GUI
+        login_result = self.db.login('admin', 'admin')
+        if not login_result['result']:
+            logging.error('!!! It was not possible to login with "admin" !!!')
+
         records = self.db.get_numbers_of_records_in_card()
         print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))
         print("The FQDN of the main file: %s" % (__name__))
         print("Web access: http://localhost{0}".format(self.webRelativePath))
-
 
     def getThreadControllerStatus(self):
         return self.gradualThreadController.getStatus()

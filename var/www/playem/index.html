@@ -33,46 +33,33 @@
         let port = ":80";
 
         let language_dict = {"hu": "Magyar", "en": "English"};
-        let user_name = "admin";
+//        let user_name = "admin";
+
+
+
 
         //
-        // Fetch user specific data from DB
+        // Fetch user data for a user who is logged in
+        // If no logged in user, then default values will be loaded with username=undefined
         //
         let rq_method = "GET";
-        let rq_url = "http://" + host + port + "/personal/user_data/request/by/name/" + user_name;
+        let rq_url = "http://" + host + port + "/personal/user_data/request";
         let rq_assync = false;
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-        let user_data = result.responseJSON;
+        let user_data = result.responseJSON['data'];
 
-        // Take the default user data - to be sure
-        let languageCode = "en";
-        let languageId = 1;
-        let user_id = 1234;
-        let always_show_original_title = true;
-        let show_lyrics_anyway = true;
-        let show_storyline_anyway = true;
-        let play_continuously = true;
-
-        if(user_data != undefined){
-            languageCode = user_data.language_code
-            languageId = user_data.language_id
-            user_id = user_data.id;
-            always_show_original_title = user_data.show_original_title;
-            show_lyrics_anyway = user_data.show_lyrics_anyway;
-            show_storyline_anyway = user_data.show_storyline_anyway;
-            play_continuously = user_data.play_continuously;
+        if(!result.responseJSON['result'] || Object.keys(user_data).length === 0){
+            user_data = {
+                languageCode: "en",
+                name: undefined,
+                is_admin: true,
+                always_show_original_title: true,
+                show_lyrics_anyway: true,
+                show_storyline_anyway: true,
+                play_continuously: true
+            }
         }
 
-        let user = {
-            'languageCode'               : languageCode,
-            'languageId'                 : languageId,
-            'id'                         : user_id,
-            'name'                       : user_name,
-            'always_show_original_title' : always_show_original_title,
-            'show_lyrics_anyway'         : show_lyrics_anyway,
-            'show_storyline_anyway'      : show_storyline_anyway,
-            'play_continuously'          : play_continuously
-        }
 
 
         let translated_titles;
@@ -82,42 +69,42 @@
         
         // Load Translated Titles
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/translate/titles/lang/" + languageCode;
+        rq_url = "http://" + host + port + "/translate/titles/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_titles = result.responseJSON;
         
         // Load Translated Genre: Movie
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + languageCode;
+        rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_genre_movie = result.responseJSON;
         
         // Load Translated Themes
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/translate/themes/lang/" + languageCode;
+        rq_url = "http://" + host + port + "/translate/themes/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_themes = result.responseJSON;
      
         // Load Translated Categories
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/translate/categories/lang/" + languageCode;
+        rq_url = "http://" + host + port + "/translate/categories/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_categories = result.responseJSON;
      
         // Load Translated Genre: Music
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/translate/genres/category/music/lang/" + languageCode;
+        rq_url = "http://" + host + port + "/translate/genres/category/music/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_genre_music = result.responseJSON;
      
         // Load Translated Levels
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/translate/levels/lang/" + languageCode;
+        rq_url = "http://" + host + port + "/translate/levels/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_levels = result.responseJSON;
@@ -313,6 +300,8 @@
 
         t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
 
+//        t.style.setProperty('--description-section-left-background', 'rgb(9, 60, 141)');
+
         function generateRandom(min = 0, max = 100) {
 
             // find diff
@@ -347,19 +336,22 @@
 
         $(document).ready(function () {
 
-            //
-            // 
-            //
-
+            // Hide the dialog box for continue playing
             $("#interrupted-dialog").hide()
 
-            // let languageCode = "hu";
-            // let always_show_origin_title = true;
-
             //
+            // if not logged in - different descriptor color
             //
 
-            let mainMenuGenerator = new MainMenuGenerator(languageCode);
+            if (user_data['name'] != undefined){
+                dslb = 'rgb(9, 60, 41)';
+            }else{
+                dslb = 'rgb(129, 60, 41)';
+            }
+            t.style.setProperty('--description-section-left-background', dslb);
+
+
+            let mainMenuGenerator = new MainMenuGenerator(user_data['language_code']);
             let oThumbnailController = new ThumbnailController(mainMenuGenerator);
             let oScrollSection = oThumbnailController.getScrollSection();
 
@@ -454,7 +446,7 @@
             let openDropdown = false;
 
             // Set the default language in the menu
-            selectedLanguage = language_dict[languageCode];
+            selectedLanguage = language_dict[user_data['language_code']];
             $('#language-menu .main-menu-text' ).text(selectedLanguage);
 
             // If the mouse is close to the top, the menu appears

@@ -30,6 +30,54 @@ con.execute('DROP TABLE Rating;').fetchall()
 db.recreate_personal_dbs()
 db.recreate_static_dbs()
  
+ 
+ 
+#
+# Create Rating table
+# 
+con.execute('''
+            CREATE TABLE Rating(
+                id_card              INTEGER NOT NULL,
+                id_user              INTEGER NOT NULL,
+                rate                 INTEGER CHECK(rate BETWEEN -1 AND 3),
+                skip_continuous_play BOOLEAN NOT NULL CHECK (skip_continuous_play IN (0, 1)),
+                FOREIGN KEY (id_card) REFERENCES Card (id),
+                FOREIGN KEY (id_user) REFERENCES User (id),
+                PRIMARY KEY (id_card, id_user)
+            );            
+''') .fetchall()
+                 
+ 
+#
+# Insert into Rating table
+# 
+con.execute('''
+    INSERT INTO Rating (id_card, id_user, rate, skip_continuous)
+        VALUES
+            ('5583062bccde422e47378450068cc5a2', '1234', 2, 0) 
+''') .fetchall()
+ 
+
+#
+# Update Rating table
+# 
+con.execute('''
+    UPDATE Rating
+    SET rate = :rate
+    WHERE
+        rating.id_card=:card_id
+        AND rating.id_user=:user_id
+''', {'rate': -3, 'user_id': '1234', 'card_id': '5583062bccde422e47378450068cc5a2'}) .fetchall()
+ 
+ 
+# REST requests
+curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request
+curl  --header "Content-Type: application/json" --request POST --data '{ "username": "admin", "password": "admin"}' http://localhost:80/auth/login
+curl  --header "Content-Type: application/json" --request POST --data '{}' http://localhost:80/auth/logout
+curl  --header "Content-Type: application/json" --request POST --data '{"language_code": "hu"}' http://localhost:80/personal/user_data/update
+ 
+ 
+ 
 #
 # feth ROWID for every table which has autoincrement:
 #
@@ -47,7 +95,13 @@ for name in res.fetchall():
 #
 # Show all fields of a table
 #
-con.execute('SELECT GROUP_CONCAT(NAME,",") FROM PRAGMA_TABLE_INFO("History");').fetchall()
+con.execute('SELECT GROUP_CONCAT(NAME,",") FROM PRAGMA_TABLE_INFO("Rating");').fetchall()
+ 
+
+#
+# Set rating
+#
+db.set_rationg('1234', '5583062bccde422e47378450068cc5a2', 2, 0)
  
  
 #

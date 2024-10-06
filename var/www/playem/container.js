@@ -1332,10 +1332,12 @@ class ThumbnailController {
 
         if (medium_path != null) {
 
+            // TODO: the recent_position should be taken from the normal request
+            //
             // REST request to check if the media was played before but not finished
             let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, card_id, limit_days)
 
-            console.log("recent_position: " + recent_position)
+            // console.log("recent_position: " + recent_position)
             if (recent_position < net_stop_time && recent_position != 0){
                 $("#interrupted-dialog > p").text("Playback of this media was interrupted last time. Would you like to resume playback or start from the beginning?");
                 $("#interrupted-dialog").dialog({
@@ -1573,8 +1575,10 @@ class ThumbnailController {
     finishedPlaying(event, continuous_list) {
 
         // Stop updating the current media history
-        clearInterval(this.updateMediaHistoryIntervalId);
-        console.log("Stopped Media History Interval: " + this.updateMediaHistoryIntervalId);
+        if(this.updateMediaHistoryIntervalId != undefined){
+            clearInterval(this.updateMediaHistoryIntervalId);
+            console.log("Stopped Media History Interval: " + this.updateMediaHistoryIntervalId);
+        }
 
         let player = $("#video_player")[0];
         let domPlayer = $("#video_player");
@@ -1721,13 +1725,22 @@ class ThumbnailController {
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
-        let rq_data = {"user_id": user['id'], "card_id": card_id, "recent_position": recent_position}
-        let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
-        let result_data = result.responseJSON;
+        let rq_data = {"card_id": card_id, "recent_position": recent_position}
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
 
-        this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, result_data, card_id);
-        console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
+        let response_dict = response.responseJSON;
+        let result = response_dict['result']
+        let data_dict = response_dict['data']
+        let error = response_dict['error']
 
+        // The user is logged in and the register was successful
+        if(result){
+            this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, data_dict['start_epoch'], card_id);
+            console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
+        }else{
+            this.updateMediaHistoryIntervalId = undefined;
+            console.log("Media History Interval did not started: " + error);
+        }
     }
 
     /**
@@ -1741,29 +1754,35 @@ class ThumbnailController {
         let player = $("#video_player")[0];
         let currentTimeInSeconds = player.currentTime;
 
-console.log("Update media history was called. start_epoch: " + start_epoch + ", card_id: " + card_id + ", user_id: " + user['id'] + ", recent_position: " + currentTimeInSeconds);
+        console.log("Update media history was called. start_epoch: " + start_epoch + ", card_id: " + card_id + ", recent_position: " + currentTimeInSeconds);
 
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
-        let rq_data = {"user_id": user['id'], "card_id": card_id, "recent_position": currentTimeInSeconds, "start_epoch": start_epoch}
+        let rq_data = {"card_id": card_id, "recent_position": currentTimeInSeconds, "start_epoch": start_epoch}
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
 
         // let result_data = result.responseJSON;
         // console.log("  result_data: " + result_data);
     }
 
+
+    // TODO: This method should be deleted and the normal query should take the recent_position
     getMediaPositionInLatestHistory(refToThis, card_id, limit_days=30){
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/history/request";
         let rq_assync = false;
-        let rq_data = {"user_id": user['id'], "card_id": card_id, "limit_records": "1", "limit_days": limit_days}
-        let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
+        let rq_data = {"card_id": card_id, "limit_records": "1", "limit_days": limit_days}
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
     
-        let result_data_list = result.responseJSON;
-        if (result_data_list.length > 0){
-            let result_data = result_data_list[0]
-            return result_data['recent_position'];
+        let response_dict = response.responseJSON;
+        let result = response_dict['result']
+        let data_list = response_dict['data']
+
+        // If the query was OK and there was 1 record
+        if (result && data_list.length > 0){
+            let result_dict = data_list[0]
+            return result_dict['recent_position'];
         }else{
             return 0;
         }

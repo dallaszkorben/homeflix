@@ -46,6 +46,7 @@
     --description-section-border-color: rgb(70, 70, 70);
     --description-section-background: rgb(70, 70, 70);
 
+    --description-section-left-background: rgb(9, 60, 41);
 
     --description-image-width: 1px;
     --description-text-wrapper-top: 0px;
@@ -92,7 +93,8 @@ body {
     flex-grow: 100;                                             /* grow as wide as it can. On right side the description image lays */
     display:inline-block;
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-    background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);
+/*    background: linear-gradient(to left, rgb(255, 255, 255) 0%,rgb(9, 60, 41) 60%);*/
+    background: linear-gradient(to left, rgb(255, 255, 255) 0%, var(--description-section-left-background) 60%);
     border: 0px rgb(0, 255, 247) solid;                        /* for test purpose */
 }
 

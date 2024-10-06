@@ -168,7 +168,7 @@ class RestGenerator extends Generator{
             title = hit["title_orig"]; // + " (" + lang_orig + ")";
 
         // There IS title configured on the requested language but I want to see the original title as well if it is different
-        }else if(always_show_original_title){
+        }else if(user_data['always_show_original_title']){
             if(hit["title_req"] != hit["title_orig"]){
                 title = hit["title_req"] + " (" + hit["title_orig"] + ")";
             }else{

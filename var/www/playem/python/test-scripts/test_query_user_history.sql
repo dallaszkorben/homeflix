@@ -58,13 +58,14 @@ con.execute('SELECT GROUP_CONCAT(NAME,",") FROM PRAGMA_TABLE_INFO("History");').
 #
 
 # start a new history for a card
-curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1234, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "123", "last_position": "256"}' http://localhost:80/personal/history/update
+curl  --header "Content-Type: application/json" --request POST --data '{"card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "123", "last_position": "256"}' http://localhost:80/personal/history/update
 1727604645
 
 # add new history to an existing history - use the start_epoch from the previous request
-curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1234, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "198", "start_epoch": 1727604645}' http://localhost:80/personal/history/update
+curl  --header "Content-Type: application/json" --request POST --data '{"card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "198", "start_epoch": 1727604645}' http://localhost:80/personal/history/update
 
- 
+# Get the history of the card
+curl  --header "Content-Type: application/json" --request GET --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "limit_days": 15, "limit_records": 5}' http://localhost:80/personal/history/request 
  
 #
 # Fetch history of a user:
