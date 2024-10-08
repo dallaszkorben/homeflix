@@ -8,6 +8,7 @@ from flask_classful import FlaskView, route, request
 from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
+from playem.restserver.endpoints.ep import EP
 from playem.restserver.endpoints.ep_personal_user_data_request import EPPersonalUserDataRequest
 from playem.restserver.endpoints.ep_personal_user_data_update import EPPersonalUserDataUpdate
 from playem.restserver.endpoints.ep_personal_history_request import EPPersonalHistoryRequest
@@ -110,7 +111,7 @@ class PersonalView(FlaskView):
             json_data = request.json
 
         else:
-            return "Not valid request", EP.CODE_BAD_REQUEST
+            return output_json({'result': False, 'data':{}, 'error': 'Not valid request'}, EP.CODE_BAD_REQUEST)
 
         out = self.epPersonalUserDataUpdate.executeByPayload(json_data)
         return out
@@ -159,12 +160,9 @@ class PersonalView(FlaskView):
 
         # ajax
         else:
-#            user_id = request.args.get('user_id')
             card_id = request.args.get('card_id')
             limit_days = request.args.get('limit_days', None)
             limit_records = request.args.get('limit_records', None)
-
-#            json_data = {'user_id': user_id, 'card_id': card_id, 'limit_days': limit_days, 'limit_records': limit_records}
             json_data = {'card_id': card_id, 'limit_days': limit_days, 'limit_records': limit_records}
 
         out = self.ePPersonalHistoryRequest.executeByPayload(json_data)

@@ -9,7 +9,7 @@ import distlib
 import json
 from flask import Flask
 from flask import jsonify
-#from flask import session
+from flask import session
 from flask_classful import FlaskView, route, request
 from flask_cors import CORS
 
@@ -34,11 +34,11 @@ class WSPlayem(Flask):
         self.app = self
 
         # Secret for the SESSION
-        #self.secret_key = os.urandom(24)
-        #self.secret_key = "my persistent secret"
+#        self.secret_key = os.urandom(24)
+        self.secret_key = "very secret key"
 
-        # It stores the logged in user - No User logged in yet
-        self.logged_in_user = {'username': None, 'user_id': None, 'language_id': None}
+#        # It stores the logged in user - No User logged in yet
+#        self.logged_in_user = {'username': None, 'user_id': None, 'language_id': None}
 
         # Fetch Confiuration variables
         self.cg = getConfig()        # defined in config.py
@@ -77,11 +77,11 @@ class WSPlayem(Flask):
         end = time.time()
         diff = end-start
 
-        # TODO: TEMPORARY SOLUTION
-        #       I login with admin, until I develop the login process on GUI
-        login_result = self.db.login('admin', 'admin')
-        if not login_result['result']:
-            logging.error('!!! It was not possible to login with "admin" !!!')
+#        # TODO: TEMPORARY SOLUTION
+#        #       I login with admin, until I develop the login process on GUI
+#        login_result = self.db.login('admin', 'admin')
+#        if not login_result['result']:
+#            logging.error('!!! It was not possible to login with "admin" !!!')
 
         records = self.db.get_numbers_of_records_in_card()
         print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))

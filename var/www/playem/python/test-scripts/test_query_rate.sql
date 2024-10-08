@@ -31,7 +31,6 @@ db.recreate_personal_dbs()
 db.recreate_static_dbs()
  
  
- 
 #
 # Create Rating table
 # 

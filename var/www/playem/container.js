@@ -1339,8 +1339,8 @@ class ThumbnailController {
 
             // console.log("recent_position: " + recent_position)
             if (recent_position < net_stop_time && recent_position != 0){
-                $("#interrupted-dialog > p").text("Playback of this media was interrupted last time. Would you like to resume playback or start from the beginning?");
-                $("#interrupted-dialog").dialog({
+                $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time. Would you like to resume playback or start from the beginning?");
+                $("#dialog-confirm-continue-interrupted-play").dialog({
                     //closeOnEscape: false,
                     resizable: false,
                     height: "auto",

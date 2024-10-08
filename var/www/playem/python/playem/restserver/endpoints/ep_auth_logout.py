@@ -30,7 +30,9 @@ class EPAuthLogout(EP):
 
         output = self.web_gadget.db.logout()
 
-#        session.pop('logged_in_user', None)
+#
+        session.pop('logged_in_user', None)
+#
 #        return output_json({'result': True, 'data': {}, 'error': None}, EP.CODE_OK)
 
         return output_json(output, EP.CODE_OK)

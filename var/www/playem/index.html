@@ -4,6 +4,10 @@
 
 <head>
     <style>
+        label, input { display:block; }
+    input.text { margin-bottom:12px; width:95%; padding: .4em; }
+    fieldset { padding:0; border:0; margin-top:25px; }
+    h1 { font-size: 1.2em; margin: .6em 0; }
     </style>
 
     <script src="script/jquery/jquery-3.6.0.min.js"></script>
@@ -33,19 +37,15 @@
         let port = ":80";
 
         let language_dict = {"hu": "Magyar", "en": "English"};
-//        let user_name = "admin";
-
-
-
 
         //
-        // Fetch user data for a user who is logged in
-        // If no logged in user, then default values will be loaded with username=undefined
+        // Try to restore the previous session calling the login without credentials
         //
-        let rq_method = "GET";
-        let rq_url = "http://" + host + port + "/personal/user_data/request";
+        let rq_method = "POST";
+        let rq_url = "http://" + host + port + "/auth/login";
+        let rq_data = {"username": null, "password": null};
         let rq_assync = false;
-        let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, data: rq_data, dataType: "json" });
         let user_data = result.responseJSON['data'];
 
         if(!result.responseJSON['result'] || Object.keys(user_data).length === 0){
@@ -53,14 +53,13 @@
                 languageCode: "en",
                 name: undefined,
                 is_admin: true,
+                descriptor_color: 'rgb(129, 60, 41)',
                 always_show_original_title: true,
                 show_lyrics_anyway: true,
                 show_storyline_anyway: true,
                 play_continuously: true
             }
         }
-
-
 
         let translated_titles;
         let translated_genre_movie;
@@ -300,8 +299,6 @@
 
         t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
 
-//        t.style.setProperty('--description-section-left-background', 'rgb(9, 60, 141)');
-
         function generateRandom(min = 0, max = 100) {
 
             // find diff
@@ -336,20 +333,10 @@
 
         $(document).ready(function () {
 
-            // Hide the dialog box for continue playing
-            $("#interrupted-dialog").hide()
-
             //
             // if not logged in - different descriptor color
             //
-
-            if (user_data['name'] != undefined){
-                dslb = 'rgb(9, 60, 41)';
-            }else{
-                dslb = 'rgb(129, 60, 41)';
-            }
-            t.style.setProperty('--description-section-left-background', dslb);
-
+            t.style.setProperty('--description-section-left-background', user_data['descriptor_color']);
 
             let mainMenuGenerator = new MainMenuGenerator(user_data['language_code']);
             let oThumbnailController = new ThumbnailController(mainMenuGenerator);
@@ -458,6 +445,8 @@
                     $('#menu-line').removeClass('show');
                 }
             });
+            // To show the menu
+            // $('#menu-line').addClass('show');
 
             // If the mouse is over the language menu, the dropdown appears
             // If the mouse is over the setting menu, the dropdown appears
@@ -489,11 +478,11 @@
 
 
                 // Update the language in the DB
-                let rq_method = "PUT";
+                let rq_method = "POST";
                 let rq_url = "http://" + host + port + "/personal/user_data/update";
                 let rq_assync = false;
-                let data = {"user_id": user_id, "language_code": $(this).attr("value")}
-                let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
+                let data = {"language_code": $(this).attr("value")}
+                let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
 
                 // Restart the browser
                 window.location.reload();
@@ -511,8 +500,8 @@
                         rq_method = "POST";
                         rq_url = "http://" + host + port + "/control/rebuild";
                         rq_assync = false;
-                        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-                        rebuild_result = result.responseJSON;
+                        response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+                        rebuild_result = response.responseJSON;
 
                         window.location.reload(true);
                     }, 100);
@@ -531,15 +520,15 @@
                         rq_method = "POST";
                         rq_url = "http://" + host + port + "/control/update";
                         rq_assync = false;
-                        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-                        rebuild_result = result.responseJSON;
-                        console.log(rebuild_result);
+                        response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+                        response_dict = response.responseJSON;
+                        console.log(response_dict);
 
                         Generator.stopSpinner();
 
-                        if(rebuild_result['result'] != "SUCCESS"){
+                        if(response_dict['result'] != "SUCCESS"){
 
-                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + rebuild_result['message'] + "<br><br>Command: " + rebuild_result['command'][0]);
+                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + response_dict['message'] + "<br><br>Command: " + response_dict['command'][0]);
                             $("#dialog-warning-update-failed" ).dialog({
                                 resizable: false,
                                 height: "auto",
@@ -573,8 +562,91 @@
                 }
             });
 
+            // LOGIN dialog
+            $('.option.personal').on('click', function() {
+                let personal = $(this).attr("value");
+                if(personal=="login"){
 
+                    $('#username').val("");
+                    $('#password').val("");
 
+                    $("#dialog-form-login").dialog({
+                        resizable: false,
+                        height: "auto",
+                        width: 400,
+                        modal: true,
+                        buttons: {
+                            "Submit": {
+                                text: "Submit",
+                                id: "login-submit-button",
+                                click: function() {
+                                    var username = $("#username").val();
+                                    var password = $("#password").val();
+
+                                    // Login message to the server                                
+                                    let rq_method = "POST";
+                                    let rq_url = "http://" + host + port + "/auth/login";
+                                    let rq_assync = false;
+                                    let data = { "username": username, "password": password }
+                                    let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
+                                    
+                                    let response_dict = response.responseJSON;
+                                    let result = response_dict['result']
+                                    let data_dict = response_dict['data']
+                                    let error = response_dict['error']
+                                    
+                                    $(this).dialog("close");
+
+                                    //window.alert(JSON.stringify(response_dict))
+
+                                    if(result){                                
+                                        window.location.reload(true);
+                                    }
+                                }
+                            },
+                            "Cancel": function() {
+                                $(this).dialog("close");
+                            }
+                        },
+                        // It needs to be able to use the Enter to Submit. Otherwise, for the Enter it goes bad and do stupid things
+                        open: function() {
+                            $("#dialog-form-login").keypress(function(e) {
+                                if (e.keyCode == $.ui.keyCode.ENTER) {
+                                    $(this).parent().find("#login-submit-button").trigger("click");
+                                }
+                            });
+                        }
+                    })
+                }
+            })
+
+            // LOGOUT
+            $('.option.personal').on('click', function() {
+                let personal = $(this).attr("value");
+                if(personal=="logout"){
+                    
+                    // Login message to the server                                
+                    let rq_method = "POST";
+                    let rq_url = "http://" + host + port + "/auth/logout";
+                    let rq_assync = false;
+                    let data = '{}'
+                    let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
+                    
+                    if(response.status == 200){
+                        let response_dict = response.responseJSON;
+                        let result = response_dict['result']
+                        let data_dict = response_dict['data']
+                        let error = response_dict['error']
+
+                        if (result){
+                            window.location.reload(true);
+                        }
+                    }else{
+                        error = response.statusText;
+                    }
+                    console.log(error);
+                }
+            })
         });
 
     </script>
@@ -588,26 +660,55 @@
     </div>
     <div id="dialog-success-update-success" title="Success" style="display:none">
         <div class="ui-icon ui-icon-check" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
-    </div>    
+    </div>
+    <div id="dialog-confirm-continue-interrupted-play" title="" style="display:none">
+        <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
+    </div>
+    <div id="dialog-form-login" title="Login" style="display:none">
+        <p class="validateTips">All form fields are required.</p>
+        <form method="POST">
+            <fieldset>
+              <label for="username">Name</label>
+              <input type="text" name="name" id="username" value="" autocomplete="off" class="text ui-widget-content ui-corner-all">
+              <label for="password">Password</label>
+              <input type="password" name="password" autocomplete="off" id="password" value="" class="text ui-widget-content ui-corner-all">
+            
+              <!-- Allow form submission with keyboard without duplicating the dialog button -->
+              <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+            </fieldset>
+        </form>
+    </div>
+
 
     <div id="menu-line">
-        <div id="setting-menu" class="main-menu">
+        <div id="setting-menu" class="main-menu admin">
             <div class="main-menu-text">Server Settings</div>
             <ul id="setting-dropdown" class="dropdown">
                 <li class="option setting" value="rebuild">Re-build DB</li>
                 <li class="option setting" value="update">Update SW</li>
             </ul>
         </div>
-        <div id="language-menu" class="main-menu">
+        <div id="language-menu" class="main-menu user">
             <div class="main-menu-text">English</div>
             <ul id="language-dropdown" class="dropdown">
                 <li class="option language" value="en">English</li>
                 <li class="option language" value="hu">Magyar </li>
             </ul>
         </div>
+        <div id="personal-menu" class="main-menu user">
+            <div class="main-menu-text">Personal</div>
+            <ul id="personal-dropdown" class="dropdown">
+                <li class="option personal" value="login">Login</li>
+                <li class="option personal" value="logout">Logout</li>
+            </ul>
+        </div>
+
+<!--
         <div class="main-menu empty">
             <div class="main-menu-text">&nbsp; &nbsp; &nbsp; </div>
         </div>
+-->
+
     </div>
 
     <div id="viewport">
@@ -657,10 +758,6 @@
         <div id="spinner">
             <img src="spinner.gif">
         </div>
-    </div>
-
-    <div id="interrupted-dialog" title="">
-        <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>Hello</p>
     </div>
 
     <div id="video-container">

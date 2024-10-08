@@ -205,16 +205,12 @@ class SqlDatabase:
     def drop_static_tables(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-#        tables_all = list(cur.execute("SELECT name FROM sqlite_master WHERE type is 'table'"))
         cur.execute("commit")
 
-#        for table in tables_all:
         for table in self.table_static_list:
             try:
-#                self.conn.execute("DROP TABLE {0}".format(table[0]))
                 self.conn.execute("DROP TABLE {0}".format(table))
             except sqlite3.OperationalError as e:
-#                logging.error("Error while DROP TABLE ({0}): {1}".format(table[0], e))
                 logging.error("Wanted to Drop '{0}' 'Static' table, but error happened: {1}".format(table, e))
 
     def drop_personal_tables(self):
@@ -233,7 +229,8 @@ class SqlDatabase:
                 name                   TEXT    NOT NULL,
                 password               TEXT    NOT NULL,
                 is_admin               BOOLEAN NOT NULL CHECK (show_original_title IN (0, 1)),
-                id_language            INTEGER NOT NULL ,
+                id_language            INTEGER NOT NULL,
+                descriptor_color       TEXT    NOT NULL,
                 show_original_title    BOOLEAN NOT NULL CHECK (show_original_title IN (0, 1)),
                 show_lyrics_anyway     BOOLEAN NOT NULL CHECK (show_lyrics_anyway IN (0, 1)),
                 show_storyline_anyway  BOOLEAN NOT NULL CHECK (show_storyline_anyway IN (0, 1)),
@@ -287,12 +284,28 @@ class SqlDatabase:
                 hashed_password = generate_password_hash(password)
                 user_id = 1234
                 language_code = 'en'
+                descriptor_color = 'rgb(0, 117, 104)'
                 show_original_title = True
                 show_lyrics_anyway = True
                 show_storyline_anyway = True
                 play_continuously = True
 
-                id = self.append_user(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously)
+                id = self.append_user(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously)
+
+                # default
+                username = 'default'
+                password = 'default'
+                is_admin = False
+                hashed_password = generate_password_hash(password)
+                user_id = 1235
+                language_code = 'en'
+                descriptor_color = 'rgb(69, 113, 144)'
+                show_original_title = True
+                show_lyrics_anyway = True
+                show_storyline_anyway = True
+                play_continuously = True
+
+                id = self.append_user(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously)
 
             except sqlite3.Error as e:
                 error_message = "Filling up the User table FAILED: {0}".format(e)
@@ -760,13 +773,25 @@ class SqlDatabase:
             self.country_id_name_dict[id] = country
         cur.execute("commit")
 
-    def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code="en", show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True):
+    def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True):
         created_epoch = int(datetime.now().timestamp())
         id_language = self.language_name_id_dict[language_code]
         if user_id:
-            cur.execute('INSERT INTO ' + SqlDatabase.TABLE_USER + ' (name, password, is_admin, id, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously) VALUES (:username, :password, :is_admin, :user_id, :created_epoch, :id_language, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously) RETURNING id', (username, password, is_admin, user_id, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously))
+            cur.execute(
+                'INSERT INTO ' + SqlDatabase.TABLE_USER + ''' 
+                    (name, password, is_admin, id, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously) 
+                VALUES 
+                    (:username, :password, :is_admin, :user_id, :created_epoch, :id_language, :show_original_title, :descriptor_color, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously) 
+                RETURNING id''', 
+                (username, password, is_admin, user_id, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously))
         else:
-            cur.execute('INSERT INTO ' + SqlDatabase.TABLE_USER + ' (name, password, is_admin, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously) VALUES (:username, :password, :is_admin, :created_epoch, :id_language, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously) RETURNING id', (username, password, is_admin, created_epoch, id_language, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously))
+            cur.execute(
+                'INSERT INTO ' + SqlDatabase.TABLE_USER + ''' 
+                    (name, password, is_admin, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously) 
+                VALUES 
+                    (:username, :password, :is_admin, :created_epoch, :id_language, :descriptor_color, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously) 
+                RETURNING id''', 
+                (username, password, is_admin, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously))
         record = cur.fetchone()
         (user_id, ) = record if record else (None,)
         return user_id
@@ -1428,8 +1453,11 @@ class SqlDatabase:
                 # But it is really stupid to start a coursor before I decide if the user is logged in or not
                 # figure out how to make this code clean
                 #
-                user_id = self.web_gadget.logged_in_user_data.get("user_id", None)
-                if not user_id:
+
+                user_data = session.get('logged_in_user')
+                if user_data:
+                    user_id = user_data["user_id"]
+                else:
                     error_message = 'Not logged in'
                     raise sqlite3.Error(error_message)
 
@@ -1545,15 +1573,10 @@ class SqlDatabase:
         data = {}
         error_message = "Lock error"
         
-        #        logging.debug("SESSION on get logged in user data: {0}".format(session))
-        #        if 'logged_in_user' in session:
-        #            username = session["logged_in_user"]["username"]
-        #        else:
-        #            error_message = "Not logged in"
-        #            return {"result": result, "data": data, "error": error_message}
-
-        username = self.web_gadget.logged_in_user_data.get("username", None)
-        if not username:
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            username = user_data['username']
+        else:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
             
         with self.lock:
@@ -1615,12 +1638,13 @@ class SqlDatabase:
                 # Verify user existence
                 query = '''
                     SELECT 
-                        user.id as id,
-                        user.password as password,
-                        user.is_admin as is_admin,
-                        user.name as name,
-                        lang.name as language_code,
-                        lang.id as language_id,
+                        user.id                    as id,
+                        user.password              as password,
+                        user.is_admin              as is_admin,
+                        user.name                  as name,
+                        lang.name                  as language_code,
+                        lang.id                    as language_id,
+                        user.descriptor_color      as descriptor_color,
                         user.show_original_title   as show_original_title,
                         user.show_lyrics_anyway    as show_lyrics_anyway,
                         user.show_storyline_anyway as show_storyline_anyway,
@@ -1659,9 +1683,10 @@ class SqlDatabase:
                 # Verify user existence
                 query = '''
                     SELECT 
-                        user.is_admin as is_admin,
-                        user.name as name,
-                        lang.name as language_code,
+                        user.is_admin              as is_admin,
+                        user.name                  as name,
+                        lang.name                  as language_code,
+                        user.descriptor_color      as descriptor_color,
                         user.show_original_title   as show_original_title,
                         user.show_lyrics_anyway    as show_lyrics_anyway,
                         user.show_storyline_anyway as show_storyline_anyway,
@@ -1689,13 +1714,15 @@ class SqlDatabase:
         return data
 
 
-    def update_user_data(self, password=None, language_code=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None):
+    def update_user_data(self, password=None, language_code=None, descriptor_color=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None):
         result = False
         data = {}
         error_message = "Lock error"
 
-        username = self.web_gadget.logged_in_user_data.get("username", None)
-        if not username:
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            username = user_data['username']
+        else:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
@@ -1751,6 +1778,9 @@ class SqlDatabase:
                 else:
                     hashed_password = ''
 
+                if descriptor_color is not None:
+                    set_list.append("'descriptor_color' = :descriptor_color")
+
                 if show_original_title is not None:
                     set_list.append("'show_original_title' = :show_original_title")
 
@@ -1768,7 +1798,7 @@ class SqlDatabase:
                             user.name=:username
                     '''
 
-                cur.execute(query, {'username': username, 'password': hashed_password, 'language_id': language_id, 'show_original_title': show_original_title, 'show_lyrics_anyway': show_lyrics_anyway, 'show_storyline_anyway': show_storyline_anyway, 'play_continuously': play_continuously})
+                cur.execute(query, {'username': username, 'password': hashed_password, 'language_id': language_id, 'descriptor_color': descriptor_color, 'show_original_title': show_original_title, 'show_lyrics_anyway': show_lyrics_anyway, 'show_storyline_anyway': show_storyline_anyway, 'play_continuously': play_continuously})
                 number_of_updated_rows = cur.rowcount
                 
                 if number_of_updated_rows == 1:
@@ -1795,8 +1825,10 @@ class SqlDatabase:
         data = []
         error_message = "Lock error"
 
-        user_id = self.web_gadget.logged_in_user_data.get("user_id", None)
-        if not user_id:
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
@@ -6296,12 +6328,26 @@ class SqlDatabase:
         return records
 
 
-    def login(self, username, password):
+    def login(self, username=None, password=None):
 
         # If something fails, the logout fails as well
         error = 'Login failed'
         result = False
         data = {}
+
+        # Login without credentials - goal: at the beginning of the client (index.html) tries to restore the previous session
+        if (username is None and password is None) or (not username and not password):
+            if session.get('logged_in_user'):
+               
+                username = session['logged_in_user']['username']
+                data = self.get_publishable_user_data(username)
+                result = True
+                error = None
+
+            return {'result': result, 'data':data, 'error': error}
+
+        logging.error("USERNAME: {}, PASSWORD: {}".format(username, password))
+
 
         # LOGIN means a LOGOUT before
         self.logout()
@@ -6324,12 +6370,18 @@ class SqlDatabase:
                     result = True
                     data = publishable_user_data
                     error = None
-#                    session['logged_in_user'] = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
-                    self.web_gadget.logged_in_user_data = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
+
+                    # make the session permanent
+                    session.permanent = True
+
+                    # store the user session data
+                    session['logged_in_user'] = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
 
         return {'result': result, 'data':data, 'error': error}
 
 
     def logout(self):
-        self.web_gadget.logged_in_user_data = {}
+
+        # remove the session
+        session.pop('logged_in_user', None)
         return {'result': True, 'data':{}, 'error': None}

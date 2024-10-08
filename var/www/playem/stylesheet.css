@@ -587,7 +587,7 @@ body {
     display:inline-flex;
     flex-direction: row; 
     justify-content: flex-end;
-    gap: 0.5em;
+    gap: 0em;
 
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-size: 2em;
@@ -598,17 +598,24 @@ body {
     top: 0;
 }
 
+.main-menu {
+    cursor: pointer;
+    padding-right: 0.3em;
+    padding-left: 0.3em;
+    position: relative; /* Added to make the submenu align relative to the main menu */
+}
+
 .main-menu-text{
     padding-top: 0.8em;
     padding-bottom: 0.8em;
 }
 
-.main-menu {
-    cursor: pointer;
+.main-menu.admin:hover {
+    background-color: #fd0000;
 }
 
-.main-menu:hover {
-    background-color: #fd0000;
+.main-menu.user:hover {
+    background-color: #0019fd;
 }
 
 .main-menu .dropdown {
@@ -620,6 +627,9 @@ body {
     list-style: none;
     z-index: 1;
     margin: 0px;
+    top: 100%; /* Ensures the dropdown appears below the main menu */
+    left: 0;
+    min-width: 100%; /* Ensures the width of the dropdown is at least as wide as the main menu */
 }
 
 .main-menu .dropdown li {
