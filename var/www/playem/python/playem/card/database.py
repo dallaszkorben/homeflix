@@ -213,6 +213,7 @@ class SqlDatabase:
             except sqlite3.OperationalError as e:
                 logging.error("Wanted to Drop '{0}' 'Static' table, but error happened: {1}".format(table, e))
 
+
     def drop_personal_tables(self):
         for table in self.table_personal_list:
             try:
@@ -258,7 +259,7 @@ class SqlDatabase:
             CREATE TABLE ''' + SqlDatabase.TABLE_RATING + '''(
                 id_card              INTEGER NOT NULL,
                 id_user              INTEGER NOT NULL,
-                rate                 INTEGER CHECK(rate BETWEEN -1 AND 3),
+                rate                 INTEGER CHECK(rate BETWEEN -2 AND 2),
                 skip_continuous_play BOOLEAN NOT NULL CHECK (skip_continuous_play IN (0, 1)),
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
@@ -314,7 +315,6 @@ class SqlDatabase:
             finally:
                 cur.execute("commit")
                 cur.close        
-
 
 
     def create_static_tables(self):
@@ -645,6 +645,7 @@ class SqlDatabase:
         self.fill_up_category_table_from_dict()
         self.fill_up_mediatype_table_from_dict()
 
+
     def fill_up_constant_dicts(self):
         self.category_name_id_dict = {}
         self.genre_name_id_dict = {}
@@ -701,6 +702,7 @@ class SqlDatabase:
 
         cur.execute("commit")
 
+
     def fill_up_category_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -712,6 +714,7 @@ class SqlDatabase:
             self.category_name_id_dict[category] = id
             self.category_id_name_dict[id] = category
         cur.execute("commit")
+
 
     def fill_up_genre_table_from_dict(self):
         cur = self.conn.cursor()
@@ -725,6 +728,7 @@ class SqlDatabase:
             self.genre_id_name_dict[id] = genre
         cur.execute("commit")
 
+
     def fill_up_mediatype_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -736,6 +740,7 @@ class SqlDatabase:
             self.mediatype_name_id_dict[mediatype] = id
             self.mediatype_id_name_dict[id] = mediatype
         cur.execute("commit")
+
 
     def fill_up_theme_table_from_dict(self):
         cur = self.conn.cursor()
@@ -749,6 +754,7 @@ class SqlDatabase:
             self.theme_id_name_dict[id] = theme
         cur.execute("commit")
 
+
     def fill_up_language_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -761,6 +767,7 @@ class SqlDatabase:
             self.language_id_name_dict[id] = lang
         cur.execute("commit")
 
+
     def fill_up_country_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -772,6 +779,7 @@ class SqlDatabase:
             self.country_name_id_dict[country] = id
             self.country_id_name_dict[id] = country
         cur.execute("commit")
+
 
     def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True):
         created_epoch = int(datetime.now().timestamp())
@@ -796,12 +804,14 @@ class SqlDatabase:
         (user_id, ) = record if record else (None,)
         return user_id
 
+
     def append_category(self, cur, category):
         #cur = self.conn.cursor()
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_CATEGORY + ' (name) VALUES (?) RETURNING id', (category,))
         record = cur.fetchone()
         (category_id, ) = record if record else (None,)
         return category_id
+
 
     def append_language(self, cur, sound):
         #cur = self.conn.cursor()
@@ -810,11 +820,13 @@ class SqlDatabase:
         (language_id, ) = record if record else (None,)
         return language_id
 
+
     def append_country(self, cur, origin):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_COUNTRY + ' (name) VALUES (?) RETURNING id', (origin,))
         record = cur.fetchone()
         (country_id, ) = record if record else (None,)
         return country_id
+
 
     def append_genre(self, cur, genre):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_GENRE + ' (name) VALUES (?) RETURNING id', (genre,))
@@ -822,17 +834,20 @@ class SqlDatabase:
         (genre_id, ) = record if record else (None,)
         return genre_id
 
+
     def append_theme(self, cur, theme):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_THEME + ' (name) VALUES (?) RETURNING id', (theme,))
         record = cur.fetchone()
         (theme_id, ) = record if record else (None,)
         return theme_id
 
+
     def append_mediatype(self, cur, mediatype):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_MEDIATYPE + ' (name) VALUES (?) RETURNING id', (mediatype,))
         record = cur.fetchone()
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
+
 
     def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
@@ -1326,6 +1341,7 @@ class SqlDatabase:
         cur.execute("commit")
 
         return card_id
+
 
     def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
@@ -1873,15 +1889,26 @@ class SqlDatabase:
             finally:
                 #                cur.execute("commit")
                 cur.close()
-                return {"result": result, "data": data, "error": error_message}                
+                return {"result": result, "data": data, "error": error_message}
+
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
 
 
-    def set_rating(self, user_id, card_id, rate, skip_continuous_play):
+    def set_rating(self, card_id, rate, skip_continuous_play):
         result = False
-        error_message = "Unknown error"
+        data = []
+        error_message = "Lock error"
 
-        try:
-            with self.lock:
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
+
+        with self.lock:
+        
+            try:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
@@ -1934,15 +1961,263 @@ class SqlDatabase:
                 result = True
                 error_message = None
 
-        except sqlite3.Error as e:
-            error_message = "Rating set for card: {0} by user: {1}. RATE: {2}, SKIP: {3} failed!\n{4}".format(card_id, user_id, rate, skip_continuous_play, e)
-            logging.error(error_message)
-            cur.execute("rollback")
+            except sqlite3.Error as e:
+                error_message = "Rating set for card: {0} by user: {1}. RATE: {2}, SKIP: {3} failed!\n{4}".format(card_id, user_id, rate, skip_continuous_play, e)
+                logging.error(error_message)
+                cur.execute("rollback")
 
-        finally:
-            return {"result": result, "error": error_message}
+            finally:
+                cur.close()
+                return {"result": result, "data": data, "error": error_message}
+
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
+
+# ---
 
 
+    def get_sql_where_condition_from_text_filter(self, text_filter, field_name):
+
+        filter_list =        [] if text_filter == None else text_filter.split('_AND_')
+        filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
+        filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
+        filter_where =       None if text_filter == None else ' AND '.join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list])
+
+        logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
+        logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
+        logging.debug("{} WHERE: {}".format(field_name, filter_where if filter_where is not None else 'None'))
+
+        return filter_where
+
+
+    def get_converted_query_to_json(self, sql_record_list, category, lang):
+        """
+        Convert and translate the given SQL card-response
+        """
+
+        records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
+
+        trans = Translator.getInstance(lang)
+        for record in records:
+
+            # Lang Orig
+            lang_orig = record["lang_orig"]
+            lang_orig_translated = trans.translate_language_short(lang_orig)
+            record["lang_orig"] = lang_orig_translated
+            # Lang Req
+            lang_req = record["lang_req"]
+            lang_req_translated = trans.translate_language_short(lang_req)
+            record["lang_req"] = lang_req_translated
+            # Media
+            medium_string = record["medium"]
+            media_dict = {}
+            if medium_string:
+                medium_string_list = medium_string.split(',')
+                for medium_string in medium_string_list:
+                    (media_type, media) = medium_string.split("=")
+                    if not media_type in media_dict:
+                        media_dict[media_type] = []
+                    media_dict[media_type].append(media)
+            record["medium"] = media_dict
+            # Appendix
+            appendix_string = record["appendix"]
+            appendix_list = []
+            if appendix_string:
+                text_list = appendix_string.split(',')
+                for appendix_string in text_list:
+                    var_list = appendix_string.split(";")
+                    appendix_dict = {}
+                    for var_pair in var_list:
+                        (key, value) = var_pair.split("=")
+                        appendix_dict[key] = value
+                    appendix_list.append(appendix_dict)
+            record["appendix"] = appendix_list
+            # Recent State (history)
+            recent_state_string = record["recent_state"]
+            recent_state_dict = {'recent_position':0, 'play_count':0}
+            if recent_state_string and record["medium"]:
+                var_list = recent_state_string.split(";")
+                for var_pair in var_list:
+                    (key, value) = var_pair.split("=")
+                    recent_state_dict[key] = value
+            record["recent_state"] = recent_state_dict
+            # Rate
+            record["rate"] = record["rate"] if record["rate"] else 0
+            record["skip_continuous_play"] = True if record["skip_continuous_play"] else False
+            # Writers
+            writers_string = record["writers"]
+            writers_list = []
+            if writers_string:
+                writers_list = writers_string.split(',')
+            record["writers"] = writers_list
+            # Directors
+            directors_string = record["directors"]
+            directors_list = []
+            if directors_string:
+                directors_list = directors_string.split(',')
+            record["directors"] = directors_list
+            # Stars
+            stars_string = record["stars"]
+            stars_list = []
+            if stars_string:
+                stars_list = stars_string.split(',')
+            record["stars"] = stars_list
+            # Actors
+            actors_string = record["actors"]
+            actors_list = []
+            if actors_string:
+                actors_list = actors_string.split(',')
+            record["actors"] = actors_list
+            # Voices
+            voices_string = record["voices"]
+            voices_list = []
+            if voices_string:
+                voices_list = voices_string.split(',')
+            record["voices"] = voices_list
+            # Host
+            hosts_string = record.get("hosts")
+            hosts_list = []
+            if hosts_string:
+                hosts_list = hosts_string.split(',')
+            record["hosts"] = hosts_list
+            # Guests
+            guests_string = record.get("guests")
+            guests_list = []
+            if guests_string:
+                guests_list = guests_string.split(',')
+            record["guests"] = guests_list
+            # Interviewers
+            interviewers_string = record.get("interviewers")
+            interviewers_list = []
+            if interviewers_string:
+                interviewers_list = interviewers_string.split(',')
+            record["interviewers"] = interviewers_list
+            # Interviewees
+            interviewees_string = record.get("interviewees")
+            interviewees_list = []
+            if interviewees_string:
+                interviewees_list = interviewees_string.split(',')
+            record["interviewees"] = interviewees_list
+            # Presenters
+            presenters_string = record.get("presenters")
+            presenters_list = []
+            if presenters_string:
+                presenters_list = presenters_string.split(',')
+            record["presenters"] = presenters_list
+            # Lecturers
+            lecturers_string = record.get("lecturers")
+            lecturers_list = []
+            if lecturers_string:
+                lecturers_list = lecturers_string.split(',')
+            record["lecturers"] = lecturers_list
+            # Performers
+            performers_string = record.get("performers")
+            performers_list = []
+            if performers_string:
+                performers_list = performers_string.split(',')
+            record["performers"] = performers_list
+            # Reporters
+            reporters_string = record.get("reporters")
+            reporters_list = []
+            if reporters_string:
+                reporters_list = reporters_string.split(',')
+            record["reporters"] = reporters_list
+            # Genre
+            genres_string = record.get("genres")
+            genres_list = []
+            if genres_string:
+                genres_list = genres_string.split(',')
+                genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+            record["genres"] = genres_list
+            # Theme
+            themes_string = record["themes"]
+            themes_list = []
+            if themes_string:
+                themes_list = themes_string.split(',')
+                themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+            record["themes"] = themes_list
+            # Origin
+            origins_string = record["origins"]
+            origins_list = []
+            if origins_string:
+                origins_list = origins_string.split(',')
+                origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+            record["origins"] = origins_list
+            # Sub
+            subs_string = record["subs"]
+            subs_list = []
+            if subs_string:
+                subs_list = subs_string.split(',')
+                subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+            record["subs"] = subs_list
+            # Sounds
+            sounds_string = record["sounds"]
+            sounds_list = []
+            if sounds_string:
+                sounds_list = sounds_string.split(',')
+                sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+            record["sounds"] = sounds_list
+        logging.debug("Converted records: '{0}'".format(records))
+
+        return records
+
+
+    def login(self, username=None, password=None):
+
+        # If something fails, the logout fails as well
+        error = 'Login failed'
+        result = False
+        data = {}
+
+        # Login without credentials - goal: at the beginning of the client (index.html) tries to restore the previous session
+        if (username is None and password is None) or (not username and not password):
+            if session.get('logged_in_user'):
+               
+                username = session['logged_in_user']['username']
+                data = self.get_publishable_user_data(username)
+                result = True
+                error = None
+
+            return {'result': result, 'data':data, 'error': error}
+
+        #logging.error("USERNAME: {}, PASSWORD: {}".format(username, password))
+
+        # LOGIN means a LOGOUT before
+        self.logout()
+
+        hashed_password = generate_password_hash(password)
+        
+        full_user_data = self.get_user_data_with_password(username)
+
+        # If the username was found in the DB
+        if full_user_data:
+            stored_hashed_password = full_user_data.get('password', None)
+
+            # The password MATCH
+            if check_password_hash(stored_hashed_password, password):
+
+                # Get publishable user data - because we do not want to bublish for example the password
+                publishable_user_data = self.get_publishable_user_data(username)
+
+                if publishable_user_data:
+                    result = True
+                    data = publishable_user_data
+                    error = None
+
+                    # make the session permanent
+                    session.permanent = True
+
+                    # store the user session data
+                    session['logged_in_user'] = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
+
+        return {'result': result, 'data':data, 'error': error}
+
+
+    def logout(self):
+
+        # remove the session
+        session.pop('logged_in_user', None)
+        return {'result': True, 'data':{}, 'error': None}
 
 
 
@@ -2165,13 +2440,14 @@ class SqlDatabase:
             return records
 
 
+
     #
     # reviewed
     #
     # General - for any kind of hierarchy if it has parent id
     #
-    # X - no one calls
-    def get_child_hierarchy_or_card(self, higher_card_id, lang, json=True):
+    # ❌ - no one calls
+    def gget_child_hierarchy_or_card(self, higher_card_id, lang, json=True):
         """
         Gives back child Hiearchy of the given hierarchy id. If the child hierarchy is Card
         then it gives back the child Cards
@@ -2324,9 +2600,9 @@ class SqlDatabase:
     #
     # --- Movie queries ---
     #
-    # X - no one calls
+    # ❌ - no one calls
     #
-    def get_standalone_movies_by_genre(self, genre, lang, limit=100, json=True):
+    def gget_standalone_movies_by_genre(self, genre, lang, limit=100, json=True):
         return self.get_general_standalone(category='movie', genre=genre, lang=lang, limit=limit, json=json)
 
     # reviewed
@@ -2337,9 +2613,9 @@ class SqlDatabase:
     #   - genre
     #   - theme
     #
-    # X - no one callse
+    # ❌ - no one callse
     #
-    def get_general_standalone(self, category, genres=None, themes=None, directors=None, actors=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def gget_general_standalone(self, category, genres=None, themes=None, directors=None, actors=None, origins=None, decade=None, lang='en', limit=100, json=True):
              
         with self.lock:
             where = ''
@@ -3040,10 +3316,10 @@ class SqlDatabase:
     # TODO: DB name should be replaced by variables
     # TODO: Give back all existing/posible fields
     #
-    # X - no one calls
+    # ❌ - no one calls
     #
 
-    def get_media_by_card_id(self, card_id, lang, limit=100, json=True):
+    def gget_media_by_card_id(self, card_id, lang, limit=100, json=True):
         with self.lock:
 
             cur = self.conn.cursor()
@@ -3470,9 +3746,9 @@ class SqlDatabase:
     #
     # more records can be fetched
     #
-    # X - no one calls
+    # ❌ - no one calls
     #
-    def get_all_appendix(self, card_id, lang='en', limit=100, json=True):
+    def gget_all_appendix(self, card_id, lang='en', limit=100, json=True):
              
         with self.lock:
 
@@ -3613,9 +3889,9 @@ class SqlDatabase:
     #
     #
     #
-    # X - no one calls
+    # ❌ - no one calls
     #
-    def get_medium_by_card_id(self, card_id, limit=100, json=True):
+    def gget_medium_by_card_id(self, card_id, limit=100, json=True):
         """
         It returns a list of medium by the card id.
         Return fields:
@@ -3724,6 +4000,13 @@ class SqlDatabase:
           - lecturers                                                 
           - origins                                                    
         """
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
         with self.lock:
 
             genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
@@ -3784,7 +4067,10 @@ class SqlDatabase:
                 storyline,
                 lyrics,
                 medium,
-                appendix
+                appendix,
+                recent_state,
+                rate,
+                skip_continuous_play
             FROM
 
                 ---------------------------
@@ -4480,6 +4766,35 @@ class SqlDatabase:
                 ) pndx
                 ON pndx.card_id=core.id
 
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id
+
             WHERE
                 mixed_id_list.id=core.id
 
@@ -4491,7 +4806,7 @@ class SqlDatabase:
             END
             LIMIT :limit; '''
 
-            query_parameters = {'level': level, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}
+            query_parameters = {'user_id': user_id, 'level': level, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}
 
             logging.error("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -4531,6 +4846,13 @@ class SqlDatabase:
           - lecturers                                                 
           - origins                                                    
         """
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
         with self.lock:
             where = ''
 
@@ -4592,7 +4914,10 @@ class SqlDatabase:
                 storyline,
                 lyrics,
                 medium,
-                appendix
+                appendix,
+                recent_state,
+                rate,
+                skip_continuous_play                
             FROM
 
                 ---------------------------
@@ -5293,6 +5618,35 @@ class SqlDatabase:
                 ) pndx
                 ON pndx.card_id=core.id
 
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id
+
             WHERE
                 mixed_id_list.id=core.id
 
@@ -5305,7 +5659,7 @@ class SqlDatabase:
             LIMIT :limit;
 
             '''
-            query_parameters = {'card_id': card_id, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}            
+            query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}            
 
             logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -5345,6 +5699,13 @@ class SqlDatabase:
           - lecturers                                                 
           - origins                                                    
         """
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
         with self.lock:
 
             genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
@@ -5389,7 +5750,11 @@ class SqlDatabase:
                 storyline,
                 lyrics,
                 medium,
-                appendix
+                appendix,
+                recent_state,
+                rate,
+                skip_continuous_play
+
             FROM
                 (
                 WITH RECURSIVE
@@ -6086,7 +6451,36 @@ class SqlDatabase:
                         )
                     GROUP BY card_id
                 ) pndx
-                ON pndx.card_id=card.id     
+                ON pndx.card_id=card.id
+
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id  
 
             WHERE
                 card.id=recursive_list.id
@@ -6132,7 +6526,7 @@ class SqlDatabase:
 
             LIMIT :limit; '''
 
-            query_parameters = {'category': category, 'level': level, 'decade': decade, 'lang': lang, 'limit': limit}            
+            query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'decade': decade, 'lang': lang, 'limit': limit}            
 
             logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -6146,242 +6540,4 @@ class SqlDatabase:
 
 
 
-# ---
 
-
-    def get_sql_where_condition_from_text_filter(self, text_filter, field_name):
-
-        filter_list =        [] if text_filter == None else text_filter.split('_AND_')
-        filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
-        filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
-        filter_where =       None if text_filter == None else ' AND '.join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list])
-
-        logging.error("{} IN LIST: {}".format(field_name, filter_in_list))
-        logging.error("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
-        logging.error("{} WHERE: {}".format(field_name, filter_where if filter_where is not None else 'None'))
-
-        return filter_where
-
-
-    def get_converted_query_to_json(self, sql_record_list, category, lang):
-        """
-        Convert and translate the given SQL card-response
-        """
-
-        records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
-
-        trans = Translator.getInstance(lang)
-        for record in records:
-
-            # It is needed to convert ID to string, otherwise I got back a different value in the jquery response if it is too high
-            # I could not figure out how this mechanizm works
-            # IMPORTANT !!!
-            record["id"] = str(record["id"])
-
-            # Lang Orig
-            lang_orig = record["lang_orig"]
-            lang_orig_translated = trans.translate_language_short(lang_orig)
-            record["lang_orig"] = lang_orig_translated
-            # Lang Req
-            lang_req = record["lang_req"]
-            lang_req_translated = trans.translate_language_short(lang_req)
-            record["lang_req"] = lang_req_translated
-            # Media
-            medium_string = record["medium"]
-            media_dict = {}
-            if medium_string:
-                medium_string_list = medium_string.split(',')
-                for medium_string in medium_string_list:
-                    (media_type, media) = medium_string.split("=")
-                    if not media_type in media_dict:
-                        media_dict[media_type] = []
-                    media_dict[media_type].append(media)
-            record["medium"] = media_dict
-            # Appendix
-            appendix_string = record["appendix"]
-            appendix_list = []
-            if appendix_string:
-                text_list = appendix_string.split(',')
-                for appendix_string in text_list:
-                    var_list = appendix_string.split(";")
-                    appendix_dict = {}
-                    for var_pair in var_list:
-                        (key, value) = var_pair.split("=")
-                        appendix_dict[key] = value
-                    appendix_list.append(appendix_dict)
-            record["appendix"] = appendix_list
-            # Writers
-            writers_string = record["writers"]
-            writers_list = []
-            if writers_string:
-                writers_list = writers_string.split(',')
-            record["writers"] = writers_list
-            # Directors
-            directors_string = record["directors"]
-            directors_list = []
-            if directors_string:
-                directors_list = directors_string.split(',')
-            record["directors"] = directors_list
-            # Stars
-            stars_string = record["stars"]
-            stars_list = []
-            if stars_string:
-                stars_list = stars_string.split(',')
-            record["stars"] = stars_list
-            # Actors
-            actors_string = record["actors"]
-            actors_list = []
-            if actors_string:
-                actors_list = actors_string.split(',')
-            record["actors"] = actors_list
-            # Voices
-            voices_string = record["voices"]
-            voices_list = []
-            if voices_string:
-                voices_list = voices_string.split(',')
-            record["voices"] = voices_list
-            # Host
-            hosts_string = record.get("hosts")
-            hosts_list = []
-            if hosts_string:
-                hosts_list = hosts_string.split(',')
-            record["hosts"] = hosts_list
-            # Guests
-            guests_string = record.get("guests")
-            guests_list = []
-            if guests_string:
-                guests_list = guests_string.split(',')
-            record["guests"] = guests_list
-            # Interviewers
-            interviewers_string = record.get("interviewers")
-            interviewers_list = []
-            if interviewers_string:
-                interviewers_list = interviewers_string.split(',')
-            record["interviewers"] = interviewers_list
-            # Interviewees
-            interviewees_string = record.get("interviewees")
-            interviewees_list = []
-            if interviewees_string:
-                interviewees_list = interviewees_string.split(',')
-            record["interviewees"] = interviewees_list
-            # Presenters
-            presenters_string = record.get("presenters")
-            presenters_list = []
-            if presenters_string:
-                presenters_list = presenters_string.split(',')
-            record["presenters"] = presenters_list
-            # Lecturers
-            lecturers_string = record.get("lecturers")
-            lecturers_list = []
-            if lecturers_string:
-                lecturers_list = lecturers_string.split(',')
-            record["lecturers"] = lecturers_list
-            # Performers
-            performers_string = record.get("performers")
-            performers_list = []
-            if performers_string:
-                performers_list = performers_string.split(',')
-            record["performers"] = performers_list
-            # Reporters
-            reporters_string = record.get("reporters")
-            reporters_list = []
-            if reporters_string:
-                reporters_list = reporters_string.split(',')
-            record["reporters"] = reporters_list
-            # Genre
-            genres_string = record.get("genres")
-            genres_list = []
-            if genres_string:
-                genres_list = genres_string.split(',')
-                genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
-            record["genres"] = genres_list
-            # Theme
-            themes_string = record["themes"]
-            themes_list = []
-            if themes_string:
-                themes_list = themes_string.split(',')
-                themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
-            record["themes"] = themes_list
-            # Origin
-            origins_string = record["origins"]
-            origins_list = []
-            if origins_string:
-                origins_list = origins_string.split(',')
-                origins_list = [trans.translate_country_long(origin) for origin in origins_list]
-            record["origins"] = origins_list
-            # Sub
-            subs_string = record["subs"]
-            subs_list = []
-            if subs_string:
-                subs_list = subs_string.split(',')
-                subs_list = [trans.translate_language_long(sub) for sub in subs_list]
-            record["subs"] = subs_list
-            # Sounds
-            sounds_string = record["sounds"]
-            sounds_list = []
-            if sounds_string:
-                sounds_list = sounds_string.split(',')
-                sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
-            record["sounds"] = sounds_list
-        logging.debug("Converted records: '{0}'".format(records))
-
-        return records
-
-
-    def login(self, username=None, password=None):
-
-        # If something fails, the logout fails as well
-        error = 'Login failed'
-        result = False
-        data = {}
-
-        # Login without credentials - goal: at the beginning of the client (index.html) tries to restore the previous session
-        if (username is None and password is None) or (not username and not password):
-            if session.get('logged_in_user'):
-               
-                username = session['logged_in_user']['username']
-                data = self.get_publishable_user_data(username)
-                result = True
-                error = None
-
-            return {'result': result, 'data':data, 'error': error}
-
-        logging.error("USERNAME: {}, PASSWORD: {}".format(username, password))
-
-
-        # LOGIN means a LOGOUT before
-        self.logout()
-
-        hashed_password = generate_password_hash(password)
-        
-        full_user_data = self.get_user_data_with_password(username)
-
-        # If the username was found in the DB
-        if full_user_data:
-            stored_hashed_password = full_user_data.get('password', None)
-
-            # The password MATCH
-            if check_password_hash(stored_hashed_password, password):
-
-                # Get publishable user data - because we do not want to bublish for example the password
-                publishable_user_data = self.get_publishable_user_data(username)
-
-                if publishable_user_data:
-                    result = True
-                    data = publishable_user_data
-                    error = None
-
-                    # make the session permanent
-                    session.permanent = True
-
-                    # store the user session data
-                    session['logged_in_user'] = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
-
-        return {'result': result, 'data':data, 'error': error}
-
-
-    def logout(self):
-
-        # remove the session
-        session.pop('logged_in_user', None)
-        return {'result': True, 'data':{}, 'error': None}

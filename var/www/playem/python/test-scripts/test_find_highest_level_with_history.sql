@@ -1,19 +1,15 @@
 
-sudo mount /dev/sda1 /media/pi -o uid=pi,gid=pi
-
-sudo mount -o bind /home/pi/Projects/playem/var/www/playem/ /var/www/playem
-sudo mount -o bind  /media/pi/MEDIA /var/www/playem/MEDIA/
-
-sudo service apache2 restart
-
-sudo umount /var/www/playem/MEDIA
-sudo umount /var/www/playem
-  
-source ~/Projects/python/playem/var/www/playem/python/env/bin/activate
-cd /home/akoel/Projects/python/playem/var/www/playem/python
-python3
+#
+# start python
+#
+# cd /var/www/playem/python
+$ source /var/www/playem/python/env/bin/activate
+$ python3
 
 
+#
+# intitialization
+#
 import sqlite3
 from playem.card.database import SqlDatabase as DB
 db=DB(None)
@@ -76,7 +72,10 @@ SELECT
     strl.storyline,
     lyrics,
     medium,
-    appendix
+    appendix,
+    recent_state,
+    rate,
+    skip_continuous_play
 FROM
 
     ---------------------------
@@ -703,7 +702,7 @@ FROM
     ----------------
     --- APPENDIX ---
     ----------------
-     LEFT JOIN    
+    LEFT JOIN    
     (    
         SELECT
             card_id,
@@ -779,6 +778,36 @@ FROM
     ) pndx
     ON pndx.card_id=core.id
 
+    ---------------
+    --- HISTORY ---
+    ---------------
+    LEFT JOIN
+    (
+        SELECT 
+            ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+            id_card
+        FROM (
+            SELECT id_card, start_epoch, recent_epoch, recent_position
+            FROM History
+            WHERE id_user=:user_id
+            ORDER BY start_epoch DESC
+        )
+        GROUP BY id_card
+    )hstr
+    ON hstr.id_card=core.id
+
+    --------------
+    --- RATING ---
+    --------------
+    LEFT JOIN
+    (
+        SELECT id_card, rate, skip_continuous_play
+        FROM Rating
+        WHERE id_user=:user_id
+    )rtng
+    ON rtng.id_card=core.id
+    
+    
 WHERE
     mixed_id_list.id=core.id
                     
@@ -789,16 +818,102 @@ ORDER BY CASE
     WHEN sequence>=0 THEN sequence
 END
 
-''', {'level': 'sequel', 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
+''', {'user_id': 1235, 'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': None, 'origin': None, 'director': 'John Carpenter', 'actor': None, 'lecturer': None, 'decade': '80s', 'lang': 'en'}).fetchall()
 
 
+
+
+-- Only sequels
+--''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': None, 'origin': None, 'director': 'Ridley Scott', 'actor': None, 'lecturer': None, 'decade': '80s', 'lang': 'en'}).fetchall()
+
+-- ONly 1 movie
+--''', {'user_id': 1235, 'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': None, 'origin': None, 'director': 'John Carpenter', 'actor': 'Kurt Russell', 'lecturer': None, 'decade': '80s', 'lang': 'en'}).fetchall()
+
+--''', {'level': 'sequel', 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 --''', {'level': 'series', 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'it'}).fetchall()
 --''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 --''', {'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '90s', 'lang': 'en'}).fetchall()
 --''', {'category': 'entertainment', 'genre': 'speech', 'theme': '*', 'origin': '*', 'director': '*', 'actor': '*', 'lecturer': '*', 'decade': '60s', 'lang': 'en'}).fetchall()
 
 
+-- -------
+--
+-- HISTORY
+--
+-- -------
 
+-- give back the latest history
+res = con.execute('SELECT start_epoch, recent_epoch, recent_position FROM History WHERE id_card=:id_card AND id_user=:id_user ORDER BY start_epoch DESC LIMIT 1 ;',{'id_card': '0b2704fd17e87d003dd9364af90c9899', 'id_user': 1235})
+for rec in res.fetchall():
+    print(rec)
 
+-- give back the latest history with concatenated result fields
+--res = con.execute('SELECT (start_epoch || "|" || recent_epoch || "|" || recent_position) as history FROM History WHERE id_card=:id_card AND id_user=:id_user ORDER BY start_epoch DESC LIMIT 1 ;',{'id_card': '0b2704fd17e87d003dd9364af90c9899', 'id_user': 1235})
+res = con.execute('SELECT ("{\'start_epoch\':" || start_epoch || ",\'recent_epoch\':" || recent_epoch || ",\'recent_position\':" || recent_position || "}") as recent_state FROM History WHERE id_card=:id_card AND id_user=:id_user ORDER BY start_epoch DESC LIMIT 1 ;',{'id_card': '0b2704fd17e87d003dd9364af90c9899', 'id_user': 1235})
+for rec in res.fetchall():
+    print(rec)    
+    
+-- give back the latest history for ALL cards for a specific user
+res = con.execute('''
+    SELECT 
+        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) as recent_state, 
+--        ("{\'start_epoch\':" || start_epoch || ",\'recent_epoch\':" || recent_epoch || ",\'recent_position\':" || recent_position || ",\'play_count\':" || count(*) || "}") as recent_state      
+--        (start_epoch || "|" || recent_epoch || "|" || recent_position || "|" || count(*) ) as recent_state,        
+        id_card
+    FROM (
+        SELECT id_card, start_epoch, recent_epoch, recent_position
+        FROM History
+        WHERE id_user=:id_user
+        ORDER BY start_epoch DESC
+    )
+    GROUP BY id_card;
+    ''',{'id_card': '0b2704fd17e87d003dd9364af90c9899', 'id_user': 1234})
+for rec in res.fetchall():
+    print(rec)      
+    
+    
+    
+-- ------
+--
+-- RATING
+--
+-- ------
 
+curl -c cookies_1.txt --header "Content-Type: application/json" --request POST --data '{ "username": "default", "password": "default"}' http://localhost:80/auth/login
+curl -b cookies_1.txt --header "Content-Type: application/json" --request POST --data '{ "card_id": "e663001a5066ca994d06621e22d332da", "rate": 2, "skip_continuous_play": 0}' http://localhost:80/personal/rating/update
 
+res = con.execute('''
+    SELECT id_card, rate, skip_continuous_play
+    FROM Rating
+    WHERE id_user=:id_user 
+    ''',{'id_card': 'e663001a5066ca994d06621e22d332da', 'id_user': 1235})
+for rec in res.fetchall():
+    print(rec)   
+    
+    
+
+    
+    
+    
+    
+--- Call directly the python database method:
+db.get_highest_level_cards(1235, 'movie', genres='scifi', themes=None, origins=None, directors='John Carpenter', actors=None, lecturers=None, decade='80s')
+
+db.get_next_level_cards(1235, 'bde37d4b910d053e72ca16bf88df9d64', 'movie', genres='scifi', themes=None, origins=None, directors='John Carpenter', actors=None, lecturers=None, decade='80s')
+
+get_lowest_level_cards(1235, 'movie', genres='scifi', themes=None, origins=None, directors='John Carpenter', actors=None, lecturers=None, decade='80s')
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

@@ -195,6 +195,45 @@ class ObjScrollSection {
         return function_for_selection;
     }
 
+    refreshFocusedThumbnailProgresBar(recent_position){
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
+        let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
+        let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
+        let extras = thumbnail.getExtras();
+        let recent_state = extras["recent_state"];
+        let full_time = extras["full_time"]; 
+        let net_start_time = extras["net_start_time"];
+        let net_stop_time = extras["net_stop_time"];       
+//---      
+        recent_state["recent_position"] = recent_position;
+        extras["recent_state"] = recent_state;
+        thumbnail.setExtras(extras);
+
+
+        let progress_percentage;
+        if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
+            progress_percentage = 100 * recent_position / full_time;
+        }else{
+            progress_percentage = 0;
+        }
+
+        let bar_wrapper = domThumbnails.eq(currentThumbnailIndex).find(".thumbnail-play-progress-bar-wrapper");
+        let bar = domThumbnails.eq(currentThumbnailIndex).find(".thumbnail-play-progress-bar")
+
+        bar.css('width', progress_percentage + '%');
+
+        if(progress_percentage == 0){
+            bar_wrapper.hide()
+        }else{
+            bar_wrapper.show()
+        }
+
+//---
+
+        console.log("new position: " + recent_position);
+    }
+
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
     showDetails() {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -481,6 +520,7 @@ class ObjThumbnailContainer {
             src: thumbnail_src,
             alt: "Image"
         });
+
         domThumbnailTextWrapper.append(domThumbnailText);
         domThumbnail.append(domThumbnailTextWrapper);
 
@@ -496,9 +536,49 @@ class ObjThumbnailContainer {
 
         domThumbnail.append(domImg);
 
+        // Play Progress Bar
+        //
+        // Progress bar needed if the recent_position is set (even if it is 0) => meaning, it is a media
+        let recent_state = extras["recent_state"];
+        if(recent_state != undefined && recent_state['recent_position'] != undefined){
+            let recent_position = recent_state['recent_position'];
+            
+            // Create the Progress bar
+            let domPlayProgressWrapper = $("<div>", {
+                class: "thumbnail-play-progress-bar-wrapper"
+            });
+            let domPlayProgress = $("<div>", {
+                class: "thumbnail-play-progress-bar"
+            });
+            domPlayProgressWrapper.append(domPlayProgress)
+            domThumbnail.append(domPlayProgressWrapper);
+
+            let progress_percentage;
+            let net_start_time = extras["net_start_time"];
+            let net_stop_time = extras["net_stop_time"];
+
+            // This media:
+            // - has been played at least once
+            // - and the recent_position is not 0
+            // - and the recent_position is between the net play time
+            if(recent_state['start_epoch'] != undefined && recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
+                let full_time = extras["full_time"];
+
+                progress_percentage = 100 * recent_position / full_time
+
+            // This media has not been played or it was played, but just a very short time=>recent position is 0
+            }else{
+                progress_percentage = 0;
+            }
+            domPlayProgress.css('width', progress_percentage + '%');
+            if(progress_percentage == 0){
+                domPlayProgressWrapper.hide()
+            }else{
+                domPlayProgressWrapper.show()
+            }
+        }
         this.domThumbnailContainer.append(domThumbnail);
     }
-
 }
 
 class Thumbnail {
@@ -623,7 +703,7 @@ class Thumbnail {
         }
     }
 
-    setExtras({ medium_path = undefined, download = undefined, length = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined }) {
+    setExtras({ medium_path = undefined, download = undefined, length = undefined, full_time = undefined, net_start_time = undefined, net_stop_time = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined, recent_state = {}, rate = undefined, skip_continuous_play = undefined }) {
         this.thumbnailDict["extras"] = {}
 
         // TODO: This is not the best choice to store 'medium_path' in the 'extras', but that is what I chose. It could be changed
@@ -634,6 +714,12 @@ class Thumbnail {
 
         this.thumbnailDict["extras"]["length"] = length;
 
+        this.thumbnailDict["extras"]["full_time"] = full_time;
+
+        this.thumbnailDict["extras"]["net_start_time"] = net_start_time;
+
+        this.thumbnailDict["extras"]["net_stop_time"] = net_stop_time;
+
         this.thumbnailDict["extras"]["date"] = date;
 
         this.thumbnailDict["extras"]["origins"] = origins;
@@ -643,6 +729,12 @@ class Thumbnail {
         this.thumbnailDict["extras"]["themes"] = themes;
 
         this.thumbnailDict["extras"]["level"] = level;
+
+        this.thumbnailDict["extras"]["recent_state"] = recent_state;
+
+        this.thumbnailDict["extras"]["rate"] = rate;
+
+        this.thumbnailDict["extras"]["skip_continuous_play"] = skip_continuous_play;
 
     }
 
@@ -918,7 +1010,6 @@ class ObjDescriptionContainer {
                 mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
                 mainObject.printCredentals(credTable, credentials, "reporters", translated_titles['reporter'] + ":");
 
-
                 let descAppendixDownload = $("#description-appendix-download");
                 let descAppendixPlay = $("#description-appendix-play");
                 descAppendixDownload.empty();
@@ -938,8 +1029,6 @@ class ObjDescriptionContainer {
                     });
                     descAppendixDownload.append(link);
                 }
-
-
 
                 // ----------------
                 // --- Appendix ---
@@ -1165,7 +1254,8 @@ class ThumbnailController {
         this.language_code = mainMenuGenerator.language_code;
         this.history = new History();
         this.focusTask = FocusTask.Menu;
-        this.updateMediaHistoryIntervalId = undefined
+        this.updateMediaHistoryIntervalId = null;
+        this.media_history_start_epoch = null;
        
         this.objScrollSection = new ObjScrollSection({ oContainerGenerator: mainMenuGenerator, objThumbnailController: this });
 
@@ -1292,8 +1382,7 @@ class ThumbnailController {
         medium_dict["net_start_time"] = hit["net_start_time"];
         medium_dict["net_stop_time"] = hit["net_stop_time"];
 
-        return medium_dict;
-            
+        return medium_dict;            
     }
 
 
@@ -1327,19 +1416,17 @@ class ThumbnailController {
         let net_start_time = medium_dict["net_start_time"];
         let net_stop_time = medium_dict["net_stop_time"];
 
-        let limit_days = 7
+        let limit_days = 30;
         let refToThis = this;
 
         if (medium_path != null) {
 
-            // TODO: the recent_position should be taken from the normal request
-            //
-            // REST request to check if the media was played before but not finished
-            let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, card_id, limit_days)
+            // REST request to check if the played media was interrupted - take it from the recent database, not from the thumbnail data
+            let recent_position = refToThis.getMediaPositionInLatestHistory(card_id, limit_days)
 
-            // console.log("recent_position: " + recent_position)
-            if (recent_position < net_stop_time && recent_position != 0){
-                $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time. Would you like to resume playback or start from the beginning?");
+            // The Recent Position is between the Net Play interval
+            if (recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
+                $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
                 $("#dialog-confirm-continue-interrupted-play").dialog({
                     //closeOnEscape: false,
                     resizable: false,
@@ -1367,6 +1454,8 @@ class ThumbnailController {
 //                    }                
 //                    evt.stopPropagation();
 //                });            
+
+            // Otherwise it starts to play from the beginning
             }else{
                 this.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
             }
@@ -1416,18 +1505,8 @@ class ThumbnailController {
             player.poster = "";
         }
 
-        // REST request to check if the media was played before but not finished
-        // let recent_position = refToThis.getMediaPositionInLatestHistory(refToThis, card_id)
-        // let last_position = player.duration;
-
-        // this media in the list time was stopped after the credits list
-        //if (recent_position >= net_stop_time){
-        //    // We play the media from the beginning
-        //    recent_position = 0;
-        //}
-
         // REST request to register this media in the History
-        refToThis.registerMediaInHistory(refToThis, card_id, recent_position);
+        this.media_history_start_epoch = refToThis.registerMediaInHistory(refToThis, card_id, recent_position);
 
         player.load();
         player.controls = true;
@@ -1437,7 +1516,7 @@ class ThumbnailController {
 
         // ENDED event listener
         $("#video_player").bind("ended", function (par) {
-            refToThis.finishedPlaying('ended', continuous_list);
+            refToThis.finishedPlaying('ended', medium_dict, continuous_list);
         });
 
         // FULLSCREENCHANGE event listener
@@ -1446,7 +1525,7 @@ class ThumbnailController {
 
             // If exited of full screen
             if (!state) {
-                refToThis.finishedPlaying('fullscreenchange', continuous_list);
+                refToThis.finishedPlaying('fullscreenchange', medium_dict, continuous_list);
             }
         });
         player.style.display = 'block';
@@ -1572,16 +1651,26 @@ class ThumbnailController {
      * @param {*} event 
      * @param {*} continuous_list 
      */
-    finishedPlaying(event, continuous_list) {
+    finishedPlaying(event, medium_dict, continuous_list) {
 
         // Stop updating the current media history
-        if(this.updateMediaHistoryIntervalId != undefined){
+        if(this.updateMediaHistoryIntervalId != null){
             clearInterval(this.updateMediaHistoryIntervalId);
             console.log("Stopped Media History Interval: " + this.updateMediaHistoryIntervalId);
         }
 
         let player = $("#video_player")[0];
         let domPlayer = $("#video_player");
+
+        // Update the Current Position at the finished position
+        if (this.media_history_start_epoch != null){            
+            let card_id = medium_dict["card_id"];
+            this.updateMediaHistory(this.media_history_start_epoch, card_id)
+        }
+
+        // Refresh the Progress bar
+        let currentTimeInSeconds = player.currentTime;
+        this.objScrollSection.refreshFocusedThumbnailProgresBar(currentTimeInSeconds)
 
         // Remove the playing list
         domPlayer.children("source").remove();
@@ -1614,8 +1703,6 @@ class ThumbnailController {
             // if the recent element is media
             if(medium_path != null){
             
-                // console.log("Next media to playe. id: " + card_id + ", title: "+ title);
-
                 // Creates a new source element
                 let sourceElement = $('<source>');
                 sourceElement.attr('src', medium_path);
@@ -1629,7 +1716,7 @@ class ThumbnailController {
                 }
 
                 // REST request to register this media in the History
-                this.registerMediaInHistory(this, card_id, 0);
+                this.media_history_start_epoch = this.registerMediaInHistory(this, card_id, 0);
 
                 player.load();
                 player.play();
@@ -1722,6 +1809,7 @@ class ThumbnailController {
      * POST REST request to register the recent media in the History
      */ 
     registerMediaInHistory(refToThis, card_id, recent_position){
+        
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
@@ -1738,9 +1826,11 @@ class ThumbnailController {
             this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, data_dict['start_epoch'], card_id);
             console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
         }else{
-            this.updateMediaHistoryIntervalId = undefined;
-            console.log("Media History Interval did not started: " + error);
+            this.updateMediaHistoryIntervalId = null;
+            console.log("Media History Interval did not start: " + error);
         }
+
+        return data_dict['start_epoch'];
     }
 
     /**
@@ -1750,7 +1840,7 @@ class ThumbnailController {
      * @param {*} start_epoch 
      * @param {*} card_id 
      */
-    updateMediaHistory(refToThis, start_epoch, card_id){
+    updateMediaHistory(start_epoch, card_id){
         let player = $("#video_player")[0];
         let currentTimeInSeconds = player.currentTime;
 
@@ -1768,7 +1858,7 @@ class ThumbnailController {
 
 
     // TODO: This method should be deleted and the normal query should take the recent_position
-    getMediaPositionInLatestHistory(refToThis, card_id, limit_days=30){
+    getMediaPositionInLatestHistory(card_id, limit_days=30){
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/history/request";
         let rq_assync = false;

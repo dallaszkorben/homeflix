@@ -237,7 +237,7 @@ class RestGenerator extends Generator{
         let history_title = this.getHistoryTitle(hit);
         let main_title = RestGenerator.getMainTitle(hit);
 
-        let card_id = hit["id"];
+//        let card_id = hit["id"];
 
         // If any numbers of appendix belong to the card (regardles of it is media card or level)
         if(hit["appendix"]){
@@ -276,7 +276,7 @@ class RestGenerator extends Generator{
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
             thumbnail.setTextCard({storyline:hit["storyline"], lyrics:hit["lyrics"]});
-            thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"]});
+            thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"] });
 
             thumbnail.setFunctionForSelection({
                 "single": 
@@ -371,7 +371,7 @@ class RestGenerator extends Generator{
 
             // TODO: fix it
             // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I choose. It could be changed
-            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"]});
+            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], full_time: card["full_time"],net_start_time: card["net_start_time"], net_stop_time: card["net_stop_time"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"], recent_state: hit["recent_state"], 'rate': hit['rate'], 'skip_continuous_play': hit['skip_continuous_play']});
     
             thumbnail.setFunctionForSelection({
                 "single": 

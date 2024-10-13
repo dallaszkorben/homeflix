@@ -65,7 +65,7 @@ curl  --header "Content-Type: application/json" --request POST --data '{"card_id
 curl  --header "Content-Type: application/json" --request POST --data '{"card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "198", "start_epoch": 1727604645}' http://localhost:80/personal/history/update
 
 # Get the history of the card
-curl  --header "Content-Type: application/json" --request GET --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "limit_days": 15, "limit_records": 5}' http://localhost:80/personal/history/request 
+curl  --header "Content-Type: application/json" --request GET --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "limit_days": 15, "limit_records": 1}' http://localhost:80/personal/history/request 
  
 #
 # Fetch history of a user:
@@ -86,7 +86,7 @@ WHERE
 # Fetch history of a media of a user
 # print the records in separate lines
 #
-res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recent_position, last_position FROM History WHERE id_card=:id_card ORDER BY start_epoch;',{'id_card': 'a842968e01a203e1efe295001d837ca6'})
+res = con.execute('SELECT datetime(start_epoch, "unixepoch", "localtime"), recent_position FROM History WHERE id_card=:id_card ORDER BY start_epoch ;',{'id_card': '2ec99cd6df31a2ba2e9369bae876faad'})
 for rec in res.fetchall():
     print(rec)
 
@@ -101,7 +101,7 @@ for rec in res.fetchall():
 #
 # Get the latest history
 #
-curl  --header "Content-Type: application/json" --request GET --data '{ "user_id": 1234, "card_id": "5583062bccde422e47378450068cc5a2", "limit_records": 1}' http://localhost:80/personal/history/request
+curl  --header "Content-Type: application/json" --request GET --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "limit_records": 1}' http://localhost:80/personal/history/request
     
 
 #

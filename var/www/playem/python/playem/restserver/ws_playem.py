@@ -2,9 +2,10 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import distlib
+import hashlib
 
 import json
 from flask import Flask
@@ -34,11 +35,10 @@ class WSPlayem(Flask):
         self.app = self
 
         # Secret for the SESSION
-#        self.secret_key = os.urandom(24)
-        self.secret_key = "very secret key"
-
-#        # It stores the logged in user - No User logged in yet
-#        self.logged_in_user = {'username': None, 'user_id': None, 'language_id': None}
+        # self.secret_key = os.urandom(24)
+        salt = "my very secret key"
+        self.secret_key = hashlib.sha256(salt.encode()).hexdigest()
+        self.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365)
 
         # Fetch Confiuration variables
         self.cg = getConfig()        # defined in config.py

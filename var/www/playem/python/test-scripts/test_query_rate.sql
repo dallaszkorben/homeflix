@@ -30,6 +30,11 @@ con.execute('DROP TABLE Rating;').fetchall()
 db.recreate_personal_dbs()
 db.recreate_static_dbs()
  
+
+res=con.execute('SELECT * FROM History;')
+for hist in res.fetchall():
+    print(hist) 
+ 
  
 #
 # Create Rating table

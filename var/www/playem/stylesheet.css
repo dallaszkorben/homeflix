@@ -60,7 +60,7 @@
     --description-text-credentials-height: 0px;
     --description-text-credentials-font-size: 0px;
 
-    --description-text-storyline-width:50%;
+    --description-text-storyline-width: 50%;
 
     --description-image: "";
 }
@@ -427,6 +427,27 @@ body {
     position: relative;                                         /* This made the animation with text work. I do not know how */
     cursor: pointer;
 }
+
+.thumbnail-play-progress-bar-wrapper {
+    position: absolute;
+    bottom: 10px; /* Adjust as needed to fine-tune vertical positioning */
+    left: 5%;
+    width: 90%;
+    height: 6px; /* Or use 4px for a slimmer bar */
+    background-color: #e0e0e0; /* Light gray background */
+    border-radius: 3px; /* For rounded ends */
+    overflow: hidden;
+}
+
+.thumbnail-play-progress-bar {
+    height: calc(100% - 2px); /* Reduce the height by 2px (1px on top, 1px on bottom) */
+    width: 0; /* This will control the progress */
+    background-color: #007aff; /* Apple-like blue */
+    margin: 1px; /* Adds a 1px gap on all sides */
+    border-radius: 3px; /* Rounded ends */
+    transition: width 0.3s ease; /* Smooth animation on change */
+}
+
 
 /**********/
 /* Ribbon */
