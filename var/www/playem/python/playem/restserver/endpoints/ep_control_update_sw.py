@@ -1,6 +1,5 @@
 import logging
 import subprocess
-# import os
 import time
 
 from playem.card.database import SqlDatabase as DB
@@ -11,7 +10,7 @@ from playem.restserver.representations import output_json
 
 from flask import request
 
-class EPControlUpdate(EP):
+class EPControlUpdateSw(EP):
 
     ID = 'control_update'
     URL = '/control/update'
@@ -33,7 +32,7 @@ class EPControlUpdate(EP):
         remoteAddress = request.remote_addr
 
         logging.debug( "WEB request {1} {0} {2})".format(
-                    remoteAddress, EPControlUpdate.METHOD, EPControlUpdate.URL                    
+                    remoteAddress, EPControlUpdateSw.METHOD, EPControlUpdateSw.URL                    
                 )
         )
 

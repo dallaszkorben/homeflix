@@ -611,7 +611,7 @@ body {
     gap: 0em;
 
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-    font-size: 2em;
+    font-size: 1.5em;
     font-weight: bold;
 }
   
@@ -650,6 +650,7 @@ body {
     margin: 0px;
     top: 100%; /* Ensures the dropdown appears below the main menu */
     left: 0;
+    white-space: nowrap;
     min-width: 100%; /* Ensures the width of the dropdown is at least as wide as the main menu */
 }
 

@@ -51,7 +51,7 @@
         if(!result.responseJSON['result'] || Object.keys(user_data).length === 0){
             user_data = {
                 languageCode: "en",
-                name: undefined,
+                name: null,
                 is_admin: true,
                 descriptor_color: 'rgb(129, 60, 41)',
                 always_show_original_title: true,
@@ -327,10 +327,6 @@
 
 // TODO with the other translated_???? dictionaries
 
-
-
-
-
         $(document).ready(function () {
 
             //
@@ -488,37 +484,47 @@
                 window.location.reload();
             });
 
-            // Select Rebuild from the dropdown list
+            //
+            // Server Setting
+            //
             $('.option.setting').on('click', function() {
                 let setting = $(this).attr("value");
 
-                if(setting=="rebuild"){
+                if(setting=="rebuild-static-db"){
 
                     Generator.startSpinner();
 
                     setTimeout(function(){
                         rq_method = "POST";
-                        rq_url = "http://" + host + port + "/control/rebuild";
+                        rq_url = "http://" + host + port + "/control/rebuild/db/static";
                         rq_assync = false;
                         response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
                         rebuild_result = response.responseJSON;
 
                         window.location.reload(true);
                     }, 100);
-                }
-            });
 
-            // Select Update from the dropdown list
-            $('.option.setting').on('click', function() {
-                let setting = $(this).attr("value");
+                }else if(setting=="rebuild-personal-db"){
 
-                if(setting=="update"){
+                    Generator.startSpinner();
+
+                    setTimeout(function(){
+                        rq_method = "POST";
+                        rq_url = "http://" + host + port + "/control/rebuild/db/personal";
+                        rq_assync = false;
+                        response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+                        rebuild_result = response.responseJSON;
+
+                        window.location.reload(true);
+                    }, 100);
+
+                }else if(setting=="update-sw"){
 
                     Generator.startSpinner();
 
                     setTimeout(function(){                    
                         rq_method = "POST";
-                        rq_url = "http://" + host + port + "/control/update";
+                        rq_url = "http://" + host + port + "/control/update/sw";
                         rq_assync = false;
                         response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
                         response_dict = response.responseJSON;
@@ -562,9 +568,15 @@
                 }
             });
 
-            // LOGIN dialog
+            //
+            // PERSONAL
+            //
+            let personal = user_data["name"] != null ? user_data["name"] :"Not logged in";
+            $('#personal-menu .main-menu-text' ).text("User: " + personal);
             $('.option.personal').on('click', function() {
                 let personal = $(this).attr("value");
+
+                // LOGIN dialog
                 if(personal=="login"){
 
                     $('#username').val("");
@@ -617,13 +629,9 @@
                             });
                         }
                     })
-                }
-            })
 
-            // LOGOUT
-            $('.option.personal').on('click', function() {
-                let personal = $(this).attr("value");
-                if(personal=="logout"){
+                // LOGOUT
+                }else if(personal=="logout"){
                     
                     // Login message to the server                                
                     let rq_method = "POST";
@@ -684,8 +692,9 @@
         <div id="setting-menu" class="main-menu admin">
             <div class="main-menu-text">Server Settings</div>
             <ul id="setting-dropdown" class="dropdown">
-                <li class="option setting" value="rebuild">Re-build DB</li>
-                <li class="option setting" value="update">Update SW</li>
+                <li class="option setting" value="rebuild-static-db">Re-build Static DB</li>
+                <li class="option setting" value="rebuild-personal-db">Re-build Personal DB</li>
+                <li class="option setting" value="update-sw">Update SW</li>
             </ul>
         </div>
         <div id="language-menu" class="main-menu user">
@@ -696,7 +705,7 @@
             </ul>
         </div>
         <div id="personal-menu" class="main-menu user">
-            <div class="main-menu-text">Personal</div>
+            <div class="main-menu-text">No one</div>
             <ul id="personal-dropdown" class="dropdown">
                 <li class="option personal" value="login">Login</li>
                 <li class="option personal" value="logout">Logout</li>
