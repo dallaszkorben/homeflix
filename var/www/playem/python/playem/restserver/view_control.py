@@ -41,13 +41,13 @@ class ControlView(FlaskView):
     #
     # Rebuild the Static Database
     #
-    # curl  --header "Content-Type: application/json" --request POST http://localhost:5000/control/rebuild/db/static
+    # curl  --header "Content-Type: application/json" --request POST http://localhost:80/control/rebuild/db/static
     #
-    # POST http://localhost:5000/control/rebuild/db/static
+    # POST http://localhost:80/control/rebuild/db/static
     #
-    #@route('/rebuild', methods=['POST'])
+    #@route('/rebuild/db/static', methods=['POST'])
     @route(EPControlRebuildDbStatic.PATH_PAR_PAYLOAD, methods=[EPControlRebuildDbStatic.METHOD])
-    def controlRebuild(self):
+    def controlRebuildDbStatic(self):
 
         json_data = {}
         out = self.epControlRebuildDbStatic.executeByPayload(json_data)
@@ -56,13 +56,13 @@ class ControlView(FlaskView):
     #
     # Rebuild the Personal Database
     #
-    # curl  --header "Content-Type: application/json" --request POST http://localhost:5000/control/rebuild/db/personal
+    # curl  --header "Content-Type: application/json" --request POST http://localhost:80/control/rebuild/db/personal
     #
-    # POST http://localhost:5000/control/rebuild/db/personal
+    # POST http://localhost:80/control/rebuild/db/personal
     #
-    #@route('/rebuild', methods=['POST'])
+    #@route('/rebuild/db/personal', methods=['POST'])
     @route(EPControlRebuildDbPersonal.PATH_PAR_PAYLOAD, methods=[EPControlRebuildDbPersonal.METHOD])
-    def controlRebuild(self):
+    def controlRebuildDbPersonal(self):
 
         json_data = {}
         out = self.epControlRebuildDbPersonal.executeByPayload(json_data)

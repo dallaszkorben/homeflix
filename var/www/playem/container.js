@@ -1407,7 +1407,9 @@ class ThumbnailController {
 
     playMediaAudioVideo(continuous_list){
         
-        let medium_dict = continuous_list.shift();
+        // Takes the first element from the list
+//        let medium_dict = continuous_list.shift();
+        let medium_dict = continuous_list[0];
 
         let medium_path = medium_dict["medium_path"];
         let screenshot_path = medium_dict["screenshot_path"];
@@ -1437,12 +1439,12 @@ class ThumbnailController {
                     buttons: {
                       "Continue": function() {
                         $( this ).dialog( "close" );
-                        refToThis.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
+                        refToThis.configurePlayer(refToThis, continuous_list, recent_position);
                       },
                       "From beginning": function() {
                         $( this ).dialog( "close" );
                         recent_position = 0;
-                        refToThis.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
+                        refToThis.configurePlayer(refToThis, continuous_list, recent_position);
                       }
                     }
                 })
@@ -1457,12 +1459,21 @@ class ThumbnailController {
 
             // Otherwise it starts to play from the beginning
             }else{
-                this.configurePlayer(refToThis, medium_dict, continuous_list, recent_position);
+                recent_position = 0;
+                this.configurePlayer(refToThis, continuous_list, recent_position);
             }
         }
     }
 
-    configurePlayer(refToThis, medium_dict, continuous_list, recent_position){
+    /**
+     * 
+     * @param {*} refToThis 
+     * @param {*} continuous_list - Still contains the recent playing media - first element
+     * @param {*} recent_position 
+     */
+    configurePlayer(refToThis, continuous_list, recent_position){
+
+        let medium_dict = continuous_list[0];
 
         let medium_path = medium_dict["medium_path"];
         let screenshot_path = medium_dict["screenshot_path"];
@@ -1506,7 +1517,7 @@ class ThumbnailController {
         }
 
         // REST request to register this media in the History
-        this.media_history_start_epoch = refToThis.registerMediaInHistory(refToThis, card_id, recent_position);
+        this.media_history_start_epoch = refToThis.registerMediaInHistory(card_id, recent_position);
 
         player.load();
         player.controls = true;
@@ -1516,7 +1527,7 @@ class ThumbnailController {
 
         // ENDED event listener
         $("#video_player").bind("ended", function (par) {
-            refToThis.finishedPlaying('ended', medium_dict, continuous_list);
+            refToThis.finishedPlaying('ended', continuous_list);
         });
 
         // FULLSCREENCHANGE event listener
@@ -1525,7 +1536,7 @@ class ThumbnailController {
 
             // If exited of full screen
             if (!state) {
-                refToThis.finishedPlaying('fullscreenchange', medium_dict, continuous_list);
+                refToThis.finishedPlaying('fullscreenchange', continuous_list);
             }
         });
         player.style.display = 'block';
@@ -1649,9 +1660,12 @@ class ThumbnailController {
      * Make decision if the next media should be played, and start to play it if needed
      * 
      * @param {*} event 
-     * @param {*} continuous_list 
+     * @param {*} continuous_list - Still contains the recent playing media - first element
      */
-    finishedPlaying(event, medium_dict, continuous_list) {
+    finishedPlaying(event, continuous_list) {
+
+        // Take the first element of the list and remove it from the list
+        let medium_dict = continuous_list.shift();
 
         // Stop updating the current media history
         if(this.updateMediaHistoryIntervalId != null){
@@ -1675,31 +1689,30 @@ class ThumbnailController {
         // Remove the playing list
         domPlayer.children("source").remove();
 
-        // if I'm here because the player ended and there is at least 1 element in the play_list
+        // if I'm here because the player ended and there is at least 1 more element in the play_list
         if (event == 'ended' && continuous_list.length > 0) {
 
-            let medium_dict
-            let medium_path;
-            let screenshot_path;
-            let card_id;
-            let title;
+            this.objScrollSection.arrowRight()
+            
+            let medium_dict = continuous_list[0];
+            let medium_path = medium_dict["medium_path"];
+            let screenshot_path = medium_dict["screenshot_path"];
+            let card_id = medium_dict["card_id"];
+            let title = medium_dict["title"];
 
             // takes the next element until it is a media
-            do {
-                medium_dict = continuous_list.shift();
+            while(medium_path == null && continuous_list.length > 0){
+                continuous_list.shift();
+                medium_dict = continuous_list[0];
                 medium_path = medium_dict["medium_path"];
                 screenshot_path = medium_dict["screenshot_path"];
                 card_id = medium_dict["card_id"];
                 title = medium_dict["title"];
-                //net_start_time = medium_dict["net_start_time"];
-                //net_stop_time = medium_dict["net_stop_time"];
-                                
+                
                 // next focus on the thumbnails
                 this.objScrollSection.arrowRight()
-
-            // takes the next element until it is media or empty play_list
-            } while(medium_path == null && continuous_list.length > 0);
-            
+            }
+           
             // if the recent element is media
             if(medium_path != null){
             
@@ -1716,7 +1729,7 @@ class ThumbnailController {
                 }
 
                 // REST request to register this media in the History
-                this.media_history_start_epoch = this.registerMediaInHistory(this, card_id, 0);
+                this.media_history_start_epoch = this.registerMediaInHistory(card_id, 0);
 
                 player.load();
                 player.play();
@@ -1808,7 +1821,7 @@ class ThumbnailController {
     /**
      * POST REST request to register the recent media in the History
      */ 
-    registerMediaInHistory(refToThis, card_id, recent_position){
+    registerMediaInHistory(card_id, recent_position){
         
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
@@ -1823,7 +1836,7 @@ class ThumbnailController {
 
         // The user is logged in and the register was successful
         if(result){
-            this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, refToThis, data_dict['start_epoch'], card_id);
+            this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, data_dict['start_epoch'], card_id);
             console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
         }else{
             this.updateMediaHistoryIntervalId = null;

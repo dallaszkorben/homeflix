@@ -1,6 +1,4 @@
 import logging
-# import subprocess
-# import os
 import time
 
 from playem.card.database import SqlDatabase as DB

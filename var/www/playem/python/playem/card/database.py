@@ -1544,7 +1544,8 @@ class SqlDatabase:
                         VALUES (:card_id, :user_id, :start_epoch, :recent_epoch, :recent_position);
                     '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'recent_epoch': recent_epoch, 'recent_position': recent_position})
-                    record = cur.fetchone()                
+                    record = cur.fetchone()
+                    logging.debug("The registered new history of card_id: {0} has 'start_epoch': {1}".format(card_id, start_epoch))
 
                 # Update history
                 elif history_number == 1 and start_epoch:
