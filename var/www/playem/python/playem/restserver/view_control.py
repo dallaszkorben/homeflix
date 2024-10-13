@@ -80,5 +80,5 @@ class ControlView(FlaskView):
     def controlUpdateSw(self):
 
         json_data = {}
-        out = self.EPControlUpdateSw.executeByPayload(json_data)
+        out = self.epControlUpdateSw.executeByPayload(json_data)
         return out
