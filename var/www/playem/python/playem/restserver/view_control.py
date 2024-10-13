@@ -68,16 +68,16 @@ class ControlView(FlaskView):
         out = self.epControlRebuildDbPersonal.executeByPayload(json_data)
         return out
 
-   #
+    #
     # Update software
     #
-    # curl  --header "Content-Type: application/json" --request POST http://localhost:5000/control/update/sw
+    # curl  --header "Content-Type: application/json" --request POST http://localhost:80/control/update/sw
     #
-    # POST http://localhost:5000/control/update/sw
+    # POST http://localhost:80/control/update/sw
     #
-    #@route('/update', methods=['POST'])
+    #@route('/update/sw', methods=['POST'])
     @route(EPControlUpdateSw.PATH_PAR_PAYLOAD, methods=[EPControlUpdateSw.METHOD])
-    def controlUpdate(self):
+    def controlUpdateSw(self):
 
         json_data = {}
         out = self.EPControlUpdateSw.executeByPayload(json_data)
