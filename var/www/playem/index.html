@@ -527,15 +527,14 @@
                         rq_url = "http://" + host + port + "/control/update/sw";
                         rq_assync = false;
                         response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
-                        response.status
-                        response.text
                         response_dict = response.responseJSON;
                         console.log(response_dict);
 
                         Generator.stopSpinner();
 
                         if(response.status != 200){
-                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + response.text + "<br>");
+                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + response.statusText + "<br>");
+//                            $("#dialog-warning-update-failed p").html(response.responseText);
                             $("#dialog-warning-update-failed" ).dialog({
                                 resizable: false,
                                 height: "auto",

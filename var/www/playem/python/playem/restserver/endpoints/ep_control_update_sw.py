@@ -12,11 +12,11 @@ from flask import request
 
 class EPControlUpdateSw(EP):
 
-    ID = 'control_update'
-    URL = '/control/update'
+    ID = 'control_update_sw'
+    URL = '/control/update/sw'
 
-    PATH_PAR_PAYLOAD = '/update'
-    PATH_PAR_URL = '/update'
+    PATH_PAR_PAYLOAD = '/update/sw'
+    PATH_PAR_URL = '/update/sw'
 
     METHOD = 'POST'
 
