@@ -285,26 +285,35 @@ class CardHandle:
                 except:
                     full_length = None
                     full_time = None
-                try:
-                    net_start = data['netstart']
-                    net_start_time = self.format_time_code_to_seconds(net_start)
-                except:
-                    net_start = None
-                    net_start_time = 0
-                try:
-                    if full_length:
+
+                # If the media has configured length
+                if full_length:
+
+                    # then there should be net_start and net_stop
+                    try:
+                        net_start = data['netstart']
+                        net_start_time = self.format_time_code_to_seconds(net_start)
                         net_stop = data['netstop']
                         net_stop_time = self.format_time_code_to_seconds(net_stop)
-                    else:
+                    except:
+                        net_start = None
                         net_stop = None
-                        net_stop_time = None
-                except:
-                    if full_length:
-                        net_stop = None
-                        net_stop_time = full_time
-                    else:
-                        net_stop = None
-                        net_stop_time = None
+
+                        # If the media time > 10 minutes, then I have to handle the continuous play, even if the netstart/netstop is not set
+                        if full_time >= 600:
+                            net_start_time = 60
+                            net_stop_time = full_time - 200
+                        else:
+                            net_start_time = 0
+                            net_stop_time = full_time                        
+
+                # If the media has no configured length
+                else:
+                    net_start = None
+                    net_start_time = None
+                    net_stop = None
+                    net_stop_time = None
+
                 try:
                     sounds = data['sounds']
                 except:

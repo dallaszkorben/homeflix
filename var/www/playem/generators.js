@@ -198,7 +198,7 @@ class RestGenerator extends Generator{
         return result_title;
     }
 
-    static getRandomFileFromDirectory(path, filter){
+    static getRandomFileFromDirectory(path,filter){
         let file_list = [];
         let rawText = $.ajax({url: path, async: false}).responseText;
         $(rawText).find('tr > td > a').not(':first').each(function(){                          
@@ -213,17 +213,22 @@ class RestGenerator extends Generator{
     }
 
     static getRandomSnapshotPath(source_path){       
-        return RestGenerator.getRandomFilePath(source_path, "thumbnails");
+        return RestGenerator.getRandomFilePath(source_path, "thumbnails", "images/thumbnails/thumbnail_empty_460x600.jpg");
     }
 
     static getRandomScreenshotPath(source_path){   
-        return RestGenerator.getRandomFilePath(source_path, "screenshots");  
+        return RestGenerator.getRandomFilePath(source_path, "screenshots", "images/thumbnails/screenshot_empty_1100x500.jpg");  
     }
 
-    static getRandomFilePath(source_path, folder_name){
+    static getRandomFilePath(source_path, folder_name, default_path){
         let path_to_folder = pathJoin([source_path, folder_name]);
-        let file_name = RestGenerator.getRandomFileFromDirectory(path_to_folder, /\.jpg$/);       
-        let path = pathJoin([path_to_folder, file_name]);
+        let file_name = RestGenerator.getRandomFileFromDirectory(path_to_folder, /\.jpg$/);
+        let path;
+        if(file_name == undefined){
+            path=default_path;
+        }else{
+            path = pathJoin([path_to_folder, file_name]);
+        }
         return path;
     }
 
