@@ -38,7 +38,7 @@ class ObjScrollSection {
         this.thumbnailContainerList = [];
         this.focusedThumbnailList = [];
 
-        this.oDescriptionContainer = new ObjDescriptionContainer();
+        this.oDescriptionContainer = new ObjDescriptionContainer(this);
         this.oDescriptionContainer.setThumbnailController(objThumbnailController);
 
         this.resetDom();
@@ -240,6 +240,12 @@ class ObjScrollSection {
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex]
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
 
+        let card_id = null;
+        let single = thumbnail.function_for_selection.single;
+        if("medium_dict" in single){
+            card_id = single.medium_dict["card_id"];
+        }
+
         if (thumbnail != undefined) {
             let image = thumbnail.getDescriptionImageSource();
             let title = thumbnail.getTitle();
@@ -250,7 +256,7 @@ class ObjScrollSection {
             let appendix = thumbnail.getAppendix();
 
             // Shows the actual Description
-            this.oDescriptionContainer.refreshDescription(image, title, storyline, lyrics, credentials, extra, appendix);
+            this.oDescriptionContainer.refreshDescription(thumbnail, card_id, image, title, storyline, lyrics, credentials, extra, appendix);
         }
     }
 
@@ -632,6 +638,7 @@ class Thumbnail {
         if (thumbnail_src != undefined) {
             this.thumbnailDict["thumbnail_src"] = thumbnail_src;
         }
+        
         if (description_src != undefined) {
             this.thumbnailDict["description_src"] = description_src;
         }
@@ -735,7 +742,10 @@ class Thumbnail {
         this.thumbnailDict["extras"]["rate"] = rate;
 
         this.thumbnailDict["extras"]["skip_continuous_play"] = skip_continuous_play;
+    }
 
+    setExtrasRate(rate){
+        this.thumbnailDict["extras"]["rate"] = rate;
     }
 
     setAppendix(appendix_list) {
@@ -808,12 +818,13 @@ class Thumbnail {
 
 
 class ObjDescriptionContainer {
-    constructor() {
+    constructor(objScrollSection) {
         this.description_img = {
             width: 0,
             height: 0
         }
         this.objThumbnailController = undefined;
+        this.objScrollSection = objScrollSection;
     }
 
     setThumbnailController(objThumbnailController) {
@@ -857,11 +868,12 @@ class ObjDescriptionContainer {
     * @param {*} storyline 
     * @param {*} credential 
     */
-    refreshDescription(fileName, title, storyline, lyrics, credentials, extra, appendix_list) {
+    refreshDescription(thumbnail, card_id, fileName, title, storyline, lyrics, credentials, extra, appendix_list) {
         let mainObject = this;
         let descImg = new Image();
+        mainObject.card_id = card_id;
+        mainObject.thumbnail = thumbnail;
         descImg.src = fileName;
-        //        let refToObjThumbnailController = this.objThumbnailController;
 
         // when the image loaded, the onload event will be fired
         descImg.onload = function (refToObjThumbnailController) {
@@ -982,6 +994,135 @@ class ObjDescriptionContainer {
                     }
                 }
                 descTextExtraTheme.html(textExtraTheme);
+
+                // --- extra - rating ---
+                let descRating = $("#description-rating");
+                descRating.empty();
+
+                if(extra["medium_path"]){
+
+                    let rate = extra["rate"];
+                    let max_rate = 5;
+
+                    //
+                    // Generate the stars dynamically when the page loads
+                    //
+                    let descRating = $("#description-rating");
+                    descRating.empty(); // Clear any existing stars
+            
+                    // Dynamically generate the star divs with img elements
+                    for (var i = 1; i <= max_rate; i++) {
+                        var starDiv = $('<div>', {
+                            id: 'description-rating-' + i,
+                            class: 'description-rating-rate'
+                        });
+            
+                        var starImg = $('<img>', {
+                            key: i,
+                            src: 'images/rating/star-not-selected.png' // Initially set to 'not-selected'
+                        });
+            
+                        starDiv.append(starImg);
+                        descRating.append(starDiv);
+
+                        if (i <= rate) {
+                            $('#description-rating-' + i + ' img').attr('src', 'images/rating/star-selected.png');
+                        } else {
+                            $('#description-rating-' + i + ' img').attr('src', 'images/rating/star-not-selected.png');
+                        }
+                    }
+
+                    //
+                    // Handle hover effect
+                    //
+                    $('.description-rating-rate img').hover(function() {
+                        //var index = $(this).index() + 1;
+                        var imgSrc = $(this).attr('src');
+                
+                        // Change focus images on hover
+                        if (imgSrc.includes('star-selected')) {
+                            $(this).attr('src', 'images/rating/star-selected-focus.png');
+                        } else {
+                            $(this).attr('src', 'images/rating/star-not-selected-focus.png');
+                        }
+                    }, function(){
+                        //var index = $(this).index() + 1;
+                        var imgSrc = $(this).attr('src');
+                
+                        // Reset images on mouse leave
+                        if (imgSrc.includes('star-selected-focus') || imgSrc.includes('star-selected')) {
+                            $(this).attr('src', 'images/rating/star-selected.png');
+                        } else {
+                            $(this).attr('src', 'images/rating/star-not-selected.png');
+                        }
+                    });
+
+                    //
+                    // Handle click to change rating
+                    //
+                    $('.description-rating-rate img').click(function() {
+                        //var index = $(this).index() + 1; // Get the clicked star index
+                        let index = parseInt($(this).attr('key'));
+                
+                        // Three scenarios:
+                        if (index > rate) {
+                            // 1. Image was 'not selected', select all to the left including this one
+                            rate = index;
+                        } else if (index === rate) {
+                            // 2. Image was 'selected' and no more stars are selected on the right side, deselect this one
+                            rate--;
+                        } else {
+                            // 3. Image was 'selected', deselect all on the right side but keep the left side
+                            rate = index;
+                        }
+                
+                        //
+                        // Update the stars based on the new rate
+                        //
+                        for (var i = 1; i <= max_rate; i++) {
+                            if (i <= rate) {
+                                $('#description-rating-' + i + ' img').attr('src', 'images/rating/star-selected.png');
+                            } else {
+                                $('#description-rating-' + i + ' img').attr('src', 'images/rating/star-not-selected.png');
+                            }
+                        }
+
+                        let rq_method = "POST";
+                        let rq_url = "http://" + host + port + "/personal/rating/update";
+                        let rq_assync = false;
+                        let rq_data = {"card_id": card_id, "rate": rate}
+                        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
+                        
+                        if(response.status == 200){
+                            // Update the selected Rate for ALL Thumbnails in all ThumbnailContainer
+                            for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
+                                // console.log("container: " + containerIndex);
+
+                                let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
+                                let thumbnailList = objThumbnailContainer.thumbnailList
+                                for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+                                    let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
+
+                                    let single = thumbnail.function_for_selection.single;
+                                    if("medium_dict" in single){
+                                        let other_card_id = single.medium_dict["card_id"];
+
+                                        if(other_card_id == card_id){
+                                            // console.log("  thumbnail: " + thumbnailIndex + ", card: " + card_id + ", rate: " + rate);
+
+                                            thumbnail.setExtrasRate(rate);
+                                        }                                    
+                                    }
+                                }
+                            }
+                        }
+                        // response.responseText
+                        // response.statusText; //OK
+                        // response.responseText; //"{"result": true, "data": [], "error": null}"
+                        // console.log('Rate value: ' + rate); // Print the current rate value
+
+                    });
+                }
 
                 // -------------------
                 // --- credentials ---
@@ -1381,6 +1522,7 @@ class ThumbnailController {
         medium_dict["title"] = RestGenerator.getMainTitle(hit)
         medium_dict["net_start_time"] = hit["net_start_time"];
         medium_dict["net_stop_time"] = hit["net_stop_time"];
+        medium_dict["full_time"] = hit["full_time"];
 
         return medium_dict;            
     }
@@ -1417,6 +1559,7 @@ class ThumbnailController {
         let title = medium_dict["title"];
         let net_start_time = medium_dict["net_start_time"];
         let net_stop_time = medium_dict["net_stop_time"];
+        let full_time = medium_dict["full_time"];
 
         let limit_days = 30;
         let refToThis = this;
@@ -1426,8 +1569,8 @@ class ThumbnailController {
             // REST request to check if the played media was interrupted - take it from the recent database, not from the thumbnail data
             let recent_position = refToThis.getMediaPositionInLatestHistory(card_id, limit_days)
 
-            // The Recent Position is between the Net Play interval
-            if (recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
+            // The length of the media >= 10 minutes and Recent Position is between the Net Play interval then I handle the continuous play
+            if (full_time != null && full_time > 600 && recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
                 $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
                 $("#dialog-confirm-continue-interrupted-play").dialog({
                     //closeOnEscape: false,

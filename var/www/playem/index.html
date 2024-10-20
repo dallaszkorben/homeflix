@@ -355,6 +355,70 @@
             const domDescSectSection = document.querySelector("#description-section");
             resizeObserver.observe(domDescSectSection);
 
+
+
+
+
+
+    let recent_rate = 0; // Set this value dynamically (-2, -1, 0, 1, 2)
+    
+    // Pre-select based on recent_rate
+    const rateMap = {
+        "-2": "#description-rating-1 img",
+        "-1": "#description-rating-2 img",
+        "0":  "#description-rating-3 img",
+        "1":  "#description-rating-4 img",
+        "2":  "#description-rating-5 img"
+    };
+
+    if (!rateMap[recent_rate]) {
+        recent_rate = 0
+    }
+
+    let selectedImg = $(rateMap[recent_rate]);
+    selectedImg.attr('src', selectedImg.data('selected')); // Set the 'selected' image based on recent_rate
+
+
+    // Mouse enters an image
+    $('.description-rating-rate img').hover(function() {
+        const currentImg = $(this);
+        if (currentImg.attr('src') === 'images/rating/NotSelected-x.png') {
+            currentImg.attr('src', 'images/rating/NotSelected-x-focus.png');
+        } else if (currentImg.is(selectedImg)) {
+            currentImg.attr('src', currentImg.data('focus')); // Hovering over selected image
+        }
+    }, function() {
+        const currentImg = $(this);
+        if (currentImg.attr('src') === 'images/rating/NotSelected-x-focus.png') {
+            currentImg.attr('src', 'images/rating/NotSelected-x.png');
+        } else if (currentImg.is(selectedImg)) {
+            currentImg.attr('src', currentImg.data('selected')); // Leaving selected image
+        }
+    });
+
+    // Image clicked
+    $('.description-rating-rate img').click(function() {
+        if (selectedImg) {
+            // Reset the previous selected image back to not selected
+            selectedImg.attr('src', 'images/rating/NotSelected-x.png');
+        }
+        
+        // Set the new selected image
+        selectedImg = $(this);
+        selectedImg.attr('src', selectedImg.data('selected'));
+    });
+
+
+
+
+
+
+
+
+
+
+
+
             //
             // Arrow keyboard event listener
             //
@@ -758,14 +822,21 @@
                         <div id="description-text-area-div">
                             <div id="description-text-storyline"></div>
                             <div id="description-text-credentials"></div>
+                            <div id="description-rating"></div>
                         </div>
+
                         <div id="description-appendix">
                             <div id="description-appendix-download"></div>
                             <div id="description-appendix-play"></div>
                         </div>
+                        
+
                     </div>
                 </div>
-                <div id="description-image"></div>
+                <div id="description-image">
+<!--                    <div id="description-rating"></div>  -->
+                </div>
+
             </div>
             <div id="history-section">
                 <div id="history-section-text"></div>

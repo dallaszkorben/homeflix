@@ -28,6 +28,8 @@ from playem.restserver.endpoints.ep_personal_rating_update import EPPersonalRati
 # curl  --header "Content-Type: application/json" --request POST --data '{ "user_id": 1, "card_id": "5583062bccde422e47378450068cc5a2", "recent_position": "536.2"}' http://localhost:80/personal/history/update
 #
 # curl  --header "Content-Type: application/json" --request POST --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "rate": 2, "skip_continuous_play": 0}' http://localhost:80/personal/rating/update
+# curl  --header "Content-Type: application/json" --request POST --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "rate": 2}' http://localhost:80/personal/rating/update
+# curl  --header "Content-Type: application/json" --request POST --data '{"skip_continuous_play": 0}' http://localhost:80/personal/rating/update
 #
 # -----------------------------------
 #

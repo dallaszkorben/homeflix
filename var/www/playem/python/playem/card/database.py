@@ -259,7 +259,7 @@ class SqlDatabase:
             CREATE TABLE ''' + SqlDatabase.TABLE_RATING + '''(
                 id_card              INTEGER NOT NULL,
                 id_user              INTEGER NOT NULL,
-                rate                 INTEGER CHECK(rate BETWEEN -2 AND 2),
+                rate                 INTEGER CHECK(rate BETWEEN 0 AND 5),
                 skip_continuous_play BOOLEAN NOT NULL CHECK (skip_continuous_play IN (0, 1)),
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
@@ -1896,7 +1896,7 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
-    def set_rating(self, card_id, rate, skip_continuous_play):
+    def set_rating(self, card_id, rate=None, skip_continuous_play=None):
         result = False
         data = []
         error_message = "Lock error"
@@ -1935,11 +1935,27 @@ class SqlDatabase:
                 if rating_number == 0:
                     logging.debug("New rating record needed for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, user_id, rate, skip_continuous_play))
 
+                    insert_list = []
+                    insert_list.append("id_card")
+                    insert_list.append("id_user")
+                    values_list = []
+                    values_list.append(":card_id")
+                    values_list.append(":user_id")
+
+                    if rate is not None:
+                        set_list.append("rate")
+                        values_list.append(":rate")
+                    if skip_continuous_play is not None:
+                        set_list.append("skip_continuous_play")
+                        values_list.append(":skip_continuous_play")
+                    
                     query = '''
                         INSERT INTO ''' + SqlDatabase.TABLE_RATING + '''
-                            (id_card, id_user, rate, skip_continuous_play)
+--                            (id_card, id_user, rate, skip_continuous_play)
+                            (''' + ",".join(insert_list) + ''')
                         VALUES
-                            (:card_id, :user_id, :rate, :skip_continuous_play) 
+--                            (:card_id, :user_id, :rate, :skip_continuous_play) 
+                            (''' + ",".join(values_list) + ''')
                     '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'rate': rate, 'skip_continuous_play': skip_continuous_play})
                     record = cur.fetchone() 
@@ -1948,9 +1964,19 @@ class SqlDatabase:
                 else:
                     logging.debug("Rating updates for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, user_id, rate, skip_continuous_play))
 
+                    set_list = []
+                    set_list.append("'id_card' = :card_id")
+                    set_list.append("'id_user' = :user_id")
+                    if rate is not None:
+                        set_list.append("'rate' = :rate")
+                    if skip_continuous_play is not None:
+                        set_list.append("'skip_continuous_play' = :skip_continuous_play")
+
                     query = '''
                         UPDATE ''' + SqlDatabase.TABLE_RATING + '''
-                        SET id_card = :card_id, id_user = :user_id, rate = :rate, skip_continuous_play = :skip_continuous_play
+--                        SET id_card = :card_id, id_user = :user_id, rate = :rate, skip_continuous_play = :skip_continuous_play
+                        SET 
+                            ''' + ", ".join(set_list) + '''
                         WHERE
                             id_user = :user_id
                             AND id_card = :card_id

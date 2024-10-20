@@ -28,8 +28,8 @@ class EPPersonalRatingUpdate(EP):
         remoteAddress = request.remote_addr
 
         card_id = payload[EPPersonalRatingUpdate.ATTR_CARD_ID]
-        rate = payload[EPPersonalRatingUpdate.ATTR_RATE]
-        skip_continuous_play = payload[EPPersonalRatingUpdate.ATTR_SKIP_CONTINUOUS_PLAY]
+        rate = payload.get(EPPersonalRatingUpdate.ATTR_RATE, None)
+        skip_continuous_play = payload.get(EPPersonalRatingUpdate.ATTR_SKIP_CONTINUOUS_PLAY, None)
         #skip_continuous_play = payload.get(EPPersonalRatingUpdate.ATTR_SKIP_CONTINUOUS_PLAY, None)
 
         logging.debug( "WEB request ({0}): {1} {2} ('{3}': {4}, '{5}': {6}, '{7}': {8})".format(
