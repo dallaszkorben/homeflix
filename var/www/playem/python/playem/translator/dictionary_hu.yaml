@@ -459,8 +459,16 @@ title:
     movie_sequels: Folytatásos filmek
     movie_remakes: Feldolgozások
     movie_individual: Filmek
+    movie_mixed: Filmek
     movie_documentaries: Dokumentumfilmek
     movie_hungarian: Magyar
+    movie_interrupted: Folytasd
+    movie_last_watched: Utoljára nézett
+    movie_least_watched: Legritkábban nézett
+    movie_most_watched: Leggyakrabban nézett
+    movie_playlists: Lejátszási listák
+
+    continue_playing_movie: Mozi
 
     movie_by_genre: Műfaj
     movie_by_theme: Téma

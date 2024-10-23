@@ -459,8 +459,17 @@ title:
     movie_sequels: Movie Sequels
     movie_remakes: Movie Remakes
     movie_individual: Movie Individual
+    movie_mixed: Movie All
     movie_documentaries: Documentaries
     movie_hungarian: Hungarian
+    movie_interrupted: Continue Playing
+    movie_last_watched: Last Watched
+    movie_least_watched: Least Watched
+    movie_most_watched: Most Watched
+
+    movie_playlists: Playlists
+
+    continue_playing_movie: Continue Movie
 
     movie_by_genre: Genre
     movie_by_theme: Theme

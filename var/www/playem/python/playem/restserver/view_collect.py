@@ -35,7 +35,7 @@ from playem.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCol
 #
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/highest/mixed/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
 # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/next/mixed/card_id/<card_id>/category/<category>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
-# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/history_back/<history_back>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>
 #
 #
 #
@@ -118,25 +118,52 @@ class CollectView(FlaskView):
     #
     # Gives back filtered list of the lowest levels
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/playlist/<playlist>/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
     #
-    #@route('/lowest/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    #@route('/lowest/category/<category>/playlist/<playlist>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
     @route(EPCollectLowest.PATH_PAR_URL, methods=[EPCollectLowest.METHOD])
-    def collectLowestWithParameter(self, category, level, genres, themes, directors, actors, lecturers, origins, decade, lang):
+    def collectLowestWithParameter(self, category, playlist, level, genres, themes, directors, actors, lecturers, origins, decade, lang):
 
-        out = self.epCollectLowest.executeByParameters(category, level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        out = self.epCollectLowest.executeByParameters(category, playlist=playlist, level=level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
         return out
 
+    #
+    # Gives back filtered list of the lowest levels
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movei", "playlist": "*", "level": "*", "genres": "*", "themes": "*", "directors": "*", "actors": "*", "lecturers": "*", "origins": "*", "decade": "*", "lang": "en"}' http://localhost:80/collect/lowest
+    #
+    # GET http://localhost:80/collect/lowest
+    #      body: {
+    #       "category": "movei",
+    #       "playlist": "*",
+    #       "level": "*",
+    #       "genres": "*",
+    #       "themes": "*",
+    #       "directors": "*",
+    #       "actors": "*",
+    #       "lecturers": "*",
+    #       "origins": "*",
+    #       "decade": "*",
+    #       "lang": "en"
+    #      }
+    #
+    #@route('/lowest', methods=['GET'])
+    @route(EPCollectLowest.PATH_PAR_PAYLOAD, methods=[EPCollectLowest.METHOD])
+    def collectLowestWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+        
+        # WEB
+        elif request.form:
+            json_data = request.form
 
+        # ajax
+        else:
+            json_data = request.args
 
-
-
-
-
-
-
-
-
+        out = self.epCollectLowest.executeByPayload(json_data)
+        return out
 
 
 
