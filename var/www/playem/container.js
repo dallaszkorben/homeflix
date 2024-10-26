@@ -204,7 +204,7 @@ class ObjScrollSection {
         let recent_state = extras["recent_state"];
         let full_time = extras["full_time"]; 
         let net_start_time = extras["net_start_time"];
-        let net_stop_time = extras["net_stop_time"];       
+        let net_stop_time = extras["net_stop_time"];
 //---      
         recent_state["recent_position"] = recent_position;
         extras["recent_state"] = recent_state;
@@ -710,7 +710,7 @@ class Thumbnail {
         }
     }
 
-    setExtras({ medium_path = undefined, download = undefined, length = undefined, full_time = undefined, net_start_time = undefined, net_stop_time = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined, recent_state = {}, rate = undefined, skip_continuous_play = undefined }) {
+    setExtras({ medium_path = undefined, download = undefined, length = undefined, full_time = undefined, net_start_time = undefined, net_stop_time = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined, recent_state = {}, rate = undefined, skip_continuous_play = undefined, tags = []}) {
         this.thumbnailDict["extras"] = {}
 
         // TODO: This is not the best choice to store 'medium_path' in the 'extras', but that is what I chose. It could be changed
@@ -742,10 +742,29 @@ class Thumbnail {
         this.thumbnailDict["extras"]["rate"] = rate;
 
         this.thumbnailDict["extras"]["skip_continuous_play"] = skip_continuous_play;
+
+        this.thumbnailDict["extras"]["tags"] = tags;
     }
 
     setExtrasRate(rate){
         this.thumbnailDict["extras"]["rate"] = rate;
+    }
+
+    removeExtrasTag(tag){
+        let tag_list = this.thumbnailDict["extras"]["tags"];
+        let filtered_list = tag_list.filter(filter_tag);
+
+        this.thumbnailDict["extras"]["tags"] = filtered_list;
+
+        function filter_tag(tg){
+            return tg !== tag;
+        }
+    }
+
+    addExtraTag(tag){
+        let tag_list = this.thumbnailDict["extras"]["tags"];
+        tag_list.push(tag);
+        this.thumbnailDict["extras"]["tags"] = tag_list;
     }
 
     setAppendix(appendix_list) {
@@ -922,7 +941,9 @@ class ObjDescriptionContainer {
                 // --- extra ---
                 // -------------
 
+                //
                 // --- extra - year ---
+                //
                 let descTextExtraDate = $("#description-text-extra-date");
                 descTextExtraDate.empty();
                 let textExtraDate = "";
@@ -931,7 +952,9 @@ class ObjDescriptionContainer {
                 }
                 descTextExtraDate.html(textExtraDate);
 
+                //
                 // --- extra - length ---
+                //
                 let descTextExtraLength = $("#description-text-extra-length");
                 descTextExtraLength.empty();
                 let textExtraLength = "";
@@ -941,7 +964,9 @@ class ObjDescriptionContainer {
                 }
                 descTextExtraLength.html(textExtraLength);
 
+                //
                 // --- extra - origin ---
+                //
                 let descTextExtraOrigin = $("#description-text-extra-block-origin");
                 descTextExtraOrigin.empty();
                 let textExtraOrigin = "";
@@ -959,7 +984,9 @@ class ObjDescriptionContainer {
                 }
                 descTextExtraOrigin.html(textExtraOrigin);
 
+                //
                 // --- extra - genre ---
+                //
                 let descTextExtraGenre = $("#description-text-extra-block-genre");
                 descTextExtraGenre.empty();
                 let textExtraGenre = "";
@@ -977,7 +1004,9 @@ class ObjDescriptionContainer {
                 }
                 descTextExtraGenre.html(textExtraGenre);
 
+                //
                 // --- extra - theme ---
+                //
                 let descTextExtraTheme = $("#description-text-extra-block-theme");
                 descTextExtraTheme.empty();
                 let textExtraTheme = "";
@@ -995,9 +1024,221 @@ class ObjDescriptionContainer {
                 }
                 descTextExtraTheme.html(textExtraTheme);
 
+
+
+
+
+
+
+                //
+                // --- extra - tagging ---
+                //
+                let descTagging = $("#description-tagging");
+                descTagging.empty();
+
+                if(extra["medium_path"]){
+
+                    // Construct + button
+                    let tagButton = $('<div>', {
+                        id: 'description-tagging-add',
+                        class: "description-tagging-button"
+                    });
+                    let tagButtonText = $('<span>', {
+                        class: "description-tagging-button-add",
+                        //➕
+                        text: "  \u{2795}  "
+                    });
+                    tagButton.append(tagButtonText);
+                    descTagging.append(tagButton);
+
+                    // Construct TAG buttons
+                    for (let i = 0; i < extra["tags"].length; i++ ){  
+                        let tag_name = extra["tags"][i];
+                        let hash = tag_name.hashCode();
+                        let tagButton = $('<div>', {
+                            id: 'description-tagging-' + hash,
+                            class: "description-tagging-button"
+                        });
+                        let tagButtonText = $('<span>', {
+                            class: "description-tagging-button-text",
+                            text: tag_name
+                        });
+                        let tagButtonClose = $('<span>', {
+                            class: "description-tagging-button-close",
+                            //🗙❌
+                            text: '\u{274C}' , 
+                            tag_name: tag_name,
+                            hash: hash
+                        });
+                        tagButton.append(tagButtonText);
+                        tagButton.append(tagButtonClose);
+
+                        descTagging.append(tagButton);
+                    }
+
+                    // 'Add TAG' listener
+                    tagButtonText.on("click", function() {
+                        
+                        // Disable the global key event listener
+                        let orig_focus_task = refToObjThumbnailController.focusTask
+                        refToObjThumbnailController.focusTask = FocusTask.Text;
+                        
+                        tagButton.hide(); // Hide the + button
+
+                        // Create text field
+                        let textField = $('<input>', {
+                            type: 'text',
+                            class: 'description-tagging-field',
+                        });
+                        // put the text field in the first position
+                        descTagging.prepend(textField); // Add text field
+                        
+                        // Focus on the text field
+                        textField.focus();
+
+                        // Event for when the text field loses focus
+                        textField.on('blur', function() {
+                            textField.remove();     // Remove text field
+                            tagButton.show();       // Show the + button again
+
+                            // Enable the global key event listener
+                            refToObjThumbnailController.focusTask = orig_focus_task;
+                        });
+
+                        // Event for ENTER key press on the field
+                        //textField.on('keypress', function(e) {
+                        textField.on('keydown', function(e) {
+
+                            // Stop probageating keydown to up
+                            e.stopPropagation()
+
+                            // If you clicked ENTER on the text
+                            if (e.key === 'Enter') {
+                                let tag_name = textField.val().trim();
+                                if (tag_name !== "") {
+                                    let hash = tag_name.hashCode();
+
+                                    // Add the tag from the DB
+                                    let rq_method = "POST";
+                                    let rq_url = "http://" + host + port + "/personal/tag/insert";
+                                    let rq_assync = false;
+                                    let rq_data = {"card_id": card_id, "name": tag_name}
+                                    let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
+
+                                    // If the removal was successful
+                                    if(response.status == 200 && response.responseJSON["result"]){
+                                        
+                                        // Show the tag from the screen
+                                        let tagButton = $('<div>', {
+                                        id: 'description-tagging-' + hash,
+                                        class: "description-tagging-button"
+                                        });
+                                        let tagButtonText = $('<span>', {
+                                            class: "description-tagging-button-text",
+                                            text: tag_name
+                                        });
+                                        let tagButtonClose = $('<span>', {
+                                            class: "description-tagging-button-close",
+                                            //🗙❌
+                                            text: '\u{274C}' , 
+                                            tag_name: tag_name,
+                                            hash: hash
+                                        });
+                                        tagButton.append(tagButtonText);
+                                        tagButton.append(tagButtonClose);
+                                        descTagging.append(tagButton);
+
+                                       // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+                                        for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
+
+                                            let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
+                                            let thumbnailList = objThumbnailContainer.thumbnailList
+                                            for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+                                                let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
+                                            
+                                                let single = thumbnail.function_for_selection.single;
+                                                if("medium_dict" in single){
+                                                    let other_card_id = single.medium_dict["card_id"];
+                                                
+                                                    if(other_card_id == card_id){
+                                                    
+                                                        thumbnail.addExtraTag(tag_name);
+
+                                                    }                                    
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Trigger blur event to hide text field
+                                textField.blur();
+
+                            // If you clicked ESC on the field
+                            }else if(e.key === "Escape"){
+
+                                // Trigger blur event to hide text field
+                                textField.blur();
+                            }
+                        });
+                    });
+
+
+//                    $(".description-tagging-button-close").hover(function() {
+//                        $(this).css("cursor", "pointer");
+//                    });
+
+
+                    // 'Remove TAG' listener
+                    $(".description-tagging-button-close").on("click", function() {
+
+                        // Remove the tag from the DB
+                        let tag_name = $(this).attr('tag_name')
+                        let rq_method = "DELETE";
+                        let rq_url = "http://" + host + port + "/personal/tag/delete";
+                        let rq_assync = false;
+                        let rq_data = {"card_id": card_id, "name": tag_name}
+                        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
+
+                        // If the removal was successful
+                        if(response.status == 200){
+
+                            // Remove the tag from the screen
+                            let hash = $(this).attr('hash')
+                            $('#description-tagging-' + hash).remove()
+
+                            // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+                            for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
+                                // console.log("container: " + containerIndex);
+
+                                let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
+                                let thumbnailList = objThumbnailContainer.thumbnailList
+                                for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+                                    let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
+
+                                    let single = thumbnail.function_for_selection.single;
+                                    if("medium_dict" in single){
+                                        let other_card_id = single.medium_dict["card_id"];
+
+                                        if(other_card_id == card_id){
+
+                                            thumbnail.removeExtrasTag(tag_name);
+                                        }                                    
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+
+
+
+                //
                 // --- extra - rating ---
+                //
                 let descRating = $("#description-rating");
-                descRating.empty();
+                descRating.empty();     // Clear any existing stars
 
                 if(extra["medium_path"]){
 
@@ -1007,17 +1248,15 @@ class ObjDescriptionContainer {
                     //
                     // Generate the stars dynamically when the page loads
                     //
-                    let descRating = $("#description-rating");
-                    descRating.empty(); // Clear any existing stars
             
                     // Dynamically generate the star divs with img elements
-                    for (var i = 1; i <= max_rate; i++) {
-                        var starDiv = $('<div>', {
+                    for (let i = 1; i <= max_rate; i++) {
+                        let starDiv = $('<div>', {
                             id: 'description-rating-' + i,
                             class: 'description-rating-rate'
                         });
             
-                        var starImg = $('<img>', {
+                        let starImg = $('<img>', {
                             key: i,
                             src: 'images/rating/star-not-selected.png' // Initially set to 'not-selected'
                         });
@@ -1036,8 +1275,8 @@ class ObjDescriptionContainer {
                     // Handle hover effect
                     //
                     $('.description-rating-rate img').hover(function() {
-                        //var index = $(this).index() + 1;
-                        var imgSrc = $(this).attr('src');
+                        //let index = $(this).index() + 1;
+                        let imgSrc = $(this).attr('src');
                 
                         // Change focus images on hover
                         if (imgSrc.includes('star-selected')) {
@@ -1046,8 +1285,8 @@ class ObjDescriptionContainer {
                             $(this).attr('src', 'images/rating/star-not-selected-focus.png');
                         }
                     }, function(){
-                        //var index = $(this).index() + 1;
-                        var imgSrc = $(this).attr('src');
+                        //let index = $(this).index() + 1;
+                        let imgSrc = $(this).attr('src');
                 
                         // Reset images on mouse leave
                         if (imgSrc.includes('star-selected-focus') || imgSrc.includes('star-selected')) {
@@ -1061,7 +1300,7 @@ class ObjDescriptionContainer {
                     // Handle click to change rating
                     //
                     $('.description-rating-rate img').click(function() {
-                        //var index = $(this).index() + 1; // Get the clicked star index
+                        //let index = $(this).index() + 1; // Get the clicked star index
                         let index = parseInt($(this).attr('key'));
                 
                         // Three scenarios:
@@ -1079,7 +1318,7 @@ class ObjDescriptionContainer {
                         //
                         // Update the stars based on the new rate
                         //
-                        for (var i = 1; i <= max_rate; i++) {
+                        for (let i = 1; i <= max_rate; i++) {
                             if (i <= rate) {
                                 $('#description-rating-' + i + ' img').attr('src', 'images/rating/star-selected.png');
                             } else {
@@ -1382,7 +1621,6 @@ class FocusTask {
     static Pdf = new FocusTask('pdf');
     static Code = new FocusTask('code');
     static Picture = new FocusTask('picture');
-
     constructor(name) {
         this.name = name
     }

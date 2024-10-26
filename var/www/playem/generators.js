@@ -376,7 +376,7 @@ class RestGenerator extends Generator{
 
             // TODO: fix it
             // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I choose. It could be changed
-            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], full_time: card["full_time"],net_start_time: card["net_start_time"], net_stop_time: card["net_stop_time"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"], recent_state: hit["recent_state"], 'rate': hit['rate'], 'skip_continuous_play': hit['skip_continuous_play']});
+            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], full_time: card["full_time"],net_start_time: card["net_start_time"], net_stop_time: card["net_stop_time"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"], recent_state: hit["recent_state"], 'rate': hit['rate'], 'skip_continuous_play': hit['skip_continuous_play'], 'tags': hit['tags']});
     
             thumbnail.setFunctionForSelection({
                 "single": 
@@ -1134,15 +1134,47 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let interrupted_filter =  {category: 'movie', playlist: 'interrupted',  level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let last_watched_filter = {category: 'movie', playlist: 'last_watched', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let most_watched_filter = {category: 'movie', playlist: 'most_watched', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let interrupted_filter =  {category: 'movie', playlist: 'interrupted',  tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let last_watched_filter = {category: 'movie', playlist: 'last_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let most_watched_filter = {category: 'movie', playlist: 'most_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: translated_titles['movie_interrupted'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: interrupted_filter},
-            {title: translated_titles['movie_last_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: last_watched_filter},
-            {title: translated_titles['movie_most_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: most_watched_filter}
+            {title: translated_titles['movie_interrupted'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: interrupted_filter},
+            {title: translated_titles['movie_last_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: last_watched_filter},
+            {title: translated_titles['movie_most_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: most_watched_filter}
         ];
+
+
+        // Get the existion TAGs
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/personal/tag/get";
+        let rq_assync = false;
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync});
+        if(response.status == 200 && response.responseJSON["result"]){
+            for (let data_dict of response.responseJSON["data"]){
+
+                let filter = {};
+                filter["category"] = 'movie';
+                filter["playlist"] = '*';
+                filter["tags"] = data_dict["name"];
+                filter["level"] = '*';
+                filter["genres"] = '*';
+                filter["themes"] = '*';
+                filter["directors"] = '*';
+                filter["actors"] = '*';
+                filter["lecturers"] = '*';
+                filter["origins"] = '*';
+                filter["origins"] = '*';
+                filter["decade"] = '*';
+
+                let request = {};
+                request["title"] = data_dict["name"];
+                request["rq_method"] = 'GET';
+                request["rq_url"] = "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code;
+                request["filter"] = filter;
+                requestList.push(request);
+            }
+        }
 
         containerList = this.generateContainers(requestList);
         return containerList;
@@ -1565,20 +1597,20 @@ class MusicVideoFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_60s   = {category: 'music_video', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '60s'};
-        let filter_70s   = {category: 'music_video', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '70s'};
-        let filter_80s   = {category: 'music_video', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '80s'};
-        let filter_90s   = {category: 'music_video', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '90s'};
-        let filter_2000s = {category: 'music_video', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2000s'};
-        let filter_2010s = {category: 'music_video', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2010s'};
+        let filter_60s   = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '60s'};
+        let filter_70s   = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '70s'};
+        let filter_80s   = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '80s'};
+        let filter_90s   = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '90s'};
+        let filter_2000s = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2000s'};
+        let filter_2010s = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2010s'};
 
         let requestList = [
-            {title: "60s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_60s},
-            {title: "70s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_70s},
-            {title: "80s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_80s},
-            {title: "90s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_90s},
-            {title: "2000s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2000s},
-            {title: "2010s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
+            {title: "60s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_60s},
+            {title: "70s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_70s},
+            {title: "80s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_80s},
+            {title: "90s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_90s},
+            {title: "2000s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2000s},
+            {title: "2010s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -1592,22 +1624,22 @@ class MusicVideoFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_new_wave    = {category: 'music_video', playlist:'*', level: 'band', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_electronic  = {category: 'music_video', playlist:'*', level: 'band', genres:'electronic',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_pop         = {category: 'music_video', playlist:'*', level: 'band', genres:'pop',         themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_synth       = {category: 'music_video', playlist:'*', level: 'band', genres:'synth',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_rorck       = {category: 'music_video', playlist:'*', level: 'band', genres:'rock',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_alternative = {category: 'music_video', playlist:'*', level: 'band', genres:'alternative', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_punk        = {category: 'music_video', playlist:'*', level: 'band', genres:'punk',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_new_wave    = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_electronic  = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'electronic',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_pop         = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'pop',         themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_synth       = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'synth',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_rorck       = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'rock',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_alternative = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'alternative', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_punk        = {category: 'music_video', playlist:'*', tags: '*', level: 'band', genres:'punk',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_new_wave},
-            {title: translated_genre_music['electronic'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_electronic},
-            {title: translated_genre_music['pop'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_pop},
-            {title: translated_genre_music['synth'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_synth},
-            {title: translated_genre_music['rock'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_rorck},
-            {title: translated_genre_music['alternative'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_alternative},
-            {title: translated_genre_music['punk'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
+            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_new_wave},
+            {title: translated_genre_music['electronic'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_electronic},
+            {title: translated_genre_music['pop'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_pop},
+            {title: translated_genre_music['synth'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_synth},
+            {title: translated_genre_music['rock'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_rorck},
+            {title: translated_genre_music['alternative'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_alternative},
+            {title: translated_genre_music['punk'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -1701,20 +1733,20 @@ class MusicAudioFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_60s   = {category: 'music_audio', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '60s'};
-        let filter_70s   = {category: 'music_audio', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '70s'};
-        let filter_80s   = {category: 'music_audio', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '80s'};
-        let filter_90s   = {category: 'music_audio', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '90s'};
-        let filter_2000s = {category: 'music_audio', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2000s'};
-        let filter_2010s = {category: 'music_audio', playlist:'*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2010s'};
+        let filter_60s   = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '60s'};
+        let filter_70s   = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '70s'};
+        let filter_80s   = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '80s'};
+        let filter_90s   = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '90s'};
+        let filter_2000s = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2000s'};
+        let filter_2010s = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '2010s'};
 
         let requestList = [
-            {title: "60s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_60s},
-            {title: "70s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_70s},
-            {title: "80s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_80s},
-            {title: "90s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_90s},
-            {title: "2000s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2000s},
-            {title: "2010s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
+            {title: "60s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_60s},
+            {title: "70s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_70s},
+            {title: "80s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_80s},
+            {title: "90s",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_90s},
+            {title: "2000s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2000s},
+            {title: "2010s", rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -1728,22 +1760,22 @@ class MusicAudioFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_new_wave    = {category: 'music_audio', playlist:'*', level: 'band', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_electronic  = {category: 'music_audio', playlist:'*', level: 'band', genres:'electronic',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_pop         = {category: 'music_audio', playlist:'*', level: 'band', genres:'pop',         themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_synth       = {category: 'music_audio', playlist:'*', level: 'band', genres:'synth',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_rorck       = {category: 'music_audio', playlist:'*', level: 'band', genres:'rock',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_alternative = {category: 'music_audio', playlist:'*', level: 'band', genres:'alternative', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
-        let filter_punk        = {category: 'music_audio', playlist:'*', level: 'band', genres:'punk',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_new_wave    = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_electronic  = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'electronic',  themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_pop         = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'pop',         themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_synth       = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'synth',       themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_rorck       = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'rock',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_alternative = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'alternative', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_punk        = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'punk',        themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_new_wave},
-            {title: translated_genre_music['electronic'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_electronic},
-            {title: translated_genre_music['pop'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_pop},
-            {title: translated_genre_music['synth'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_synth},
-            {title: translated_genre_music['rock'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_rorck},
-            {title: translated_genre_music['alternative'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_alternative},
-            {title: translated_genre_music['punk'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
+            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_new_wave},
+            {title: translated_genre_music['electronic'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_electronic},
+            {title: translated_genre_music['pop'],         rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_pop},
+            {title: translated_genre_music['synth'],       rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_synth},
+            {title: translated_genre_music['rock'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_rorck},
+            {title: translated_genre_music['alternative'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_alternative},
+            {title: translated_genre_music['punk'],        rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/playlist/{playlist}/tags/{tags}/{category}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -1760,10 +1792,10 @@ class AAAMusicAudioFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_a    = {category: 'music_audio', playlist:'*', level: 'band', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let filter_a    = {category: 'music_audio', playlist:'*', tags: '*', level: 'band', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_a},
+            {title: translated_genre_music['new_wave'],    rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_a},
         ];
 
         containerList = this.generateContainers(requestList);

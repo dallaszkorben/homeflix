@@ -14,6 +14,9 @@ from playem.restserver.endpoints.ep_personal_user_data_update import EPPersonalU
 from playem.restserver.endpoints.ep_personal_history_request import EPPersonalHistoryRequest
 from playem.restserver.endpoints.ep_personal_history_update import EPPersonalHistoryUpdate
 from playem.restserver.endpoints.ep_personal_rating_update import EPPersonalRatingUpdate
+from playem.restserver.endpoints.ep_personal_tag_insert import EPPersonalTagInsert
+from playem.restserver.endpoints.ep_personal_tag_delete import EPPersonalTagDelete
+from playem.restserver.endpoints.ep_personal_tag_get import EPPersonalTagGet
 
 # -----------------------------------
 #
@@ -31,6 +34,9 @@ from playem.restserver.endpoints.ep_personal_rating_update import EPPersonalRati
 # curl  --header "Content-Type: application/json" --request POST --data '{ "card_id": "5583062bccde422e47378450068cc5a2", "rate": 2}' http://localhost:80/personal/rating/update
 # curl  --header "Content-Type: application/json" --request POST --data '{"skip_continuous_play": 0}' http://localhost:80/personal/rating/update
 #
+# curl  --header "Content-Type: application/json" --request POST --data '{"card_id": "5583062bccde422e47378450068cc5a2", "name": "my_tag"}' http://localhost:80/personal/tag/insert
+# curl  --header "Content-Type: application/json" --request DELETE --data '{"card_id": "5583062bccde422e47378450068cc5a2", "name": "my_tag"}' http://localhost:80/personal/tag/delete
+#
 # -----------------------------------
 #
 class PersonalView(FlaskView):
@@ -43,8 +49,11 @@ class PersonalView(FlaskView):
         self.epPersonalUserDataRequest = EPPersonalUserDataRequest(web_gadget)
         self.epPersonalUserDataUpdate = EPPersonalUserDataUpdate(web_gadget)
         self.ePPersonalHistoryRequest = EPPersonalHistoryRequest(web_gadget)
-        self.ePPersonalHistoryUpdate= EPPersonalHistoryUpdate(web_gadget)
-        self.ePPersonalRatingUpdate= EPPersonalRatingUpdate(web_gadget)
+        self.ePPersonalHistoryUpdate = EPPersonalHistoryUpdate(web_gadget)
+        self.ePPersonalRatingUpdate = EPPersonalRatingUpdate(web_gadget)
+        self.ePPersonalTagInsert = EPPersonalTagInsert(web_gadget)
+        self.ePPersonalTagDelete = EPPersonalTagDelete(web_gadget)
+        self.ePPersonalTagGet = EPPersonalTagGet(web_gadget)
 
     #
     # GET http://localhost:5000/personal/
@@ -250,3 +259,83 @@ class PersonalView(FlaskView):
         out = self.ePPersonalRatingUpdate.executeByPayload(json_data)
         return out
 
+
+
+# === Insert the tag ===
+
+    #
+    # Insert a tag into card by a user
+    #
+    # curl  --header "Content-Type: application/json" --request POST --data '{"card_id": "5583062bccde422e47378450068cc5a2", "name": "my_tag"}' http://localhost:80/personal/tag/insert
+    #
+    # POST http://localhost:80/personal/tag/insert
+    #      body: {
+    #           "card_id": "5583062bccde422e47378450068cc5a2",
+    #           "name": 'my_tag'
+    #      }
+    #
+    #@route('/tag/insert', methods=['POST'])
+    @route(EPPersonalTagInsert.PATH_PAR_PAYLOAD, methods=[EPPersonalTagInsert.METHOD])
+    def personalTagInsertWithPayload(self):
+
+        # WEB
+        if request.form:
+            json_data = request.form
+
+        # CURL
+        elif request.json:
+            json_data = request.json
+
+        else:
+            return "Not valid request", EP.CODE_BAD_REQUEST
+
+        out = self.ePPersonalTagInsert.executeByPayload(json_data)
+        return out
+
+
+# === Delete the tag ===
+
+    #
+    # Delete a tag from a card by a user
+    #
+    # curl  --header "Content-Type: application/json" --request DELETE --data '{"card_id": "5583062bccde422e47378450068cc5a2", "name": "my_tag"}' http://localhost:80/personal/tag/delete
+    #
+    # DELETE http://localhost:80/personal/tag/delete
+    #        body: {
+    #           "card_id": "5583062bccde422e47378450068cc5a2",
+    #           "name": 'my_tag'
+    #        }
+    #
+    #@route('/tag/delete', methods=['DELETE'])
+    @route(EPPersonalTagDelete.PATH_PAR_PAYLOAD, methods=[EPPersonalTagDelete.METHOD])
+    def personalTagDeleteWithPayload(self):
+
+        # WEB
+        if request.form:
+            json_data = request.form
+
+        # CURL
+        elif request.json:
+            json_data = request.json
+
+        else:
+            return "Not valid request", EP.CODE_BAD_REQUEST
+
+        out = self.ePPersonalTagDelete.executeByPayload(json_data)
+        return out
+
+
+# === Get tags ===
+
+    #
+    # Get tags
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/tag/get
+    #
+    # GET http://localhost:80/personal/tag/get
+    #
+    #@route('/tag/get', methods=['GET'])
+    @route(EPPersonalTagGet.PATH_PAR_URL, methods=[EPPersonalTagGet.METHOD])
+    def personalTagGetWithParameter(self):
+        out = self.ePPersonalTagGet.executeByParameters()
+        return out

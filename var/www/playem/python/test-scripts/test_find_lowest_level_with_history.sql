@@ -59,7 +59,8 @@ SELECT
     
     hstr.recent_state,
     rtng.rate,
-    rtng.skip_continuous_play
+    rtng.skip_continuous_play,
+    tggng.tags
     
 FROM
     (
@@ -794,6 +795,26 @@ FROM
     )rtng
     ON rtng.id_card=card.id
     
+    ---------------
+    --- TAGGING ---
+    ---------------
+    LEFT JOIN    
+    (
+       SELECT 
+          group_concat(name) tags,
+          id_card
+       FROM 
+          Tag tag          
+       WHERE 
+          id_user=:user_id
+       GROUP BY id_card
+    ) tggng
+    ON tggng.id_card=card.id
+    
+    
+    
+    
+    
 WHERE
     card.id=recursive_list.id
     AND category.id=card.id_category
@@ -850,29 +871,36 @@ WHERE
     AND CASE
         WHEN :lecturer IS NOT NULL THEN ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%' ELSE 1
     END
+    
+    --- WHERE TAGS - conditional ---
+    AND CASE
+        WHEN :tag IS NOT NULL THEN ',' || tags || ',' LIKE '%,' || :tag || ',%' ELSE 1
+    END
+    
 
     ORDER BY hstr.start_epoch DESC
 --    ORDER BY recursive_list.ord
 
     
-      
-''', {'user_id': 1234, 'history_back': 0, 'playlist': 'interrupted', 'level': None, 'category': 'movie', 'genre': None, 'theme': None, 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'})
+''', {'user_id': 1234, 'history_back': 0, 'playlist': None, 'tag': 'Masterpiece', 'level': None, 'category': 'movie', 'genre': None, 'theme': None, 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'})
 for rec in res.fetchall():
     print(rec) 
 
+{'user_id': 1234, 'history_back': 0, 'playlist': 'interrupted', 'tag': 'Masterpiece', 'level': None, 'category': 'movie', 'genre': None, 'theme': None, 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'})
+    
     
     
 # login
 curl -c cookies_1.txt --header "Content-Type: application/json" --request POST --data '{ "username": "admin", "password": "admin"}' http://localhost:80/auth/login
 
 # fetch list of interrupted movies
-curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/playlist/interrupted/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
+curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/playlist/interrupted/tags/*level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
 
 # fetch history
 curl -b cookies_1.txt --header "Content-Type: application/json" --request GET --data '{ "card_id": "e1b67a4895b1fb8d39fb71cb4ae0c17f", "limit_records": 1}' http://localhost:80/personal/history/request
 
 # fetch lowest level
-curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/playlist/*/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
+curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/playlist/*/tags/*/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
 
 # fetch highest level
 curl -b cookies_1.txt --header "Content-Type: application/json" --request GET http://localhost:80/collect/highest/mixed/category/movie/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en

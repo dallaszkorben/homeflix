@@ -44,9 +44,11 @@ SELECT
 
     mixed_id_list.decade,
     mixed_id_list.date,
-    mixed_id_list.length,     
-    
-    
+    mixed_id_list.length,  
+    mixed_id_list.full_time, 
+    mixed_id_list.net_start_time,
+    mixed_id_list.net_stop_time,
+
     mixed_id_list.themes,
     mixed_id_list.genres,
     mixed_id_list.origins,
@@ -72,10 +74,8 @@ SELECT
     strl.storyline,
     lyrics,
     medium,
-    appendix,
-    recent_state,
-    rate,
-    skip_continuous_play
+    appendix
+ 
 FROM
 
     ---------------------------
@@ -83,7 +83,7 @@ FROM
     ---------------------------
     (
     WITH RECURSIVE
-        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+        rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, recent_state, rate, skip_continuous_play, tags) AS
         
         (
             SELECT                 
@@ -100,7 +100,10 @@ FROM
                 
                 card.decade,
                 card.date,
-                card.length,     
+                card.length,
+                card.full_time,  
+                card.net_start_time,
+                card.net_stop_time,
                 
                 themes,
                 genres,
@@ -120,7 +123,9 @@ FROM
                 interviewees,
                 presenters,
                 reporters,
-                performers
+                performers,
+                
+                hstr.recent_state, rtng.rate, rtng.skip_continuous_play, tggng.tags
                 
             FROM 
                 Card card,
@@ -400,6 +405,56 @@ FROM
             ) prfrmr
             ON prfrmr.id_card=card.id            
 
+            ---------------
+            --- HISTORY ---
+            ---------------
+            LEFT JOIN
+            (
+                SELECT 
+                    ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                    id_card,
+                    start_epoch,
+                    recent_position
+                FROM (
+                    SELECT id_card, start_epoch, recent_epoch, recent_position
+                    FROM History
+                    WHERE id_user=:user_id
+                    ORDER BY start_epoch DESC
+                )
+                GROUP BY id_card
+            )hstr
+            ON hstr.id_card=card.id
+    
+            --------------
+            --- RATING ---
+            --------------
+            LEFT JOIN
+            (
+                SELECT
+                    id_card,
+                    rate,
+                    skip_continuous_play
+                FROM Rating
+                WHERE id_user=:user_id
+            )rtng
+            ON rtng.id_card=card.id
+    
+            ---------------
+            --- TAGGING ---
+            ---------------
+            LEFT JOIN    
+            (
+               SELECT 
+                  group_concat(name) tags,
+                  id_card
+               FROM 
+                  Tag tag          
+               WHERE 
+                  id_user=:user_id
+               GROUP BY id_card
+            ) tggng
+            ON tggng.id_card=card.id            
+            
             ------------------------
             --- Initial WHERE    ---
             --- the lowest level ---
@@ -425,6 +480,20 @@ FROM
                 -------------------
                 -------------------
 
+                --- WHERE HISTORY ---
+                AND CASE
+                    WHEN :playlist = 'interrupted' THEN
+                        hstr.start_epoch >= :history_back
+                        AND hstr.recent_position < card.net_stop_time
+                        AND hstr.recent_position > card.net_start_time
+                    WHEN :playlist = 'last_watched' THEN
+                        hstr.start_epoch >= :history_back
+                    WHEN :playlist = 'most_watched' THEN
+                        hstr.start_epoch >= :history_back
+                        AND hstr.recent_position > card.net_start_time
+                    ELSE 1
+                END
+                
                 --- WHERE DECADE ---
                 -- AND card.decade = :decade
                 AND CASE
@@ -484,7 +553,10 @@ FROM
                 NULL decade,
                 NULL date,
                 NULL length,
-                
+                NULL full_time,
+                NULL net_start_time,
+                NULL net_stop_time,
+                            
                 NULL themes,
                 NULL genres,
                 NULL origins,
@@ -502,7 +574,12 @@ FROM
                 NULL interviewees,
                 NULL presenters,
                 NULL reporters,
-                NULL performers
+                NULL performers,
+                
+                NULL recent_state, 
+                NULL rate, 
+                NULL skip_continuous_play,
+                NULL tags
                 
             FROM
                 rec,
@@ -512,7 +589,7 @@ FROM
                 rec.id_higher_card=card.id
                 AND category.id=card.id_category
         )
-    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+    SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, recent_state, rate, skip_continuous_play, tags
     
     FROM
         rec
@@ -777,36 +854,6 @@ FROM
         GROUP BY card_id
     ) pndx
     ON pndx.card_id=core.id
-
-    ---------------
-    --- HISTORY ---
-    ---------------
-    LEFT JOIN
-    (
-        SELECT 
-            ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
-            id_card
-        FROM (
-            SELECT id_card, start_epoch, recent_epoch, recent_position
-            FROM History
-            WHERE id_user=:user_id
-            ORDER BY start_epoch DESC
-        )
-        GROUP BY id_card
-    )hstr
-    ON hstr.id_card=core.id
-
-    --------------
-    --- RATING ---
-    --------------
-    LEFT JOIN
-    (
-        SELECT id_card, rate, skip_continuous_play
-        FROM Rating
-        WHERE id_user=:user_id
-    )rtng
-    ON rtng.id_card=core.id
-    
     
 WHERE
     mixed_id_list.id=core.id
@@ -818,7 +865,7 @@ ORDER BY CASE
     WHEN sequence>=0 THEN sequence
 END
 
-''', {'user_id': 1235, 'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': None, 'origin': None, 'director': 'John Carpenter', 'actor': None, 'lecturer': None, 'decade': '80s', 'lang': 'en'}).fetchall()
+''', {'user_id': 1234, 'history_back': 0, 'playlist': 'interrupted', 'level': None, 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 
 
 

@@ -85,7 +85,7 @@ FROM
 WHERE
     id_higher_card IS NULL
 GROUP BY group_id
-''', {'card_id': '19'}).fetchall()
+''', {'card_id': '1dc9c4cef22199632bc71b7db427f822'}).fetchall()
 
 
 ----------------------------------------------------------------------------

@@ -55,6 +55,7 @@ class SqlDatabase:
     TABLE_USER = "User"
     TABLE_HISTORY = "History"
     TABLE_RATING = "Rating"
+    TABLE_TAG = "Tag"
 
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
@@ -108,6 +109,7 @@ class SqlDatabase:
             SqlDatabase.TABLE_USER,
             SqlDatabase.TABLE_HISTORY,
             SqlDatabase.TABLE_RATING,
+            SqlDatabase.TABLE_TAG,
         ]
 
         self.lock = Lock()
@@ -226,7 +228,7 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_USER + '''(
-                id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                id                     INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 name                   TEXT    NOT NULL,
                 password               TEXT    NOT NULL,
                 is_admin               BOOLEAN NOT NULL CHECK (show_original_title IN (0, 1)),
@@ -248,7 +250,7 @@ class SqlDatabase:
                 start_epoch     INTEGER       NOT NULL,
                 recent_epoch    INTEGER       NOT NULL,
                 recent_position DECIMAL(10,2) NOT NULL,
-                id_card         INTEGER       NOT NULL,
+                id_card         TEXT          NOT NULL,
                 id_user         INTEGER       NOT NULL,
                 FOREIGN KEY     (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY     (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
@@ -258,13 +260,24 @@ class SqlDatabase:
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_RATING + '''(
-                id_card              INTEGER NOT NULL,
+                id_card              TEXT    NOT NULL,
                 id_user              INTEGER NOT NULL,
                 rate                 INTEGER CHECK(rate BETWEEN 0 AND 5),
                 skip_continuous_play BOOLEAN NOT NULL CHECK (skip_continuous_play IN (0, 1)),
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
                 PRIMARY KEY (id_card, id_user)
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_TAG + '''(               
+                id_card              TEXT    NOT NULL,
+                id_user              INTEGER NOT NULL,
+                name                 TEXT    NOT NULL,
+                FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
+                FOREIGN KEY (id_user) REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id),
+                PRIMARY KEY (id_card, id_user, name)
             );
         ''')
 
@@ -1643,6 +1656,7 @@ class SqlDatabase:
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
 
+
     #
     # Used only locally
     # Not used in any REST
@@ -1843,7 +1857,7 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
-    def get_history(self, card_id=None, limit_days=None, limit_records=None):                  
+    def get_history(self, card_id=None, limit_days=None, limit_records=None):
         result = False
         data = []
         error_message = "Lock error"
@@ -1902,14 +1916,15 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
-    def set_rating(self, card_id, rate=None, skip_continuous_play=None):
+    def update_rating(self, card_id, rate=None, skip_continuous_play=None):
         result = False
-        data = []
+        data = {}
         error_message = "Lock error"
 
         user_data = session.get('logged_in_user', None)
         if user_data:
             user_id = user_data['user_id']
+            username = user_data['username']
         else:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
@@ -1939,7 +1954,7 @@ class SqlDatabase:
 
                 # there was no rating for this media by this user
                 if rating_number == 0:
-                    logging.debug("New rating record needed for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, user_id, rate, skip_continuous_play))
+                    logging.debug("New rating record needed for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, username, rate, skip_continuous_play))
 
                     insert_list = []
                     insert_list.append("id_card")
@@ -1964,7 +1979,7 @@ class SqlDatabase:
                
                 # it was was already rated
                 else:
-                    logging.debug("Rating updates for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, user_id, rate, skip_continuous_play))
+                    logging.debug("Rating updates for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, username, rate, skip_continuous_play))
 
                     set_list = []
                     set_list.append("'id_card' = :card_id")
@@ -1985,21 +2000,175 @@ class SqlDatabase:
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'rate': rate, 'skip_continuous_play': skip_continuous_play})
                     record = cur.fetchone() 
                     
+                cur.execute("commit")
                 result = True
                 error_message = None
 
             except sqlite3.Error as e:
-                error_message = "Rating set for card: {0} by user: {1}. RATE: {2}, SKIP: {3} failed!\n{4}".format(card_id, user_id, rate, skip_continuous_play, e)
+                error_message = "Rating set for card: {0} by user: {1}. RATE: {2}, SKIP: {3} failed! {4}".format(card_id, username, rate, skip_continuous_play, e)
                 logging.error(error_message)
                 cur.execute("rollback")
 
-            finally:
-                cur.execute("commit")
+            finally:                
                 cur.close()
                 return {"result": result, "data": data, "error": error_message}
 
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
+
+
+    def insert_tag(self, card_id, name):
+        result = False
+        data = {}
+        error_message = "Lock error"
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+            username = user_data['username']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
+
+        with self.lock:
+        
+            try:
+                cur = self.conn.cursor()
+
+                #
+                # Verify Tag existence
+                #
+                # User
+                query = '''
+                    SELECT 
+                        COUNT(*) as tag_number
+                FROM 
+                    ''' + SqlDatabase.TABLE_TAG + ''' tag
+
+                WHERE
+                    id_user=:user_id
+                    AND id_card=:card_id
+                    AND name=:name
+                '''
+                query_parameters = {'user_id': user_id, 'card_id': card_id, 'name': name}
+                record=cur.execute(query, query_parameters).fetchone()                
+                (tag_number, ) = record if record else (0,)
+
+                # there was no tag for this media by this user for this card
+                if tag_number == 0:
+                    logging.debug("Record '{2}' tag for card: {0} by user: {1}".format(card_id, username, name))
+
+                    cur.execute("begin")
+
+                    query = '''
+                        INSERT INTO ''' + SqlDatabase.TABLE_TAG + '''
+                             (id_card, id_user, name)
+                        VALUES
+                            (:card_id, :user_id, :name) 
+                    '''
+                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'name': name})
+                    cur.execute("commit")
+                    data["row_id"]=cur.lastrowid
+                    data["id_card"]=card_id
+                    data["username"]=username
+                    data["name"]=name
+
+                # tag already exist
+                else:
+                    error_message = "The tag already exist"
+                    raise sqlite3.Error(error_message)
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Tagging the card: {0} by user: {1} with '{2}' tag failed!\n{3}".format(card_id, username, name, e)
+                logging.error(error_message)
+                cur.execute("rollback")
+
+            finally:
+                
+                cur.close()
+                return {"result": result, "data": data, "error": error_message}
+
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
+
+
+    def delete_tag(self, card_id, name):
+        result = False
+        data = {}
+        error_message = "Lock error"
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+            username = user_data['username']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
+
+        with self.lock:
+        
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                #
+                # Verify Tag existence
+                #
+                # User
+                query = '''
+                    SELECT 
+                        COUNT(*) as tag_number
+                FROM 
+                    ''' + SqlDatabase.TABLE_TAG + ''' tag
+
+                WHERE
+                    id_user=:user_id
+                    AND id_card=:card_id
+                    AND name=:name
+                '''
+                query_parameters = {'user_id': user_id, 'card_id': card_id, 'name': name}
+                record=cur.execute(query, query_parameters).fetchone()
+                (tag_number, ) = record if record else (0,)
+
+                # there is (one)s tag for this media by this user for this card
+                if tag_number > 0:
+                    logging.debug("Tag is about removed from card: {0} by user: {1}. Tag: '{2}'".format(card_id, username, name))
+
+                    query = '''
+                        DELETE FROM ''' + SqlDatabase.TABLE_TAG + '''
+                        WHERE 
+                            id_card = :card_id
+                            AND id_user = :user_id
+                            AND name = :name
+                    '''
+                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'name': name})
+                    cur.execute("commit")               
+
+                    data["id_card"]=card_id
+                    data["username"]=username
+                    data["name"]=name
+
+                # tag does not exist
+                else:
+                    error_message = "The tag does not exist"
+                    raise sqlite3.Error(error_message)
+                    
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Deleting the '{2}' tag from the card: {0} by user: {1} failed! {3}".format(card_id, username, name, e)
+                logging.error(error_message)
+                cur.execute("rollback")
+            finally:                
+                cur.close()
+                return {"result": result, "data": data, "error": error_message}
+
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
+
 
 # ---
 
@@ -2185,6 +2354,12 @@ class SqlDatabase:
                 sounds_list = sounds_string.split(',')
                 sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
             record["sounds"] = sounds_list
+            # Tags
+            tags_string = record["tags"]
+            tags_list = []
+            if tags_string:
+                tags_list = tags_string.split(',')
+            record["tags"] = tags_list
         logging.debug("Converted records: '{0}'".format(records))
 
         return records
@@ -2240,16 +2415,11 @@ class SqlDatabase:
 
         return {'result': result, 'data':data, 'error': error}
 
-
     def logout(self):
 
         # remove the session
         session.pop('logged_in_user', None)
         return {'result': True, 'data':{}, 'error': None}
-
-
-
-
 
 
 
@@ -2268,7 +2438,6 @@ class SqlDatabase:
             record=cur.execute(query).fetchone()
             cur.execute("commit")
             return record
-
 
     #
     # --- Movie series queries ---
@@ -2468,12 +2637,57 @@ class SqlDatabase:
             return records
 
 
+    def get_tags(self):
+        result = False
+        data = []
+        error_message = "Lock error"
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                # cur.execute("begin")
+
+                query = '''
+                    SELECT
+                        DISTINCT name
+                    FROM
+                        Tag
+                    WHERE
+                        id_user=:user_id
+                '''
+                query_parameters = {'user_id': user_id}
+                logging.error("get_general_level query: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                # cur.execute("commit")
+
+                data = [{key: record[key] for key in record.keys()} for record in records]
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the Tag database failed! {0}".format(e)
+                logging.error(error_message)
+            finally:                
+                cur.close()
+                return {"result": result, "data": data, "error": error_message}             
+        return {"result": result, "data": data, "error": error_message}
 
 
 
 
 
 
+
+            
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
 
 
 
@@ -2605,8 +2819,8 @@ class SqlDatabase:
 
                 hstr.recent_state,
                 rtng.rate,
-                rtng.skip_continuous_play
-
+                rtng.skip_continuous_play,
+                tggng.tags
             FROM
 
                 ---------------------------
@@ -3331,6 +3545,22 @@ class SqlDatabase:
                 )rtng
                 ON rtng.id_card=core.id
 
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=core.id
+
             WHERE
                 mixed_id_list.id=core.id
 
@@ -3454,8 +3684,8 @@ class SqlDatabase:
     
                 hstr.recent_state,
                 rtng.rate,
-                rtng.skip_continuous_play              
-
+                rtng.skip_continuous_play,
+                tggng.tags
             FROM
 
                 ---------------------------
@@ -4185,6 +4415,22 @@ class SqlDatabase:
                 )rtng
                 ON rtng.id_card=core.id
 
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=core.id
+
             WHERE
                 mixed_id_list.id=core.id
 
@@ -4217,12 +4463,19 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_lowest_level_cards(self, category, playlist=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_lowest_level_cards(self, category, playlist=None, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for lowest (medium) level list
         Returns only medium level cards level cards
         With filters category/genre/theme/origin/director/actor 
-                                                                       
+
+        Parameters for playlist:
+          - *
+          - interrupted
+          - last_watched
+          - least_watched
+          - most_watched
+
         Parameters for filtering:
           - category
           - level                                                  
@@ -4249,6 +4502,7 @@ class SqlDatabase:
             history_days = 365
             history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
 
+            tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
             genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
             themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
             actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
@@ -4295,8 +4549,8 @@ class SqlDatabase:
 
                 hstr.recent_state,
                 rtng.rate,
-                rtng.skip_continuous_play
-
+                rtng.skip_continuous_play,
+                tggng.tags
             FROM
                 (
                 WITH RECURSIVE
@@ -5027,6 +5281,22 @@ class SqlDatabase:
                 )rtng
                 ON rtng.id_card=card.id  
 
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=card.id
+
             WHERE
                 card.id=recursive_list.id
                 AND category.id=card.id_category
@@ -5080,6 +5350,10 @@ class SqlDatabase:
                 ''' + ('''
                 --- WHERE LECTURERS - conditional ---
                 AND ''' + lecturers_where if lecturers_where else '') + '''  
+
+                ''' + ('''
+                --- WHERE TAGS - conditional ---
+                AND ''' + tags_where if tags_where else '') + '''  
 
             ''' + ( 'ORDER BY hstr.start_epoch DESC' if playlist == 'interrupted' or playlist == 'last_watched' else 'ORDER BY hstr.play_count DESC' if playlist == 'most_watched' else 'ORDER BY recursive_list.ord' ) + '''
             

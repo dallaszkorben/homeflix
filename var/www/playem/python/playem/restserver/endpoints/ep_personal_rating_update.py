@@ -40,6 +40,6 @@ class EPPersonalRatingUpdate(EP):
                 )
         )
 
-        output = self.web_gadget.db.set_rating(card_id=card_id, rate=rate, skip_continuous_play=skip_continuous_play)
+        output = self.web_gadget.db.update_rating(card_id=card_id, rate=rate, skip_continuous_play=skip_continuous_play)
 
         return output_json(output, EP.CODE_OK)

@@ -119,6 +119,20 @@
             });
         };
 
+        /*
+        Generate HASH code
+        */
+        String.prototype.hashCode = function() {
+            var hash = 0, i, chr;
+            if (this.length === 0) return hash;
+            for (i = 0; i < this.length; i++) {
+                chr = this.charCodeAt(i);
+                hash = ((hash << 5) - hash) + chr;
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        }
+
         // String.prototype.format = function () {
         //     var i = 0, args = arguments;
         //     return this.replace(/{}/g, function () {
@@ -358,55 +372,34 @@
 
 
 
-
-
-    let recent_rate = 0; // Set this value dynamically (-2, -1, 0, 1, 2)
-    
-    // Pre-select based on recent_rate
-    const rateMap = {
-        "-2": "#description-rating-1 img",
-        "-1": "#description-rating-2 img",
-        "0":  "#description-rating-3 img",
-        "1":  "#description-rating-4 img",
-        "2":  "#description-rating-5 img"
-    };
-
-    if (!rateMap[recent_rate]) {
-        recent_rate = 0
-    }
-
-    let selectedImg = $(rateMap[recent_rate]);
-    selectedImg.attr('src', selectedImg.data('selected')); // Set the 'selected' image based on recent_rate
-
-
-    // Mouse enters an image
-    $('.description-rating-rate img').hover(function() {
-        const currentImg = $(this);
-        if (currentImg.attr('src') === 'images/rating/NotSelected-x.png') {
-            currentImg.attr('src', 'images/rating/NotSelected-x-focus.png');
-        } else if (currentImg.is(selectedImg)) {
-            currentImg.attr('src', currentImg.data('focus')); // Hovering over selected image
-        }
-    }, function() {
-        const currentImg = $(this);
-        if (currentImg.attr('src') === 'images/rating/NotSelected-x-focus.png') {
-            currentImg.attr('src', 'images/rating/NotSelected-x.png');
-        } else if (currentImg.is(selectedImg)) {
-            currentImg.attr('src', currentImg.data('selected')); // Leaving selected image
-        }
-    });
-
-    // Image clicked
-    $('.description-rating-rate img').click(function() {
-        if (selectedImg) {
-            // Reset the previous selected image back to not selected
-            selectedImg.attr('src', 'images/rating/NotSelected-x.png');
-        }
+            // Mouse enters an image
+            $('.description-rating-rate img').hover(function() {
+                const currentImg = $(this);
+                if (currentImg.attr('src') === 'images/rating/NotSelected-x.png') {
+                    currentImg.attr('src', 'images/rating/NotSelected-x-focus.png');
+                } else if (currentImg.is(selectedImg)) {
+                    currentImg.attr('src', currentImg.data('focus')); // Hovering over selected image
+                }
+            }, function() {
+                const currentImg = $(this);
+                if (currentImg.attr('src') === 'images/rating/NotSelected-x-focus.png') {
+                    currentImg.attr('src', 'images/rating/NotSelected-x.png');
+                } else if (currentImg.is(selectedImg)) {
+                    currentImg.attr('src', currentImg.data('selected')); // Leaving selected image
+                }
+            });
         
-        // Set the new selected image
-        selectedImg = $(this);
-        selectedImg.attr('src', selectedImg.data('selected'));
-    });
+            // Image clicked
+            $('.description-rating-rate img').click(function() {
+                if (selectedImg) {
+                    // Reset the previous selected image back to not selected
+                    selectedImg.attr('src', 'images/rating/NotSelected-x.png');
+                }
+
+                // Set the new selected image
+                selectedImg = $(this);
+                selectedImg.attr('src', selectedImg.data('selected'));
+            });
 
 
 
@@ -822,6 +815,7 @@
                         <div id="description-text-area-div">
                             <div id="description-text-storyline"></div>
                             <div id="description-text-credentials"></div>
+                            <div id="description-tagging"></div>
                             <div id="description-rating"></div>
                         </div>
 
@@ -834,7 +828,7 @@
                     </div>
                 </div>
                 <div id="description-image">
-<!--                    <div id="description-rating"></div>  -->
+
                 </div>
 
             </div>
