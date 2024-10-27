@@ -37,7 +37,7 @@ for hist in res.fetchall():
  
 or
 
-con.execute('SELECT * FROM Tag WHERE tag.id_user=:user_id;', {'user_id': '1234'}).fetchall()
+con.execute('SELECT DISTINCT FROM Tag WHERE tag.id_user=:user_id;', {'user_id': '1234'}).fetchall()
 
  
  

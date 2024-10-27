@@ -239,14 +239,14 @@ class ObjScrollSection {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex]
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
-
         let card_id = null;
-        let single = thumbnail.function_for_selection.single;
-        if("medium_dict" in single){
-            card_id = single.medium_dict["card_id"];
-        }
 
         if (thumbnail != undefined) {
+            let single = thumbnail.function_for_selection.single;
+            if("medium_dict" in single){
+                card_id = single.medium_dict["card_id"];
+            }
+
             let image = thumbnail.getDescriptionImageSource();
             let title = thumbnail.getTitle();
             let storyline = thumbnail.getStoryline();

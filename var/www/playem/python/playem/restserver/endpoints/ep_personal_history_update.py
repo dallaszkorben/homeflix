@@ -42,4 +42,3 @@ class EPPersonalHistoryUpdate(EP):
         output = self.web_gadget.db.update_play_position(card_id=card_id, recent_position=recent_position, start_epoch=start_epoch)
 
         return output_json(output, EP.CODE_OK)
-

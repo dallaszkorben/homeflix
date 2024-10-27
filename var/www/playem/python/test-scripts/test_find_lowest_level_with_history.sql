@@ -894,7 +894,7 @@ for rec in res.fetchall():
 curl -c cookies_1.txt --header "Content-Type: application/json" --request POST --data '{ "username": "admin", "password": "admin"}' http://localhost:80/auth/login
 
 # fetch list of interrupted movies
-curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/playlist/interrupted/tags/*level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
+curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/playlist/interrupted/tags/*/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
 
 # fetch history
 curl -b cookies_1.txt --header "Content-Type: application/json" --request GET --data '{ "card_id": "e1b67a4895b1fb8d39fb71cb4ae0c17f", "limit_records": 1}' http://localhost:80/personal/history/request

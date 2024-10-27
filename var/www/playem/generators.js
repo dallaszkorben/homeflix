@@ -707,7 +707,7 @@ class MovieMenuGenerator extends GeneralRestGenerator{
 
         // Playlist
         thumbnail = new Thumbnail();
-        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_playlist.jpg", description_src: "images/categories/movie_playlist.jpg"});
+        thumbnail.setImageSources({thumbnail_src: "images/categories/movie_playlists.jpg", description_src: "images/categories/movie_playlists.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_playlists'], thumb: translated_titles['movie_playlists'], history: translated_titles['movie_playlists']});
         thumbnail.setFunctionForSelection({
             "single": 
@@ -722,25 +722,6 @@ class MovieMenuGenerator extends GeneralRestGenerator{
             "continuous": []
         });
         oContainer.addThumbnail(5, thumbnail);
-
-
-//        // Continue playing Movie
-//        thumbnail = new Thumbnail();
-//        thumbnail.setImageSources({thumbnail_src: "images/categories/continue_playing.jpg", description_src: "images/categories/continue_playing.jpg"});
-//        thumbnail.setTitles({main: translated_titles['continue_playing_movie'], thumb: translated_titles['continue_playing_movie'], history: translated_titles['continue_playing_movie']});
-//        thumbnail.setFunctionForSelection({
-//            "single": 
-//                {
-//                    "menu": 
-//                        (function(movie_type) {
-//                            return function() {
-//                                return new MovieContinuePlayingRestGenerator(refToThis.language_code, translated_titles['continue_playing_movie']);
-//                            };
-//                        })("movies")
-//                },
-//            "continuous": []
-//        });
-//        oContainerContinuePlaying.addThumbnail(1, thumbnail);
 
 
         // ---
@@ -1148,8 +1129,9 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
         // Get the existion TAGs
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/tag/get";
+        let rq_data = {"category": "movie"};
         let rq_assync = false;
-        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync});
+        let response = $.getJSON({ method: rq_method, url: rq_url, data: rq_data, async: rq_assync});
         if(response.status == 200 && response.responseJSON["result"]){
             for (let data_dict of response.responseJSON["data"]){
 
@@ -1175,11 +1157,9 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
                 requestList.push(request);
             }
         }
-
         containerList = this.generateContainers(requestList);
         return containerList;
     }
-
 }
 
 
@@ -1236,7 +1216,7 @@ class MusicMenuGenerator extends Generator{
                 },
             "continuous": []
         });
-        oContainerVideo.addThumbnail(1, thumbnail);        
+        oContainerVideo.addThumbnail(2, thumbnail);        
 
         // ABC
         thumbnail = new Thumbnail();
@@ -1254,7 +1234,26 @@ class MusicMenuGenerator extends Generator{
                 },
             "continuous": []
         });
-        oContainerVideo.addThumbnail(1, thumbnail);        
+        oContainerVideo.addThumbnail(3, thumbnail);
+        
+        // Playlist
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/music_video_playlists.jpg", description_src: "images/categories/music_video_playlists.jpg"});
+        thumbnail.setTitles({main: translated_titles['music_video_playlists'], thumb: translated_titles['music_video_playlists'], history: translated_titles['music_video_playlists']});
+        thumbnail.setFunctionForSelection({
+            "single": 
+                {
+                    "menu": 
+                        (function(movie_type) {
+                            return function() {
+                                return new MusicVideoPlaylistsRestGenerator(refToThis.language_code, translated_titles['music_video_playlists']);
+                            };
+                        })("music_video")
+                },
+            "continuous": []
+        });
+        oContainerVideo.addThumbnail(4, thumbnail);
+
 
         // === Music-Audio ===
 
@@ -1294,7 +1293,25 @@ class MusicMenuGenerator extends Generator{
                 },
             "continuous": []
         });
-        oContainerAudio.addThumbnail(1, thumbnail);        
+        oContainerAudio.addThumbnail(2, thumbnail);
+
+        // Playlist
+        thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/music_audio_playlists.jpg", description_src: "images/categories/music_audio_playlists.jpg"});
+        thumbnail.setTitles({main: translated_titles['music_audio_playlists'], thumb: translated_titles['music_audio_playlists'], history: translated_titles['music_audio_playlists']});
+        thumbnail.setFunctionForSelection({
+            "single": 
+                {
+                    "menu": 
+                        (function(movie_type) {
+                            return function() {
+                                return new MusicAudioPlaylistsRestGenerator(refToThis.language_code, translated_titles['music_audio_playlists']);
+                            };
+                        })("music_video")
+                },
+            "continuous": []
+        });
+        oContainerAudio.addThumbnail(4, thumbnail);
 
         // ===
  
@@ -1308,6 +1325,8 @@ class MusicMenuGenerator extends Generator{
 
 // ===================
 // === Music-Video ===
+// ===================
+
 // ===   Decade    ===
 
 class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
@@ -1419,10 +1438,53 @@ class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
     } 
 }
 
+// ===   Playlist    ===
 
-!!!!!!!!!!!!!!!!!!!111
+class MusicVideoPlaylistsRestGenerator  extends GeneralRestGenerator{
 
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let interrupted_filter =  {category: 'music_video', playlist: 'interrupted',  tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let last_watched_filter = {category: 'music_video', playlist: 'last_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let most_watched_filter = {category: 'music_video', playlist: 'most_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        let requestList = [
+            {title: translated_titles['music_video_interrupted'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: interrupted_filter},
+            {title: translated_titles['music_video_last_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: last_watched_filter},
+            {title: translated_titles['music_video_most_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: most_watched_filter}
+        ];
+
+
+        // Get the existion TAGs
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/personal/tag/get";
+        let rq_data = {"category": "music_video"};
+        let rq_assync = false;
+        let response = $.getJSON({ method: rq_method, url: rq_url, data: rq_data, async: rq_assync});
+        if(response.status == 200 && response.responseJSON["result"]){
+            for (let data_dict of response.responseJSON["data"]){
+                let filter = {category: 'music_video', playlist: '*', tags: data_dict["name"], level: '*', genres: '*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', origins: '*', decade: '*'};
+                let request = {title: data_dict["name"], rq_method: 'GET', rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter};
+                requestList.push(request);
+            }
+        }
+
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
+
+
+// ===================
 // === Music-Audio ===
+// ===================
+
 // ===   Decade    ===
    
 class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
@@ -1534,6 +1596,46 @@ class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
     }  
 }
 
+// ===   Playlist    ===
+
+class MusicAudioPlaylistsRestGenerator  extends GeneralRestGenerator{
+
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let interrupted_filter =  {category: 'music_audio', playlist: 'interrupted',  tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let last_watched_filter = {category: 'music_audio', playlist: 'last_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let most_watched_filter = {category: 'music_audio', playlist: 'most_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        let requestList = [
+            {title: translated_titles['music_audio_interrupted'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: interrupted_filter},
+            {title: translated_titles['music_audio_last_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: last_watched_filter},
+            {title: translated_titles['music_audio_most_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: most_watched_filter}
+        ];
+
+
+        // Get the existion TAGs
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/personal/tag/get";
+        let rq_data = {"category": "music_audio"};
+        let rq_assync = false;
+        let response = $.getJSON({ method: rq_method, url: rq_url, data: rq_data, async: rq_assync});
+        if(response.status == 200 && response.responseJSON["result"]){
+            for (let data_dict of response.responseJSON["data"]){
+                let filter = {category: 'music_audio', playlist: '*', tags: data_dict["name"], level: '*', genres: '*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', origins: '*', decade: '*'};
+                let request = {title: data_dict["name"], rq_method: 'GET', rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter};
+                requestList.push(request);
+            }
+        }
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
 
 
 // === Music-Video ===
@@ -1867,6 +1969,7 @@ class RadioplayMenuGenerator extends  GeneralRestGenerator{
 class AudiobookMenuGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
+        let refToThis = this;
         let containerList = [];
 
         let filter_audiobook = {category: 'audiobook', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
@@ -1877,9 +1980,70 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
         ];
 
         containerList = this.generateContainers(requestList);
+
+        // Playlist
+        let oContainer = new ObjThumbnailContainer(translated_titles['audiobook']);
+        let thumbnail = new Thumbnail();
+        thumbnail.setImageSources({thumbnail_src: "images/categories/audiobook_playlists.jpg", description_src: "images/categories/audiobook_playlists.jpg"});
+        thumbnail.setTitles({main: translated_titles['audiobook_playlists'], thumb: translated_titles['audiobook_playlists'], history: translated_titles['audiobook_playlists']});
+        thumbnail.setFunctionForSelection({
+            "single": 
+                {
+                    "menu": 
+                        (function(music_type) {
+                            return function() {
+                                return new AudiobookPlaylistsRestGenerator(refToThis.language_code, translated_titles['audiobook_playlists']);
+                            };
+                        })("music_video")
+                },
+            "continuous": []
+        });
+        oContainer.addThumbnail(1, thumbnail);
+        containerList.push(oContainer);
+ 
         return containerList;
     }
 }
+
+class AudiobookPlaylistsRestGenerator  extends GeneralRestGenerator{
+
+    constructor(language_code, container_title){
+        super(language_code);
+        this.container_title = container_title;
+    }
+
+    getContainerList(){
+        let containerList = [];
+
+        let interrupted_filter =  {category: 'audiobook', playlist: 'interrupted',  tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let last_watched_filter = {category: 'audiobook', playlist: 'last_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+        let most_watched_filter = {category: 'audiobook', playlist: 'most_watched', tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', decade: '*'};
+
+        let requestList = [
+            {title: translated_titles['audiobook_interrupted'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: interrupted_filter},
+            {title: translated_titles['audiobook_last_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: last_watched_filter},
+            {title: translated_titles['audiobook_most_watched'], rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: most_watched_filter}
+        ];
+
+
+        // Get the existion TAGs
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/personal/tag/get";
+        let rq_data = {"category": "audiobook"};
+        let rq_assync = false;
+        let response = $.getJSON({ method: rq_method, url: rq_url, data: rq_data, async: rq_assync});
+        if(response.status == 200 && response.responseJSON["result"]){
+            for (let data_dict of response.responseJSON["data"]){
+                let filter = {category: 'audiobook', playlist: '*', tags: data_dict["name"], level: '*', genres: '*', themes: '*', directors: '*', actors: '*', lecturers: '*', origins: '*', origins: '*', decade: '*'};
+                let request = {title: data_dict["name"], rq_method: 'GET', rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter};
+                requestList.push(request);
+            }
+        }
+        containerList = this.generateContainers(requestList);
+        return containerList;
+    }
+}
+
 
 
 // ==============

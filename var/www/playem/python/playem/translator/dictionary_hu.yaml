@@ -451,6 +451,7 @@ title:
     theme: Téma
     recipetype: Recept típus
 
+    # Movie
     movies: Mozi
     movie_filter: Mozi szűrés
     movie_series: Sorozatok
@@ -462,19 +463,19 @@ title:
     movie_mixed: Filmek
     movie_documentaries: Dokumentumfilmek
     movie_hungarian: Magyar
-    movie_interrupted: Folytasd
-    movie_last_watched: Utoljára nézett
-    movie_least_watched: Legritkábban nézett
-    movie_most_watched: Leggyakrabban nézett
-    movie_playlists: Lejátszási listák
-
-    continue_playing_movie: Mozi
 
     movie_by_genre: Műfaj
     movie_by_theme: Téma
     movie_by_director: Rendező
     movie_by_actor: Szereplő
-    
+
+    movie_playlists: Lejátszási listák
+    movie_interrupted: Folytasd
+    movie_last_watched: Utoljára nézett
+    movie_least_watched: Legritkábban nézett
+    movie_most_watched: Leggyakrabban nézett
+
+    # Music
     music: Zene
     music_level_band: Együttes szint
     music_level_record: Zeneszám szint
@@ -486,8 +487,30 @@ title:
 
     music_audio: Zene-Audio
     music_hungarian: Magyar
+
+    music_video_playlists: Lejátszási listák
+    music_video_interrupted: Folytasd
+    music_video_last_watched: Utoljára nézett
+    music_video_least_watched: Legritkábban nézett
+    music_video_most_watched: Leggyakrabban nézett
+
+    music_audio_playlists: Lejátszási listák
+    music_audio_interrupted: Folytasd
+    music_audio_last_watched: Utoljára hallgatott
+    music_audio_least_watched: Legritkábban hallgatott
+    music_audio_most_watched: Leggyakrabban hallgatott
+
+    # Radioplay
     radioplay: Rádiójáték
+
+    # Audiobook
     audiobook: Hangoskönyv
+    audiobook_playlists: Lejátszási listák
+    audiobook_interrupted: Folytasd
+    audiobook_last_watched: Utoljára hallgatott
+    audiobook_least_watched: Legritkábban hallgatott
+    audiobook_most_watched: Leggyakrabban hallgatott
+
     ebook: Ebook
     dia: Dia
     entertainment: Szórakoztatás

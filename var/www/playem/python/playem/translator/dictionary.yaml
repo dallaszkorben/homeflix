@@ -451,6 +451,7 @@ title:
     theme: Theme
     recipetype: Recipe type
 
+    # Movie
     movies: Movies
     movie_filter: Movie Filter
     movie_series: Movie Series
@@ -462,20 +463,19 @@ title:
     movie_mixed: Movie All
     movie_documentaries: Documentaries
     movie_hungarian: Hungarian
-    movie_interrupted: Continue Playing
-    movie_last_watched: Last Watched
-    movie_least_watched: Least Watched
-    movie_most_watched: Most Watched
-
-    movie_playlists: Playlists
-
-    continue_playing_movie: Continue Movie
 
     movie_by_genre: Genre
     movie_by_theme: Theme
     movie_by_director: Director
     movie_by_actor: Actor
 
+    movie_playlists: Playlists
+    movie_interrupted: Continue Playing
+    movie_last_watched: Last Watched
+    movie_least_watched: Least Watched
+    movie_most_watched: Most Watched
+
+    # Music
     music: Music
     music_level_band: Band level
     music_level_record: Record level
@@ -487,8 +487,24 @@ title:
 
     music_audio: Music Audio
     music_hungarian: Hungarian
+
+    music_playlists: Playlists
+    music_interrupted: Continue Playing
+    music_last_watched: CLast Listened
+    music_least_watched: Least Listened
+    music_most_watched: Most Listened
+
+    # Radioplay    
     radioplay: Radioplay
+
+    # Audiobook
     audiobook: Audiobook
+    audiobook_playlists: Playlists
+    audiobook_interrupted: Continue Playing
+    audiobook_last_watched: Last Listened
+    audiobook_least_watched: Least Listened
+    audiobook_most_watched: Most Listened
+
     ebook: Ebook
     dia: Diafilm
     entertainment: Entertainment
