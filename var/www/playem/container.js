@@ -196,6 +196,7 @@ class ObjScrollSection {
     }
 
     refreshFocusedThumbnailProgresBar(recent_position){
+
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
@@ -205,13 +206,13 @@ class ObjScrollSection {
         let full_time = extras["full_time"]; 
         let net_start_time = extras["net_start_time"];
         let net_stop_time = extras["net_stop_time"];
-//---      
+      
         recent_state["recent_position"] = recent_position;
         extras["recent_state"] = recent_state;
         thumbnail.setExtras(extras);
 
-
         let progress_percentage;
+        // full_time != null && full_time > 600 && 
         if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
             progress_percentage = 100 * recent_position / full_time;
         }else{
@@ -228,10 +229,6 @@ class ObjScrollSection {
         }else{
             bar_wrapper.show()
         }
-
-//---
-
-        console.log("new position: " + recent_position);
     }
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
@@ -562,11 +559,14 @@ class ObjThumbnailContainer {
             let progress_percentage;
             let net_start_time = extras["net_start_time"];
             let net_stop_time = extras["net_stop_time"];
+            let full_time = extras["full_time"]; 
 
             // This media:
             // - has been played at least once
             // - and the recent_position is not 0
             // - and the recent_position is between the net play time
+            //
+            // full_time != null && full_time > 600 && 
             if(recent_state['start_epoch'] != undefined && recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
                 let full_time = extras["full_time"];
 
@@ -1148,7 +1148,9 @@ class ObjDescriptionContainer {
                                         tagButton.append(tagButtonClose);
                                         descTagging.append(tagButton);
 
-                                       // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+                                        //
+                                        // Add the tag to the hierarchy for ALL Thumbnails in all ThumbnailContainer
+                                        //
                                         for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
 
                                             let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
@@ -1207,7 +1209,9 @@ class ObjDescriptionContainer {
                             let hash = $(this).attr('hash')
                             $('#description-tagging-' + hash).remove()
 
+                            //
                             // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+                            //
                             for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
                                 // console.log("container: " + containerIndex);
 
@@ -1333,7 +1337,10 @@ class ObjDescriptionContainer {
                         let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
                         
                         if(response.status == 200){
+
+                            //
                             // Update the selected Rate for ALL Thumbnails in all ThumbnailContainer
+                            //
                             for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
                                 // console.log("container: " + containerIndex);
 
@@ -1808,7 +1815,8 @@ class ThumbnailController {
             let recent_position = refToThis.getMediaPositionInLatestHistory(card_id, limit_days)
 
             // The length of the media >= 10 minutes and Recent Position is between the Net Play interval then I handle the continuous play
-            if (full_time != null && full_time > 600 && recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
+            // full_time != null && full_time > 600 && 
+            if (recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
                 $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
                 $("#dialog-confirm-continue-interrupted-play").dialog({
                     //closeOnEscape: false,
@@ -2057,15 +2065,134 @@ class ThumbnailController {
         let player = $("#video_player")[0];
         let domPlayer = $("#video_player");
 
+        let card_id = medium_dict["card_id"];
+
         // Update the Current Position at the finished position
         if (this.media_history_start_epoch != null){            
-            let card_id = medium_dict["card_id"];
+            //let card_id = medium_dict["card_id"];
             this.updateMediaHistory(this.media_history_start_epoch, card_id)
         }
 
         // Refresh the Progress bar
         let currentTimeInSeconds = player.currentTime;
-        this.objScrollSection.refreshFocusedThumbnailProgresBar(currentTimeInSeconds)
+//        this.objScrollSection.refreshFocusedThumbnailProgresBar(currentTimeInSeconds)
+
+//--
+
+
+
+
+
+
+        //
+        // Set the progressbar in the hierarchy for ALL Thumbnails in all ThumbnailContainer
+        //
+        let recent_position = currentTimeInSeconds;
+        for (let containerIndex = 0; containerIndex < this.objScrollSection.thumbnailContainerList.length; containerIndex++) {
+        
+            let domThumbnails = $('#container-' + containerIndex + ' .thumbnail');
+            let objThumbnailContainer = this.objScrollSection.thumbnailContainerList[containerIndex];
+            let thumbnailList = objThumbnailContainer.thumbnailList
+            for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+                let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
+            
+                let single = thumbnail.function_for_selection.single;
+                if("medium_dict" in single){
+                    let other_card_id = single.medium_dict["card_id"];
+                
+                    if(other_card_id == card_id){
+                    
+                        let extras = thumbnail.getExtras();
+                        let recent_state = extras["recent_state"];
+                        let full_time = extras["full_time"]; 
+                        let net_start_time = extras["net_start_time"];
+                        let net_stop_time = extras["net_stop_time"];
+                        
+                        recent_state["recent_position"] = recent_position;
+                        extras["recent_state"] = recent_state;
+                        thumbnail.setExtras(extras);
+                        
+                        let progress_percentage;
+                        // full_time != null && full_time > 600 && 
+                        if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
+                            progress_percentage = 100 * recent_position / full_time;
+                        }else{
+                            progress_percentage = 0;
+                        }
+                        
+                        let bar_wrapper = domThumbnails.eq(thumbnailIndex).find(".thumbnail-play-progress-bar-wrapper");
+                        let bar = domThumbnails.eq(thumbnailIndex).find(".thumbnail-play-progress-bar")
+                        
+                        bar.css('width', progress_percentage + '%');
+                        
+                        if(progress_percentage == 0){
+                            bar_wrapper.hide()
+                        }else{
+                            bar_wrapper.show()
+                        }
+                    }                                    
+                }
+            }
+        }
+
+
+
+
+
+/*
+let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
+let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
+let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
+let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
+let extras = thumbnail.getExtras();
+let recent_state = extras["recent_state"];
+let full_time = extras["full_time"]; 
+let net_start_time = extras["net_start_time"];
+let net_stop_time = extras["net_stop_time"];
+
+recent_state["recent_position"] = recent_position;
+extras["recent_state"] = recent_state;
+thumbnail.setExtras(extras);
+
+let progress_percentage;
+// full_time != null && full_time > 600 && 
+if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
+    progress_percentage = 100 * recent_position / full_time;
+}else{
+    progress_percentage = 0;
+}
+
+let bar_wrapper = domThumbnails.eq(currentThumbnailIndex).find(".thumbnail-play-progress-bar-wrapper");
+let bar = domThumbnails.eq(currentThumbnailIndex).find(".thumbnail-play-progress-bar")
+
+bar.css('width', progress_percentage + '%');
+
+if(progress_percentage == 0){
+    bar_wrapper.hide()
+}else{
+    bar_wrapper.show()
+}
+
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//--
 
         // Remove the playing list
         domPlayer.children("source").remove();
