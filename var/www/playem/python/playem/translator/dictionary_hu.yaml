@@ -468,6 +468,7 @@ title:
     movie_by_theme: Téma
     movie_by_director: Rendező
     movie_by_actor: Szereplő
+    movie_by_title_abc: Film címek ABC-ben
 
     movie_playlists: Lejátszási listák
     movie_interrupted: Folytasd
@@ -586,77 +587,3 @@ title:
         record: '{0}. szám'
         simple: '{0}'
         general: '#{0}'
-
-
-
-
-
-
-
-
-
-
-# genre_radioplay=Radio Play
-# 
-# 
-# genre_analysis=Analysis
-# genre_talk=Talk
-# genre_interview=Interview
-# genre_standup=Stand-up Comedy
-# genre_skit=Skit
-# genre_lecture=Lecture
-# genre_diy=DIY
-# genre_news=News
-# genre_spotnews=Spot News
-# genre_press_conference=Press Conference
-# genre_compilation=Compilation
-# genre_footage=Footage
-# genre_speech=Speech
-# genre_performamnce=Performance
-# genre_demo=Demo
-# genre_demonstration=Demonstration
-# genre_advertisement=Advertisement
-# 
-# 
-# 
-# 
-# media_video: Video
-# media_audio: Audio
-# media_dia: Dia
-# media_ebook: E-Book
-# media_elearn: E-Learn
-# media_picture: Picture
-# 
-# category_talk: Talk
-# category_movie: Movie
-# category_music: Music
-# category_show: Show
-# category_presentation: Presentation
-# category_alternative: Alternative Media
-# category_miscellaneous: Miscellaneous
-# category_radioplay: Radio Play
-# category_recipe: Recipe
-# category_footage: Footage
-# category_news: News
-# category_speech: Speech
-# category_language: Language
-# 
-# 
-# button_ok: Ok
-# button_cancel: Cancel
-# button_filter: Filter
-# button_clear: Clear
-# 
-# media_video: Video
-# media_audio: Audio
-# 
-# 
-# recipetype_soup=Soup
-# recipetype_pasta=Pasta
-# recipetype_rice=Rice
-# recipetype_chicken=Chicken
-# recipetype_beef=Beef
-# recipetype_pork=Pork
-# recipetype_cookie=Cookie
-# recipetype_buffet=Buffet
-

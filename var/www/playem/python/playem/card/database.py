@@ -2164,7 +2164,7 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
-    def get_tags(self, category="movie", playlist=None, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_tags(self, category="movie", playlist=None, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         result = False
         data = []
         error_message = "Lock error"
@@ -2181,7 +2181,7 @@ class SqlDatabase:
                 history_days = 365
                 history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
 
-                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins)
+                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
                 query = '''
                     SELECT Tag.name
@@ -2220,11 +2220,22 @@ class SqlDatabase:
 
 
     def get_sql_where_condition_from_text_filter(self, text_filter, field_name):
+        op = None
+        if text_filter is None:
+            filter_list = []
+        elif '_AND_' in text_filter:
+            op = 'and'
+            filter_list = [] if text_filter is None else text_filter.split('_AND_')
+        elif '_OR_' in text_filter:
+            op = 'or'
+            filter_list = [] if text_filter is None else text_filter.split('_OR_')
+        else:
+            op = ''
+            filter_list = [text_filter]
 
-        filter_list =        [] if text_filter == None else text_filter.split('_AND_')
         filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
         filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
-        filter_where =       None if text_filter == None else ' AND '.join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list])
+        filter_where =       None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list]) + ')'
 
         logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
         logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
@@ -2719,7 +2730,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_highest_level_cards(self, category, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_highest_level_cards(self, category, playlist=None, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for highest level list                ---
         Returns mixed standalone media and level cards   ---
@@ -2752,820 +2763,12 @@ class SqlDatabase:
 
         with self.lock:
 
-            genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
-            themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
-            actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
-            directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
-            lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
-            origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
-
             cur = self.conn.cursor()
             cur.execute("begin")
 
             records = {}
 
-            query = '''
-
-            SELECT
-                core.*,
-
-                mixed_id_list.id_higher_card,
-                mixed_id_list.category,
-                mixed_id_list.level,
-                mixed_id_list.source_path,
-                mixed_id_list.basename,        
-                mixed_id_list.sequence,
-
-                mixed_id_list.title_on_thumbnail,
-                mixed_id_list.title_show_sequence,
-
-                mixed_id_list.decade,
-                mixed_id_list.date,
-                mixed_id_list.length,  
-                mixed_id_list.full_time, 
-                mixed_id_list.net_start_time,    
-                mixed_id_list.net_stop_time,
-
-                mixed_id_list.themes,
-                mixed_id_list.genres,
-                mixed_id_list.origins,
-                mixed_id_list.directors,
-                mixed_id_list.actors,
-
-                mixed_id_list.sounds,
-                mixed_id_list.subs,
-                mixed_id_list.writers,
-                mixed_id_list.voices,
-                mixed_id_list.stars,
-                mixed_id_list.lecturers,
-
-                mixed_id_list.hosts,
-                mixed_id_list.guests,
-                mixed_id_list.interviewers,
-                mixed_id_list.interviewees,
-                mixed_id_list.presenters,
-                mixed_id_list.reporters,
-                mixed_id_list.performers,
-
-                storyline,
-                lyrics,
-                medium,
-                appendix,
-
-                hstr.recent_state,
-                rtng.rate,
-                rtng.skip_continuous_play,
-                tggng.tags
-            FROM
-
-                ---------------------------
-                --- mixed level id list ---
-                ---------------------------
-                (
-                WITH RECURSIVE
-                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
-
-                    (
-                        SELECT                 
-                            card.id, 
-                            card.id_higher_card,
-                            category.name category,
-                            card.level,
-                            card.source_path,
-
-                            card.basename,
-                            card.sequence,
-                            card.title_on_thumbnail,
-                            card.title_show_sequence,
-
-                            card.decade,
-                            card.date,
-                            card.length,
-                            card.full_time,  
-                            card.net_start_time,
-                            card.net_stop_time,
-
-                            themes,
-                            genres,
-                            origins,
-                            directors,
-                            actors,
-                            lecturers,
-
-                            sounds,
-                            subs,
-                            writers,
-                            voices,
-                            stars,        
-                            hosts,
-                            guests,
-                            interviewers,
-                            interviewees,
-                            presenters,
-                            reporters,
-                            performers
-
-                        FROM 
-                            Card card,
-
-                            --- Conditional ---
-                            Category category
-
-                        -------------
-                        --- GENRE ---
-                        -------------
-                        LEFT JOIN 
-                        (
-                            SELECT group_concat(genre.name) genres, card_genre.id_card
-                            FROM
-                                Genre genre,
-                                Card_Genre card_genre
-                            WHERE            
-                                card_genre.id_genre=genre.id
-                            GROUP BY card_genre.id_card
-                        )gnr
-                        ON gnr.id_card=card.id
-
-                        -------------
-                        --- THEME ---
-                        -------------
-                        LEFT JOIN 
-                        (
-                            SELECT group_concat(theme.name) themes, card_theme.id_card
-                            FROM
-                                Theme theme,
-                                Card_Theme card_theme
-                            WHERE            
-                                card_theme.id_theme=theme.id
-                            GROUP BY card_theme.id_card
-                        )thm
-                        ON thm.id_card=card.id
-
-                        ---------------
-                        --- ORIGINS ---
-                        ---------------
-                        LEFT JOIN
-                        (
-                            SELECT group_concat(origin.name) origins, card_origin.id_card
-                            FROM
-                                Country origin,
-                                Card_Origin card_origin
-                            WHERE
-                                card_origin.id_origin=origin.id
-                            GROUP BY card_origin.id_card
-                        )rgn
-                        ON rgn.id_card=card.id    
-
-                        -----------------
-                        --- DIRECTORS ---
-                        -----------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) directors,  card_dir.id_card
-                            FROM 
-                                Person person,
-                                Card_Director card_dir
-                            WHERE 
-                                card_dir.id_director = person.id
-                            GROUP BY card_dir.id_card
-                        ) dr
-                        ON dr.id_card=card.id
-
-                        --------------
-                        --- ACTORS ---
-                        --------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) actors,  card_actor.id_card
-                            FROM 
-                                Person person,
-                                Card_Actor card_actor
-                            WHERE 
-                                card_actor.id_actor = person.id
-                            GROUP BY card_actor.id_card
-                        ) act
-                        ON act.id_card=card.id
-
-                        ----------------
-                        --- LECTURER ---
-                        ----------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
-                            FROM 
-                                Person person,
-                                Card_Lecturer card_lecturer
-                            WHERE 
-                                card_lecturer.id_lecturer = person.id
-                            GROUP BY card_lecturer.id_card
-                        ) lctr
-                        ON lctr.id_card=card.id           
-
-                        --- No Filter ---
-
-                        --------------
-                        --- SOUNDS ---
-                        --------------
-                        LEFT JOIN 
-                        (
-                            SELECT group_concat(language.name) sounds, card_sound.id_card
-                            FROM 
-                                Language language,
-                                Card_Sound card_sound
-                            WHERE 
-                                card_sound.id_sound=language.id 
-                            GROUP BY card_sound.id_card
-                        ) snd
-                        ON snd.id_card=card.id
-
-                        ----------------
-                        --- SUBTITLE ---
-                        ----------------
-                        LEFT JOIN
-                        (
-                            SELECT group_concat(language.name) subs, card_sub.id_card
-                            FROM 
-                                Language language,
-                                Card_Sub card_sub
-                            WHERE 
-                                card_sub.id_sub=language.id
-                            GROUP BY card_sub.id_card
-                        ) sb
-                        ON sb.id_card=card.id
-
-                        ---------------
-                        --- WRITERS ---
-                        ---------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) writers,  card_writer.id_card
-                            FROM 
-                                Person person,
-                                Card_Writer card_writer
-                            WHERE 
-                                card_writer.id_writer = person.id
-                            GROUP BY card_writer.id_card
-                        ) wr
-                        ON wr.id_card=card.id
-
-                        --------------
-                        --- VOICES ---
-                        --------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) voices,  card_voice.id_card
-                            FROM 
-                                Person person,
-                                Card_Voice card_voice
-                            WHERE 
-                                card_voice.id_voice = person.id
-                            GROUP BY card_voice.id_card
-                        ) vc
-                        ON vc.id_card=card.id    
-
-                        -------------
-                        --- STARS ---
-                        -------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) stars,  card_star.id_card
-                            FROM 
-                                Person person,
-                                Card_Star card_star
-                            WHERE 
-                                card_star.id_star = person.id
-                            GROUP BY card_star.id_card
-                        ) str
-                        ON str.id_card=card.id
-
-                        -------------
-                        --- HOSTS ---
-                        -------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) hosts,  card_host.id_card
-                            FROM 
-                                Person person,
-                                Card_Host card_host
-                            WHERE 
-                                card_host.id_host = person.id
-                            GROUP BY card_host.id_card
-                        ) hst
-                        ON hst.id_card=card.id    
-
-                        --------------
-                        --- GUESTS ---
-                        --------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) guests,  card_guest.id_card
-                            FROM 
-                                Person person,
-                                Card_Guest card_guest
-                            WHERE 
-                                card_guest.id_guest = person.id
-                            GROUP BY card_guest.id_card
-                        ) gst
-                        ON gst.id_card=card.id
-
-                        ---------------------
-                        --- INTERVIEWERS  ---
-                        ---------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
-                            FROM 
-                                Person person,
-                                Card_Interviewer card_interviewer
-                            WHERE 
-                                card_interviewer.id_interviewer = person.id
-                            GROUP BY card_interviewer.id_card
-                        ) ntrvwr
-                        ON ntrvwr.id_card=card.id
-
-                        ---------------------
-                        --- INTERVIEWEES  ---
-                        ---------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
-                            FROM 
-                                Person person,
-                                Card_Interviewee card_interviewee
-                            WHERE 
-                                card_interviewee.id_interviewee = person.id
-                            GROUP BY card_interviewee.id_card
-                        ) ntrw
-                        ON ntrw.id_card=card.id
-
-                        -------------------
-                        --- PRESENTERS  ---
-                        -------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) presenters,  card_presenter.id_card
-                            FROM 
-                                Person person,
-                                Card_Presenter card_presenter
-                            WHERE 
-                                card_presenter.id_presenter = person.id
-                            GROUP BY card_presenter.id_card
-                        ) prsntr
-                        ON prsntr.id_card=card.id
-
-                        ------------------
-                        --- REPORTERS  ---
-                        ------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) reporters,  card_reporter.id_card
-                            FROM 
-                                Person person,
-                                Card_Reporter card_reporter
-                            WHERE 
-                                card_reporter.id_reporter = person.id
-                            GROUP BY card_reporter.id_card
-                        ) rprtr
-                        ON rprtr.id_card=card.id
-
-                        ------------------
-                        --- PERFORMER  ---
-                        ------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) performers,  card_performer.id_card
-                            FROM 
-                                Person person,
-                                Card_Performer card_performer
-                            WHERE 
-                                card_performer.id_performer = person.id
-                            GROUP BY card_performer.id_card
-                        ) prfrmr
-                        ON prfrmr.id_card=card.id            
-
-                        ------------------------
-                        --- Initial WHERE    ---
-                        --- the lowest level ---
-                        ------------------------
-
-                        WHERE 
-                            -- card can not be appendix --
-                            card.isappendix == 0
-
-                            -- connect card to category --
-                            AND category.id=card.id_category
-
-                            -- Find the lowest level --
-                            AND card.level IS NULL
-
-                            -- Select the given category --
-                            AND category.name = :category
-
-                            -------------------
-                            -------------------
-                            --- Conditional ---
-                            ---   filter    ---
-                            -------------------
-                            -------------------
-
-                            --- WHERE DECADE ---
-                            AND CASE
-                                WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
-                            END
-
-                            ''' + ('''                
-                            --- WHERE THEMES - conditional ---
-                            AND ''' + themes_where if themes_where else '') + '''
-
-                            ''' + ('''
-                            --- WHERE GENRES - conditional ---
-                            AND ''' + genres_where if genres_where else '') + '''
-
-                            ''' + ('''               
-                            --- WHERE DIRECTORS - conditional ---
-                            AND ''' + directors_where if directors_where else '') + '''
-
-                            ''' + ('''
-                            --- WHERE ACTORS - conditional ---
-                            AND ''' + actors_where if actors_where else '') + '''
-
-                            ''' + ('''
-                            --- WHERE ORIGINS - conditional ---
-                            AND ''' + origins_where if origins_where else '') + '''
-
-                            ''' + ('''
-                            --- WHERE LECTURERS - conditional ---
-                            AND ''' + lecturers_where if lecturers_where else '') + '''
-
-                        UNION ALL
-
-                        SELECT 
-                            card.id,
-                            card.id_higher_card,
-                            category.name category,
-                            card.level,
-                            card.source_path,
-
-                            card.basename,
-                            card.sequence,
-                            card.title_on_thumbnail,
-                            card.title_show_sequence,
-
-                            NULL decade,
-                            NULL date,
-                            NULL length,
-                            NULL full_time,
-                            NULL net_start_time,
-                            NULL net_stop_time,
-
-                            NULL themes,
-                            NULL genres,
-                            NULL origins,
-                            NULL directors,
-                            NULL actors,
-                            NULL lecturers,
-                            NULL sounds,
-                            NULL subs,
-                            NULL writers,
-                            NULL voices,
-                            NULL stars,
-                            NULL hosts,
-                            NULL guests,
-                            NULL interviewers,
-                            NULL interviewees,
-                            NULL presenters,
-                            NULL reporters,
-                            NULL performers
-
-                        FROM
-                            rec,
-                            Card card,
-                            Category category
-                        WHERE
-                            rec.id_higher_card=card.id
-                            AND category.id=card.id_category
-                    )
-                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
-
-                FROM
-                    rec
-                WHERE
-
-                    -------------------
-                    -------------------
-                    --- Conditional ---
-                    ---   filter    ---
-                    -------------------
-                    -------------------
-
-                    --- if :level is set, then takes that specific level as highest level
-                    --- if :level is NOT set, then takes the highest level
-                    CASE
-                        WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
-                    END
-
-                GROUP BY id
-                ) mixed_id_list,
-
-                --------------------------
-                --- unioned with title ---
-                --------------------------
-                (
-                SELECT 
-                    unioned.id id,
-
-                    MAX(title_req) title_req, 
-                    MAX(title_orig) title_orig, 
-                    MAX(lang_orig) lang_orig,
-                    MAX(lang_req) lang_req
-
-                FROM 
-                    (
-                    SELECT 
-                        card.id id, 
-
-                        NULL title_req, 
-                        NULL lang_req, 
-                        tcl.text title_orig, 
-                        lang.name lang_orig
-                    FROM                     
-                        Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE                
-                        tcl.id_card=card.id
-                        AND tcl.id_language=lang.id
-                        AND tcl.type="T"
-                        AND card.id_title_orig=lang.id
-
-                        AND card.isappendix = 0
-                        AND lang.name <> :lang
-                    UNION
-
-                    SELECT 
-                        card.id id,
-
-                        tcl.text title_req, 
-                        lang.name lang_req, 
-                        NULL title_orig, 
-                        NULL lang_orig
-                    FROM               
-                        Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE               
-                        tcl.id_card=card.id
-                        AND tcl.id_language=lang.id
-                        AND tcl.type="T"
-
-                        AND card.isappendix = 0
-                        AND lang.name=:lang
-                    ) unioned
-
-                -- because of the title required and origin
-                GROUP BY unioned.id               
-
-                ) core
-
-                -----------------
-                --- STORYLINE ---
-                -----------------
-                LEFT JOIN
-                (
-                    SELECT ord, storyline, id_card
-                    FROM
-                    (
-
-                        --- Select the storyline on the requested language, not the original ---
-
-                        SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE
-                            tcl.type = "S" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            language.name = :lang AND
-                            card.id_title_orig<>language.id AND
-                            tcl.text IS NOT NULL
-
-                        UNION
-
-                        --- Select the storyline on the original language ---
-
-                        SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM 
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE 
-                            tcl.type = "S" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
-                            tcl.text IS NOT NULL
-                    )
-                    GROUP BY id_card
-            --        HAVING MIN(ord)
-            --        ORDER BY ord
-                )strl
-                ON strl.id_card=core.id
-
-                --------------
-                --- LYRICS ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT ord, lyrics, id_card
-                    FROM
-                    (
-
-                        --- Select the lyrics on the requested language, not the original ---
-
-                        SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE
-                            tcl.type = "L" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            language.name = :lang AND
-                            card.id_title_orig<>language.id AND
-                            tcl.text IS NOT NULL
-
-                        UNION
-
-                        --- Select the lyrics on the original language ---
-
-                        SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM 
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE 
-                            tcl.type = "L" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
-                            tcl.text IS NOT NULL
-                    )
-                    GROUP BY id_card
-                )lrx
-                ON lrx.id_card=core.id       
-
-                --------------
-                --- MEDIUM ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
-                    FROM
-                        MediaType media_type,
-                        Card_Media card_media
-                    WHERE
-                        card_media.id_mediatype=media_type.id
-                    GROUP BY card_media.id_card
-                )mdt
-                ON mdt.id_card=core.id
-
-                ----------------
-                --- APPENDIX ---
-                ----------------
-                 LEFT JOIN    
-                (    
-                    SELECT
-                        card_id,
-                        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
-                    FROM
-
-                        (
-                        SELECT                
-                            merged_appendix.id,
-                            merged_appendix.card_id,
-                            MAX(merged_appendix.title_req) title_req, 
-                            MAX(merged_appendix.title_orig) title_orig,
-                            merged_appendix.show,
-                            merged_appendix.download,
-                            merged_appendix.source_path,
-                            mt.name media_type,
-                            cm.name contact_media                
-                        FROM
-                            (
-                            SELECT 
-                                app_card.id id,
-                                id_higher_card card_id,
-                                app_card.isappendix,
-                                app_card.show,
-                                app_card.download,
-                                app_card.source_path,
-                                "" title_req, 
-                                tcl.text title_orig
-                            FROM 
-                                CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE                
-                                app_card.isappendix=1
-                                AND tcl.id_card=app_card.id
-                                AND tcl.id_language=lang.id
-                                AND tcl.type="T"
-                                AND app_card.id_title_orig=lang.id
-                                AND lang.name <> :lang
-
-                            UNION
-
-                            SELECT 
-                                app_card.id id,
-                                id_higher_card card_id,
-                                app_card.isappendix,
-                                app_card.show,
-                                app_card.download,
-                                app_card.source_path,
-                                tcl.text title_req, 
-                                "" title_orig
-                            FROM 
-                                CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE
-                                app_card.isappendix=1
-                                AND tcl.id_card=app_card.id
-                                AND tcl.id_language=lang.id
-                                AND tcl.type="T"
-                                AND lang.name=:lang
-                            ) merged_appendix,
-                            Card_Media cm,
-                            MediaType mt
-
-                        WHERE
-                            cm.id_card=merged_appendix.id
-                            AND mt.id=cm.id_mediatype
-
-                        GROUP BY merged_appendix.id
-                        )
-                    GROUP BY card_id
-                ) pndx
-                ON pndx.card_id=core.id
-
-                ---------------
-                --- HISTORY ---
-                ---------------
-                LEFT JOIN
-                (
-                    SELECT 
-                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
-                        id_card
-                    FROM (
-                        SELECT id_card, start_epoch, recent_epoch, recent_position
-                        FROM History
-                        WHERE id_user=:user_id
-                        ORDER BY start_epoch DESC
-                    )
-                    GROUP BY id_card
-                )hstr
-                ON hstr.id_card=core.id
-
-                --------------
-                --- RATING ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT id_card, rate, skip_continuous_play
-                    FROM Rating
-                    WHERE id_user=:user_id
-                )rtng
-                ON rtng.id_card=core.id
-
-                ---------------
-                --- TAGGING ---
-                ---------------
-                LEFT JOIN    
-                (
-                   SELECT 
-                      group_concat(name) tags,
-                      id_card
-                   FROM 
-                      Tag tag          
-                   WHERE 
-                      id_user=:user_id
-                   GROUP BY id_card
-                ) tggng
-                ON tggng.id_card=core.id
-
-            WHERE
-                mixed_id_list.id=core.id
-
-            ORDER BY CASE 
-                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
-                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
-                WHEN sequence<0 THEN basename
-                WHEN sequence>=0 THEN sequence
-            END
-            LIMIT :limit; '''
+            query = self.get_raw_query_of_highest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
             query_parameters = {'user_id': user_id, 'level': level, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}
 
@@ -3579,7 +2782,6 @@ class SqlDatabase:
 
             return records
 
-
 # ---
 
     #
@@ -3587,7 +2789,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_next_level_cards(self, card_id, category, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_next_level_cards(self, card_id, category, playlist=None, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
         Returns the next child cards which could ne:                                           
@@ -3617,827 +2819,14 @@ class SqlDatabase:
         with self.lock:
             where = ''
 
-            genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
-            themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
-            actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
-            directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
-            lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
-            origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
-
             cur = self.conn.cursor()
             cur.execute("begin")
 
             records = {}
 
-            query = '''
+            query = self.get_raw_query_of_next_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
-            SELECT
-                core.*,
 
-                mixed_id_list.id_higher_card,
-                mixed_id_list.category,
-                mixed_id_list.level,
-                mixed_id_list.source_path,
-                mixed_id_list.basename,        
-                mixed_id_list.sequence,
-
-                mixed_id_list.title_on_thumbnail,
-                mixed_id_list.title_show_sequence,
-
-                mixed_id_list.decade,
-                mixed_id_list.date,
-                mixed_id_list.length,
-                mixed_id_list.full_time,     
-                mixed_id_list.net_start_time,
-                mixed_id_list.net_stop_time,
-
-                mixed_id_list.themes,
-                mixed_id_list.genres,
-                mixed_id_list.origins,
-                mixed_id_list.directors,
-                mixed_id_list.actors,
-
-                mixed_id_list.sounds,
-                mixed_id_list.subs,
-                mixed_id_list.writers,
-                mixed_id_list.voices,
-                mixed_id_list.stars,
-                mixed_id_list.lecturers,
-
-                mixed_id_list.hosts,
-                mixed_id_list.guests,
-                mixed_id_list.interviewers,
-                mixed_id_list.interviewees,
-                mixed_id_list.presenters,
-                mixed_id_list.reporters,
-                mixed_id_list.performers,
-
-                storyline,
-                lyrics,
-                medium,
-                appendix,
-    
-                hstr.recent_state,
-                rtng.rate,
-                rtng.skip_continuous_play,
-                tggng.tags
-            FROM
-
-                ---------------------------
-                --- mixed level id list ---
-                ---------------------------
-                (
-                WITH RECURSIVE
-                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
-
-                    (
-                        SELECT                 
-                            card.id, 
-                            card.id_higher_card,
-                            category.name category,
-                            card.level,
-                            card.source_path,
-
-                            card.basename,
-                            card.sequence,
-                            card.title_on_thumbnail,
-                            card.title_show_sequence,
-
-                            card.decade,
-                            card.date,
-                            card.length, 
-                            card.full_time,
-                            card.net_start_time,
-                            card.net_stop_time,
-
-                            themes,
-                            genres,
-                            origins,
-                            directors,
-                            actors,
-                            lecturers,
-
-                            sounds,
-                            subs,
-                            writers,
-                            voices,
-                            stars,        
-                            hosts,
-                            guests,
-                            interviewers,
-                            interviewees,
-                            presenters,
-                            reporters,
-                            performers
-
-                        FROM 
-                            Card card,
-
-                            --- Conditional ---
-                            Category category
-
-                        -------------
-                        --- GENRE ---
-                        -------------
-                        LEFT JOIN 
-                        (
-                            SELECT group_concat(genre.name) genres, card_genre.id_card
-                            FROM
-                                Genre genre,
-                                Card_Genre card_genre
-                            WHERE            
-                                card_genre.id_genre=genre.id
-                            GROUP BY card_genre.id_card
-                        )gnr
-                        ON gnr.id_card=card.id
-
-                        -------------
-                        --- THEME ---
-                        -------------
-                        LEFT JOIN 
-                        (
-                            SELECT group_concat(theme.name) themes, card_theme.id_card
-                            FROM
-                                Theme theme,
-                                Card_Theme card_theme
-                            WHERE            
-                                card_theme.id_theme=theme.id
-                            GROUP BY card_theme.id_card
-                        )thm
-                        ON thm.id_card=card.id
-
-                        ---------------
-                        --- ORIGINS ---
-                        ---------------
-                        LEFT JOIN
-                        (
-                            SELECT group_concat(origin.name) origins, card_origin.id_card
-                            FROM
-                                Country origin,
-                                Card_Origin card_origin
-                            WHERE
-                                card_origin.id_origin=origin.id
-                            GROUP BY card_origin.id_card
-                        )rgn
-                        ON rgn.id_card=card.id    
-
-                        -----------------
-                        --- DIRECTORS ---
-                        -----------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) directors,  card_dir.id_card
-                            FROM 
-                                Person person,
-                                Card_Director card_dir
-                            WHERE 
-                                card_dir.id_director = person.id
-                            GROUP BY card_dir.id_card
-                        ) dr
-                        ON dr.id_card=card.id
-
-                        --------------
-                        --- ACTORS ---
-                        --------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) actors,  card_actor.id_card
-                            FROM 
-                                Person person,
-                                Card_Actor card_actor
-                            WHERE 
-                                card_actor.id_actor = person.id
-                            GROUP BY card_actor.id_card
-                        ) act
-                        ON act.id_card=card.id
-
-                        ----------------
-                        --- LECTURER ---
-                        ----------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
-                            FROM 
-                                Person person,
-                                Card_Lecturer card_lecturer
-                            WHERE 
-                                card_lecturer.id_lecturer = person.id
-                            GROUP BY card_lecturer.id_card
-                        ) lctr
-                        ON lctr.id_card=card.id           
-
-                        --- No Filter ---
-
-                        --------------
-                        --- SOUNDS ---
-                        --------------
-                        LEFT JOIN 
-                        (
-                            SELECT group_concat(language.name) sounds, card_sound.id_card
-                            FROM 
-                                Language language,
-                                Card_Sound card_sound
-                            WHERE 
-                                card_sound.id_sound=language.id 
-                            GROUP BY card_sound.id_card
-                        ) snd
-                        ON snd.id_card=card.id
-
-                        ----------------
-                        --- SUBTITLE ---
-                        ----------------
-                        LEFT JOIN
-                        (
-                            SELECT group_concat(language.name) subs, card_sub.id_card
-                            FROM 
-                                Language language,
-                                Card_Sub card_sub
-                            WHERE 
-                                card_sub.id_sub=language.id
-                            GROUP BY card_sub.id_card
-                        ) sb
-                        ON sb.id_card=card.id
-
-                        ---------------
-                        --- WRITERS ---
-                        ---------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) writers,  card_writer.id_card
-                            FROM 
-                                Person person,
-                                Card_Writer card_writer
-                            WHERE 
-                                card_writer.id_writer = person.id
-                            GROUP BY card_writer.id_card
-                        ) wr
-                        ON wr.id_card=card.id
-
-                        --------------
-                        --- VOICES ---
-                        --------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) voices,  card_voice.id_card
-                            FROM 
-                                Person person,
-                                Card_Voice card_voice
-                            WHERE 
-                                card_voice.id_voice = person.id
-                            GROUP BY card_voice.id_card
-                        ) vc
-                        ON vc.id_card=card.id    
-
-                        -------------
-                        --- STARS ---
-                        -------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) stars,  card_star.id_card
-                            FROM 
-                                Person person,
-                                Card_Star card_star
-                            WHERE 
-                                card_star.id_star = person.id
-                            GROUP BY card_star.id_card
-                        ) str
-                        ON str.id_card=card.id
-
-                        -------------
-                        --- HOSTS ---
-                        -------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) hosts,  card_host.id_card
-                            FROM 
-                                Person person,
-                                Card_Host card_host
-                            WHERE 
-                                card_host.id_host = person.id
-                            GROUP BY card_host.id_card
-                        ) hst
-                        ON hst.id_card=card.id    
-
-                        --------------
-                        --- GUESTS ---
-                        --------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) guests,  card_guest.id_card
-                            FROM 
-                                Person person,
-                                Card_Guest card_guest
-                            WHERE 
-                                card_guest.id_guest = person.id
-                            GROUP BY card_guest.id_card
-                        ) gst
-                        ON gst.id_card=card.id
-
-                        ---------------------
-                        --- INTERVIEWERS  ---
-                        ---------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
-                            FROM 
-                                Person person,
-                                Card_Interviewer card_interviewer
-                            WHERE 
-                                card_interviewer.id_interviewer = person.id
-                            GROUP BY card_interviewer.id_card
-                        ) ntrvwr
-                        ON ntrvwr.id_card=card.id
-
-                        ---------------------
-                        --- INTERVIEWEES  ---
-                        ---------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
-                            FROM 
-                                Person person,
-                                Card_Interviewee card_interviewee
-                            WHERE 
-                                card_interviewee.id_interviewee = person.id
-                            GROUP BY card_interviewee.id_card
-                        ) ntrw
-                        ON ntrw.id_card=card.id
-
-                        -------------------
-                        --- PRESENTERS  ---
-                        -------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) presenters,  card_presenter.id_card
-                            FROM 
-                                Person person,
-                                Card_Presenter card_presenter
-                            WHERE 
-                                card_presenter.id_presenter = person.id
-                            GROUP BY card_presenter.id_card
-                        ) prsntr
-                        ON prsntr.id_card=card.id
-
-                        ------------------
-                        --- REPORTERS  ---
-                        ------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) reporters,  card_reporter.id_card
-                            FROM 
-                                Person person,
-                                Card_Reporter card_reporter
-                            WHERE 
-                                card_reporter.id_reporter = person.id
-                            GROUP BY card_reporter.id_card
-                        ) rprtr
-                        ON rprtr.id_card=card.id
-
-                        ------------------
-                        --- PERFORMER  ---
-                        ------------------
-                        LEFT JOIN    
-                        (
-                            SELECT group_concat(person.name) performers,  card_performer.id_card
-                            FROM 
-                                Person person,
-                                Card_Performer card_performer
-                            WHERE 
-                                card_performer.id_performer = person.id
-                            GROUP BY card_performer.id_card
-                        ) prfrmr
-                        ON prfrmr.id_card=card.id            
-
-                        ------------------------
-                        --- Initial WHERE    ---
-                        --- the lowest level ---
-                        ------------------------
-
-                        WHERE 
-                            -- card can not be appendix --
-                            card.isappendix == 0
-
-                            -- connect card to category --
-                            AND category.id=card.id_category
-
-                            -- Find the lowest level --
-                            AND card.level IS NULL
-
-                            -- Select the given category --
-                            AND category.name = :category
-
-                            -------------------
-                            -------------------
-                            --- Conditional ---
-                            ---   filter    ---
-                            -------------------
-                            -------------------
-
-                        --- WHERE DECADE ---
-                        AND CASE
-                            WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
-                        END
-
-                        ''' + ('''                
-                        --- WHERE THEMES - conditional ---
-                        AND ''' + themes_where if themes_where else '') + '''
-
-                        ''' + ('''
-                        --- WHERE GENRES - conditional ---
-                        AND ''' + genres_where if genres_where else '') + '''
-
-                        ''' + ('''               
-                        --- WHERE DIRECTORS - conditional ---
-                        AND ''' + directors_where if directors_where else '') + '''
-
-                        ''' + ('''
-                        --- WHERE ACTORS - conditional ---
-                        AND ''' + actors_where if actors_where else '') + '''
-
-                        ''' + ('''
-                        --- WHERE ORIGINS - conditional ---
-                        AND ''' + origins_where if origins_where else '') + '''
-
-                        ''' + ('''
-                        --- WHERE LECTURERS - conditional ---
-                        AND ''' + lecturers_where if lecturers_where else '') + '''
-
-                        UNION ALL
-
-                        SELECT 
-                            card.id,
-                            card.id_higher_card,
-                            category.name category,
-                            card.level,
-                            card.source_path,
-
-                            card.basename,
-                            card.sequence,
-                            card.title_on_thumbnail,
-                            card.title_show_sequence,
-
-                            NULL decade,
-                            NULL date,
-                            NULL length,
-                            NULL full_time,
-                            NULL net_start_time,
-                            NULL net_stop_time,
-
-                            NULL themes,
-                            NULL genres,
-                            NULL origins,
-                            NULL directors,
-                            NULL actors,
-                            NULL lecturers,
-                            NULL sounds,
-                            NULL subs,
-                            NULL writers,
-                            NULL voices,
-                            NULL stars,
-                            NULL hosts,
-                            NULL guests,
-                            NULL interviewers,
-                            NULL interviewees,
-                            NULL presenters,
-                            NULL reporters,
-                            NULL performers
-
-                        FROM
-                            rec,
-                            Card card,
-                            Category category
-                        WHERE
-                            rec.id_higher_card=card.id
-                            AND category.id=card.id_category
-                    )
-                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
-
-                FROM
-                    rec
-                WHERE
-
-                    -------------------
-                    -------------------
-                    --- Conditional ---
-                    ---   filter    ---
-                    -------------------
-                    -------------------
-
-
-
-
-                    --- if :level is set, then takes that specific level as highest level
-                    --- if :level is NOT set, then takes the highest level
-            --        CASE
-            --            WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
-            --        END
-
-                    id_higher_card = :card_id
-
-                GROUP BY id
-                ) mixed_id_list,
-
-                --------------------------
-                --- unioned with title ---
-                --------------------------
-                (
-                SELECT 
-                    unioned.id id,
-
-                    MAX(title_req) title_req, 
-                    MAX(title_orig) title_orig, 
-                    MAX(lang_orig) lang_orig,
-                    MAX(lang_req) lang_req
-
-                FROM 
-                    (
-                    SELECT 
-                        card.id id, 
-
-                        NULL title_req, 
-                        NULL lang_req, 
-                        tcl.text title_orig, 
-                        lang.name lang_orig
-                    FROM                     
-                        Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE                
-                        tcl.id_card=card.id
-                        AND tcl.id_language=lang.id
-                        AND tcl.type="T"
-                        AND card.id_title_orig=lang.id
-
-                        AND card.isappendix = 0
-                        AND lang.name <> :lang
-                    UNION
-
-                    SELECT 
-                        card.id id,
-
-                        tcl.text title_req, 
-                        lang.name lang_req, 
-                        NULL title_orig, 
-                        NULL lang_orig
-                    FROM               
-                        Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE               
-                        tcl.id_card=card.id
-                        AND tcl.id_language=lang.id
-                        AND tcl.type="T"
-
-                        AND card.isappendix = 0
-                        AND lang.name=:lang
-                    ) unioned
-
-                -- because of the title required and origin
-                GROUP BY unioned.id               
-
-                ) core
-
-                -----------------
-                --- STORYLINE ---
-                -----------------
-                LEFT JOIN
-                (
-                    SELECT ord, storyline, id_card
-                    FROM
-                    (
-
-                        --- Select the storyline on the requested language, not the original ---
-
-                        SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE
-                            tcl.type = "S" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            language.name = :lang AND
-                            card.id_title_orig<>language.id AND
-                            tcl.text IS NOT NULL
-
-                        UNION
-
-                        --- Select the storyline on the original language ---
-
-                        SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM 
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE 
-                            tcl.type = "S" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
-                            tcl.text IS NOT NULL
-                    )
-                    GROUP BY id_card
-            --        HAVING MIN(ord)
-            --        ORDER BY ord
-                )strl
-                ON strl.id_card=core.id
-
-                --------------
-                --- LYRICS ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT ord, lyrics, id_card
-                    FROM
-                    (
-
-                        --- Select the lyrics on the requested language, not the original ---
-
-                        SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE
-                            tcl.type = "L" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            language.name = :lang AND
-                            card.id_title_orig<>language.id AND
-                            tcl.text IS NOT NULL
-
-                        UNION
-
-                        --- Select the lyrics on the original language ---
-
-                        SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM 
-                            Text_Card_Lang tcl,
-                            Language language,
-                            Card card
-                        WHERE 
-                            tcl.type = "L" AND
-                            tcl.id_language = language.id AND
-                            tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
-                            tcl.text IS NOT NULL
-                    )
-                    GROUP BY id_card
-                )lrx
-                ON lrx.id_card=core.id       
-
-                --------------
-                --- MEDIUM ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
-                    FROM
-                        MediaType media_type,
-                        Card_Media card_media
-                    WHERE
-                        card_media.id_mediatype=media_type.id
-                    GROUP BY card_media.id_card
-                )mdt
-                ON mdt.id_card=core.id
-
-                ----------------
-                --- APPENDIX ---
-                ----------------
-                 LEFT JOIN    
-                (    
-                    SELECT
-                        card_id,
-                        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
-                    FROM
-
-                        (
-                        SELECT                
-                            merged_appendix.id,
-                            merged_appendix.card_id,
-                            MAX(merged_appendix.title_req) title_req, 
-                            MAX(merged_appendix.title_orig) title_orig,
-                            merged_appendix.show,
-                            merged_appendix.download,
-                            merged_appendix.source_path,
-                            mt.name media_type,
-                            cm.name contact_media                
-                        FROM
-                            (
-                            SELECT 
-                                app_card.id id,
-                                id_higher_card card_id,
-                                app_card.isappendix,
-                                app_card.show,
-                                app_card.download,
-                                app_card.source_path,
-                                "" title_req, 
-                                tcl.text title_orig
-                            FROM 
-                                CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE                
-                                app_card.isappendix=1
-                                AND tcl.id_card=app_card.id
-                                AND tcl.id_language=lang.id
-                                AND tcl.type="T"
-                                AND app_card.id_title_orig=lang.id
-                                AND lang.name <> :lang
-
-                            UNION
-
-                            SELECT 
-                                app_card.id id,
-                                id_higher_card card_id,
-                                app_card.isappendix,
-                                app_card.show,
-                                app_card.download,
-                                app_card.source_path,
-                                tcl.text title_req, 
-                                "" title_orig
-                            FROM 
-                                CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE
-                                app_card.isappendix=1
-                                AND tcl.id_card=app_card.id
-                                AND tcl.id_language=lang.id
-                                AND tcl.type="T"
-                                AND lang.name=:lang
-                            ) merged_appendix,
-                            Card_Media cm,
-                            MediaType mt
-
-                        WHERE
-                            cm.id_card=merged_appendix.id
-                            AND mt.id=cm.id_mediatype
-
-                        GROUP BY merged_appendix.id
-                        )
-                    GROUP BY card_id
-                ) pndx
-                ON pndx.card_id=core.id
-
-                ---------------
-                --- HISTORY ---
-                ---------------
-                LEFT JOIN
-                (
-                    SELECT 
-                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
-                        id_card
-                    FROM (
-                        SELECT id_card, start_epoch, recent_epoch, recent_position
-                        FROM History
-                        WHERE id_user=:user_id
-                        ORDER BY start_epoch DESC
-                    )
-                    GROUP BY id_card
-                )hstr
-                ON hstr.id_card=core.id
-
-                --------------
-                --- RATING ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT id_card, rate, skip_continuous_play
-                    FROM Rating
-                    WHERE id_user=:user_id
-                )rtng
-                ON rtng.id_card=core.id
-
-                ---------------
-                --- TAGGING ---
-                ---------------
-                LEFT JOIN    
-                (
-                   SELECT 
-                      group_concat(name) tags,
-                      id_card
-                   FROM 
-                      Tag tag          
-                   WHERE 
-                      id_user=:user_id
-                   GROUP BY id_card
-                ) tggng
-                ON tggng.id_card=core.id
-
-            WHERE
-                mixed_id_list.id=core.id
-
-            ORDER BY CASE 
-                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
-                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
-                WHEN sequence<0 THEN basename
-                WHEN sequence>=0 THEN sequence
-            END
-            LIMIT :limit;
-
-            '''
             query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}            
 
             logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
@@ -4458,7 +2847,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_lowest_level_cards(self, category, playlist=None, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_lowest_level_cards(self, category, playlist=None, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for lowest (medium) level list
         Returns only medium level cards level cards
@@ -4496,7 +2885,7 @@ class SqlDatabase:
             history_days = 365
             history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
 
-            query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins)
+            query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
             query = '''
             SELECT *
@@ -4536,6 +2925,22 @@ class SqlDatabase:
                 records = self.get_converted_query_to_json(records, category, lang)
 
             return records
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     # !!! Keep it until it is not proved the other solution works !!!
@@ -5446,6 +3851,1727 @@ class SqlDatabase:
                 records = self.get_converted_query_to_json(records, category, lang)
 
             return records
+    def gggget_next_level_cards(self, card_id, category, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+        """
+        FULL QUERY for the children cards of the given card
+        Returns the next child cards which could ne:                                           
+          - media card        
+          - level cards
+                                                                       
+        Parameters for filtering:
+          - category                                                   
+          - decade                                                     
+          - language                                                   
+                                                                       
+          logical operands (_AND_, _NOT_) in                           
+          - genres                                                     
+          - themes                                                     
+          - actors                                                     
+          - directors                                                  
+          - lecturers                                                 
+          - origins                                                    
+        """
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
+        with self.lock:
+            where = ''
+
+            genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
+            themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
+            actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+            directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
+            lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+            origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+
+            SELECT
+                core.*,
+
+                mixed_id_list.id_higher_card,
+                mixed_id_list.category,
+                mixed_id_list.level,
+                mixed_id_list.source_path,
+                mixed_id_list.basename,        
+                mixed_id_list.sequence,
+
+                mixed_id_list.title_on_thumbnail,
+                mixed_id_list.title_show_sequence,
+
+                mixed_id_list.decade,
+                mixed_id_list.date,
+                mixed_id_list.length,
+                mixed_id_list.full_time,     
+                mixed_id_list.net_start_time,
+                mixed_id_list.net_stop_time,
+
+                mixed_id_list.themes,
+                mixed_id_list.genres,
+                mixed_id_list.origins,
+                mixed_id_list.directors,
+                mixed_id_list.actors,
+
+                mixed_id_list.sounds,
+                mixed_id_list.subs,
+                mixed_id_list.writers,
+                mixed_id_list.voices,
+                mixed_id_list.stars,
+                mixed_id_list.lecturers,
+
+                mixed_id_list.hosts,
+                mixed_id_list.guests,
+                mixed_id_list.interviewers,
+                mixed_id_list.interviewees,
+                mixed_id_list.presenters,
+                mixed_id_list.reporters,
+                mixed_id_list.performers,
+
+                storyline,
+                lyrics,
+                medium,
+                appendix,
+    
+                hstr.recent_state,
+                rtng.rate,
+                rtng.skip_continuous_play,
+                tggng.tags
+            FROM
+
+                ---------------------------
+                --- mixed level id list ---
+                ---------------------------
+                (
+                WITH RECURSIVE
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+
+                    (
+                        SELECT                 
+                            card.id, 
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            card.decade,
+                            card.date,
+                            card.length, 
+                            card.full_time,
+                            card.net_start_time,
+                            card.net_stop_time,
+
+                            themes,
+                            genres,
+                            origins,
+                            directors,
+                            actors,
+                            lecturers,
+
+                            sounds,
+                            subs,
+                            writers,
+                            voices,
+                            stars,        
+                            hosts,
+                            guests,
+                            interviewers,
+                            interviewees,
+                            presenters,
+                            reporters,
+                            performers
+
+                        FROM 
+                            Card card,
+
+                            --- Conditional ---
+                            Category category
+
+                        -------------
+                        --- GENRE ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(genre.name) genres, card_genre.id_card
+                            FROM
+                                Genre genre,
+                                Card_Genre card_genre
+                            WHERE            
+                                card_genre.id_genre=genre.id
+                            GROUP BY card_genre.id_card
+                        )gnr
+                        ON gnr.id_card=card.id
+
+                        -------------
+                        --- THEME ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(theme.name) themes, card_theme.id_card
+                            FROM
+                                Theme theme,
+                                Card_Theme card_theme
+                            WHERE            
+                                card_theme.id_theme=theme.id
+                            GROUP BY card_theme.id_card
+                        )thm
+                        ON thm.id_card=card.id
+
+                        ---------------
+                        --- ORIGINS ---
+                        ---------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(origin.name) origins, card_origin.id_card
+                            FROM
+                                Country origin,
+                                Card_Origin card_origin
+                            WHERE
+                                card_origin.id_origin=origin.id
+                            GROUP BY card_origin.id_card
+                        )rgn
+                        ON rgn.id_card=card.id    
+
+                        -----------------
+                        --- DIRECTORS ---
+                        -----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) directors,  card_dir.id_card
+                            FROM 
+                                Person person,
+                                Card_Director card_dir
+                            WHERE 
+                                card_dir.id_director = person.id
+                            GROUP BY card_dir.id_card
+                        ) dr
+                        ON dr.id_card=card.id
+
+                        --------------
+                        --- ACTORS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) actors,  card_actor.id_card
+                            FROM 
+                                Person person,
+                                Card_Actor card_actor
+                            WHERE 
+                                card_actor.id_actor = person.id
+                            GROUP BY card_actor.id_card
+                        ) act
+                        ON act.id_card=card.id
+
+                        ----------------
+                        --- LECTURER ---
+                        ----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+                            FROM 
+                                Person person,
+                                Card_Lecturer card_lecturer
+                            WHERE 
+                                card_lecturer.id_lecturer = person.id
+                            GROUP BY card_lecturer.id_card
+                        ) lctr
+                        ON lctr.id_card=card.id           
+
+                        --- No Filter ---
+
+                        --------------
+                        --- SOUNDS ---
+                        --------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(language.name) sounds, card_sound.id_card
+                            FROM 
+                                Language language,
+                                Card_Sound card_sound
+                            WHERE 
+                                card_sound.id_sound=language.id 
+                            GROUP BY card_sound.id_card
+                        ) snd
+                        ON snd.id_card=card.id
+
+                        ----------------
+                        --- SUBTITLE ---
+                        ----------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(language.name) subs, card_sub.id_card
+                            FROM 
+                                Language language,
+                                Card_Sub card_sub
+                            WHERE 
+                                card_sub.id_sub=language.id
+                            GROUP BY card_sub.id_card
+                        ) sb
+                        ON sb.id_card=card.id
+
+                        ---------------
+                        --- WRITERS ---
+                        ---------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) writers,  card_writer.id_card
+                            FROM 
+                                Person person,
+                                Card_Writer card_writer
+                            WHERE 
+                                card_writer.id_writer = person.id
+                            GROUP BY card_writer.id_card
+                        ) wr
+                        ON wr.id_card=card.id
+
+                        --------------
+                        --- VOICES ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) voices,  card_voice.id_card
+                            FROM 
+                                Person person,
+                                Card_Voice card_voice
+                            WHERE 
+                                card_voice.id_voice = person.id
+                            GROUP BY card_voice.id_card
+                        ) vc
+                        ON vc.id_card=card.id    
+
+                        -------------
+                        --- STARS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) stars,  card_star.id_card
+                            FROM 
+                                Person person,
+                                Card_Star card_star
+                            WHERE 
+                                card_star.id_star = person.id
+                            GROUP BY card_star.id_card
+                        ) str
+                        ON str.id_card=card.id
+
+                        -------------
+                        --- HOSTS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) hosts,  card_host.id_card
+                            FROM 
+                                Person person,
+                                Card_Host card_host
+                            WHERE 
+                                card_host.id_host = person.id
+                            GROUP BY card_host.id_card
+                        ) hst
+                        ON hst.id_card=card.id    
+
+                        --------------
+                        --- GUESTS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) guests,  card_guest.id_card
+                            FROM 
+                                Person person,
+                                Card_Guest card_guest
+                            WHERE 
+                                card_guest.id_guest = person.id
+                            GROUP BY card_guest.id_card
+                        ) gst
+                        ON gst.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWERS  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewer card_interviewer
+                            WHERE 
+                                card_interviewer.id_interviewer = person.id
+                            GROUP BY card_interviewer.id_card
+                        ) ntrvwr
+                        ON ntrvwr.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWEES  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewee card_interviewee
+                            WHERE 
+                                card_interviewee.id_interviewee = person.id
+                            GROUP BY card_interviewee.id_card
+                        ) ntrw
+                        ON ntrw.id_card=card.id
+
+                        -------------------
+                        --- PRESENTERS  ---
+                        -------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) presenters,  card_presenter.id_card
+                            FROM 
+                                Person person,
+                                Card_Presenter card_presenter
+                            WHERE 
+                                card_presenter.id_presenter = person.id
+                            GROUP BY card_presenter.id_card
+                        ) prsntr
+                        ON prsntr.id_card=card.id
+
+                        ------------------
+                        --- REPORTERS  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) reporters,  card_reporter.id_card
+                            FROM 
+                                Person person,
+                                Card_Reporter card_reporter
+                            WHERE 
+                                card_reporter.id_reporter = person.id
+                            GROUP BY card_reporter.id_card
+                        ) rprtr
+                        ON rprtr.id_card=card.id
+
+                        ------------------
+                        --- PERFORMER  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) performers,  card_performer.id_card
+                            FROM 
+                                Person person,
+                                Card_Performer card_performer
+                            WHERE 
+                                card_performer.id_performer = person.id
+                            GROUP BY card_performer.id_card
+                        ) prfrmr
+                        ON prfrmr.id_card=card.id            
+
+                        ------------------------
+                        --- Initial WHERE    ---
+                        --- the lowest level ---
+                        ------------------------
+
+                        WHERE 
+                            -- card can not be appendix --
+                            card.isappendix == 0
+
+                            -- connect card to category --
+                            AND category.id=card.id_category
+
+                            -- Find the lowest level --
+                            AND card.level IS NULL
+
+                            -- Select the given category --
+                            AND category.name = :category
+
+                            -------------------
+                            -------------------
+                            --- Conditional ---
+                            ---   filter    ---
+                            -------------------
+                            -------------------
+
+                        --- WHERE DECADE ---
+                        AND CASE
+                            WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
+                        END
+
+                        ''' + ('''                
+                        --- WHERE THEMES - conditional ---
+                        AND ''' + themes_where if themes_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE GENRES - conditional ---
+                        AND ''' + genres_where if genres_where else '') + '''
+
+                        ''' + ('''               
+                        --- WHERE DIRECTORS - conditional ---
+                        AND ''' + directors_where if directors_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE ACTORS - conditional ---
+                        AND ''' + actors_where if actors_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE ORIGINS - conditional ---
+                        AND ''' + origins_where if origins_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE LECTURERS - conditional ---
+                        AND ''' + lecturers_where if lecturers_where else '') + '''
+
+                        UNION ALL
+
+                        SELECT 
+                            card.id,
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            NULL decade,
+                            NULL date,
+                            NULL length,
+                            NULL full_time,
+                            NULL net_start_time,
+                            NULL net_stop_time,
+
+                            NULL themes,
+                            NULL genres,
+                            NULL origins,
+                            NULL directors,
+                            NULL actors,
+                            NULL lecturers,
+                            NULL sounds,
+                            NULL subs,
+                            NULL writers,
+                            NULL voices,
+                            NULL stars,
+                            NULL hosts,
+                            NULL guests,
+                            NULL interviewers,
+                            NULL interviewees,
+                            NULL presenters,
+                            NULL reporters,
+                            NULL performers
+
+                        FROM
+                            rec,
+                            Card card,
+                            Category category
+                        WHERE
+                            rec.id_higher_card=card.id
+                            AND category.id=card.id_category
+                    )
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+
+                FROM
+                    rec
+                WHERE
+
+                    -------------------
+                    -------------------
+                    --- Conditional ---
+                    ---   filter    ---
+                    -------------------
+                    -------------------
+
+
+
+
+                    --- if :level is set, then takes that specific level as highest level
+                    --- if :level is NOT set, then takes the highest level
+            --        CASE
+            --            WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
+            --        END
+
+                    id_higher_card = :card_id
+
+                GROUP BY id
+                ) mixed_id_list,
+
+                --------------------------
+                --- unioned with title ---
+                --------------------------
+                (
+                SELECT 
+                    unioned.id id,
+
+                    MAX(title_req) title_req, 
+                    MAX(title_orig) title_orig, 
+                    MAX(lang_orig) lang_orig,
+                    MAX(lang_req) lang_req
+
+                FROM 
+                    (
+                    SELECT 
+                        card.id id, 
+
+                        NULL title_req, 
+                        NULL lang_req, 
+                        tcl.text title_orig, 
+                        lang.name lang_orig
+                    FROM                     
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE                
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.id_title_orig=lang.id
+
+                        AND card.isappendix = 0
+                        AND lang.name <> :lang
+                    UNION
+
+                    SELECT 
+                        card.id id,
+
+                        tcl.text title_req, 
+                        lang.name lang_req, 
+                        NULL title_orig, 
+                        NULL lang_orig
+                    FROM               
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE               
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+
+                        AND card.isappendix = 0
+                        AND lang.name=:lang
+                    ) unioned
+
+                -- because of the title required and origin
+                GROUP BY unioned.id               
+
+                ) core
+
+                -----------------
+                --- STORYLINE ---
+                -----------------
+                LEFT JOIN
+                (
+                    SELECT ord, storyline, id_card
+                    FROM
+                    (
+
+                        --- Select the storyline on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the storyline on the original language ---
+
+                        SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+            --        HAVING MIN(ord)
+            --        ORDER BY ord
+                )strl
+                ON strl.id_card=core.id
+
+                --------------
+                --- LYRICS ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT ord, lyrics, id_card
+                    FROM
+                    (
+
+                        --- Select the lyrics on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the lyrics on the original language ---
+
+                        SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+                )lrx
+                ON lrx.id_card=core.id       
+
+                --------------
+                --- MEDIUM ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
+                    FROM
+                        MediaType media_type,
+                        Card_Media card_media
+                    WHERE
+                        card_media.id_mediatype=media_type.id
+                    GROUP BY card_media.id_card
+                )mdt
+                ON mdt.id_card=core.id
+
+                ----------------
+                --- APPENDIX ---
+                ----------------
+                 LEFT JOIN    
+                (    
+                    SELECT
+                        card_id,
+                        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
+                    FROM
+
+                        (
+                        SELECT                
+                            merged_appendix.id,
+                            merged_appendix.card_id,
+                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_orig) title_orig,
+                            merged_appendix.show,
+                            merged_appendix.download,
+                            merged_appendix.source_path,
+                            mt.name media_type,
+                            cm.name contact_media                
+                        FROM
+                            (
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                "" title_req, 
+                                tcl.text title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE                
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND app_card.id_title_orig=lang.id
+                                AND lang.name <> :lang
+
+                            UNION
+
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                tcl.text title_req, 
+                                "" title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND lang.name=:lang
+                            ) merged_appendix,
+                            Card_Media cm,
+                            MediaType mt
+
+                        WHERE
+                            cm.id_card=merged_appendix.id
+                            AND mt.id=cm.id_mediatype
+
+                        GROUP BY merged_appendix.id
+                        )
+                    GROUP BY card_id
+                ) pndx
+                ON pndx.card_id=core.id
+
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id
+
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=core.id
+
+            WHERE
+                mixed_id_list.id=core.id
+
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+            LIMIT :limit;
+
+            '''
+            query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}            
+
+            logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = self.get_converted_query_to_json(records, category, lang)
+
+            return records
+    def gggget_highest_level_cards(self, category, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+        """
+        FULL QUERY for highest level list                ---
+        Returns mixed standalone media and level cards   ---
+        With filters category/genre                      ---
+
+        Why need to use recursive search?                ---
+        Because I filter by the lower level card (media) ---
+        but I show the highest                           ---
+                                                                       
+        Parameters for filtering:
+          - category
+          - level
+          - decade                                                     
+          - language                                                   
+                                                                       
+          logical operands (_AND_, _NOT_) in                           
+          - genres                                                     
+          - themes                                                     
+          - actors                                                     
+          - directors                                                  
+          - lecturers                                                 
+          - origins                                                    
+        """
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
+        with self.lock:
+
+            genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
+            themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
+            actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+            directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
+            lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+            origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            records = {}
+
+            query = '''
+
+            SELECT
+                core.*,
+
+                mixed_id_list.id_higher_card,
+                mixed_id_list.category,
+                mixed_id_list.level,
+                mixed_id_list.source_path,
+                mixed_id_list.basename,        
+                mixed_id_list.sequence,
+
+                mixed_id_list.title_on_thumbnail,
+                mixed_id_list.title_show_sequence,
+
+                mixed_id_list.decade,
+                mixed_id_list.date,
+                mixed_id_list.length,  
+                mixed_id_list.full_time, 
+                mixed_id_list.net_start_time,    
+                mixed_id_list.net_stop_time,
+
+                mixed_id_list.themes,
+                mixed_id_list.genres,
+                mixed_id_list.origins,
+                mixed_id_list.directors,
+                mixed_id_list.actors,
+
+                mixed_id_list.sounds,
+                mixed_id_list.subs,
+                mixed_id_list.writers,
+                mixed_id_list.voices,
+                mixed_id_list.stars,
+                mixed_id_list.lecturers,
+
+                mixed_id_list.hosts,
+                mixed_id_list.guests,
+                mixed_id_list.interviewers,
+                mixed_id_list.interviewees,
+                mixed_id_list.presenters,
+                mixed_id_list.reporters,
+                mixed_id_list.performers,
+
+                storyline,
+                lyrics,
+                medium,
+                appendix,
+
+                hstr.recent_state,
+                rtng.rate,
+                rtng.skip_continuous_play,
+                tggng.tags
+            FROM
+
+                ---------------------------
+                --- mixed level id list ---
+                ---------------------------
+                (
+                WITH RECURSIVE
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+
+                    (
+                        SELECT                 
+                            card.id, 
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            card.decade,
+                            card.date,
+                            card.length,
+                            card.full_time,  
+                            card.net_start_time,
+                            card.net_stop_time,
+
+                            themes,
+                            genres,
+                            origins,
+                            directors,
+                            actors,
+                            lecturers,
+
+                            sounds,
+                            subs,
+                            writers,
+                            voices,
+                            stars,        
+                            hosts,
+                            guests,
+                            interviewers,
+                            interviewees,
+                            presenters,
+                            reporters,
+                            performers
+
+                        FROM 
+                            Card card,
+
+                            --- Conditional ---
+                            Category category
+
+                        -------------
+                        --- GENRE ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(genre.name) genres, card_genre.id_card
+                            FROM
+                                Genre genre,
+                                Card_Genre card_genre
+                            WHERE            
+                                card_genre.id_genre=genre.id
+                            GROUP BY card_genre.id_card
+                        )gnr
+                        ON gnr.id_card=card.id
+
+                        -------------
+                        --- THEME ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(theme.name) themes, card_theme.id_card
+                            FROM
+                                Theme theme,
+                                Card_Theme card_theme
+                            WHERE            
+                                card_theme.id_theme=theme.id
+                            GROUP BY card_theme.id_card
+                        )thm
+                        ON thm.id_card=card.id
+
+                        ---------------
+                        --- ORIGINS ---
+                        ---------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(origin.name) origins, card_origin.id_card
+                            FROM
+                                Country origin,
+                                Card_Origin card_origin
+                            WHERE
+                                card_origin.id_origin=origin.id
+                            GROUP BY card_origin.id_card
+                        )rgn
+                        ON rgn.id_card=card.id    
+
+                        -----------------
+                        --- DIRECTORS ---
+                        -----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) directors,  card_dir.id_card
+                            FROM 
+                                Person person,
+                                Card_Director card_dir
+                            WHERE 
+                                card_dir.id_director = person.id
+                            GROUP BY card_dir.id_card
+                        ) dr
+                        ON dr.id_card=card.id
+
+                        --------------
+                        --- ACTORS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) actors,  card_actor.id_card
+                            FROM 
+                                Person person,
+                                Card_Actor card_actor
+                            WHERE 
+                                card_actor.id_actor = person.id
+                            GROUP BY card_actor.id_card
+                        ) act
+                        ON act.id_card=card.id
+
+                        ----------------
+                        --- LECTURER ---
+                        ----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+                            FROM 
+                                Person person,
+                                Card_Lecturer card_lecturer
+                            WHERE 
+                                card_lecturer.id_lecturer = person.id
+                            GROUP BY card_lecturer.id_card
+                        ) lctr
+                        ON lctr.id_card=card.id           
+
+                        --- No Filter ---
+
+                        --------------
+                        --- SOUNDS ---
+                        --------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(language.name) sounds, card_sound.id_card
+                            FROM 
+                                Language language,
+                                Card_Sound card_sound
+                            WHERE 
+                                card_sound.id_sound=language.id 
+                            GROUP BY card_sound.id_card
+                        ) snd
+                        ON snd.id_card=card.id
+
+                        ----------------
+                        --- SUBTITLE ---
+                        ----------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(language.name) subs, card_sub.id_card
+                            FROM 
+                                Language language,
+                                Card_Sub card_sub
+                            WHERE 
+                                card_sub.id_sub=language.id
+                            GROUP BY card_sub.id_card
+                        ) sb
+                        ON sb.id_card=card.id
+
+                        ---------------
+                        --- WRITERS ---
+                        ---------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) writers,  card_writer.id_card
+                            FROM 
+                                Person person,
+                                Card_Writer card_writer
+                            WHERE 
+                                card_writer.id_writer = person.id
+                            GROUP BY card_writer.id_card
+                        ) wr
+                        ON wr.id_card=card.id
+
+                        --------------
+                        --- VOICES ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) voices,  card_voice.id_card
+                            FROM 
+                                Person person,
+                                Card_Voice card_voice
+                            WHERE 
+                                card_voice.id_voice = person.id
+                            GROUP BY card_voice.id_card
+                        ) vc
+                        ON vc.id_card=card.id    
+
+                        -------------
+                        --- STARS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) stars,  card_star.id_card
+                            FROM 
+                                Person person,
+                                Card_Star card_star
+                            WHERE 
+                                card_star.id_star = person.id
+                            GROUP BY card_star.id_card
+                        ) str
+                        ON str.id_card=card.id
+
+                        -------------
+                        --- HOSTS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) hosts,  card_host.id_card
+                            FROM 
+                                Person person,
+                                Card_Host card_host
+                            WHERE 
+                                card_host.id_host = person.id
+                            GROUP BY card_host.id_card
+                        ) hst
+                        ON hst.id_card=card.id    
+
+                        --------------
+                        --- GUESTS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) guests,  card_guest.id_card
+                            FROM 
+                                Person person,
+                                Card_Guest card_guest
+                            WHERE 
+                                card_guest.id_guest = person.id
+                            GROUP BY card_guest.id_card
+                        ) gst
+                        ON gst.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWERS  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewer card_interviewer
+                            WHERE 
+                                card_interviewer.id_interviewer = person.id
+                            GROUP BY card_interviewer.id_card
+                        ) ntrvwr
+                        ON ntrvwr.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWEES  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewee card_interviewee
+                            WHERE 
+                                card_interviewee.id_interviewee = person.id
+                            GROUP BY card_interviewee.id_card
+                        ) ntrw
+                        ON ntrw.id_card=card.id
+
+                        -------------------
+                        --- PRESENTERS  ---
+                        -------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) presenters,  card_presenter.id_card
+                            FROM 
+                                Person person,
+                                Card_Presenter card_presenter
+                            WHERE 
+                                card_presenter.id_presenter = person.id
+                            GROUP BY card_presenter.id_card
+                        ) prsntr
+                        ON prsntr.id_card=card.id
+
+                        ------------------
+                        --- REPORTERS  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) reporters,  card_reporter.id_card
+                            FROM 
+                                Person person,
+                                Card_Reporter card_reporter
+                            WHERE 
+                                card_reporter.id_reporter = person.id
+                            GROUP BY card_reporter.id_card
+                        ) rprtr
+                        ON rprtr.id_card=card.id
+
+                        ------------------
+                        --- PERFORMER  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) performers,  card_performer.id_card
+                            FROM 
+                                Person person,
+                                Card_Performer card_performer
+                            WHERE 
+                                card_performer.id_performer = person.id
+                            GROUP BY card_performer.id_card
+                        ) prfrmr
+                        ON prfrmr.id_card=card.id            
+
+                        ------------------------
+                        --- Initial WHERE    ---
+                        --- the lowest level ---
+                        ------------------------
+
+                        WHERE 
+                            -- card can not be appendix --
+                            card.isappendix == 0
+
+                            -- connect card to category --
+                            AND category.id=card.id_category
+
+                            -- Find the lowest level --
+                            AND card.level IS NULL
+
+                            -- Select the given category --
+                            AND category.name = :category
+
+                            -------------------
+                            -------------------
+                            --- Conditional ---
+                            ---   filter    ---
+                            -------------------
+                            -------------------
+
+                            --- WHERE DECADE ---
+                            AND CASE
+                                WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
+                            END
+
+                            ''' + ('''                
+                            --- WHERE THEMES - conditional ---
+                            AND ''' + themes_where if themes_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE GENRES - conditional ---
+                            AND ''' + genres_where if genres_where else '') + '''
+
+                            ''' + ('''               
+                            --- WHERE DIRECTORS - conditional ---
+                            AND ''' + directors_where if directors_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE ACTORS - conditional ---
+                            AND ''' + actors_where if actors_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE ORIGINS - conditional ---
+                            AND ''' + origins_where if origins_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE LECTURERS - conditional ---
+                            AND ''' + lecturers_where if lecturers_where else '') + '''
+
+                        UNION ALL
+
+                        SELECT 
+                            card.id,
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            NULL decade,
+                            NULL date,
+                            NULL length,
+                            NULL full_time,
+                            NULL net_start_time,
+                            NULL net_stop_time,
+
+                            NULL themes,
+                            NULL genres,
+                            NULL origins,
+                            NULL directors,
+                            NULL actors,
+                            NULL lecturers,
+                            NULL sounds,
+                            NULL subs,
+                            NULL writers,
+                            NULL voices,
+                            NULL stars,
+                            NULL hosts,
+                            NULL guests,
+                            NULL interviewers,
+                            NULL interviewees,
+                            NULL presenters,
+                            NULL reporters,
+                            NULL performers
+
+                        FROM
+                            rec,
+                            Card card,
+                            Category category
+                        WHERE
+                            rec.id_higher_card=card.id
+                            AND category.id=card.id_category
+                    )
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+
+                FROM
+                    rec
+                WHERE
+
+                    -------------------
+                    -------------------
+                    --- Conditional ---
+                    ---   filter    ---
+                    -------------------
+                    -------------------
+
+                    --- if :level is set, then takes that specific level as highest level
+                    --- if :level is NOT set, then takes the highest level
+                    CASE
+                        WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
+                    END
+
+                GROUP BY id
+                ) mixed_id_list,
+
+                --------------------------
+                --- unioned with title ---
+                --------------------------
+                (
+                SELECT 
+                    unioned.id id,
+
+                    MAX(title_req) title_req, 
+                    MAX(title_orig) title_orig, 
+                    MAX(lang_orig) lang_orig,
+                    MAX(lang_req) lang_req
+
+                FROM 
+                    (
+                    SELECT 
+                        card.id id, 
+
+                        NULL title_req, 
+                        NULL lang_req, 
+                        tcl.text title_orig, 
+                        lang.name lang_orig
+                    FROM                     
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE                
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.id_title_orig=lang.id
+
+                        AND card.isappendix = 0
+                        AND lang.name <> :lang
+                    UNION
+
+                    SELECT 
+                        card.id id,
+
+                        tcl.text title_req, 
+                        lang.name lang_req, 
+                        NULL title_orig, 
+                        NULL lang_orig
+                    FROM               
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE               
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+
+                        AND card.isappendix = 0
+                        AND lang.name=:lang
+                    ) unioned
+
+                -- because of the title required and origin
+                GROUP BY unioned.id               
+
+                ) core
+
+                -----------------
+                --- STORYLINE ---
+                -----------------
+                LEFT JOIN
+                (
+                    SELECT ord, storyline, id_card
+                    FROM
+                    (
+
+                        --- Select the storyline on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the storyline on the original language ---
+
+                        SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+            --        HAVING MIN(ord)
+            --        ORDER BY ord
+                )strl
+                ON strl.id_card=core.id
+
+                --------------
+                --- LYRICS ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT ord, lyrics, id_card
+                    FROM
+                    (
+
+                        --- Select the lyrics on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the lyrics on the original language ---
+
+                        SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+                )lrx
+                ON lrx.id_card=core.id       
+
+                --------------
+                --- MEDIUM ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
+                    FROM
+                        MediaType media_type,
+                        Card_Media card_media
+                    WHERE
+                        card_media.id_mediatype=media_type.id
+                    GROUP BY card_media.id_card
+                )mdt
+                ON mdt.id_card=core.id
+
+                ----------------
+                --- APPENDIX ---
+                ----------------
+                 LEFT JOIN    
+                (    
+                    SELECT
+                        card_id,
+                        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
+                    FROM
+
+                        (
+                        SELECT                
+                            merged_appendix.id,
+                            merged_appendix.card_id,
+                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_orig) title_orig,
+                            merged_appendix.show,
+                            merged_appendix.download,
+                            merged_appendix.source_path,
+                            mt.name media_type,
+                            cm.name contact_media                
+                        FROM
+                            (
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                "" title_req, 
+                                tcl.text title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE                
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND app_card.id_title_orig=lang.id
+                                AND lang.name <> :lang
+
+                            UNION
+
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                tcl.text title_req, 
+                                "" title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND lang.name=:lang
+                            ) merged_appendix,
+                            Card_Media cm,
+                            MediaType mt
+
+                        WHERE
+                            cm.id_card=merged_appendix.id
+                            AND mt.id=cm.id_mediatype
+
+                        GROUP BY merged_appendix.id
+                        )
+                    GROUP BY card_id
+                ) pndx
+                ON pndx.card_id=core.id
+
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id
+
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=core.id
+
+            WHERE
+                mixed_id_list.id=core.id
+
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+            LIMIT :limit; '''
+
+            query_parameters = {'user_id': user_id, 'level': level, 'category': category, 'decade': decade, 'lang': lang, 'limit': limit}
+
+            logging.error("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
+
+            records=cur.execute(query, query_parameters).fetchall()
+            cur.execute("commit")
+
+            if json:
+                records = self.get_converted_query_to_json(records, category, lang)
+
+            return records
 
 
 
@@ -5453,8 +5579,828 @@ class SqlDatabase:
 
 
 
+# RAW Queries
 
-    def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, origins=None):
+    def get_raw_query_of_highest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+        tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
+        genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
+        themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
+        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+        directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
+        lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+        performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
+        origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+        query = '''
+
+            SELECT
+                core.*,
+
+                mixed_id_list.id_higher_card,
+                mixed_id_list.category,
+                mixed_id_list.level,
+                mixed_id_list.source_path,
+                mixed_id_list.basename,        
+                mixed_id_list.sequence,
+
+                mixed_id_list.title_on_thumbnail,
+                mixed_id_list.title_show_sequence,
+
+                mixed_id_list.decade,
+                mixed_id_list.date,
+                mixed_id_list.length,  
+                mixed_id_list.full_time, 
+                mixed_id_list.net_start_time,    
+                mixed_id_list.net_stop_time,
+
+                mixed_id_list.themes,
+                mixed_id_list.genres,
+                mixed_id_list.origins,
+                mixed_id_list.directors,
+                mixed_id_list.actors,
+
+                mixed_id_list.sounds,
+                mixed_id_list.subs,
+                mixed_id_list.writers,
+                mixed_id_list.voices,
+                mixed_id_list.stars,
+                mixed_id_list.lecturers,
+
+                mixed_id_list.hosts,
+                mixed_id_list.guests,
+                mixed_id_list.interviewers,
+                mixed_id_list.interviewees,
+                mixed_id_list.presenters,
+                mixed_id_list.reporters,
+                mixed_id_list.performers,
+
+                storyline,
+                lyrics,
+                medium,
+                appendix,
+
+                hstr.recent_state,
+                rtng.rate,
+                rtng.skip_continuous_play,
+                tggng.tags
+            FROM
+
+                ---------------------------
+                --- mixed level id list ---
+                ---------------------------
+                (
+                WITH RECURSIVE
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+
+                    (
+                        SELECT                 
+                            card.id, 
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            card.decade,
+                            card.date,
+                            card.length,
+                            card.full_time,  
+                            card.net_start_time,
+                            card.net_stop_time,
+
+                            themes,
+                            genres,
+                            origins,
+                            directors,
+                            actors,
+                            lecturers,
+
+                            sounds,
+                            subs,
+                            writers,
+                            voices,
+                            stars,        
+                            hosts,
+                            guests,
+                            interviewers,
+                            interviewees,
+                            presenters,
+                            reporters,
+                            performers
+
+                        FROM 
+                            Card card,
+
+                            --- Conditional ---
+                            Category category
+
+                        -------------
+                        --- GENRE ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(genre.name) genres, card_genre.id_card
+                            FROM
+                                Genre genre,
+                                Card_Genre card_genre
+                            WHERE            
+                                card_genre.id_genre=genre.id
+                            GROUP BY card_genre.id_card
+                        )gnr
+                        ON gnr.id_card=card.id
+
+                        -------------
+                        --- THEME ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(theme.name) themes, card_theme.id_card
+                            FROM
+                                Theme theme,
+                                Card_Theme card_theme
+                            WHERE            
+                                card_theme.id_theme=theme.id
+                            GROUP BY card_theme.id_card
+                        )thm
+                        ON thm.id_card=card.id
+
+                        ---------------
+                        --- ORIGINS ---
+                        ---------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(origin.name) origins, card_origin.id_card
+                            FROM
+                                Country origin,
+                                Card_Origin card_origin
+                            WHERE
+                                card_origin.id_origin=origin.id
+                            GROUP BY card_origin.id_card
+                        )rgn
+                        ON rgn.id_card=card.id    
+
+                        -----------------
+                        --- DIRECTORS ---
+                        -----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) directors,  card_dir.id_card
+                            FROM 
+                                Person person,
+                                Card_Director card_dir
+                            WHERE 
+                                card_dir.id_director = person.id
+                            GROUP BY card_dir.id_card
+                        ) dr
+                        ON dr.id_card=card.id
+
+                        --------------
+                        --- ACTORS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) actors,  card_actor.id_card
+                            FROM 
+                                Person person,
+                                Card_Actor card_actor
+                            WHERE 
+                                card_actor.id_actor = person.id
+                            GROUP BY card_actor.id_card
+                        ) act
+                        ON act.id_card=card.id
+
+                        ----------------
+                        --- LECTURER ---
+                        ----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+                            FROM 
+                                Person person,
+                                Card_Lecturer card_lecturer
+                            WHERE 
+                                card_lecturer.id_lecturer = person.id
+                            GROUP BY card_lecturer.id_card
+                        ) lctr
+                        ON lctr.id_card=card.id           
+
+                        --- No Filter ---
+
+                        --------------
+                        --- SOUNDS ---
+                        --------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(language.name) sounds, card_sound.id_card
+                            FROM 
+                                Language language,
+                                Card_Sound card_sound
+                            WHERE 
+                                card_sound.id_sound=language.id 
+                            GROUP BY card_sound.id_card
+                        ) snd
+                        ON snd.id_card=card.id
+
+                        ----------------
+                        --- SUBTITLE ---
+                        ----------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(language.name) subs, card_sub.id_card
+                            FROM 
+                                Language language,
+                                Card_Sub card_sub
+                            WHERE 
+                                card_sub.id_sub=language.id
+                            GROUP BY card_sub.id_card
+                        ) sb
+                        ON sb.id_card=card.id
+
+                        ---------------
+                        --- WRITERS ---
+                        ---------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) writers,  card_writer.id_card
+                            FROM 
+                                Person person,
+                                Card_Writer card_writer
+                            WHERE 
+                                card_writer.id_writer = person.id
+                            GROUP BY card_writer.id_card
+                        ) wr
+                        ON wr.id_card=card.id
+
+                        --------------
+                        --- VOICES ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) voices,  card_voice.id_card
+                            FROM 
+                                Person person,
+                                Card_Voice card_voice
+                            WHERE 
+                                card_voice.id_voice = person.id
+                            GROUP BY card_voice.id_card
+                        ) vc
+                        ON vc.id_card=card.id    
+
+                        -------------
+                        --- STARS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) stars,  card_star.id_card
+                            FROM 
+                                Person person,
+                                Card_Star card_star
+                            WHERE 
+                                card_star.id_star = person.id
+                            GROUP BY card_star.id_card
+                        ) str
+                        ON str.id_card=card.id
+
+                        -------------
+                        --- HOSTS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) hosts,  card_host.id_card
+                            FROM 
+                                Person person,
+                                Card_Host card_host
+                            WHERE 
+                                card_host.id_host = person.id
+                            GROUP BY card_host.id_card
+                        ) hst
+                        ON hst.id_card=card.id    
+
+                        --------------
+                        --- GUESTS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) guests,  card_guest.id_card
+                            FROM 
+                                Person person,
+                                Card_Guest card_guest
+                            WHERE 
+                                card_guest.id_guest = person.id
+                            GROUP BY card_guest.id_card
+                        ) gst
+                        ON gst.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWERS  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewer card_interviewer
+                            WHERE 
+                                card_interviewer.id_interviewer = person.id
+                            GROUP BY card_interviewer.id_card
+                        ) ntrvwr
+                        ON ntrvwr.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWEES  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewee card_interviewee
+                            WHERE 
+                                card_interviewee.id_interviewee = person.id
+                            GROUP BY card_interviewee.id_card
+                        ) ntrw
+                        ON ntrw.id_card=card.id
+
+                        -------------------
+                        --- PRESENTERS  ---
+                        -------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) presenters,  card_presenter.id_card
+                            FROM 
+                                Person person,
+                                Card_Presenter card_presenter
+                            WHERE 
+                                card_presenter.id_presenter = person.id
+                            GROUP BY card_presenter.id_card
+                        ) prsntr
+                        ON prsntr.id_card=card.id
+
+                        ------------------
+                        --- REPORTERS  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) reporters,  card_reporter.id_card
+                            FROM 
+                                Person person,
+                                Card_Reporter card_reporter
+                            WHERE 
+                                card_reporter.id_reporter = person.id
+                            GROUP BY card_reporter.id_card
+                        ) rprtr
+                        ON rprtr.id_card=card.id
+
+                        ------------------
+                        --- PERFORMER  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) performers,  card_performer.id_card
+                            FROM 
+                                Person person,
+                                Card_Performer card_performer
+                            WHERE 
+                                card_performer.id_performer = person.id
+                            GROUP BY card_performer.id_card
+                        ) prfrmr
+                        ON prfrmr.id_card=card.id            
+
+                        ------------------------
+                        --- Initial WHERE    ---
+                        --- the lowest level ---
+                        ------------------------
+
+                        WHERE 
+                            -- card can not be appendix --
+                            card.isappendix == 0
+
+                            -- connect card to category --
+                            AND category.id=card.id_category
+
+                            -- Find the lowest level --
+                            AND card.level IS NULL
+
+                            -- Select the given category --
+                            AND category.name = :category
+
+                            -------------------
+                            -------------------
+                            --- Conditional ---
+                            ---   filter    ---
+                            -------------------
+                            -------------------
+
+                            --- WHERE DECADE ---
+                            AND CASE
+                                WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
+                            END
+
+                            ''' + ('''                
+                            --- WHERE THEMES - conditional ---
+                            AND ''' + themes_where if themes_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE GENRES - conditional ---
+                            AND ''' + genres_where if genres_where else '') + '''
+
+                            ''' + ('''               
+                            --- WHERE DIRECTORS - conditional ---
+                            AND ''' + directors_where if directors_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE ACTORS - conditional ---
+                            AND ''' + actors_where if actors_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE ORIGINS - conditional ---
+                            AND ''' + origins_where if origins_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE PERFORMERS - conditional ---
+                            AND ''' + performers_where if performers_where else '') + ''' 
+
+                            ''' + ('''
+                            --- WHERE LECTURERS - conditional ---
+                            AND ''' + lecturers_where if lecturers_where else '') + '''
+
+                        UNION ALL
+
+                        SELECT 
+                            card.id,
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            NULL decade,
+                            NULL date,
+                            NULL length,
+                            NULL full_time,
+                            NULL net_start_time,
+                            NULL net_stop_time,
+
+                            NULL themes,
+                            NULL genres,
+                            NULL origins,
+                            NULL directors,
+                            NULL actors,
+                            NULL lecturers,
+                            NULL sounds,
+                            NULL subs,
+                            NULL writers,
+                            NULL voices,
+                            NULL stars,
+                            NULL hosts,
+                            NULL guests,
+                            NULL interviewers,
+                            NULL interviewees,
+                            NULL presenters,
+                            NULL reporters,
+                            NULL performers
+
+                        FROM
+                            rec,
+                            Card card,
+                            Category category
+                        WHERE
+                            rec.id_higher_card=card.id
+                            AND category.id=card.id_category
+                    )
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+
+                FROM
+                    rec
+                WHERE
+
+                    -------------------
+                    -------------------
+                    --- Conditional ---
+                    ---   filter    ---
+                    -------------------
+                    -------------------
+
+                    --- if :level is set, then takes that specific level as highest level
+                    --- if :level is NOT set, then takes the highest level
+                    CASE
+                        WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
+                    END
+
+                GROUP BY id
+                ) mixed_id_list,
+
+                --------------------------
+                --- unioned with title ---
+                --------------------------
+                (
+                SELECT 
+                    unioned.id id,
+
+                    MAX(title_req) title_req, 
+                    MAX(title_orig) title_orig, 
+                    MAX(lang_orig) lang_orig,
+                    MAX(lang_req) lang_req
+
+                FROM 
+                    (
+                    SELECT 
+                        card.id id, 
+
+                        NULL title_req, 
+                        NULL lang_req, 
+                        tcl.text title_orig, 
+                        lang.name lang_orig
+                    FROM                     
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE                
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.id_title_orig=lang.id
+
+                        AND card.isappendix = 0
+                        AND lang.name <> :lang
+                    UNION
+
+                    SELECT 
+                        card.id id,
+
+                        tcl.text title_req, 
+                        lang.name lang_req, 
+                        NULL title_orig, 
+                        NULL lang_orig
+                    FROM               
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE               
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+
+                        AND card.isappendix = 0
+                        AND lang.name=:lang
+                    ) unioned
+
+                -- because of the title required and origin
+                GROUP BY unioned.id               
+
+                ) core
+
+                -----------------
+                --- STORYLINE ---
+                -----------------
+                LEFT JOIN
+                (
+                    SELECT ord, storyline, id_card
+                    FROM
+                    (
+
+                        --- Select the storyline on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the storyline on the original language ---
+
+                        SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+            --        HAVING MIN(ord)
+            --        ORDER BY ord
+                )strl
+                ON strl.id_card=core.id
+
+                --------------
+                --- LYRICS ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT ord, lyrics, id_card
+                    FROM
+                    (
+
+                        --- Select the lyrics on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the lyrics on the original language ---
+
+                        SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+                )lrx
+                ON lrx.id_card=core.id       
+
+                --------------
+                --- MEDIUM ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
+                    FROM
+                        MediaType media_type,
+                        Card_Media card_media
+                    WHERE
+                        card_media.id_mediatype=media_type.id
+                    GROUP BY card_media.id_card
+                )mdt
+                ON mdt.id_card=core.id
+
+                ----------------
+                --- APPENDIX ---
+                ----------------
+                 LEFT JOIN    
+                (    
+                    SELECT
+                        card_id,
+                        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
+                    FROM
+
+                        (
+                        SELECT                
+                            merged_appendix.id,
+                            merged_appendix.card_id,
+                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_orig) title_orig,
+                            merged_appendix.show,
+                            merged_appendix.download,
+                            merged_appendix.source_path,
+                            mt.name media_type,
+                            cm.name contact_media                
+                        FROM
+                            (
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                "" title_req, 
+                                tcl.text title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE                
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND app_card.id_title_orig=lang.id
+                                AND lang.name <> :lang
+
+                            UNION
+
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                tcl.text title_req, 
+                                "" title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND lang.name=:lang
+                            ) merged_appendix,
+                            Card_Media cm,
+                            MediaType mt
+
+                        WHERE
+                            cm.id_card=merged_appendix.id
+                            AND mt.id=cm.id_mediatype
+
+                        GROUP BY merged_appendix.id
+                        )
+                    GROUP BY card_id
+                ) pndx
+                ON pndx.card_id=core.id
+
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id
+
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=core.id
+
+            WHERE
+                mixed_id_list.id=core.id
+
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+            LIMIT :limit; '''
+
+        return query
+
+    def get_raw_query_of_next_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
         
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
@@ -5462,6 +6408,832 @@ class SqlDatabase:
         actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
         directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
         lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+        performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
+        origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+        query = '''
+             SELECT
+                core.*,
+
+                mixed_id_list.id_higher_card,
+                mixed_id_list.category,
+                mixed_id_list.level,
+                mixed_id_list.source_path,
+                mixed_id_list.basename,        
+                mixed_id_list.sequence,
+
+                mixed_id_list.title_on_thumbnail,
+                mixed_id_list.title_show_sequence,
+
+                mixed_id_list.decade,
+                mixed_id_list.date,
+                mixed_id_list.length,
+                mixed_id_list.full_time,     
+                mixed_id_list.net_start_time,
+                mixed_id_list.net_stop_time,
+
+                mixed_id_list.themes,
+                mixed_id_list.genres,
+                mixed_id_list.origins,
+                mixed_id_list.directors,
+                mixed_id_list.actors,
+
+                mixed_id_list.sounds,
+                mixed_id_list.subs,
+                mixed_id_list.writers,
+                mixed_id_list.voices,
+                mixed_id_list.stars,
+                mixed_id_list.lecturers,
+
+                mixed_id_list.hosts,
+                mixed_id_list.guests,
+                mixed_id_list.interviewers,
+                mixed_id_list.interviewees,
+                mixed_id_list.presenters,
+                mixed_id_list.reporters,
+                mixed_id_list.performers,
+
+                storyline,
+                lyrics,
+                medium,
+                appendix,
+    
+                hstr.recent_state,
+                rtng.rate,
+                rtng.skip_continuous_play,
+                tggng.tags
+            FROM
+
+                ---------------------------
+                --- mixed level id list ---
+                ---------------------------
+                (
+                WITH RECURSIVE
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
+
+                    (
+                        SELECT                 
+                            card.id, 
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            card.decade,
+                            card.date,
+                            card.length, 
+                            card.full_time,
+                            card.net_start_time,
+                            card.net_stop_time,
+
+                            themes,
+                            genres,
+                            origins,
+                            directors,
+                            actors,
+                            lecturers,
+
+                            sounds,
+                            subs,
+                            writers,
+                            voices,
+                            stars,        
+                            hosts,
+                            guests,
+                            interviewers,
+                            interviewees,
+                            presenters,
+                            reporters,
+                            performers
+
+                        FROM 
+                            Card card,
+
+                            --- Conditional ---
+                            Category category
+
+                        -------------
+                        --- GENRE ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(genre.name) genres, card_genre.id_card
+                            FROM
+                                Genre genre,
+                                Card_Genre card_genre
+                            WHERE            
+                                card_genre.id_genre=genre.id
+                            GROUP BY card_genre.id_card
+                        )gnr
+                        ON gnr.id_card=card.id
+
+                        -------------
+                        --- THEME ---
+                        -------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(theme.name) themes, card_theme.id_card
+                            FROM
+                                Theme theme,
+                                Card_Theme card_theme
+                            WHERE            
+                                card_theme.id_theme=theme.id
+                            GROUP BY card_theme.id_card
+                        )thm
+                        ON thm.id_card=card.id
+
+                        ---------------
+                        --- ORIGINS ---
+                        ---------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(origin.name) origins, card_origin.id_card
+                            FROM
+                                Country origin,
+                                Card_Origin card_origin
+                            WHERE
+                                card_origin.id_origin=origin.id
+                            GROUP BY card_origin.id_card
+                        )rgn
+                        ON rgn.id_card=card.id    
+
+                        -----------------
+                        --- DIRECTORS ---
+                        -----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) directors,  card_dir.id_card
+                            FROM 
+                                Person person,
+                                Card_Director card_dir
+                            WHERE 
+                                card_dir.id_director = person.id
+                            GROUP BY card_dir.id_card
+                        ) dr
+                        ON dr.id_card=card.id
+
+                        --------------
+                        --- ACTORS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) actors,  card_actor.id_card
+                            FROM 
+                                Person person,
+                                Card_Actor card_actor
+                            WHERE 
+                                card_actor.id_actor = person.id
+                            GROUP BY card_actor.id_card
+                        ) act
+                        ON act.id_card=card.id
+
+                        ----------------
+                        --- LECTURER ---
+                        ----------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+                            FROM 
+                                Person person,
+                                Card_Lecturer card_lecturer
+                            WHERE 
+                                card_lecturer.id_lecturer = person.id
+                            GROUP BY card_lecturer.id_card
+                        ) lctr
+                        ON lctr.id_card=card.id           
+
+                        --- No Filter ---
+
+                        --------------
+                        --- SOUNDS ---
+                        --------------
+                        LEFT JOIN 
+                        (
+                            SELECT group_concat(language.name) sounds, card_sound.id_card
+                            FROM 
+                                Language language,
+                                Card_Sound card_sound
+                            WHERE 
+                                card_sound.id_sound=language.id 
+                            GROUP BY card_sound.id_card
+                        ) snd
+                        ON snd.id_card=card.id
+
+                        ----------------
+                        --- SUBTITLE ---
+                        ----------------
+                        LEFT JOIN
+                        (
+                            SELECT group_concat(language.name) subs, card_sub.id_card
+                            FROM 
+                                Language language,
+                                Card_Sub card_sub
+                            WHERE 
+                                card_sub.id_sub=language.id
+                            GROUP BY card_sub.id_card
+                        ) sb
+                        ON sb.id_card=card.id
+
+                        ---------------
+                        --- WRITERS ---
+                        ---------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) writers,  card_writer.id_card
+                            FROM 
+                                Person person,
+                                Card_Writer card_writer
+                            WHERE 
+                                card_writer.id_writer = person.id
+                            GROUP BY card_writer.id_card
+                        ) wr
+                        ON wr.id_card=card.id
+
+                        --------------
+                        --- VOICES ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) voices,  card_voice.id_card
+                            FROM 
+                                Person person,
+                                Card_Voice card_voice
+                            WHERE 
+                                card_voice.id_voice = person.id
+                            GROUP BY card_voice.id_card
+                        ) vc
+                        ON vc.id_card=card.id    
+
+                        -------------
+                        --- STARS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) stars,  card_star.id_card
+                            FROM 
+                                Person person,
+                                Card_Star card_star
+                            WHERE 
+                                card_star.id_star = person.id
+                            GROUP BY card_star.id_card
+                        ) str
+                        ON str.id_card=card.id
+
+                        -------------
+                        --- HOSTS ---
+                        -------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) hosts,  card_host.id_card
+                            FROM 
+                                Person person,
+                                Card_Host card_host
+                            WHERE 
+                                card_host.id_host = person.id
+                            GROUP BY card_host.id_card
+                        ) hst
+                        ON hst.id_card=card.id    
+
+                        --------------
+                        --- GUESTS ---
+                        --------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) guests,  card_guest.id_card
+                            FROM 
+                                Person person,
+                                Card_Guest card_guest
+                            WHERE 
+                                card_guest.id_guest = person.id
+                            GROUP BY card_guest.id_card
+                        ) gst
+                        ON gst.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWERS  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewer card_interviewer
+                            WHERE 
+                                card_interviewer.id_interviewer = person.id
+                            GROUP BY card_interviewer.id_card
+                        ) ntrvwr
+                        ON ntrvwr.id_card=card.id
+
+                        ---------------------
+                        --- INTERVIEWEES  ---
+                        ---------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
+                            FROM 
+                                Person person,
+                                Card_Interviewee card_interviewee
+                            WHERE 
+                                card_interviewee.id_interviewee = person.id
+                            GROUP BY card_interviewee.id_card
+                        ) ntrw
+                        ON ntrw.id_card=card.id
+
+                        -------------------
+                        --- PRESENTERS  ---
+                        -------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) presenters,  card_presenter.id_card
+                            FROM 
+                                Person person,
+                                Card_Presenter card_presenter
+                            WHERE 
+                                card_presenter.id_presenter = person.id
+                            GROUP BY card_presenter.id_card
+                        ) prsntr
+                        ON prsntr.id_card=card.id
+
+                        ------------------
+                        --- REPORTERS  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) reporters,  card_reporter.id_card
+                            FROM 
+                                Person person,
+                                Card_Reporter card_reporter
+                            WHERE 
+                                card_reporter.id_reporter = person.id
+                            GROUP BY card_reporter.id_card
+                        ) rprtr
+                        ON rprtr.id_card=card.id
+
+                        ------------------
+                        --- PERFORMER  ---
+                        ------------------
+                        LEFT JOIN    
+                        (
+                            SELECT group_concat(person.name) performers,  card_performer.id_card
+                            FROM 
+                                Person person,
+                                Card_Performer card_performer
+                            WHERE 
+                                card_performer.id_performer = person.id
+                            GROUP BY card_performer.id_card
+                        ) prfrmr
+                        ON prfrmr.id_card=card.id            
+
+                        ------------------------
+                        --- Initial WHERE    ---
+                        --- the lowest level ---
+                        ------------------------
+
+                        WHERE 
+                            -- card can not be appendix --
+                            card.isappendix == 0
+
+                            -- connect card to category --
+                            AND category.id=card.id_category
+
+                            -- Find the lowest level --
+                            AND card.level IS NULL
+
+                            -- Select the given category --
+                            AND category.name = :category
+
+                            -------------------
+                            -------------------
+                            --- Conditional ---
+                            ---   filter    ---
+                            -------------------
+                            -------------------
+
+                        --- WHERE DECADE ---
+                        AND CASE
+                            WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
+                        END
+
+                        ''' + ('''                
+                        --- WHERE THEMES - conditional ---
+                        AND ''' + themes_where if themes_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE GENRES - conditional ---
+                        AND ''' + genres_where if genres_where else '') + '''
+
+                        ''' + ('''               
+                        --- WHERE DIRECTORS - conditional ---
+                        AND ''' + directors_where if directors_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE ACTORS - conditional ---
+                        AND ''' + actors_where if actors_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE ORIGINS - conditional ---
+                        AND ''' + origins_where if origins_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE LECTURERS - conditional ---
+                        AND ''' + lecturers_where if lecturers_where else '') + '''
+
+                        ''' + ('''
+                        --- WHERE PERFORMERS - conditional ---
+                        AND ''' + performers_where if performers_where else '') + '''                         
+
+                        UNION ALL
+
+                        SELECT 
+                            card.id,
+                            card.id_higher_card,
+                            category.name category,
+                            card.level,
+                            card.source_path,
+
+                            card.basename,
+                            card.sequence,
+                            card.title_on_thumbnail,
+                            card.title_show_sequence,
+
+                            NULL decade,
+                            NULL date,
+                            NULL length,
+                            NULL full_time,
+                            NULL net_start_time,
+                            NULL net_stop_time,
+
+                            NULL themes,
+                            NULL genres,
+                            NULL origins,
+                            NULL directors,
+                            NULL actors,
+                            NULL lecturers,
+                            NULL sounds,
+                            NULL subs,
+                            NULL writers,
+                            NULL voices,
+                            NULL stars,
+                            NULL hosts,
+                            NULL guests,
+                            NULL interviewers,
+                            NULL interviewees,
+                            NULL presenters,
+                            NULL reporters,
+                            NULL performers
+
+                        FROM
+                            rec,
+                            Card card,
+                            Category category
+                        WHERE
+                            rec.id_higher_card=card.id
+                            AND category.id=card.id_category
+                    )
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+
+                FROM
+                    rec
+                WHERE
+
+                    -------------------
+                    -------------------
+                    --- Conditional ---
+                    ---   filter    ---
+                    -------------------
+                    -------------------
+
+
+
+
+                    --- if :level is set, then takes that specific level as highest level
+                    --- if :level is NOT set, then takes the highest level
+            --        CASE
+            --            WHEN :level IS NULL THEN id_higher_card IS NULL ELSE level = :level
+            --        END
+
+                    id_higher_card = :card_id
+
+                GROUP BY id
+                ) mixed_id_list,
+
+                --------------------------
+                --- unioned with title ---
+                --------------------------
+                (
+                SELECT 
+                    unioned.id id,
+
+                    MAX(title_req) title_req, 
+                    MAX(title_orig) title_orig, 
+                    MAX(lang_orig) lang_orig,
+                    MAX(lang_req) lang_req
+
+                FROM 
+                    (
+                    SELECT 
+                        card.id id, 
+
+                        NULL title_req, 
+                        NULL lang_req, 
+                        tcl.text title_orig, 
+                        lang.name lang_orig
+                    FROM                     
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE                
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+                        AND card.id_title_orig=lang.id
+
+                        AND card.isappendix = 0
+                        AND lang.name <> :lang
+                    UNION
+
+                    SELECT 
+                        card.id id,
+
+                        tcl.text title_req, 
+                        lang.name lang_req, 
+                        NULL title_orig, 
+                        NULL lang_orig
+                    FROM               
+                        Card card,
+                        Text_Card_Lang tcl, 
+                        Language lang                    
+                    WHERE               
+                        tcl.id_card=card.id
+                        AND tcl.id_language=lang.id
+                        AND tcl.type="T"
+
+                        AND card.isappendix = 0
+                        AND lang.name=:lang
+                    ) unioned
+
+                -- because of the title required and origin
+                GROUP BY unioned.id               
+
+                ) core
+
+                -----------------
+                --- STORYLINE ---
+                -----------------
+                LEFT JOIN
+                (
+                    SELECT ord, storyline, id_card
+                    FROM
+                    (
+
+                        --- Select the storyline on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the storyline on the original language ---
+
+                        SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "S" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+            --        HAVING MIN(ord)
+            --        ORDER BY ord
+                )strl
+                ON strl.id_card=core.id
+
+                --------------
+                --- LYRICS ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT ord, lyrics, id_card
+                    FROM
+                    (
+
+                        --- Select the lyrics on the requested language, not the original ---
+
+                        SELECT "1" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            language.name = :lang AND
+                            card.id_title_orig<>language.id AND
+                            tcl.text IS NOT NULL
+
+                        UNION
+
+                        --- Select the lyrics on the original language ---
+
+                        SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
+                        FROM 
+                            Text_Card_Lang tcl,
+                            Language language,
+                            Card card
+                        WHERE 
+                            tcl.type = "L" AND
+                            tcl.id_language = language.id AND
+                            tcl.id_card = card.id AND
+                            card.id_title_orig=language.id AND        
+                            tcl.text IS NOT NULL
+                    )
+                    GROUP BY id_card
+                )lrx
+                ON lrx.id_card=core.id       
+
+                --------------
+                --- MEDIUM ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT group_concat( media_type.name || "=" || card_media.name) medium, card_media.id_card
+                    FROM
+                        MediaType media_type,
+                        Card_Media card_media
+                    WHERE
+                        card_media.id_mediatype=media_type.id
+                    GROUP BY card_media.id_card
+                )mdt
+                ON mdt.id_card=core.id
+
+                ----------------
+                --- APPENDIX ---
+                ----------------
+                 LEFT JOIN    
+                (    
+                    SELECT
+                        card_id,
+                        group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
+                    FROM
+
+                        (
+                        SELECT                
+                            merged_appendix.id,
+                            merged_appendix.card_id,
+                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_orig) title_orig,
+                            merged_appendix.show,
+                            merged_appendix.download,
+                            merged_appendix.source_path,
+                            mt.name media_type,
+                            cm.name contact_media                
+                        FROM
+                            (
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                "" title_req, 
+                                tcl.text title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE                
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND app_card.id_title_orig=lang.id
+                                AND lang.name <> :lang
+
+                            UNION
+
+                            SELECT 
+                                app_card.id id,
+                                id_higher_card card_id,
+                                app_card.isappendix,
+                                app_card.show,
+                                app_card.download,
+                                app_card.source_path,
+                                tcl.text title_req, 
+                                "" title_orig
+                            FROM 
+                                CARD app_card,
+                                TEXT_CARD_LANG tcl, 
+                                LANGUAGE lang                    
+                            WHERE
+                                app_card.isappendix=1
+                                AND tcl.id_card=app_card.id
+                                AND tcl.id_language=lang.id
+                                AND tcl.type="T"
+                                AND lang.name=:lang
+                            ) merged_appendix,
+                            Card_Media cm,
+                            MediaType mt
+
+                        WHERE
+                            cm.id_card=merged_appendix.id
+                            AND mt.id=cm.id_mediatype
+
+                        GROUP BY merged_appendix.id
+                        )
+                    GROUP BY card_id
+                ) pndx
+                ON pndx.card_id=core.id
+
+                ---------------
+                --- HISTORY ---
+                ---------------
+                LEFT JOIN
+                (
+                    SELECT 
+                        ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
+                        id_card
+                    FROM (
+                        SELECT id_card, start_epoch, recent_epoch, recent_position
+                        FROM History
+                        WHERE id_user=:user_id
+                        ORDER BY start_epoch DESC
+                    )
+                    GROUP BY id_card
+                )hstr
+                ON hstr.id_card=core.id
+
+                --------------
+                --- RATING ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT id_card, rate, skip_continuous_play
+                    FROM Rating
+                    WHERE id_user=:user_id
+                )rtng
+                ON rtng.id_card=core.id
+
+                ---------------
+                --- TAGGING ---
+                ---------------
+                LEFT JOIN    
+                (
+                   SELECT 
+                      group_concat(name) tags,
+                      id_card
+                   FROM 
+                      Tag tag          
+                   WHERE 
+                      id_user=:user_id
+                   GROUP BY id_card
+                ) tggng
+                ON tggng.id_card=core.id
+
+            WHERE
+                mixed_id_list.id=core.id
+
+            ORDER BY CASE 
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
+                WHEN sequence<0 THEN basename
+                WHEN sequence>=0 THEN sequence
+            END
+            LIMIT :limit;
+        '''
+
+        return query
+
+    def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+        
+        tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
+        genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
+        themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
+        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+        directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
+        lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
+        performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
 
         query = '''
@@ -5821,9 +7593,9 @@ class SqlDatabase:
                 ) act
                 ON act.id_card=card.id
 
-                ----------------
-                --- LECTURER ---
-                ----------------
+                -----------------
+                --- LECTURERS ---
+                -----------------
                 LEFT JOIN    
                 (
                     SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
@@ -6282,7 +8054,10 @@ class SqlDatabase:
                 AND ''' + origins_where if origins_where else '') + '''
                 ''' + ('''
                 --- WHERE LECTURERS - conditional ---
-                AND ''' + lecturers_where if lecturers_where else '') + '''  
+                AND ''' + lecturers_where if lecturers_where else '') + '''
+                ''' + ('''
+                --- WHERE PERFORMERS - conditional ---
+                AND ''' + performers_where if performers_where else '') + '''  
                 ''' + ('''
                 --- WHERE TAGS - conditional ---
                 AND ''' + tags_where if tags_where else '') + '''  

@@ -2074,20 +2074,14 @@ class ThumbnailController {
         }
 
         // Refresh the Progress bar
-        let currentTimeInSeconds = player.currentTime;
-//        this.objScrollSection.refreshFocusedThumbnailProgresBar(currentTimeInSeconds)
+        let recent_position = player.currentTime;
+//        this.objScrollSection.refreshFocusedThumbnailProgresBar(recent_position)
 
 //--
-
-
-
-
-
 
         //
         // Set the progressbar in the hierarchy for ALL Thumbnails in all ThumbnailContainer
         //
-        let recent_position = currentTimeInSeconds;
         for (let containerIndex = 0; containerIndex < this.objScrollSection.thumbnailContainerList.length; containerIndex++) {
         
             let domThumbnails = $('#container-' + containerIndex + ' .thumbnail');
@@ -2134,62 +2128,6 @@ class ThumbnailController {
                 }
             }
         }
-
-
-
-
-
-/*
-let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
-let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
-let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
-let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
-let extras = thumbnail.getExtras();
-let recent_state = extras["recent_state"];
-let full_time = extras["full_time"]; 
-let net_start_time = extras["net_start_time"];
-let net_stop_time = extras["net_stop_time"];
-
-recent_state["recent_position"] = recent_position;
-extras["recent_state"] = recent_state;
-thumbnail.setExtras(extras);
-
-let progress_percentage;
-// full_time != null && full_time > 600 && 
-if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
-    progress_percentage = 100 * recent_position / full_time;
-}else{
-    progress_percentage = 0;
-}
-
-let bar_wrapper = domThumbnails.eq(currentThumbnailIndex).find(".thumbnail-play-progress-bar-wrapper");
-let bar = domThumbnails.eq(currentThumbnailIndex).find(".thumbnail-play-progress-bar")
-
-bar.css('width', progress_percentage + '%');
-
-if(progress_percentage == 0){
-    bar_wrapper.hide()
-}else{
-    bar_wrapper.show()
-}
-
-}
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //--

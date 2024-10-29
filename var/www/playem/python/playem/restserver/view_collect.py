@@ -88,13 +88,59 @@ class CollectView(FlaskView):
     #
     # Gives back filtered list of mixed records of the highest levels
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/highest/mixed/category/<category>/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/highest/mixed/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/performers/<performers>/origin/<origin>/decade/<decade>/lang/<lang>
     #
-    #@route('/highest/mixed/category/<category>/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    #@route('/highest/mixed/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>')
     @route(EPCollectHighestMixed.PATH_PAR_URL, methods=[EPCollectHighestMixed.METHOD])
-    def collectHighestMixedWithParameter(self, category, level, genres, themes, directors, actors, lecturers, origins, decade, lang):
+    def collectHighestMixedWithParameter(self, category, playlist, tags, level, genres, themes, directors, actors, lecturers, performers, origins, decade, lang):
 
-        out = self.epCollectHighestMixed.executeByParameters(category, level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        out = self.epCollectHighestMixed.executeByParameters(category, playlist=playlist, tags=tags, level=level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang)
+        return out
+
+    #
+    # Gives back filtered list of mixed records of the highest levels
+    #
+    # curl -b cookies.txt --header "Content-Type: application/json" --request GET --data '{"category":"music_video", "performers": "A%"}' http://localhost:80/collect/highest/mixed
+    #
+    # GET http://localhost:80/collect/highest/mixed
+    #      body: {
+    #       "category": "movei",
+    #       "playlist": "*",
+    #       "tags": "*",
+    #       "level": "*",
+    #       "genres": "*",
+    #       "themes": "*",
+    #       "directors": "*",
+    #       "actors": "*",
+    #       "lecturers": "*",
+    #       "origins": "*",
+    #       "decade": "*",
+    #       "lang": "en"
+    #      }
+    #
+    # playlist:
+    #   - *
+    #   - interrupted
+    #   - last_watched
+    #   - least_watched
+    #   - most_watched
+
+    #@route('/highest/mixed', methods=['GET'])
+    @route(EPCollectHighestMixed.PATH_PAR_PAYLOAD, methods=[EPCollectHighestMixed.METHOD])
+    def collectHighestWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+        
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectHighestMixed.executeByPayload(json_data)
         return out
 
 
@@ -103,14 +149,20 @@ class CollectView(FlaskView):
     #
     # Gives back filtered list of mixed records of the next levels
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/next/mixed/card_id/<card_id>/category/<category>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/next/mixed/card_id/<card_id>/category/<category>/playlist/<playlist>/tags{tags}/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/performers/<performers>/origin/<origin>/decade/<decade>/lang/<lang>
     #
-    #@route('/highest/mixed/card_id/<card_id>/category/<category>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    #@route('/highest/mixed/card_id/<card_id>/category/<category>/playlist/<playlist>/tags{tags}/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>')
     @route(EPCollectNextMixed.PATH_PAR_URL, methods=[EPCollectNextMixed.METHOD])
-    def collectNextMixedWithParameter(self, card_id, category, genres, themes, directors, actors, lecturers, origins, decade, lang):
+    def collectNextMixedWithParameter(self, card_id, category, playlist, tags, genres, themes, directors, actors, lecturers, performers, origins, decade, lang):
 
-        out = self.epCollectNextMixed.executeByParameters(card_id, category, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        out = self.epCollectNextMixed.executeByParameters(card_id, category, playlist=playlist, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang)
         return out
+
+
+
+
+
+
 
 
 # === collect with general filter on the lowest level ===
@@ -118,7 +170,7 @@ class CollectView(FlaskView):
     #
     # Gives back filtered list of the lowest levels
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/origin/<origin>/decade/<decade>/lang/<lang>
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/lowest/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/genre/<genre>/theme/<theme>/director/<director>/actor/<actor>/lecturer/<lecturer>/performers/<performers>/origin/<origin>/decade/<decade>/lang/<lang>
     #
     # playlist:
     #   - *
@@ -126,17 +178,17 @@ class CollectView(FlaskView):
     #   - last_watched
     #   - least_watched
     #   - most_watched
-    #@route('/lowest/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    #@route('/lowest/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>')
     @route(EPCollectLowest.PATH_PAR_URL, methods=[EPCollectLowest.METHOD])
-    def collectLowestWithParameter(self, category, playlist, tags, level, genres, themes, directors, actors, lecturers, origins, decade, lang):
+    def collectLowestWithParameter(self, category, playlist, tags, level, genres, themes, directors, actors, lecturers, performers, origins, decade, lang):
 
-        out = self.epCollectLowest.executeByParameters(category, playlist=playlist, tags=tags, level=level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        out = self.epCollectLowest.executeByParameters(category, playlist=playlist, tags=tags, level=level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang)
         return out
 
     #
     # Gives back filtered list of the lowest levels
     #
-    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movei", "playlist": "*", "tags": "*", "level": "*", "genres": "*", "themes": "*", "directors": "*", "actors": "*", "lecturers": "*", "origins": "*", "decade": "*", "lang": "en"}' http://localhost:80/collect/lowest
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "playlist": "*", "tags": "*", "level": "*", "genres": "*", "themes": "*", "directors": "*", "actors": "*", "lecturers": "*", "performers": "*", "origins": "*", "decade": "*", "lang": "en"}' http://localhost:80/collect/lowest
     #
     # GET http://localhost:80/collect/lowest
     #      body: {
