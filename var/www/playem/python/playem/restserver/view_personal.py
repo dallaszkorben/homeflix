@@ -335,14 +335,15 @@ class PersonalView(FlaskView):
     # GET http://localhost:80/personal/tag/get
     #      body: {
     #           category: "movie"
-    #           genres:
-    #           themes:
-    #           directors:
-    #           actors:
-    #           lecturers:
-    #           origins:
-    #           decade:
-    #           lang:
+    #           title: "*"
+    #           genres: "*"
+    #           themes: "*"
+    #           directors: "*"
+    #           actors: "*"
+    #           lecturers: "*"
+    #           origins: "*"
+    #           decade: "*"
+    #           lang: "en"
     #      }
     #@route('/tag/get', methods=['GET'])
     @route(EPPersonalTagGet.PATH_PAR_PAYLOAD, methods=[EPPersonalTagGet.METHOD])
@@ -365,12 +366,12 @@ class PersonalView(FlaskView):
     #
     # Get tags
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/tag/get/category/media/genres/*/themes/*/directors/*/actors/*/lecturers/*/origin/*/decade/*/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/tag/get/category/movie/title/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origin/*/decade/*/lang/en
     #
-    # GET http://localhost:80/personal/tag/get/category/media/genres/*/themes/*/directors/*/actors/*/lecturers/*/origin/*/decade/*/lang/en
+    # GET http://localhost:80/personal/tag/get/category/movie/title/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origin/*/decade/*/lang/en
     #
-    #@route('/tag/get/category/<category>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origin/<origin>/decade/<decade>/lang/<lang>', methods=['GET'])
+    #@route('/tag/get/category/<category>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/origin/<origin>/decade/<decade>/lang/<lang>', methods=['GET'])
     @route(EPPersonalTagGet.PATH_PAR_URL, methods=[EPPersonalTagGet.METHOD])
-    def personalTagGetWithParameters(self, category, genres, themes, directors, actors, lecturers, origins, decade, lang):
-        out = self.ePPersonalTagGet.executeByParameters(category=category, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+    def personalTagGetWithParameters(self, category, title, genres, themes, directors, actors, lecturers, origins, decade, lang):
+        out = self.ePPersonalTagGet.executeByParameters(category=category, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
         return out

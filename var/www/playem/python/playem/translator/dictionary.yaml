@@ -489,11 +489,17 @@ title:
     music_audio: Music Audio
     music_hungarian: Hungarian
 
-    music_playlists: Playlists
-    music_interrupted: Continue Playing
-    music_last_watched: CLast Listened
-    music_least_watched: Least Listened
-    music_most_watched: Most Listened
+    music_video_playlists: Playlists
+    music_video_interrupted: Continue Playing
+    music_video_last_watched: Last Watched
+    music_video_least_watched: Least Watched
+    music_video_most_watched: Most Watched
+
+    music_audio_playlists: Playlists
+    music_audio_interrupted: Continue Playing
+    music_audio_last_watched: Last Listened
+    music_audio_least_watched: Least Listened
+    music_audio_most_watched: Most Listened
 
     # Radioplay    
     radioplay: Radioplay

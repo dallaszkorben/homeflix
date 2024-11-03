@@ -168,3 +168,10 @@ for rec in res.fetchall():
 res = con.execute('SELECT start_epoch, datetime(start_epoch, "unixepoch", "localtime"), recent_position FROM History WHERE id_card=:id_card ORDER BY start_epoch DESC;',{'id_card': '067243a51521181250adb9fb52b5adb5'})
 for rec in res.fetchall():
     print(rec)
+
+res = con.execute('SELECT start_epoch, datetime(start_epoch, "unixepoch", "localtime"), recent_position FROM History WHERE id_card=:id_card ORDER BY start_epoch DESC;',{'id_card': 'c091e3dcbcbbb42e10b1bc4bb2c96e85'})
+for rec in res.fetchall():
+    print(rec)   
+    
+    
+    

@@ -30,10 +30,19 @@ con.execute('''
     select * from sqlite_sequence
 ''', {}).fetchall()
 
--------------------------------
--- Recursive simple example ---
--------------------------------
+con.execute('''
+    SELECT * FROM Card WHERE source_path LIKE "%Bang%"
+''', {}).fetchall()
 
+con.execute('''
+    SELECT * FROM Card WHERE id='6d6c0ba21c7606819297c7e29d0ffdf9'
+''', {}).fetchall()
+
+----------------------------------
+-- Recursive learning examples ---
+----------------------------------
+
+--- Example 1: consecutive numbers
 con.execute('''
 WITH RECURSIVE cnt(x) AS    -- Define the TABLE (cnt) with its FIELD (x)
 (
@@ -46,16 +55,78 @@ WITH RECURSIVE cnt(x) AS    -- Define the TABLE (cnt) with its FIELD (x)
 SELECT x FROM cnt;          -- Query on the TABLE
 ''', {}).fetchall()
 
----------------------------------------------
---- find the highest element of all cards ---
----------------------------------------------
+--- Example 2: fibonacci sequnce
+con.execute('''
+WITH RECURSIVE fibonacci(a,b,c) AS      -- Define the TABLE (cnt) with its FIELD (x)
+(
+    SELECT 0,1,1                        -- Initial first record of the virtual (fibonacci) table
+    UNION ALL
+    SELECT b, c, b+c                    -- Takes the last record of the table, do any operation with them and create a new record.
+    FROM fibonacci
+    LIMIT 10                            -- Take only the first 10 records
+)
+SELECT c FROM fibonacci;                -- Only the 3rd column I want to show in the result
+''', {}).fetchall()
+
+
+----------------------------------------------
+--- find all hierarchy of a low level card ---
+----------------------------------------------
 
 con.execute('''
 WITH RECURSIVE
-    rec(group_id,id,id_higher_card,level,source_path) AS
+    rec(group_id,id,id_higher_card,level,source_path) AS    -- define a new table, called 'rec' having the given fields
     (
-        SELECT 
-            id group_id,                    -- For group the hierarchy of one media
+        SELECT                                              -- define the INITIAL record
+            id group_id,                                    -- the group_id`s initial value is the id - meaning of the field: the lowest level card_id
+            id, 
+            id_higher_card, 
+            level,
+            source_path            
+        FROM 
+            Card card
+        WHERE                                               -- INITIAL conditions
+            card.level IS NULL                              -- take the lowest level cards 
+            AND card.id = :card_id                          -- take that specific card
+        UNION ALL
+
+        SELECT                                              -- the next record
+            rec.group_id,                                   --   takes the group_id of the previous record => lowest card id
+            card.id,                                        --   takes the recent card id => the higher level card id
+            card.id_higher_card,                            --   takes the higher level card_id
+            card.level,
+            card.source_path
+        FROM
+            rec,
+            Card card
+        WHERE
+            rec.id_higher_card=card.id                      -- connects the new card record and the previous card record. previous record`s id_higher_card is the recent card id. Which means, the recent record is the parent of the previous
+    )
+SELECT group_id,id,source_path                              -- print out only the group_id, id, source_path
+FROM
+    rec
+''', {'card_id': '85eaef2bb3e3ef4986d0a8994b4ee1ce'}).fetchall()
+
+-- result:
+--   [
+--   ('85eaef2bb3e3ef4986d0a8994b4ee1ce', '85eaef2bb3e3ef4986d0a8994b4ee1ce', 'MEDIA/01.Movie/03.Series/02-Series/The.Big.Bang.Theory/S01/E07'), 
+--   ('85eaef2bb3e3ef4986d0a8994b4ee1ce', 'f3c94b019ee85c4ff085c1b991dee2ef', 'MEDIA/01.Movie/03.Series/02-Series/The.Big.Bang.Theory/S01'), 
+--   ('85eaef2bb3e3ef4986d0a8994b4ee1ce', '670b1bb7bbfded8a6f26ecf5754943d4', 'MEDIA/01.Movie/03.Series/02-Series/The.Big.Bang.Theory')
+--   ]
+
+-- standalone movie id: '1dc9c4cef22199632bc71b7db427f822'
+-- sequel movie id:     'c091e3dcbcbbb42e10b1bc4bb2c96e85'
+-- series movie id:     '85eaef2bb3e3ef4986d0a8994b4ee1ce'
+
+---------------------------------------------------------------
+--- find the highest level card of the given low level card ---
+---------------------------------------------------------------
+con.execute('''
+WITH RECURSIVE
+    rec(group_id,id,id_higher_card,level,source_path) AS    -- define a new table, called 'rec' having the given fields
+    (
+        SELECT                                              -- define the initial record
+            id group_id,                                    -- the group_id`s initial value is the id
             id, 
             id_higher_card, 
             level,
@@ -63,11 +134,11 @@ WITH RECURSIVE
         FROM 
             Card card
         WHERE 
-            card.level IS NULL
---            AND card.id = :card_id
+            card.level IS NULL                              -- take the lowest level cards 
+            AND card.id = :card_id                          -- take that specific card
         UNION ALL
 
-        SELECT 
+        SELECT                                              -- the next record
             rec.group_id,
             card.id,
             card.id_higher_card,
@@ -77,22 +148,78 @@ WITH RECURSIVE
             rec,
             Card card
         WHERE
-            rec.id_higher_card=card.id
+            rec.id_higher_card=card.id                      -- previous record`s id_higher_card is the recent card id. Which means, the recent record is the parent of the previous
     )
-SELECT group_id,id,source_path 
+SELECT group_id,id,source_path                              -- I print out only the group_i, id, source_path
 FROM
     rec
 WHERE
-    id_higher_card IS NULL
-GROUP BY group_id
-''', {'card_id': '1dc9c4cef22199632bc71b7db427f822'}).fetchall()
+    id_higher_card IS NULL                                  -- take only the record which has NO id_higher_card => the highest level card of the given card
+-- GROUP BY group_id
+''', {'card_id': '85eaef2bb3e3ef4986d0a8994b4ee1ce'}).fetchall()
+
+-- result:
+--   [('85eaef2bb3e3ef4986d0a8994b4ee1ce', '670b1bb7bbfded8a6f26ecf5754943d4', 'MEDIA/01.Movie/03.Series/02-Series/The.Bing.Bang.Theory')]
+
+
+----------------------------------------
+--- find all the highest level cards ---
+---                                  ---
+--- hide all duplications            ---
+----------------------------------------
+res=con.execute('''
+WITH RECURSIVE
+    rec(group_id,id,id_higher_card,level,source_path) AS    -- define a new table, called 'rec' having the given fields
+    (
+        SELECT                                              -- define the initial record
+            id group_id,                                    -- the group_id`s initial value is the id
+            id, 
+            id_higher_card, 
+            level,
+            source_path            
+        FROM 
+            Card card
+        WHERE 
+            card.level IS NULL                              -- take the lowest level cards 
+        UNION ALL
+
+        SELECT                                              -- the next record
+            rec.group_id,
+            card.id,
+            card.id_higher_card,
+            card.level,
+            card.source_path
+        FROM
+            rec,
+            Card card
+        WHERE
+            rec.id_higher_card=card.id                      -- previous record`s id_higher_card is the recent card id. Which means, the recent record is the parent of the previous
+    )
+SELECT group_id,id,source_path                              -- I print out only the group_i, id, source_path
+FROM
+    rec
+WHERE
+    id_higher_card IS NULL                                  -- take only the record which has NO id_higher_card => the highest level card of the given card
+GROUP BY id
+ORDER BY source_path
+''', {'card_id': '85eaef2bb3e3ef4986d0a8994b4ee1ce'})
+for name in res.fetchall():
+    print(name)
+
+-- result:
+--   ('97ffa458d3eda176e7209ec13c900144', '97ffa458d3eda176e7209ec13c900144', 'MEDIA/01.Movie/01.Standalone/10.Cloverfield.Lane')
+--   ('5583062bccde422e47378450068cc5a2', '5583062bccde422e47378450068cc5a2', 'MEDIA/01.Movie/01.Standalone/2001.Space.Odyssey-1968')
+--   ('6d6c0ba21c7606819297c7e29d0ffdf9', '6d6c0ba21c7606819297c7e29d0ffdf9', 'MEDIA/01.Movie/01.Standalone/A.100.Eves.Ember.Aki.Kimaszott.Az.Ablakon.Es.Eltunt')
+--   ('8d64eb3ccaefdf29038fe1441816c571', '8d64eb3ccaefdf29038fe1441816c571', 'MEDIA/01.Movie/01.Standalone/A.Halal.50.Oraja-1965')
+--   ('11ce502ee42b9223e44145262a4e0b8b', '11ce502ee42b9223e44145262a4e0b8b', 'MEDIA/01.Movie/01.Standalone/A.Profi-1981')
+
 
 
 ----------------------------------------------------------------------------
 --- Creates list to the media from the highest level (if there is level) --- 
 ----------------------------------------------------------------------------
 
-con.execute('''
+res=con.execute('''
 WITH RECURSIVE
     rec(group_id, id,id_higher_card,level,source_path) AS
     (
@@ -108,7 +235,6 @@ WITH RECURSIVE
             card.level IS NULL
             AND card.id_higher_card IS NOT NULL
             AND card.isappendix == 0
-            AND card.id = :card_id
         UNION ALL
 
         SELECT 
@@ -126,19 +252,24 @@ WITH RECURSIVE
 SELECT group_id, id,source_path 
 FROM
     rec
---WHERE
---    id_higher_card IS NULL
---GROUP BY id
+WHERE
+    id_higher_card IS NULL
+GROUP BY id
 ORDER BY id
-''', {'card_id': '454'}).fetchall()
+''', {'card_id': '454'})
+for name in res.fetchall():
+    print(name)
 
 
------------------------------------
---- List of hierarchy to medium ---
------------------------------------
+---------------------------------------------------------
+--- List of highest levels and the belonging card ids ---
+--- using group_concat                                ---
+---------------------------------------------------------
 
-con.execute('''
-SELECT group_id, group_concat("ID:" || id || ";SRC:" || source_path)
+res=con.execute('''
+--- SELECT group_id, group_concat("ID:" || id || ";SRC:" || source_path)
+SELECT group_concat("ID:" || group_id), source_path
+-- SELECT group_id, id, source_path
 FROM
     (WITH RECURSIVE
         rec(group_id, id,id_higher_card,level,source_path) AS
@@ -153,9 +284,8 @@ FROM
                 Card card
             WHERE 
                 card.level IS NULL
-                AND card.id_higher_card IS NOT NULL
+--                AND card.id_higher_card IS NOT NULL
                 AND card.isappendix == 0
---                AND card.id = :card_id
             UNION ALL
 
             SELECT 
@@ -173,23 +303,30 @@ FROM
     SELECT group_id, id,source_path 
     FROM
         rec
-    ORDER BY id         -- Needed to make hierarchy in order to highest to lowest (medium)
+    WHERE
+        id_higher_card IS NULL                              -- Only the highest level records will be considered
     )
-GROUP BY group_id       -- Needed for group_concat()
+GROUP BY id                                                 -- Needed for group_concat()
+ORDER BY source_path
+''', {'card_id': '454'})
+for name in res.fetchall():
+    print(name)
+    
+-- result:
+--   ('ID:92894330d1ccb7a0c167d887f65a5142,ID:343680ed875ca9280c8f877ae2bfd793,ID:54f0a50adfcd37acce95ebab7ba70f56', 'MEDIA/01.Movie/02.Documentary/~Aaron.Russo')
+--   ('ID:6e2d97530fde20cb5fa8781ba868e920,ID:d4b0bebb12e7b6b8e40bd6cfc39bc07a,ID:c6af8fdbc816774461ab53d7faf3255d,ID:2250d55dd59567547872382877f001dc', 'MEDIA/01.Movie/05.Remakes/Dune')
+--   ('ID:57f0b675489b7d3af92326d18e813551,ID:cfe84c9f703a88fea67de004091436c6', 'MEDIA/02.Music/02.Audio/The.Human.League')
+--   ('ID:9e7e21bfa68989f00f4772a8fb1b4b2b', 'MEDIA/02.Music/01.Video/03.80s/Roni.Griffith')
+--   ('ID:37b9a23005464627de6f526699534bbc', 'MEDIA/02.Music/01.Video/03.80s/Taco')
+--   ('ID:8c8a1439ca421662f76e2f48206fb992,ID:43f6b3914ade4459001a029236b8cf1e,ID:a4eff518b196e799f85477704f982e50', 'MEDIA/02.Music/02.Audio/Yonderboi')
+--   ('ID:f5eb74ebfd2ff2e8bcdf4b025cc2e17b', 'MEDIA/02.Music/01.Video/03.80s/Styx')
 
-''', {'card_id': '454'}).fetchall()
 
-[
-  (182,
-  'ID:180;SRC:MEDIA/01.Movie/02.Documentary,ID:181;SRC:MEDIA/01.Movie/02.Documentary/Haboru.A.Nemzet.Ellen-2009,ID:182;SRC:MEDIA/01.Movie/02.Documentary/Haboru.A.Nemzet.Ellen-2009/E01'),
-  (183,
-  'ID:180;SRC:MEDIA/01.Movie/02.Documentary,ID:181;SRC:MEDIA/01.Movie/02.Documentary/Haboru.A.Nemzet.Ellen-2009,ID:183;SRC:MEDIA/01.Movie/02.Documentary/Haboru.A.Nemzet.Ellen-2009/E02'),
-  (184,
-  'ID:180;SRC:MEDIA/01.Movie/02.Documentary,ID:184;SRC:MEDIA/01.Movie/02.Documentary/Home-2009'),
-  (185,
-  'ID:180;SRC:MEDIA/01.Movie/02.Documentary,ID:185;SRC:MEDIA/01.Movie/02.Documentary/Inside.Job-2010'),
-  
-]
+
+---------------------
+
+
+
 
 
 
