@@ -160,11 +160,11 @@ class CollectView(FlaskView):
     #
     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/next/mixed/card_id/<card_id>/category/<category>/playlist/<playlist>/tags{tags}/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origin/<origin>/decade/<decade>/lang/<lang>
     #
-    #@route('/highest/mixed/card_id/<card_id>/category/<category>/playlist/<playlist>/tags{tags}/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>')
+    #@route('/highest/mixed/card_id/<card_id>/category/<category>/playlist/<playlist>/tags{tags}/level/<level>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>')
     @route(EPCollectNextMixed.PATH_PAR_URL, methods=[EPCollectNextMixed.METHOD])
-    def collectNextMixedWithParameter(self, card_id, category, playlist, tags, title, genres, themes, directors, actors, lecturers, performers, origins, decade, lang):
+    def collectNextMixedWithParameter(self, card_id, category, playlist, tags, level, title, genres, themes, directors, actors, lecturers, performers, origins, decade, lang):
 
-        out = self.epCollectNextMixed.executeByParameters(card_id, category, playlist=playlist, tags=tags, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang)
+        out = self.epCollectNextMixed.executeByParameters(card_id, category, playlist=playlist, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang)
         return out
 
     #

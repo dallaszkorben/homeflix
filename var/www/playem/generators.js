@@ -426,7 +426,7 @@ class SubLevelRestGenerator extends  RestGenerator{
         // TODO: we just added the filter in the constructor. Now I add it again
 
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed/card_id/" + this.hierarchy_id + "/category/{category}/playlist/{playlist}/tags/{tags}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: this.filters},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed/card_id/" + this.hierarchy_id + "/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: this.filters},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -997,32 +997,32 @@ class MovieFilterAbcRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
         let containerList = [];
 
-        let filter_a    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'A%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_b    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'B%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_c    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'C%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_d    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'D%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_e    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'E%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_f    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'F%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_g    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'G%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_h    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'H%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_i    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'I%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_j    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'J%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_k    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'K%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_l    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'L%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_m    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'M%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_n    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'N%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_o    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'O%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_p    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'P%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_q    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'Q%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_r    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'R%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_s    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'S%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_t    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'T%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_u    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'U%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_v    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'V%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_w    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'W%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_x    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'X%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_y    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'Y%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_z    = {category: 'movie', playlist: '*',  tags: '*', level: 'series', title: 'Z%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_a    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'A%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_b    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'B%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_c    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'C%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_d    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'D%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_e    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'E%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_f    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'F%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_g    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'G%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_h    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'H%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_i    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'I%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_j    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'J%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_k    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'K%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_l    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'L%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_m    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'M%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_n    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'N%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_o    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'O%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_p    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'P%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_q    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'Q%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_r    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'R%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_s    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'S%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_t    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'T%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_u    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'U%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_v    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'V%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_w    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'W%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_x    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'X%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_y    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'Y%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_z    = {category: 'movie', playlist: '*',  tags: '*', level: '-', title: 'Z%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
 
         let requestList = [
             {title: 'A',    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_a},

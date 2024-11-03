@@ -38,6 +38,7 @@ con.execute('''
     SELECT * FROM Card WHERE id='6d6c0ba21c7606819297c7e29d0ffdf9'
 ''', {}).fetchall()
 
+
 ----------------------------------
 -- Recursive learning examples ---
 ----------------------------------
