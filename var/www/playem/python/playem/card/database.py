@@ -2245,6 +2245,31 @@ class SqlDatabase:
         return filter_where
 
 
+    def get_sql_like_where_condition_from_text_filter(self, text_filter, field_name):
+
+        op = None
+        if text_filter is None:
+            filter_list = []
+        elif '_AND_' in text_filter:
+            op = 'and'
+            filter_list = [] if text_filter is None else text_filter.split('_AND_')
+        elif '_OR_' in text_filter:
+            op = 'or'
+            filter_list = [] if text_filter is None else text_filter.split('_OR_')
+        else:
+            op = ''
+            filter_list = [text_filter]
+
+        filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
+        filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
+        filter_where =       None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["" + field_name + " " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '" + filter.removeprefix("_NOT_") + "'" for filter in filter_list]) + ')'
+
+        logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
+        logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
+        logging.debug("{} WHERE: {}".format(field_name, filter_where if filter_where is not None else 'None'))
+
+        return filter_where
+
     def get_converted_query_to_json(self, sql_record_list, category, lang):
         """
         Convert and translate the given SQL card-response
@@ -2768,11 +2793,11 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_highest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
                 query_parameters = {'user_id': user_id, 'level': level, 'category': category, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
-                logging.error("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
+                logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
@@ -2963,7 +2988,7 @@ class SqlDatabase:
 
 # RAW Queries
 
-    def get_raw_query_of_highest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+    def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
@@ -2972,6 +2997,9 @@ class SqlDatabase:
         lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
         performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+        titles_req_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_req')
+        titles_orig_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_orig')
+
 
         query = '''
 
@@ -3426,17 +3454,28 @@ class SqlDatabase:
                             -------------------
                             -------------------
 
-                            --- WHERE TITLE ---
-                            AND CASE
-                                WHEN :title IS NOT NULL AND ttitle_req IS NOT NULL THEN ttitle_req LIKE :title
-                                WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title                              
-                                ELSE 1
-                            END
+--                            --- WHERE TITLE ---
+--                            AND CASE
+--                                WHEN :title IS NOT NULL AND ttitle_req IS NOT NULL THEN ttitle_req LIKE :title
+--                                WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title                              
+--                                ELSE 1
+--                            END
 
                             --- WHERE DECADE ---
                             AND CASE
                                 WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
                             END
+
+
+                            ''' + (
+                                '''
+                                AND CASE
+                                    WHEN ttitle_req IS NOT NULL THEN ''' + titles_req_where + '''
+                                    ELSE ''' + titles_orig_where + '''
+                                END                                
+                                ''' if titles_orig_where else ''' '''
+                            ) + '''
+
 
                             ''' + ('''                
                             --- WHERE THEMES - conditional ---
@@ -3466,12 +3505,6 @@ class SqlDatabase:
                             --- WHERE LECTURERS - conditional ---
                             AND ''' + lecturers_where if lecturers_where else '') + '''
 
-                            -- AND CASE
-                            --     WHEN :level IS NOT NULL AND :level = 'NONE' THEN card.id_higher_card IS NULL ELSE 1
-                            -- END
-                            -- AND CASE
-                            --     WHEN :level IS NOT NULL AND :level = 'NONE' THEN card.id_higher_card IS NULL AND card.level IS NOT NULL ELSE 1
-                            -- END
 
                             AND CASE
 
@@ -3489,8 +3522,6 @@ class SqlDatabase:
 
                                 -- filter on the the given level: ???. ONLY THE GIVEN LEVEL IS SHOWN
                                 ELSE card.level = :level
-
-
 
                             END
 
