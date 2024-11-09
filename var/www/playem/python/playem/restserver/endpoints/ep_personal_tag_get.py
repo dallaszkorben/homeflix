@@ -94,6 +94,6 @@ class EPPersonalTagGet(EP):
             origins = None
         if decade == '*':
             decade=None
-        output = self.web_gadget.db.get_tags(category=category, playlist=None, tags=None, level=None, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        output = self.web_gadget.db.get_tags(category=category, playlist=None, tags=None, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
 
         return output_json(output, EP.CODE_OK)

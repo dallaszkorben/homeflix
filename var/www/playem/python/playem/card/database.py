@@ -2164,7 +2164,7 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
-    def get_tags(self, category="movie", playlist=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_tags(self, category="movie", playlist=None, tags=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         result = False
         error_message = "Lock error"
 
@@ -2192,12 +2192,15 @@ class SqlDatabase:
                     GROUP BY Tag.name;
                 '''.format(query)
 
+                #print(query)
+
                 cur = self.conn.cursor()
                 cur.execute("begin")            #Otherwise "no transaction is active"
 
+                level = None
                 query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}            
 
-                logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
+                logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
@@ -2756,7 +2759,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_highest_level_cards(self, category, playlist=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_highest_level_cards(self, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for highest level list                ---
         Returns mixed standalone media and level cards   ---
@@ -2789,13 +2792,14 @@ class SqlDatabase:
 
         with self.lock:
 
+            #print("level: {}, filter_on: {}".format(level, filter_on))
             try:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
                 query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
-                query_parameters = {'user_id': user_id, 'level': level, 'category': category, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
+                query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -2825,7 +2829,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_next_level_cards(self, card_id, category, playlist=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_next_level_cards(self, card_id, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
         Returns the next child cards which could ne:                                           
@@ -2863,9 +2867,9 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
-                query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}            
+                query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'filter_on': filter_on, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}            
 
                 logging.debug("get_next_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -2999,7 +3003,6 @@ class SqlDatabase:
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
         titles_req_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_req')
         titles_orig_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_orig')
-
 
         query = '''
 
@@ -3422,13 +3425,6 @@ class SqlDatabase:
                             ) ttlor
                             ON ttlor.id_card=card.id AND ttlor.lang_id=card.id_title_orig
                     
-
-
-
-
-
-
-
                         ------------------------
                         --- INITIAL WHERE    ---
                         --- the lowest level ---
@@ -3454,18 +3450,10 @@ class SqlDatabase:
                             -------------------
                             -------------------
 
---                            --- WHERE TITLE ---
---                            AND CASE
---                                WHEN :title IS NOT NULL AND ttitle_req IS NOT NULL THEN ttitle_req LIKE :title
---                                WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title                              
---                                ELSE 1
---                            END
-
                             --- WHERE DECADE ---
                             AND CASE
                                 WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
                             END
-
 
                             ''' + (
                                 '''
@@ -3475,7 +3463,6 @@ class SqlDatabase:
                                 END                                
                                 ''' if titles_orig_where else ''' '''
                             ) + '''
-
 
                             ''' + ('''                
                             --- WHERE THEMES - conditional ---
@@ -3505,23 +3492,23 @@ class SqlDatabase:
                             --- WHERE LECTURERS - conditional ---
                             AND ''' + lecturers_where if lecturers_where else '') + '''
 
-
                             AND CASE
 
-                                -- filter on the LOWEST level on any type. Like standalon, series -> HIGHEST LEVEL SHOWN
-                                WHEN :level IS NULL THEN card.level IS NULL
+                                -- level: ^ (*, None), filter: v (*, None) => show the HIGHEST level and filter on the LOWEST level on any type => filter LOWEST level
+                                -- Genre: Standalone Scifi
+                                WHEN (:level IS NULL OR :level = '^') AND (:filter_on IS NULL OR :filter_on = 'v') THEN card.level IS NULL
 
-                                -- filter on the HIGHEST level on any type. Like standalon, series -> HIGHEST LEVEL SHOWN 
-                                WHEN :level = '-' THEN card.id_higher_card IS NULL
+                                -- level: ^ (*, None), filter: ^ (-) => show the HIGHEST level and filter on the same (HIGHEST) level on any type => filter HIGHEST level
+                                -- Title: Standalon or Series
+                                WHEN (:level IS NULL OR :level = '^') AND :filter_on IS not NULL AND :filter_on = '-' THEN card.id_higher_card IS NULL
 
-                                -- filter on the HIGHEST level if there is higher level. Like series. -> HIGHEST LEVEL SHOWN
-                                WHEN :level = '^' THEN card.id_higher_card IS NULL AND card.level IS NOT NULL
+                                -- level: <level>, filter: v (* None) => show the GIVENT level and filter on the LOWEST level on any type => filter LOWEST level
+                                WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND (:filter_on IS NULL OR :filter_on = 'v') THEN card.level IS NULL AND card.id_higher_card IS not NULL
 
-                                -- filter on the HIGHEST level if there is NO higher level. Like standalon. -> ONLY STANDALON SHOWN 
-                                WHEN :level = 'v' THEN card.id_higher_card IS NULL AND card.level IS NULL
+                                -- level: <level>, filter: - => show the GIVENT level and filter on the same (GIVEN) level on any type => filter GIVEN level
+                                WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND :filter_on IS not NULL AND :filter_on = '-' THEN card.level = :level
 
-                                -- filter on the the given level: ???. ONLY THE GIVEN LEVEL IS SHOWN
-                                ELSE card.level = :level
+                                ELSE 0
 
                             END
 
@@ -3592,21 +3579,19 @@ class SqlDatabase:
                     -------------------
 
                     CASE
+                        -- level: ^ (*, None), filter: v (*, None) => show the HIGHEST level and filter on the LOWEST level on any type => show HIGHEST level
+                        WHEN (:level IS NULL OR :level = '^') AND (:filter_on IS NULL OR :filter_on = 'v') THEN id_higher_card IS NULL
 
-                        -- if :level is NOT set, then takes the highest mixed level, can be series and standalon movie as well
-                        WHEN :level IS NULL THEN id_higher_card IS NULL
+                        -- level: ^ (*, None), filter: - => show the HIGHEST level and filter on the same (HIGHEST) level on any type => show HIGHEST level
+                        WHEN (:level IS NULL OR :level = '^') AND :filter_on IS not NULL AND :filter_on = '-' THEN id_higher_card IS NULL
 
-                        -- if :level = '-', then takes the highest mixed level, can be series and standalon movie as well
-                        WHEN :level = '-' THEN id_higher_card IS NULL
+                        -- level: <level>, filter: v (* None) => show the GIVENT level and filter on the LOWEST level on any type => GIVEN level
+                        WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND (:filter_on IS NULL OR :filter_on = 'v') THEN level = :level
 
-                        -- if :level = '^', then takes the highest level, only with levels, can be series
-                        WHEN :level = '^' THEN id_higher_card IS NULL AND level IS NOT NULL
+                        -- level: <level>, filter: - => show the GIVENT level and filter on the same (GIVEN) level on any type => GIVEN level
+                        WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND :filter_on IS not NULL AND :filter_on = '-' THEN level = :level
 
-                        -- if :level = 'v', then takes the lovest level, only without higher, can be standalone
-                        WHEN :level='v' THEN id_higher_card IS NULL AND level IS NULL
-
-                        -- if :level is set, then takes that specific level as highest level, can be LP
-                        ELSE level = :level
+                        ELSE 0
                     END
 
                 GROUP BY id
@@ -3914,7 +3899,8 @@ class SqlDatabase:
 
         return query
 
-    def get_raw_query_of_next_level(self, category, tags=None, level=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+
+    def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
         
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
@@ -4406,7 +4392,7 @@ class SqlDatabase:
 
                             ''' + ('''                
                             --- LOWEST FILTER IF NEEDED - conditional ---
-                            ''' + lowest_level_where if level is None or level == 'v' else '') + '''
+                            ''' + lowest_level_where if filter_on is None or filter_on == 'v' else '') + '''
 
                         UNION ALL
 
