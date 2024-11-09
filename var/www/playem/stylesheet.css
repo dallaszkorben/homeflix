@@ -314,7 +314,8 @@ body {
     /*border: 2px rgb(255, 0, 225) solid;*/
 }
 
-.description-rating-rate{    
+.description-rating-rate{ 
+    cursor: pointer;   
     padding-left: 1em; 
 }
 
@@ -331,7 +332,6 @@ body {
 }
 
 .description-tagging-button {
-/*    cursor: pointer; */
     display: inline-block;
     margin: 4px;
     font-weight: bold;
@@ -357,7 +357,6 @@ body {
 }
 
 .description-tagging-button-add {
-/*    cursor: pointer; */
     font-weight: bold;
     border-radius: 2px;
     padding: 0 4px;
@@ -371,7 +370,7 @@ body {
 
 /* Hover effect on "+" icon */
 .description-tagging-button-add:hover {
-/*    cursor: pointer; */
+    cursor: pointer;
     border: 1px solid black;
     background-color: black;
 
@@ -380,7 +379,6 @@ body {
 }
 
 .description-tagging-button-close {
-/*    cursor: pointer;*/
     margin-left: 8px;
     font-weight: bold;
     border-radius: 2px;
@@ -395,7 +393,7 @@ body {
 
 /* Hover effect on "X" icon */
 .description-tagging-button-close:hover {
-/*    cursor: pointer; */
+    cursor: pointer;
     border: 1px solid black;
     background-color: black;
 
@@ -404,7 +402,6 @@ body {
 }
 
 .description-tagging-field{
-/*    cursor: pointer; */
     font-family: inherit;
     display: inline-block;
     margin: 4px;

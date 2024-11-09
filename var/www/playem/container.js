@@ -1185,12 +1185,6 @@ class ObjDescriptionContainer {
                         });
                     });
 
-
-//                    $(".description-tagging-button-close").hover(function() {
-//                        $(this).css("cursor", "pointer");
-//                    });
-
-
                     // 'Remove TAG' listener
                     $(".description-tagging-button-close").on("click", function() {
 
