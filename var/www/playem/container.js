@@ -1614,6 +1614,7 @@ class History {
     }
 }
 
+
 class FocusTask {
     static Menu = new FocusTask('menu');
     static Player = new FocusTask('player');
@@ -1622,6 +1623,7 @@ class FocusTask {
     static Pdf = new FocusTask('pdf');
     static Code = new FocusTask('code');
     static Picture = new FocusTask('picture');
+    static Modal_Continue_Play = new FocusTask('modal_continue_play');
     constructor(name) {
         this.name = name
     }
@@ -1665,7 +1667,7 @@ class ThumbnailController {
         return oScrollSection;
     }
 
-    enter() {
+    enter(event) {
 
         if (this.focusTask === FocusTask.Menu) {
 
@@ -1700,6 +1702,8 @@ class ThumbnailController {
 
                     play_list.push(this.getMediumDict(hit));
                 }
+
+console.log("before playmediaaudiovideo first elemenet: " + play_list[0]["title"]);
 
                 this.playMediaAudioVideo(play_list);
 
@@ -1786,8 +1790,79 @@ class ThumbnailController {
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    // Show the modal when the event is triggered
+//    showModal() {
+//        $('#playback-modal').fadeIn();
+//
+//        // Add a keydown listener to prevent keypress propagation when the modal is open
+//        $(document).on('keydown.modal', function(e) {
+//            console.log(e.key);
+//            e.stopPropagation();
+//            if (e.key === "Escape") {
+//                $('#playback-modal').fadeOut(); // Hide modal if ESC is pressed
+//            }
+//        });
+//    }
+//    
+//    // Hide the modal
+//    hideModal() {
+//      $('#playback-modal').fadeOut();
+//
+//      // Remove the modal-specific keydown event listener
+//      $(document).off('keydown.modal');
+//    }
+    
+
+    
+    
+
+
+
+
+
+closeModal(refToThis) {
+    $('#continue-btn').off('click');
+    $('#start-over-btn').off('click');
+    $('.modal-content .close').off('click');
+    $('#playback-modal').fadeOut();
+    refToThis.focusTask = refToThis.originalTask;
+}
+
+
+
+
     playMediaAudioVideo(continuous_list){
         
+console.log("length continuous_list in the playMedia: " + continuous_list.length);
+
         // Takes the first element from the list
 //        let medium_dict = continuous_list.shift();
         let medium_dict = continuous_list[0];
@@ -1811,34 +1886,139 @@ class ThumbnailController {
             // The length of the media >= 10 minutes and Recent Position is between the Net Play interval then I handle the continuous play
             // full_time != null && full_time > 600 && 
             if (recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
-                $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
-                $("#dialog-confirm-continue-interrupted-play").dialog({
-                    //closeOnEscape: false,
-                    resizable: false,
-                    height: "auto",
-                    width: 400,
-                    modal: true,
-                    title: "Interrupted playback",
-                    buttons: {
-                      "Continue": function() {
-                        $( this ).dialog( "close" );
-                        refToThis.configurePlayer(refToThis, continuous_list, recent_position);
-                      },
-                      "From beginning": function() {
-                        $( this ).dialog( "close" );
-                        recent_position = 0;
-                        refToThis.configurePlayer(refToThis, continuous_list, recent_position);
-                      }
-                    }
-                })
 
-//                .on('keydown', function(evt) {
-//                    console.log("hello");
-//                    if (evt.keyCode === $.ui.keyCode.ESCAPE) {
-//                        dialog.dialog('close');
-//                    }                
-//                    evt.stopPropagation();
-//                });            
+//                refToThis.originalTask = refToThis.focusTask;
+//                refToThis.focusTask = FocusTask.Modal_Continue_Play;
+//
+///*                $(document).on('keydown.modal', function(e) {
+//                    console.log(e.key);
+//                    e.stopPropagation();
+//                    if (e.key === "Escape") {
+//                        $('#playback-modal').fadeOut();
+//                        refToThis.focusTask = refToThis.originalTask;
+//                    }
+//                });
+//*/                
+//
+//                // Message in the modal window
+//                $("#playback-modal .modal-content p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
+//
+//                //this.showModal()
+//                $('#playback-modal').fadeIn();
+//
+//                // Delay focusing to avoid immediate Enter trigger
+//                setTimeout(function () {
+//                    $('#continue-btn').focus(); // Set initial focus to the first button
+//                }, 100); // Adjust delay as needed
+//
+//                // Handle button clicks
+//                $('#continue-btn').on('click', function (e) {
+//                    refToThis.closeModal(refToThis);
+//
+//console.error("!!!! size: " + continuous_list.length + ", title: " + continuous_list[0]["title"]);
+//
+//                    refToThis.configurePlayer(refToThis, continuous_list, recent_position);
+//                    
+//                });
+//
+//                $('#start-over-btn').on('click', function (e) {
+//                    refToThis.closeModal(refToThis);
+//                    recent_position = 0;
+//                    refToThis.configurePlayer(refToThis, continuous_list, recent_position);
+//                });
+//
+//                // Handle close button click
+//                $('.modal-content .close').on('click', function (e) {
+//                    refToThis.closeModal(refToThis);
+//                });
+//  
+//
+//                let buttons = $('.focusable');
+//                let currentFocusIndex = 0;
+////                buttons.eq(currentFocusIndex).focus();
+//
+//                buttons.on('keydown', function (e) {
+//                  if (e.key === "ArrowRight" || e.key === "Tab") {
+//                    e.preventDefault();
+//                    currentFocusIndex = (currentFocusIndex + 1) % buttons.length;
+//                    buttons.eq(currentFocusIndex).focus();
+//                  } else if (e.key === "ArrowLeft") {
+//                    e.preventDefault();
+//                    currentFocusIndex = (currentFocusIndex - 1 + buttons.length) % buttons.length;
+//                    buttons.eq(currentFocusIndex).focus();
+//                  } else if (e.key === "Enter") {
+//                    buttons.eq(currentFocusIndex).click();
+//                  }
+//                });
+
+                // Disable keys behind the Dialog()
+                refToThis.originalTask = refToThis.focusTask;
+                refToThis.focusTask = FocusTask.Modal_Continue_Play;
+
+                // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
+                setTimeout(() => {
+                    $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
+                    $("#dialog-confirm-continue-interrupted-play").dialog({
+                        //closeOnEscape: false,
+                        resizable: false,
+                        height: "auto",
+                        width: 400,
+                        modal: true,
+                        zIndex: 1100,
+                        title: "Interrupted playback",                    
+                        // beforeClose: function( event, ui ) {
+                        //     setTimeout(function () {      
+                        //         refToThis.focusTask = refToThis.originalTask;
+                        //      }, 500);
+
+                        // },
+                        buttons: {
+                          "Continue": function() {
+                            $( this ).dialog( "close" );
+                            refToThis.configurePlayer(refToThis, continuous_list, recent_position);                       
+                          },
+                          "From beginning": function() {
+                            $( this ).dialog( "close" );
+                            recent_position = 0;
+                            refToThis.configurePlayer(refToThis, continuous_list, recent_position);
+                          }
+                        },
+
+                        open: function() {
+                            const buttons = $(this).parent().find(".ui-dialog-buttonset button");
+                            let focusedButtonIndex = 0;
+
+                            $(document).on("keydown.arrowKeys", function(event) {
+                              if (event.key === "ArrowRight") {
+                                focusedButtonIndex = (focusedButtonIndex + 1) % buttons.length;
+                                buttons.eq(focusedButtonIndex).focus();
+                                event.preventDefault();
+                              } else if (event.key === "ArrowLeft") {
+                                focusedButtonIndex = (focusedButtonIndex - 1 + buttons.length) % buttons.length;
+                                buttons.eq(focusedButtonIndex).focus();
+                                event.preventDefault();
+                              }
+                            });
+
+                            $(this).parent().find(".ui-dialog-buttonpane button:first").focus();
+                          },
+                          close: function() {
+                            $(document).off("keydown.arrowKeys"); // Remove listener on close
+
+                            setTimeout(function () {      
+                                refToThis.focusTask = refToThis.originalTask;
+                            }, 500);
+
+                            $(this).dialog("destroy");
+                          },
+                    });
+                }, 200);
+
+
+
+
+                console.error("myerror");
+
 
             // Otherwise it starts to play from the beginning
             }else{
@@ -1847,6 +2027,10 @@ class ThumbnailController {
             }
         }
     }
+
+
+
+
 
     /**
      * 
@@ -1862,6 +2046,9 @@ class ThumbnailController {
         let screenshot_path = medium_dict["screenshot_path"];
         let card_id = medium_dict["card_id"];
         let title = medium_dict["title"];
+
+console.error("!!! " + title);
+
         let net_start_time = medium_dict["net_start_time"];
         let net_stop_time = medium_dict["net_stop_time"];
 
@@ -1873,7 +2060,9 @@ class ThumbnailController {
         // Creates a new source element
         let newSourceElement = $('<source>');
         newSourceElement.attr('src', medium_path);
+
         $('#video_player').append(newSourceElement);
+
 
 //            let isInFullScreen = false;
 //            if (document.fullscreenEnabled){
@@ -1899,14 +2088,36 @@ class ThumbnailController {
             player.poster = "";
         }
 
+// this part works together with startPlayer() and pausePlayer() 
+// Using this, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
+// The below code is a temporary solution. I kept it to learn:
+//        setTimeout(function () {      
+//            player.play();
+//         }, 550);
+//        player.play();
+
+this.isPlaying = false;
+
+// On video playing toggle values
+player.onplaying = function() {
+    this.isPlaying = true;
+};
+
+// On video pause toggle values
+player.onpause = function() {
+    this.isPlaying = false;
+};
+
+player.controls = true;
+player.autoplay = true;
+player.currentTime = recent_position;
+player.load();
+this.startPlayer()
+
+// ---
+
         // REST request to register this media in the History
         this.media_history_start_epoch = refToThis.registerMediaInHistory(card_id, recent_position);
-
-        player.load();
-        player.controls = true;
-        player.autoplay = true;
-        player.currentTime = recent_position;
-        player.play();
 
         // ENDED event listener
         $("#video_player").bind("ended", function (par) {
@@ -1929,6 +2140,21 @@ class ThumbnailController {
 
         this.focusTask = FocusTask.Player;        
     }
+
+
+// Using the below 2 functions, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
+startPlayer(){
+    let player = $("#video_player")[0];
+    if( !player.paused && !this.isPlaying){
+        return player.play();
+    }
+}
+pausePlayer(){
+    let player = $("#video_player")[0];
+    if( !player.paused && this.isPlaying){
+        return player.pause();
+    }
+}
 
 
     playMediaPdf(medium_dict){
@@ -2053,7 +2279,7 @@ class ThumbnailController {
         // Stop updating the current media history
         if(this.updateMediaHistoryIntervalId != null){
             clearInterval(this.updateMediaHistoryIntervalId);
-            console.log("Stopped Media History Interval: " + this.updateMediaHistoryIntervalId);
+            console.log("Stopped Media History Interval. Id: " + this.updateMediaHistoryIntervalId);
         }
 
         let player = $("#video_player")[0];
@@ -2129,7 +2355,7 @@ class ThumbnailController {
         // Remove the playing list
         domPlayer.children("source").remove();
 
-        // if I'm here because the player ended and there is at least 1 more element in the play_list
+        // if I'm here because the player 'ended' and there is at least 1 more element in the play_list
         if (event == 'ended' && continuous_list.length > 0) {
 
             this.objScrollSection.arrowRight()
@@ -2140,7 +2366,7 @@ class ThumbnailController {
             let card_id = medium_dict["card_id"];
             let title = medium_dict["title"];
 
-            // takes the next element until it is a media
+            // takes the next element until it is a media - skip the collections (series, sequels, ...)
             while(medium_path == null && continuous_list.length > 0){
                 continuous_list.shift();
                 medium_dict = continuous_list[0];
@@ -2172,7 +2398,8 @@ class ThumbnailController {
                 this.media_history_start_epoch = this.registerMediaInHistory(card_id, 0);
 
                 player.load();
-                player.play();
+                this.startPlayer()
+                //player.play();
 
                 // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
                 domPlayer.focus();
@@ -2181,7 +2408,7 @@ class ThumbnailController {
                 this.stop_playing(player, domPlayer, event);
             }
 
-        // Stop playing
+        // Stop playing manually or empty list
         } else {
             this.stop_playing(player, domPlayer, event);
         }
@@ -2197,7 +2424,10 @@ class ThumbnailController {
         domPlayer.off('ended');
 
         domPlayer.hide();
-        player.pause();
+
+        this.pausePlayer()        
+        //player.pause();
+
         player.height = 0;
 
         this.focusTask = FocusTask.Menu;
@@ -2258,6 +2488,12 @@ class ThumbnailController {
         }
     }
 
+    tab() {
+        if (this.focusTask === FocusTask.Menu) {
+            //this.objScrollSection.arrowDown();
+        }
+    }
+
     /**
      * POST REST request to register the recent media in the History
      */ 
@@ -2277,7 +2513,7 @@ class ThumbnailController {
         // The user is logged in and the register was successful
         if(result){
             this.updateMediaHistoryIntervalId = setInterval(this.updateMediaHistory, 60000, data_dict['start_epoch'], card_id);
-            console.log("Start Media History Interval: " + this.updateMediaHistoryIntervalId);
+            console.log("Start Media History Interval for " + card_id + " car id. Interval id: "+ this.updateMediaHistoryIntervalId);
         }else{
             this.updateMediaHistoryIntervalId = null;
             console.log("Media History Interval did not start: " + error);

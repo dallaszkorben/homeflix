@@ -3,12 +3,6 @@
 <html>
 
 <head>
-    <style>
-        label, input { display:block; }
-    input.text { margin-bottom:12px; width:95%; padding: .4em; }
-    fieldset { padding:0; border:0; margin-top:25px; }
-    h1 { font-size: 1.2em; margin: .6em 0; }
-    </style>
 
     <script src="script/jquery/jquery-3.6.0.min.js"></script>
     <script src="script/js-jaml/js-yaml.js"></script>
@@ -418,7 +412,7 @@
 
             $(document).on('keydown', function (e) {
                 function clickOnThumbnail() {
-                    oThumbnailController.enter();
+                    oThumbnailController.enter(e);
                 }
                 function clickOnEscape() {
                     oThumbnailController.escape();
@@ -435,8 +429,12 @@
                 function arrowDown() {
                     oThumbnailController.arrowDown();
                 }
+                function tab() {
+                    oThumbnailController.tab();
+                }
 
-                var act = { 27: clickOnEscape, 13: clickOnThumbnail, 32: clickOnThumbnail, 37: arrowLeft, 38: arrowUp, 39: arrowRight, 40: arrowDown };
+
+                var act = { 27: clickOnEscape, 13: clickOnThumbnail, 32: clickOnThumbnail, 37: arrowLeft, 38: arrowUp, 39: arrowRight, 40: arrowDown, 9: tab };
                 if (act[e.keyCode])
                     var a = new act[e.keyCode];
             });
@@ -735,16 +733,30 @@
 
 <body>
   
-
     <div id="dialog-warning-update-failed" title="Failure" style="display:none">
         <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
     </div>
     <div id="dialog-success-update-success" title="Success" style="display:none">
         <div class="ui-icon ui-icon-check" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
     </div>
+    <!-- Continue interrupted video Dialog window -->
     <div id="dialog-confirm-continue-interrupted-play" title="" style="display:none">
         <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
     </div>
+
+    <!-- Modal window - I do not use it now - must be saved somewhere --> <!--
+    <div id="playback-modal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <p>???</p>
+          <div class="button-group">
+            <button id="continue-btn" class="focusable" autofocus>Continue</button>
+            <button id="start-over-btn" class="focusable">From beginning</button>
+          </div>
+        </div>
+    </div> -->
+
+    <!-- Login input modal window -->
     <div id="dialog-form-login" title="Login" style="display:none">
         <p class="validateTips">All form fields are required.</p>
         <form method="POST">
@@ -850,6 +862,7 @@
         </div>
     </div>
 
+    <!-- Video container -->
     <div id="video-container">
         <video height="0" id="video_player"></video>
     </div>
@@ -861,7 +874,5 @@
         </div>
     </div>
 
-
 </body>
-
 </html>
