@@ -1624,6 +1624,7 @@ class FocusTask {
     static Code = new FocusTask('code');
     static Picture = new FocusTask('picture');
     static Modal_Continue_Play = new FocusTask('modal_continue_play');
+    static Modal_Login = new FocusTask('modal_login');
     constructor(name) {
         this.name = name
     }
@@ -1966,10 +1967,6 @@ console.log("length continuous_list in the playMedia: " + continuous_list.length
                         modal: true,
                         zIndex: 1100,
                         title: "Interrupted playback",                    
-                        // beforeClose: function( event, ui ) {
-                        //     setTimeout(function () {      
-                        //         refToThis.focusTask = refToThis.originalTask;
-                        //      }, 500);
 
                         // },
                         buttons: {
@@ -2001,16 +1998,17 @@ console.log("length continuous_list in the playMedia: " + continuous_list.length
                             });
 
                             $(this).parent().find(".ui-dialog-buttonpane button:first").focus();
-                          },
-                          close: function() {
+                        },
+                        close: function() {
                             $(document).off("keydown.arrowKeys"); // Remove listener on close
 
+                            // Delay needed to not propagate ESC
                             setTimeout(function () {      
                                 refToThis.focusTask = refToThis.originalTask;
                             }, 500);
 
                             $(this).dialog("destroy");
-                          },
+                        }
                     });
                 }, 200);
 

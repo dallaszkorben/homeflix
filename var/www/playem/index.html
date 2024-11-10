@@ -653,6 +653,10 @@
                     $('#username').val("");
                     $('#password').val("");
 
+                    
+                    originalTask = oThumbnailController.focusTask;
+                    oThumbnailController.focusTask = FocusTask.Modal_Login;
+
                     $("#dialog-form-login").dialog({
                         resizable: false,
                         height: "auto",
@@ -698,7 +702,17 @@
                                     $(this).parent().find("#login-submit-button").trigger("click");
                                 }
                             });
-                        }
+                        },
+                        close: function() {
+                            $(document).off("keydown.arrowKeys"); // Remove listener on close
+
+                            // Delay needed to not propagate ESC
+                            setTimeout(function () {      
+                                oThumbnailController.focusTask = originalTask;
+                            }, 500);
+
+                            $(this).dialog("destroy");
+                          }
                     })
 
                 // LOGOUT
@@ -834,8 +848,7 @@
                         <div id="description-appendix">
                             <div id="description-appendix-download"></div>
                             <div id="description-appendix-play"></div>
-                        </div>
-                        
+                        </div>                        
 
                     </div>
                 </div>
