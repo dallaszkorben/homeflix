@@ -1794,78 +1794,9 @@ class ThumbnailController {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    // Show the modal when the event is triggered
-//    showModal() {
-//        $('#playback-modal').fadeIn();
-//
-//        // Add a keydown listener to prevent keypress propagation when the modal is open
-//        $(document).on('keydown.modal', function(e) {
-//            console.log(e.key);
-//            e.stopPropagation();
-//            if (e.key === "Escape") {
-//                $('#playback-modal').fadeOut(); // Hide modal if ESC is pressed
-//            }
-//        });
-//    }
-//    
-//    // Hide the modal
-//    hideModal() {
-//      $('#playback-modal').fadeOut();
-//
-//      // Remove the modal-specific keydown event listener
-//      $(document).off('keydown.modal');
-//    }
-    
-
-    
-    
-
-
-
-
-
-//    closeModal(refToThis) {
-//        $('#continue-btn').off('click');
-//        $('#start-over-btn').off('click');
-//        $('.modal-content .close').off('click');
-//        $('#playback-modal').fadeOut();
-//        refToThis.focusTask = refToThis.originalTask;
-//    }
-
-
-
-
     playMediaAudioVideo(continuous_list){
         
         // Takes the first element from the list
-//        let medium_dict = continuous_list.shift();
         let medium_dict = continuous_list[0];
 
         let medium_path = medium_dict["medium_path"];
@@ -1887,70 +1818,6 @@ class ThumbnailController {
             // The length of the media >= 10 minutes and Recent Position is between the Net Play interval then I handle the continuous play
             // full_time != null && full_time > 600 && 
             if (recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
-
-//                refToThis.originalTask = refToThis.focusTask;
-//                refToThis.focusTask = FocusTask.Modal_Continue_Play;
-//
-///*                $(document).on('keydown.modal', function(e) {
-//                    console.log(e.key);
-//                    e.stopPropagation();
-//                    if (e.key === "Escape") {
-//                        $('#playback-modal').fadeOut();
-//                        refToThis.focusTask = refToThis.originalTask;
-//                    }
-//                });
-//*/                
-//
-//                // Message in the modal window
-//                $("#playback-modal .modal-content p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
-//
-//                //this.showModal()
-//                $('#playback-modal').fadeIn();
-//
-//                // Delay focusing to avoid immediate Enter trigger
-//                setTimeout(function () {
-//                    $('#continue-btn').focus(); // Set initial focus to the first button
-//                }, 100); // Adjust delay as needed
-//
-//                // Handle button clicks
-//                $('#continue-btn').on('click', function (e) {
-//                    refToThis.closeModal(refToThis);
-//
-//console.error("!!!! size: " + continuous_list.length + ", title: " + continuous_list[0]["title"]);
-//
-//                    refToThis.configurePlayer(refToThis, continuous_list, recent_position);
-//                    
-//                });
-//
-//                $('#start-over-btn').on('click', function (e) {
-//                    refToThis.closeModal(refToThis);
-//                    recent_position = 0;
-//                    refToThis.configurePlayer(refToThis, continuous_list, recent_position);
-//                });
-//
-//                // Handle close button click
-//                $('.modal-content .close').on('click', function (e) {
-//                    refToThis.closeModal(refToThis);
-//                });
-//  
-//
-//                let buttons = $('.focusable');
-//                let currentFocusIndex = 0;
-////                buttons.eq(currentFocusIndex).focus();
-//
-//                buttons.on('keydown', function (e) {
-//                  if (e.key === "ArrowRight" || e.key === "Tab") {
-//                    e.preventDefault();
-//                    currentFocusIndex = (currentFocusIndex + 1) % buttons.length;
-//                    buttons.eq(currentFocusIndex).focus();
-//                  } else if (e.key === "ArrowLeft") {
-//                    e.preventDefault();
-//                    currentFocusIndex = (currentFocusIndex - 1 + buttons.length) % buttons.length;
-//                    buttons.eq(currentFocusIndex).focus();
-//                  } else if (e.key === "Enter") {
-//                    buttons.eq(currentFocusIndex).click();
-//                  }
-//                });
 
                 // Disable keys behind the Dialog()
                 refToThis.originalTask = refToThis.focusTask;
