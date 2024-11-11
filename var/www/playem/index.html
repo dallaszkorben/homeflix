@@ -44,7 +44,7 @@
 
         if(!result.responseJSON['result'] || Object.keys(user_data).length === 0){
             user_data = {
-                languageCode: "en",
+                language_code: "en",
                 name: null,
                 is_admin: true,
                 descriptor_color: 'rgb(129, 60, 41)',
@@ -66,7 +66,14 @@
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_titles = result.responseJSON;
-        
+
+        // Load Translated Interaction Labels
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/translate/interaction_labels/lang/" + user_data['language_code'];
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        translated_interaction_labels = result.responseJSON;
+
         // Load Translated Genre: Movie
         rq_method = "GET";
         rq_url = "http://" + host + port + "/translate/genres/category/movie/lang/" + user_data['language_code'];
@@ -477,15 +484,13 @@
                 }
             });
 
-            /*      */
-            /* MENU */
-            /*      */
+            /********
+             *      *
+             * MENU *
+             *      *
+             ********/
 
             let openDropdown = false;
-
-            // Set the default language in the menu
-            selectedLanguage = language_dict[user_data['language_code']];
-            $('#language-menu .main-menu-text' ).text(selectedLanguage);
 
             // If the mouse is close to the top, the menu appears
             $(document).on('mousemove', function(event) {
@@ -515,16 +520,19 @@
                 }
             );
 
-            // ////////////
+
             //
-            // Control menu
+            // LANGUAGE
             //
-            // ////////////
+            // Set the default language in the menu
+            let language_prefix = translated_interaction_labels['menu']['language']['language_prefix'];
+            selectedLanguage = language_dict[user_data['language_code']];
+            $('#language-menu .main-menu-text' ).text(language_prefix + ": " + selectedLanguage);
 
             // Select on language from the dropdown list
             $('.option.language').on('click', function() {
                 let selectedLanguage = $(this).text();
-                $('#language-menu .main-menu-text' ).text(selectedLanguage);
+                $('#language-menu .main-menu-text' ).text(language_prefix + ": " + selectedLanguage);
                 // $('#language-dropdown').slideUp(200); // To bring back the menu
 
 
@@ -542,6 +550,16 @@
             //
             // Server Setting
             //
+            let server_setting_menu = translated_interaction_labels['menu']['server']['menu'];
+            let rebuild_static_db_menu = translated_interaction_labels['menu']['server']['sub_menus']['rebuild_static_db'];
+            let rebuild_personal_db_menu = translated_interaction_labels['menu']['server']['sub_menus']['rebuild_personal_db'];
+            let update_software_menu = translated_interaction_labels['menu']['server']['sub_menus']['update_software'];
+
+            $("#setting-menu .main-menu-text").text(server_setting_menu);
+            $("#setting-menu li[value='rebuild-static-db']").text(rebuild_static_db_menu);
+            $("#setting-menu li[value='rebuild-personal-db']").text(rebuild_personal_db_menu);
+            $("#setting-menu li[value='update-sw']").text(update_software_menu);
+
             $('.option.setting').on('click', function() {
                 let setting = $(this).attr("value");
 
@@ -640,10 +658,19 @@
             });
 
             //
-            // PERSONAL
+            // LOGIN
             //
-            let personal = user_data["name"] != null ? user_data["name"] :"Not logged in";
-            $('#personal-menu .main-menu-text' ).text("User: " + personal);
+            let login_sub_menu = translated_interaction_labels['menu']['login']['sub_menus']['login'];
+            let logout_sub_menu = translated_interaction_labels['menu']['login']['sub_menus']['logout'];
+            
+            let user_prefix = translated_interaction_labels['menu']['login']['user_prefix'];
+            let user_not_logged_in = translated_interaction_labels['menu']['login']['user_not_logged_in'];
+            let personal = user_data["name"] != null ? user_data["name"] : user_not_logged_in;
+
+            $("#personal-menu li[value='login']" ).text(login_sub_menu);
+            $("#personal-menu li[value='logout']" ).text(logout_sub_menu);
+            
+            $('#personal-menu .main-menu-text' ).text(user_prefix + ": " + personal);
             $('.option.personal').on('click', function() {
                 let personal = $(this).attr("value");
 
@@ -652,19 +679,29 @@
 
                     $('#username').val("");
                     $('#password').val("");
-
                     
                     originalTask = oThumbnailController.focusTask;
                     oThumbnailController.focusTask = FocusTask.Modal_Login;
 
+                    let title = translated_interaction_labels['dialog']['login']['title'];
+                    let message = translated_interaction_labels['dialog']['login']['message'];
+                    let username_label = translated_interaction_labels['dialog']['login']['labels']['username'];
+                    let password_label = translated_interaction_labels['dialog']['login']['labels']['password'];
+                    let submit_button = translated_interaction_labels['dialog']['login']['buttons']['submit'];
+                    let cancel_button = translated_interaction_labels['dialog']['login']['buttons']['cancel'];
+
+                    $("#dialog-form-login p").html(message);
+                    $("#dialog-form-login label[for='username']").text(username_label);
+                    $("#dialog-form-login label[for='password']").text(password_label);
                     $("#dialog-form-login").dialog({
                         resizable: false,
                         height: "auto",
                         width: 400,
                         modal: true,
+                        title: title,
                         buttons: {
                             "Submit": {
-                                text: "Submit",
+                                text: submit_button,
                                 id: "login-submit-button",
                                 click: function() {
                                     var username = $("#username").val();
@@ -691,8 +728,11 @@
                                     }
                                 }
                             },
-                            "Cancel": function() {
-                                $(this).dialog("close");
+                            "Cancel": {
+                                text: cancel_button,
+                                click: function() {
+                                    $(this).dialog("close");
+                                }
                             }
                         },
                         // It needs to be able to use the Enter to Submit. Otherwise, for the Enter it goes bad and do stupid things
@@ -754,25 +794,14 @@
         <div class="ui-icon ui-icon-check" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
     </div>
     <!-- Continue interrupted video Dialog window -->
-    <div id="dialog-confirm-continue-interrupted-play" title="" style="display:none">
-        <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
+    <div id="dialog-confirm-continue-interrupted-play" title="continue_interrupted_playback" style="display:none">
+        <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div>
+        <p></p>
     </div>
 
-    <!-- Modal window - I do not use it now - must be saved somewhere --> <!--
-    <div id="playback-modal" class="modal">
-        <div class="modal-content">
-          <span class="close">&times;</span>
-          <p>???</p>
-          <div class="button-group">
-            <button id="continue-btn" class="focusable" autofocus>Continue</button>
-            <button id="start-over-btn" class="focusable">From beginning</button>
-          </div>
-        </div>
-    </div> -->
-
     <!-- Login input modal window -->
-    <div id="dialog-form-login" title="Login" style="display:none">
-        <p class="validateTips">All form fields are required.</p>
+    <div id="dialog-form-login" title="login" style="display:none">
+        <p>qewrqew</p>
         <form method="POST">
             <fieldset>
               <label for="username">Name</label>
@@ -797,7 +826,7 @@
             </ul>
         </div>
         <div id="language-menu" class="main-menu user">
-            <div class="main-menu-text">English</div>
+            <div class="main-menu-text">Language: English</div>
             <ul id="language-dropdown" class="dropdown">
                 <li class="option language" value="en">English</li>
                 <li class="option language" value="hu">Magyar </li>

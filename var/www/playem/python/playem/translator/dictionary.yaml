@@ -587,3 +587,39 @@ title:
         record: '# {0}'
         simple: '{0}'
         general: '#{0}'
+
+interaction_labels:
+    menu:
+        login:
+            user_prefix: User
+            user_not_logged_in: Not logged in
+            sub_menus:
+                login: Login
+                logout: Logout
+        language:
+            language_prefix: Language
+        server:
+            menu: Server Settings
+            sub_menus:
+                rebuild_static_db: Rebuild Static DB
+                rebuild_personal_db: Rebuild Personal DB
+                update_software: Update Software
+
+
+    dialog:
+        login:
+            title: Login
+            message: All form fields are required
+            labels:
+                username: Name
+                password: Password
+            buttons:
+                submit: Submit
+                cancel: Cancel
+        
+        continue_interrupted_playback:
+            title: Interrupted playback
+            message: Playback of this media was interrupted last time.<br>Would you like to resume playback or start from the beginning?
+            buttons:
+                continue: Continue
+                from_beginning: From beginning

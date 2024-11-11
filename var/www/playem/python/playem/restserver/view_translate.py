@@ -11,6 +11,7 @@ from playem.restserver.representations import output_json
 from playem.restserver.endpoints.ep_translate_genre import EPTranslateGenre
 from playem.restserver.endpoints.ep_translate_genres import EPTranslateGenres
 from playem.restserver.endpoints.ep_translate_titles import EPTranslateTitles
+from playem.restserver.endpoints.ep_translate_interaction_labels import EPTranslateInteractionLabels
 from playem.restserver.endpoints.ep_translate_categories import EPTranslateCategories
 from playem.restserver.endpoints.ep_translate_themes import EPTranslateThemes
 from playem.restserver.endpoints.ep_translate_levels import EPTranslateLevels
@@ -32,6 +33,7 @@ class TranslateView(FlaskView):
         self.epTranslateGenre = EPTranslateGenre(web_gadget)
         self.epTranslateGenres = EPTranslateGenres(web_gadget)
         self.epTranslateTitles = EPTranslateTitles(web_gadget)
+        self.epTranslateInteractionLabels = EPTranslateInteractionLabels(web_gadget)
         self.epTranslateCategories = EPTranslateCategories(web_gadget)
         self.epTranslateThemes = EPTranslateThemes(web_gadget)
         self.epTranslateLevels = EPTranslateLevels(web_gadget)
@@ -123,6 +125,19 @@ class TranslateView(FlaskView):
     @route(EPTranslateTitles.PATH_PAR_URL, methods=[EPTranslateTitles.METHOD])
     def translateTitlesWithParameter(self, lang):        
         out = self.epTranslateTitles.executeByParameters(lang=lang)
+        return out
+
+    #
+    # Gives back translation of all interaction labels with parameters
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/interaction_labels/lang/en
+    #
+    # GET http://localhost:80/translate/interaction_labels/lang/en
+    #
+    #@route('/interaction_labels/lang/<lang>')
+    @route(EPTranslateInteractionLabels.PATH_PAR_URL, methods=[EPTranslateInteractionLabels.METHOD])
+    def translateInteractionlabelsWithParameter(self, lang):        
+        out = self.epTranslateInteractionLabels.executeByParameters(lang=lang)
         return out
 
     #

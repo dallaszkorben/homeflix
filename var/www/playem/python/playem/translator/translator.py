@@ -69,6 +69,16 @@ class Translator( Property ):
             output[title] = self.translate_title(title)
         return output
 
+
+    def translate_interaction_labels(self):
+        output = {}
+        interaction_label_list = self.actual_dictionary['interaction_labels']
+#        for title in title_list:
+#            output[title] = self.translate_title(title)
+        return interaction_label_list
+
+
+
     def translate_categories(self):
         output = {}
         category_list = self.actual_dictionary['category']

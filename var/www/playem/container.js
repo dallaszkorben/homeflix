@@ -1823,9 +1823,12 @@ class ThumbnailController {
                 refToThis.originalTask = refToThis.focusTask;
                 refToThis.focusTask = FocusTask.Modal_Continue_Play;
 
+                let continue_button = translated_interaction_labels['dialog']['continue_interrupted_playback']['buttons']['continue'];
+                let from_beginning_button = translated_interaction_labels['dialog']['continue_interrupted_playback']['buttons']['from_beginning']
+
                 // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
                 setTimeout(() => {
-                    $("#dialog-confirm-continue-interrupted-play p").html("Playback of this media was interrupted last time.<br> Would you like to resume playback or start from the beginning?");
+                    $("#dialog-confirm-continue-interrupted-play p").html(translated_interaction_labels['dialog']['continue_interrupted_playback']['message']);
                     $("#dialog-confirm-continue-interrupted-play").dialog({
                         //closeOnEscape: false,
                         resizable: false,
@@ -1833,19 +1836,19 @@ class ThumbnailController {
                         width: 400,
                         modal: true,
                         zIndex: 1100,
-                        title: "Interrupted playback",                    
+                        title: translated_interaction_labels['dialog']['continue_interrupted_playback']['title'],
 
                         // },
                         buttons: {
-                          "Continue": function() {
-                            $( this ).dialog( "close" );
-                            refToThis.configurePlayer(refToThis, continuous_list, recent_position);                       
-                          },
-                          "From beginning": function() {
-                            $( this ).dialog( "close" );
-                            recent_position = 0;
-                            refToThis.configurePlayer(refToThis, continuous_list, recent_position);
-                          }
+                            [continue_button]: function() {
+                                $( this ).dialog( "close" );
+                                refToThis.configurePlayer(refToThis, continuous_list, recent_position);                       
+                            },
+                            [from_beginning_button]: function() {
+                                $( this ).dialog( "close" );
+                                recent_position = 0;
+                                refToThis.configurePlayer(refToThis, continuous_list, recent_position);
+                            }
                         },
 
                         open: function() {
