@@ -850,6 +850,10 @@ class ObjDescriptionContainer {
         this.objThumbnailController = objThumbnailController;
     }
 
+    getThumbnailController(){
+        return this.objThumbnailController;
+    }
+
     /**
     * Refreshes the Description
     * It configures an onload listener on the new image.
@@ -1704,8 +1708,6 @@ class ThumbnailController {
                     play_list.push(this.getMediumDict(hit));
                 }
 
-console.log("before playmediaaudiovideo first elemenet: " + play_list[0]["title"]);
-
                 this.playMediaAudioVideo(play_list);
 
             } else if ("picture" in functionSingle) {
@@ -1849,21 +1851,19 @@ console.log("before playmediaaudiovideo first elemenet: " + play_list[0]["title"
 
 
 
-closeModal(refToThis) {
-    $('#continue-btn').off('click');
-    $('#start-over-btn').off('click');
-    $('.modal-content .close').off('click');
-    $('#playback-modal').fadeOut();
-    refToThis.focusTask = refToThis.originalTask;
-}
+//    closeModal(refToThis) {
+//        $('#continue-btn').off('click');
+//        $('#start-over-btn').off('click');
+//        $('.modal-content .close').off('click');
+//        $('#playback-modal').fadeOut();
+//        refToThis.focusTask = refToThis.originalTask;
+//    }
 
 
 
 
     playMediaAudioVideo(continuous_list){
         
-console.log("length continuous_list in the playMedia: " + continuous_list.length);
-
         // Takes the first element from the list
 //        let medium_dict = continuous_list.shift();
         let medium_dict = continuous_list[0];
@@ -1999,24 +1999,26 @@ console.log("length continuous_list in the playMedia: " + continuous_list.length
 
                             $(this).parent().find(".ui-dialog-buttonpane button:first").focus();
                         },
+
+                        beforeClose: function(event){
+
+                            if (event.originalEvent && event.originalEvent.key === "Escape") {
+                                
+                                // Delay needed to not propagate ESC
+                                setTimeout(function () {      
+                                    refToThis.focusTask = refToThis.originalTask;
+                                }, 200);    
+                            }else{
+                                refToThis.focusTask = refToThis.originalTask;
+                            }
+                        },
+
                         close: function() {
                             $(document).off("keydown.arrowKeys"); // Remove listener on close
-
-                            // Delay needed to not propagate ESC
-                            setTimeout(function () {      
-                                refToThis.focusTask = refToThis.originalTask;
-                            }, 500);
-
                             $(this).dialog("destroy");
                         }
                     });
                 }, 200);
-
-
-
-
-                console.error("myerror");
-
 
             // Otherwise it starts to play from the beginning
             }else{
@@ -2044,8 +2046,6 @@ console.log("length continuous_list in the playMedia: " + continuous_list.length
         let screenshot_path = medium_dict["screenshot_path"];
         let card_id = medium_dict["card_id"];
         let title = medium_dict["title"];
-
-console.error("!!! " + title);
 
         let net_start_time = medium_dict["net_start_time"];
         let net_stop_time = medium_dict["net_stop_time"];
@@ -2086,33 +2086,33 @@ console.error("!!! " + title);
             player.poster = "";
         }
 
-// this part works together with startPlayer() and pausePlayer() 
-// Using this, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
-// The below code is a temporary solution. I kept it to learn:
-//        setTimeout(function () {      
-//            player.play();
-//         }, 550);
-//        player.play();
+        // this part works together with startPlayer() and pausePlayer() 
+        // Using this, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
+        // The below code is a temporary solution. I kept it to learn:
+        //        setTimeout(function () {      
+        //            player.play();
+        //         }, 550);
+        //        player.play();
 
-this.isPlaying = false;
+        this.isPlaying = false;
 
-// On video playing toggle values
-player.onplaying = function() {
-    this.isPlaying = true;
-};
+        // On video playing toggle values
+        player.onplaying = function() {
+            this.isPlaying = true;
+        };
 
-// On video pause toggle values
-player.onpause = function() {
-    this.isPlaying = false;
-};
+        // On video pause toggle values
+        player.onpause = function() {
+            this.isPlaying = false;
+        };
 
-player.controls = true;
-player.autoplay = true;
-player.currentTime = recent_position;
-player.load();
-this.startPlayer()
+        player.controls = true;
+        player.autoplay = true;
+        player.currentTime = recent_position;
+        player.load();
+        this.startPlayer()
 
-// ---
+        // ---
 
         // REST request to register this media in the History
         this.media_history_start_epoch = refToThis.registerMediaInHistory(card_id, recent_position);
@@ -2136,23 +2136,23 @@ this.startPlayer()
         // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
         $('#video_player').focus();
 
-        this.focusTask = FocusTask.Player;        
+        refToThis.focusTask = FocusTask.Player;        
     }
 
 
-// Using the below 2 functions, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
-startPlayer(){
-    let player = $("#video_player")[0];
-    if( !player.paused && !this.isPlaying){
-        return player.play();
+    // Using the below 2 functions, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
+    startPlayer(){
+        let player = $("#video_player")[0];
+        if( !player.paused && !this.isPlaying){
+            return player.play();
+        }
     }
-}
-pausePlayer(){
-    let player = $("#video_player")[0];
-    if( !player.paused && this.isPlaying){
-        return player.pause();
+    pausePlayer(){
+        let player = $("#video_player")[0];
+        if( !player.paused && this.isPlaying){
+            return player.pause();
+        }
     }
-}
 
 
     playMediaPdf(medium_dict){
