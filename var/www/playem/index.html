@@ -55,11 +55,20 @@
             }
         }
 
+        let version;
         let translated_titles;
         let translated_genre_movie;
         let translated_categories;
         let translated_themes;
         
+        // Load Version
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/info/version";
+        rq_assync = false;
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
+        result = result.responseJSON;
+        version = result['version'];
+
         // Load Translated Titles
         rq_method = "GET";
         rq_url = "http://" + host + port + "/translate/titles/lang/" + user_data['language_code'];
@@ -779,7 +788,14 @@
                     }
                     console.log(error);
                 }
-            })
+            });
+
+            //
+            // VERSION
+            //
+//            let language_prefix = translated_interaction_labels['menu']['language']['language_prefix'];
+//            selectedLanguage = language_dict[user_data['language_code']];
+            $('#version-menu .main-menu-text' ).text("Version" + ": " + version);
         });
 
     </script>
@@ -838,6 +854,9 @@
                 <li class="option personal" value="login">Login</li>
                 <li class="option personal" value="logout">Logout</li>
             </ul>
+        </div>
+        <div id="version-menu" class="main-menu user">
+            <div class="main-menu-text">Version:</div>
         </div>
 
 <!--

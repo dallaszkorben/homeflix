@@ -9,6 +9,7 @@ from playem.exceptions.invalid_api_usage import InvalidAPIUsage
 from playem.restserver.representations import output_json
 
 from playem.restserver.endpoints.ep_info_is_alive import EPInfoIsAlive
+from playem.restserver.endpoints.ep_info_version import EPInfoVersion
 
 # -----------------------------------
 #
@@ -27,6 +28,7 @@ class InfoView(FlaskView):
 
 #        self.epInfoFunctions = EPInfoFunctions(web_gadget)
         self.epInfoIsAlive = EPInfoIsAlive(web_gadget)
+        self.epInfoVersion = EPInfoVersion(web_gadget)
 
     #
     # GET http://localhost:5000/info/
@@ -48,4 +50,20 @@ class InfoView(FlaskView):
 
         json_data = {}
         out = self.epInfoIsAlive.executeByPayload(json_data)
+        return out
+
+
+    #
+    # Gives back the recent version
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:5000/info/version
+    #
+    # GET http://localhost:5000/info/version
+    #
+    #@route('/version', methods=['GET'])
+    @route(EPInfoVersion.PATH_PAR_PAYLOAD, methods=[EPInfoVersion.METHOD])
+    def infoVersion(self):
+
+        json_data = {}
+        out = self.epInfoVersion.executeByPayload(json_data)
         return out
