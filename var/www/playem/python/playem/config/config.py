@@ -17,7 +17,7 @@ class Config( Property ):
     DEFAULT_WEB_ABSOLUTE_PATH = "/var/www/playem"
 
     DEFAULT_MEDIA_ABSOLUTE_PATH = "/var/www/playem/MEDIA"
-    DEFAULT_MEDIA_RELATIVE_PATH = "playem/MEDIA/"
+    DEFAULT_MEDIA_RELATIVE_PATH = "MEDIA"
 
     DEFAULT_CARD_DB_NAME = "playem.db"
 

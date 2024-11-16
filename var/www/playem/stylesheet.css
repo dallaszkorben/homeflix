@@ -861,13 +861,16 @@ h1 {
   
   /* Style the dialog title */
   .ui-dialog-titlebar {
-    background: #f0f0f5; /* Soft background color */
+    /*background: #f0f0f5; /* Soft background color */
+    background: var(--description-section-left-background);
     color: #333;
     font-size: 18px;
     font-weight: bold;
     border-radius: 12px 12px 0 0;
     padding: 10px;
     border-bottom: 1px solid #ddd;
+    margin: 0;
+    padding: 0.5em; /* Adjust as needed */
   }
   
   /* Remove the close button icon */
@@ -882,12 +885,11 @@ h1 {
     color: #333;
     padding: 20px;
   }
-
-  
   
   /* Style the buttons */
   .ui-dialog-buttonpane {
-    background: #f0f0f5;
+    /*background: #f0f0f5;*/
+    background: var(--description-section-left-background);
     border-top: 1px solid #ddd;
   }
   

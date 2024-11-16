@@ -376,32 +376,207 @@ Explanation of how '"'"' is interpreted as just ':
 ' Start third quotation, using single quotes.
 
 
-
 Modify the crontab config file to make the script run after the reboot automatically
 ```sh
 (crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/startplayem.sh  >> /home/pi/.playem/startplayem.log 2>&1") | crontab -
 ```
 
 
-
-### Umount the media
+### Copy lazy dog
 ```sh
-$ sudo umount /var/www/playem/MEDIA
-$ sudo systemctl stop apache2
-$ sudo umount /var/www/playem
-$ sudo umount /dev/sda1
+$ echo "
+keyboard:
+    Change the keyboards from EN to HU(QWERTY) use the below hotkeys:
+
+        Shift+left Alt
+
+    There is NO graphical indication of the current keyword on the desktop
+
+ssh:
+    Append the public key (id_rsa.pub) from the client side in this rpi server's  ~/.ssh/authorized_keys file
+    To trasfer the public key to this machine, use the netcat app.
+
+netcat:
+    On this rpi machine run the following command
+
+        nc -l 5555
+
+    On the client machine run the following command
+
+        nc <rpi_ip> 5555
+
+    where the <rpi_ip> is the ip of this rpi host
+
+wifi info:
+    /etc/wpa_supplicant/wpa_supplicant.conf
+
+        ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+        update_config=1
+        country=US
+        network={
+            ssid="<wifi_name>"
+            psk="<wifi_password>"
+        }
+
+    The ssid and the psk must be set first
+
+network configuration:
+    /etc/network/interfaces
+
+        source /etc/network/interfaces.d/*
+
+        auto lo
+        iface lo inet loopback
+        iface eth0 inet dhcp
+
+        auto wlan0
+        allow-hotplug wlan0
+
+        # dynamic ip from the dhcp server
+        #iface wlan0 inet dhcp
+
+        # static ip
+        iface wlan0 inet static
+        address 192.168.<0>.200
+        netmask 255.255.255.0
+        gateway 192.168.<0>.1
+
+        wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+        iface default inet dhcp
+
+wpa configuration:
+    /etc/systemd/system/wpa_supplicant.service
+        [Unit]
+        Wants=network.target
+        After=network.target
+
+        [Service]
+        Type=simple
+        ExecStartPre=/sbin/ifconfig wlan0 up
+        ExecStart=/sbin/wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-usfasdfer.target
+
+kill wifi interface:
+    sudo ifdown wlan0
+
+    (or sudo ip link set wlan0 down)
+
+bring wifi interface back:
+    sudo ifup wlan0
+
+    (or sudo ip link set wlan0 up)
+
+handle networking
+    sudo systemctl status networking
+    sudo systemctl start networking
+    sudo systemctl restart networking
+    sudo systemctl stop networking
+    sudo systemctl enable networking
+    sudo systemctl disable networking
+
+playem
+
+    logs
+
+        /var/www/playem/logs/access.log
+        /var/www/playem/logs/error.log
+        /home/pi/.playem/playem.log
+        /home/pi/.playem/startplayem.log
+
+    start playem - mounting
+        /usr/local/bin/startplayem.sh
+
+            sudo systemctl stop apache2
+
+            # I got an error before: mount: (hint) your fstab has been modified, but systemd still uses the old version; use 'systemctl daemon-reload' to reload
+            sudo systemctl daemon-reload
+
+            # reload the /etc/network/interfaces
+            sudo systemctl restart networking
+
+            ABSOLUTE_PATH=$(yq -r '.media["absolute-path"]' /home/pi/.playem/config.yaml)
+            RELATIVE_PATH=$(yq -r '.media["relative-path"]' /home/pi/.playem/config.yaml)
+            sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/
+            sleep 20
+            sudo mount -o bind $ABSOLUTE_PATH /var/www/playem/$RELATIVE_PATH/
+            sleep 20
+            sudo systemctl restart apache2
+
+    umount
+
+        umount media:
+
+            $ sudo umount /var/www/playem/MEDIA
+
+        stop apach:
+
+            $ sudo systemctl stop apache2
+
+        umount project:
+
+            $ sudo umount /var/www/playem
+
+        umount driver:
+
+            $ sudo umount /dev/<sda1>
+
+    monitor web server:
+
+        $ watch systemctl status apache2
+
+" > ~/Documents/lazydog.txt
+
+
 ```
 
-### TEMPORARILY I NEED THIS INFO 
+### SETTINGS ON THE SEVELOPER MACHINE 
+
+Normal case we mount the project and the media witht the mount command
 ```sh
-sudo mount -o bind /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
-sudo mount -o bind  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
-# ---
+sudo mount -o bind /home/<user>/Projects/python/playem/var/www/playem /var/www/playem
+sudo mount -o bind  /media/<user>/vegyes/MEDIA /var/www/playem/MEDIA/
+```
+
+But we want the committed code the same on the developer environment and on the PI machine.
+So we have to intoduce the 'pi' user on our developer environment and set the user:group pi:pi on every project files and media files:
+```sh
+# install the bindfs (to mount project and media with group and user) - must be done only once
+$ sudo apt install bindfs
+
+# Mount the project with pi:pi
+sudo bindfs -o --force-group=pi --force-user=pi  /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
+
+# Mount the media with pi:pi
+sudo bindfs -o --force-group=pi --force-user=pi  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
+
+# Start the web server
+sudo systemctl restart apache2
+```
+
+Dismantle the project
+```sh
 $ sudo umount /var/www/playem/MEDIA
 $ sudo systemctl stop apache2
 $ sudo umount /var/www/playem
-$ sudo umount /dev/sda1
+$ sudo umount /dev/<sda1>
+```
 
+In the code, when the user selects to update software, the apache2 server reload needed.
+By default it can be done only if the user provides the sudo password.
+In the code it is not good idea to store the password.
+Solution: Allow the Apache2's reload command to run without requiring password for the user pi
+```sh
+# start the editor to modify the /etc/sudoers
+$ sudo visudo
+```
+
+Go to the end of the file, insert the following line and save it
+```sh
+pi    ALL=(ALL) NOPASSWD: /usr/bin/systemctl reload apache2
 ```
 
 

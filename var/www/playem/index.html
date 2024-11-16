@@ -610,13 +610,17 @@
                         rq_assync = false;
                         response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
                         response_dict = response.responseJSON;
-                        console.log(response_dict);
+
+                        response_update = response_dict["update"]
+                        response_reload = response_dict["reload"]
+
+                        console.log("Update response: " + response_update);
+                        console.log("Reload response: " + response_reload);
 
                         Generator.stopSpinner();
 
                         if(response.status != 200){
-                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + response.statusText + "<br>");
-//                            $("#dialog-warning-update-failed p").html(response.responseText);
+                            $("#dialog-warning-update-failed p").html("Something went wrong.<br>" + response.statusText + "<br>");
                             $("#dialog-warning-update-failed" ).dialog({
                                 resizable: false,
                                 height: "auto",
@@ -630,9 +634,27 @@
                                 }
                             });
 
-                        }else if(response_dict['result'] != "SUCCESS"){
+                        // The update failed - there was NO restart
+                        }else if(response_update['result'] != "SUCCESS"){
 
-                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + response_dict['message'] + "<br><br>Command: " + response_dict['command'][0]);
+                            $("#dialog-warning-update-failed p").html("Update failed.<br>" + response_update['message'] + "<br><br>Command: " + response_update['command'][0]);
+                            $("#dialog-warning-update-failed" ).dialog({
+                                resizable: false,
+                                height: "auto",
+                                width: 400,
+                                modal: true,
+                                buttons: {
+                                    "OK": function() {
+                                        $( this ).dialog( "close" );
+                                        window.location.reload(true);
+                                    }
+                                }
+                            });
+
+                        // The reload failed - update was successful
+                        }else if(response_reload['result'] != "SUCCESS"){
+
+                            $("#dialog-warning-update-failed p").html("Software update was successful, but the server reload failed.<br>" + response_reload['message'] + "<br><br>Command: " + response_reload['command'][0] + "<br>The easiest way to reload the server is to turn OFF/ON the machine.");
                             $("#dialog-warning-update-failed" ).dialog({
                                 resizable: false,
                                 height: "auto",
@@ -648,7 +670,7 @@
 
                         }else{
 
-                            $("#dialog-success-update-success p").html("Successfully updated");
+                            $("#dialog-success-update-success p").html("Software update was successful");
                             $("#dialog-success-update-success" ).dialog({
                                 resizable: false,
                                 height: "auto",

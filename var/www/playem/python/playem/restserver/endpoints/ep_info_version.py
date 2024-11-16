@@ -36,7 +36,6 @@ class EPInfoVersion(EP):
 
         version = None
         version_path = os.path.join(self.web_gadget.projectPath, "version.txt")
-        print("version path: {}".format(version_path))
         try:
             with open(version_path, "r") as f:
                 version = f.read().strip()

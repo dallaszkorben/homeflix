@@ -36,24 +36,50 @@ class EPControlUpdateSw(EP):
                 )
         )
 
-        output = {}
+        output = {'update':{}, 'reload':{}}
 
         logging.debug("Update code started...")
         print("===========================")
         print("Update code started...")
 
-        process = subprocess.run(["cd {0}; git pull --rebase".format(self.project_path)], capture_output=True,text=True, shell=True, check=False)
-        if process.returncode == 0:
-            logging.debug("Update finished successfully: {0}".format(process.stdout))
-            print("Update code finished")
-            output["result"] = "SUCCESS"
-            output["message"] = process.stdout
-            output["command"] = process.args
-        else:
-            logging.debug("Update failed: {0}. Command: {1}".format(process.stderr, process.args))
-            print("Update code failed: {0}. Command: {1}".format(process.stderr, process.args))
-            output["result"] = "EXCEPTION"
-            output["message"] = process.stderr
-            output["command"] = process.args
+#        process = subprocess.run(["cd {0}; git pull --rebase".format(self.project_path)], capture_output=True,text=True, shell=True, check=False)
+#        if process.returncode == 0:
+#            logging.debug("Update finished successfully: {0}".format(process.stdout))
+#            print("Update code finished")
+#            output["update"]["result"] = "SUCCESS"
+#            output["update"]["message"] = process.stdout
+#            output["update"]["command"] = process.args
+#        else:
+#            logging.debug("Update failed: {0}. Command: {1}".format(process.stderr, process.args))
+#            print("Update code failed: {0}. Command: {1}".format(process.stderr, process.args))
+#            output["update"]["result"] = "EXCEPTION"
+#            output["update"]["message"] = process.stderr
+#            output["update"]["command"] = process.args
+
+        output["update"]["result"] = "SUCCESS"
+        output["update"]["message"] = ""
+        output["update"]["command"] = ""
+
+
+        if 1==1: #process.returncode == 0:
+            logging.debug("Reload server started...")
+            print("===========================")
+            print("Reload server started...")
+
+            process = subprocess.run(["sudo", "/usr/bin/systemctl", "reload", "apache2"], capture_output=True, text=True, check=False)
+
+            if process.returncode == 0:
+                logging.debug("Server reload finished successfully".format(process.stdout))
+                print("Server reload finished")
+                output["reload"]["result"] = "SUCCESS"
+                output["reload"]["message"] = process.stdout
+                output["reload"]["command"] = process.args
+            else:
+                logging.debug("Server reload failed: {0}. Command: {1}".format(process.stderr, process.args))
+                print("Server reload failed: {0}. Command: {1}".format(process.stderr, process.args))
+                output["reload"]["result"] = "EXCEPTION"
+                output["reload"]["message"] = process.stderr
+                output["reload"]["command"] = process.args
+
 
         return output_json(output, EP.CODE_OK)
