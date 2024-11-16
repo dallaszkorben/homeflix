@@ -42,19 +42,19 @@ class EPControlUpdateSw(EP):
         print("===========================")
         print("Update code started...")
 
-#        process = subprocess.run(["cd {0}; git pull --rebase".format(self.project_path)], capture_output=True,text=True, shell=True, check=False)
-#        if process.returncode == 0:
-#            logging.debug("Update finished successfully: {0}".format(process.stdout))
-#            print("Update code finished")
-#            output["update"]["result"] = "SUCCESS"
-#            output["update"]["message"] = process.stdout
-#            output["update"]["command"] = process.args
-#        else:
-#            logging.debug("Update failed: {0}. Command: {1}".format(process.stderr, process.args))
-#            print("Update code failed: {0}. Command: {1}".format(process.stderr, process.args))
-#            output["update"]["result"] = "EXCEPTION"
-#            output["update"]["message"] = process.stderr
-#            output["update"]["command"] = process.args
+        process = subprocess.run(["cd {0}; git pull --rebase".format(self.project_path)], capture_output=True,text=True, shell=True, check=False)
+        if process.returncode == 0:
+            logging.debug("Update finished successfully: {0}".format(process.stdout))
+            print("Update code finished")
+            output["update"]["result"] = "SUCCESS"
+            output["update"]["message"] = process.stdout
+            output["update"]["command"] = process.args
+        else:
+            logging.debug("Update failed: {0}. Command: {1}".format(process.stderr, process.args))
+            print("Update code failed: {0}. Command: {1}".format(process.stderr, process.args))
+            output["update"]["result"] = "EXCEPTION"
+            output["update"]["message"] = process.stderr
+            output["update"]["command"] = process.args
 
         output["update"]["result"] = "SUCCESS"
         output["update"]["message"] = ""
