@@ -61,7 +61,7 @@ class EPControlUpdateSw(EP):
         output["update"]["command"] = ""
 
 
-        if 1==1: #process.returncode == 0:
+        if process.returncode == 0:
             logging.debug("Reload server started...")
             print("===========================")
             print("Reload server started...")
