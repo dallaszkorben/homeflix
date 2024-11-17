@@ -533,7 +533,7 @@ playem
 
 ```
 
-### SETTINGS ON THE SEVELOPER MACHINE 
+### SETTINGS ON THE DEVELOPER MACHINE 
 
 Normal case we mount the project and the media witht the mount command
 ```sh

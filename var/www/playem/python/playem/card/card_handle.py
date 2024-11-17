@@ -500,9 +500,10 @@ class CardHandle:
                             title_orig=title_orig, 
                             titles=titles,
                             title_on_thumbnail=title_on_thumbnail,
-                            title_show_sequence=title_show_sequence,
-#                            
+                            title_show_sequence=title_show_sequence,                           
+
 #                            card_id=given_card_id,
+
                             isappendix=is_appendix,
                             show=show,
                             download=download,
@@ -543,6 +544,10 @@ class CardHandle:
                             higher_card_id=higher_card_id,
                         )
                         card_type = 'media'
+
+            except Exception as e:
+                card_error = "CARD - {0}".format(str(e))
+
             finally:
 
                 if card_type == "media":

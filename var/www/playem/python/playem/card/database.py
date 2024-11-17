@@ -2247,7 +2247,6 @@ class SqlDatabase:
 
         return filter_where
 
-
     def get_sql_like_where_condition_from_text_filter(self, text_filter, field_name):
 
         op = None
@@ -2450,7 +2449,6 @@ class SqlDatabase:
 
         return records
 
-
     def login(self, username=None, password=None):
 
         # If something fails, the logout fails as well
@@ -2507,10 +2505,6 @@ class SqlDatabase:
         session.pop('logged_in_user', None)
         return {'result': True, 'data':{}, 'error': None}
 
-
-
-
-
     def get_numbers_of_records_in_card(self):
         """
         Gives back the number of records in the Card table
@@ -2552,7 +2546,7 @@ class SqlDatabase:
     #
     # GET /collect/general/level
     #
-    def gggget_general_level(self, level, category, genre=None, theme=None, origin=None, decade=None, lang='en', limit=100, json=True):
+    def DELETE_gggget_general_level(self, level, category, genre=None, theme=None, origin=None, decade=None, lang='en', limit=100, json=True):
         """
         It returns a list of the given level cards in the given category, optionally filtered by genre/theme/origin/decade
         """
@@ -2818,9 +2812,6 @@ class SqlDatabase:
 
                 return records
         return records
-
-
-
 
 # ---
 
@@ -3585,10 +3576,10 @@ class SqlDatabase:
                         -- level: ^ (*, None), filter: - => show the HIGHEST level and filter on the same (HIGHEST) level on any type => show HIGHEST level
                         WHEN (:level IS NULL OR :level = '^') AND :filter_on IS not NULL AND :filter_on = '-' THEN id_higher_card IS NULL
 
-                        -- level: <level>, filter: v (* None) => show the GIVENT level and filter on the LOWEST level on any type => GIVEN level
+                        -- level: <level>, filter: v (* None) => show the GIVEN level and filter on the LOWEST level on any type => GIVEN level
                         WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND (:filter_on IS NULL OR :filter_on = 'v') THEN level = :level
 
-                        -- level: <level>, filter: - => show the GIVENT level and filter on the same (GIVEN) level on any type => GIVEN level
+                        -- level: <level>, filter: - => show the GIVEN level and filter on the same (GIVEN) level on any type => GIVEN level
                         WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND :filter_on IS not NULL AND :filter_on = '-' THEN level = :level
 
                         ELSE 0
@@ -3898,7 +3889,6 @@ class SqlDatabase:
             LIMIT :limit; '''
 
         return query
-
 
     def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
         
