@@ -121,6 +121,10 @@ body {
     border: 10px solid transparent;                         /* Needed to make margin to the text */
 }
 
+
+
+
+
 #description-text-extra{
     display: inline-flex;                                       /* children divs (description-text-extra-length, description-text-extra-date, description-text-extra-block) */
     flex-direction: row;                                        /* must be in one row */
@@ -155,7 +159,7 @@ body {
     border: 0px blue solid;                                   /* for test purpose */
 }
 
-#description-text-storyline{
+#description-text-storyline {
     display: inline-block;
     position: relative;
     flex-wrap: wrap;
@@ -163,16 +167,18 @@ body {
     font-weight: bold;
     font-size: var(--description-text-storyline-font-size);
     color: rgb(190, 253, 250);
-    white-space: wrap;                                          /* the new line (\n) will take effect */
+    white-space: wrap;
     word-break: break-word;
-
     height: var(--description-text-storyline-height);
     width: var(--description-text-storyline-width);
     overflow: hidden; 
     text-align: justify;
     border-left: 10px solid transparent;
-    overflow-y: auto;                                           /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
+    overflow-y: auto;
     white-space: pre-wrap;
+
+    /* Smooth scrolling for better UX */
+    scroll-behavior: smooth;
 }
 
 #description-text-credentials{
@@ -191,8 +197,11 @@ body {
 
     overflow: hidden; 
     text-align: justify;
-    border-left: 20px solid transparent;
+    border-left: 10px solid transparent;
     overflow-y: auto;                                           /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
+
+    /* Smooth scrolling for better UX */
+    scroll-behavior: smooth;
 }
 
 #description-text-credentials-table{
@@ -201,6 +210,44 @@ body {
     font-weight: inherit;
     text-shadow: inherit
 }
+
+
+/* *********************
+ *
+ * MacOS style scrollbar
+ *
+************************/
+.with-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px; /* Ensures horizontal scrollbars are equally styled, if visible */
+}
+
+.with-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Keeps the track invisible */
+    border-radius: 10px; /* Applies rounding to the track edges */
+}
+
+.with-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(0, 122, 255, 0.8), rgba(0, 122, 255, 0.6));
+    border-radius: 10px; /* Fully rounded scrollbar thumb */
+    border: 2px solid transparent;
+    background-clip: padding-box; /* Ensures the thumb doesn't overflow */
+}
+
+.with-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(0, 122, 255, 1), rgba(0, 122, 255, 0.8));
+}
+
+.with-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, rgba(0, 122, 255, 0.9), rgba(0, 122, 255, 0.7));
+}
+
+/* Hide scrollbar buttons (up and down arrows) */
+.with-scrollbar::-webkit-scrollbar-button {
+    display: none;
+}
+
+
 
 
 
@@ -836,12 +883,6 @@ body {
     margin-top:25px;
 }
 
-/*
-h1 {
-    font-size: 1.2em;
-    margin: .6em 0;
-}
-*/
 
 
 
@@ -1034,53 +1075,4 @@ h1 {
 
 
 
-
-
-/* Disable close X button */
-
-/* configure message */
-/*.ui-widget {
-    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-}
-.ui-widget-header,.ui-state-default, ui-button{
-   background: rgb(33, 134, 56);
-   border: 3px solid black;
-   color: white;
-   font-weight: 900;
-   letter-spacing: 1px;
-   font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-}
-   
-.ui-dialog-buttonpane
-{
-	text-align:center;
-	font-size: medium;
-	font-weight: bold;
-	color: #00467F; 
-}
-*/
-
-/*
-.ui-dialog-titlebar-close {
-    display: none;
- }
-*/
-
-/*
-#dialog .ui-button-text {
-    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-}
-*/ 
-/*
-#button{
-   position: absolute;
-   left: 40%;
-   margin: 12px;
-   padding: 12px;
-   border: 2px solid black;
-   font-weight: 900;
-   letter-spacing: 1.5px;
-   font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-}
-*/
 
