@@ -654,7 +654,7 @@
                         // The reload failed - update was successful
                         }else if(response_reload['result'] != "SUCCESS"){
 
-                            $("#dialog-warning-update-failed p").html("Software update was successful, but the server reload failed.<br>" + response_reload['message'] + "<br><br>Command: " + response_reload['command'][0] + "<br>The easiest way to reload the server is to turn OFF/ON the machine.");
+                            $("#dialog-warning-update-failed p").html("Software update was successful, but the server reload failed.<br>" + response_reload['message'] + "<br><br>Command: " + response_reload['command'] + "<br><br>The easiest way to reload the server is to turn OFF/ON the machine.");
                             $("#dialog-warning-update-failed" ).dialog({
                                 resizable: false,
                                 height: "auto",

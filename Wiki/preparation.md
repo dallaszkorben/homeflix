@@ -382,7 +382,7 @@ Modify the crontab config file to make the script run after the reboot automatic
 #(crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/startplayem.sh  >> /home/pi/.playem/startplayem.log 2>&1") | crontab -
 
 # Unfortunatelly the previous solution does not print the date. Use this solution:
-(crontab -l 2>/dev/null; echo '@reboot /usr/local/bin/startplayem.sh 2>&1 | while IFS= read -r line; do echo "$(date +"%Y-%m-%dT%H:%M:%S%z"): $line"; done >> /home/pi/.playem/startplayem.log') | crontab -
+(crontab -l 2>/dev/null; echo '@reboot /usr/local/bin/startplayem.sh 2>&1 | while IFS= read -r line; do echo "$(date -In): $line"; done >> /home/pi/.playem/startplayem.log') | crontab -
 ```
 
 ### Allow the product to reload Apache config
@@ -584,20 +584,6 @@ $ sudo umount /var/www/playem/MEDIA
 $ sudo systemctl stop apache2
 $ sudo umount /var/www/playem
 $ sudo umount /dev/<sda1>
-```
-
-In the code, when the user selects to update software, the apache2 server reload needed.
-By default it can be done only if the user provides the sudo password.
-In the code it is not good idea to store the password.
-Solution: Allow the Apache2's reload command to run without requiring password for the user pi
-```sh
-# start the editor to modify the /etc/sudoers
-$ sudo visudo
-```
-
-Go to the end of the file, insert the following line and save it
-```sh
-pi    ALL=(ALL) NOPASSWD: /usr/bin/systemctl reload apache2
 ```
 
 
