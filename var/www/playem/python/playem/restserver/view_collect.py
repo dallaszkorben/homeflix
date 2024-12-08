@@ -13,8 +13,6 @@ from playem.restserver.endpoints.ep_collect_highest_mixed_card import EPCollectH
 from playem.restserver.endpoints.ep_collect_next_mixed_card import EPCollectNextMixed
 from playem.restserver.endpoints.ep_collect_lowest_card import EPCollectLowest
 
-
-
 # ---
 
 from playem.restserver.endpoints.ep_collect_media_by_card_id import EPCollectMediaByCardId
@@ -28,6 +26,8 @@ from playem.restserver.endpoints.ep_collect_general_level import EPCollectGenera
 from playem.restserver.endpoints.ep_collect_general_standalone import EPCollectGeneralStandalone
 
 from playem.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCollectAllAppendixByCardId
+from playem.restserver.endpoints.ep_collect_actors_by_role_count import EPCollectActorsByRoleCount
+from playem.restserver.endpoints.ep_collect_directors_by_movie_count import EPCollectDirectorsByMovieCount
 
 # -----------------------------------
 #
@@ -68,6 +68,8 @@ class CollectView(FlaskView):
         self.epCollectChildHierarchyOrCard = EPCollectChildHierarchyOrCard(web_gadget)
         self.epCollectMediaByCardId = EPCollectMediaByCardId(web_gadget)
         self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
+        self.epCollectActorsByRoleCount = EPCollectActorsByRoleCount(web_gadget)
+        self.epCollectDirectorsByMovieCount = EPCollectDirectorsByMovieCount(web_gadget)
 
 # ---
 
@@ -432,4 +434,96 @@ class CollectView(FlaskView):
     def collectStandaloneMediaByCardIdWithParameter(self, card_id, lang):
 
         out = self.epCollectMediaByCardId.executeByParameters(card_id=card_id, lang=lang)
+        return out
+
+
+
+
+
+
+# === collect actors by role count descending ===
+
+    #
+    # Gives back list of the highest role count of actors
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/actors/by/role/count/category/<category>/minimum/<minimum>/limit/<limit>
+    #
+    #@route('/actors/by/role/count/category/<category>/minimum/<minimum>/limit/<limit>')
+    @route(EPCollectActorsByRoleCount.PATH_PAR_URL, methods=[EPCollectActorsByRoleCount.METHOD])
+    def collectActorsWithParameter(self, category, minimum, limit):
+        out = self.epCollectActorsByRoleCount.executeByParameters(category, minimum=minimum, limit=limit)
+        return out
+
+    #
+    # Gives back list of the highest role count of actors
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "minimum": 3, "limit": 15}' http://localhost:80/collect/actors/by/role/count
+    #
+    # GET http://localhost:80/collect/actors/by/role/count
+    #      body: {
+    #       "category": "movei",
+    #       "minimum": 3,
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/actors/by/role/count', methods=['GET'])
+    @route(EPCollectActorsByRoleCount.PATH_PAR_PAYLOAD, methods=[EPCollectActorsByRoleCount.METHOD])
+    def collectActorsWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+        
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectActorsByRoleCount.executeByPayload(json_data)
+        return out
+
+
+# === collect directors by movie count descending ===
+
+    #
+    # Gives back list of the highest movie count of directors
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/directors/by/movie/count/category/<category>/minimum/<minimum>/limit/<limit>
+    #
+    #@route('/directors/by/movie/count/category/<category>/minimum/<minimum>/limit/<limit>')
+    @route(EPCollectDirectorsByMovieCount.PATH_PAR_URL, methods=[EPCollectDirectorsByMovieCount.METHOD])
+    def collectDirectorsWithParameter(self, category, minimum, limit):
+        out = self.EPCollectDirectorsByMovieCount.executeByParameters(category, minimum=minimum, limit=limit)
+        return out
+
+    #
+    # Gives back list of the highest movie count of directors
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "minimum": 3, "limit": 15}' http://localhost:80/collect/directors/by/movie/count
+    #
+    # GET http://localhost:80/collect/directors/by/movie/count
+    #      body: {
+    #       "category": "movei",
+    #       "minimum": 3,
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/directors/by/movie/count', methods=['GET'])
+    @route(EPCollectDirectorsByMovieCount.PATH_PAR_PAYLOAD, methods=[EPCollectDirectorsByMovieCount.METHOD])
+    def collectDirectorsWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+        
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectDirectorsByMovieCount.executeByPayload(json_data)
         return out

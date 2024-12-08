@@ -951,23 +951,51 @@ class MovieFilterThemeRestGenerator extends  GeneralRestGenerator{
 
 class MovieFilterDirectorRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
+        let refToThis = this;
+
         let containerList = [];
+        let requestList = [];
 
-        let filter_luc_besson      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', title: '*', genres:'*', themes: '*', directors: 'Luc Besson',      actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_david_lynch     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', title: '*', genres:'*', themes: '*', directors: 'David Lynch',     actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_woody_allen     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', title: '*', genres:'*', themes: '*', directors: 'Woody Allen',     actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_john_carpenter  = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', title: '*', genres:'*', themes: '*', directors: 'John Carpenter',  actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_stanley_kubrick = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', title: '*', genres:'*', themes: '*', directors: 'Stanley Kubrick', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_terry_gilliam   = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', title: '*', genres:'*', themes: '*', directors: 'Terry Gilliam',   actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/collect/directors/by/movie/count";
+        let rq_assync = false;
+        let rq_data = {"category": "movie", "minimum": 2, "limit": 40}
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
+    
+        let response_dict = response.responseJSON;
+        let result = response_dict['result']
+        let data_list = response_dict['data']
 
-        let requestList = [
-            {title: "Luc Besson",       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_luc_besson},
-            {title: "David Lynch",      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_david_lynch},
-            {title: "Woody Allen",      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_woody_allen},
-            {title: "John Carpenter",   rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_john_carpenter},
-            {title: "Stanley Kubrick",  rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_stanley_kubrick},
-            {title: "Terry Gilliam",    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_terry_gilliam},
-        ];
+        // If the query was OK and there was 1 record
+        if (result && data_list.length > 0){
+
+            $.each( data_list, function( key, value ) {
+                let filter = {
+                    category: 'movie',
+                    playlist: '*',
+                    tags: '*',
+                    level: '*',
+                    filter_on: '*',
+                    title: '*',
+                    title: '*',
+                    genres:'*',
+                    themes: '*',
+                    directors: value,
+                    actors: '*',
+                    lecturers: '*',
+                    performers: '*',
+                    origins: '*',
+                    decade: '*'  
+                }
+                let line_dict = {
+                    title: value,
+                    rq_method: "GET",
+                    rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  refToThis.language_code, 
+                    filter: filter
+                }                
+                requestList.push(line_dict);
+            });
+        }
 
         containerList = this.generateContainers(requestList);
         return containerList;
@@ -977,43 +1005,51 @@ class MovieFilterDirectorRestGenerator extends  GeneralRestGenerator{
 
 class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
     getContainerList(){
+        let refToThis = this;
+
         let containerList = [];
+        let requestList = [];
 
-        let filter_robert_de_Niro    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Robert De Niro',      lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_al_pacino         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Al Pacino',           lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_brad_pitt         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Brad Pitt',           lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_johnny_depp       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Johnny Depp',         lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_sigourney_weaver  = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Sigourney Weaver',    lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_benicio_del_toro  = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Benicio Del Toro',    lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_nicole_kidman     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Nicole Kidman',       lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_robert_loggia     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Robert Loggia',       lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_clint_eastwood    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Clint Eastwood',      lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_gene_hackman      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Gene Hackman',        lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_michael_douglas   = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Michael Douglas',     lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_peter_greene      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Peter Greene',        lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_kevin_spacey      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Kevin Spacey',        lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_joaquin_phoenix   = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Joaquin Phoenix',     lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_jonah_hill        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Jonah Hill',          lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_simon_pegg        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: 'Simon Pegg',          lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let rq_method = "GET";
+        let rq_url = "http://" + host + port + "/collect/actors/by/role/count";
+        let rq_assync = false;
+        let rq_data = {"category": "movie", "minimum": 3, "limit": 40}
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
+    
+        let response_dict = response.responseJSON;
+        let result = response_dict['result']
+        let data_list = response_dict['data']
 
-        let requestList = [
-            {title: "Robert De Niro",      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_robert_de_Niro},
-            {title: "Al Pacino",           rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_al_pacino},
-            {title: "Brad Pitt",           rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_brad_pitt},
-            {title: "Johnny Depp",         rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_johnny_depp},
-            {title: "Sigourney Weaver",    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_sigourney_weaver},
-            {title: "Benicio Del Toro",    rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_benicio_del_toro},
-            {title: "Nicole Kidman",       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_nicole_kidman},
-            {title: "Robert Loggia",       rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_robert_loggia},
-            {title: "Clint Eastwood",      rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_clint_eastwood},
-            {title: "Gene Hackman",        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_gene_hackman},
-            {title: "Michael Douglas",     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_michael_douglas},
-            {title: "Peter Greene",        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_peter_greene},
-            {title: "Kevin Spacey",        rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_kevin_spacey},
-            {title: "Joaquin Phoenix",     rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_joaquin_phoenix},
-            {title: "Jonah Hill",          rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_jonah_hill},
-            {title: "Simon Pegg",          rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_simon_pegg},
-        ];
+        // If the query was OK and there was 1 record
+        if (result && data_list.length > 0){
+
+            $.each( data_list, function( key, value ) {
+                let filter = {
+                    category: 'movie',
+                    playlist: '*',
+                    tags: '*',
+                    level: '*',
+                    filter_on: '*',
+                    title: '*',
+                    title: '*',
+                    genres:'*',
+                    themes: '*',
+                    directors: '*',
+                    actors: value,
+                    lecturers: '*',
+                    performers: '*',
+                    origins: '*',
+                    decade: '*'  
+                }
+                let line_dict = {
+                    title: value,
+                    rq_method: "GET",
+                    rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  refToThis.language_code, 
+                    filter: filter
+                }                
+                requestList.push(line_dict);
+            });
+        }
 
         containerList = this.generateContainers(requestList);
         return containerList;

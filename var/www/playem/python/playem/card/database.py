@@ -1655,7 +1655,7 @@ class SqlDatabase:
     # Used only locally
     # Not used in any REST
     #
-    def get_user_data_with_password(self, username):
+    def _get_user_data_with_password(self, username):
         data = {}
         
         with self.lock:
@@ -1701,7 +1701,7 @@ class SqlDatabase:
     # Used only locally
     # Not used in any REST
     #
-    def get_publishable_user_data(self, username):
+    def _get_publishable_user_data(self, username):
         data = {}
 
         with self.lock:
@@ -2461,7 +2461,7 @@ class SqlDatabase:
             if session.get('logged_in_user'):
                
                 username = session['logged_in_user']['username']
-                data = self.get_publishable_user_data(username)
+                data = self._get_publishable_user_data(username)
                 result = True
                 error = None
 
@@ -2474,7 +2474,7 @@ class SqlDatabase:
 
         hashed_password = generate_password_hash(password)
         
-        full_user_data = self.get_user_data_with_password(username)
+        full_user_data = self._get_user_data_with_password(username)
 
         # If the username was found in the DB
         if full_user_data:
@@ -2483,8 +2483,8 @@ class SqlDatabase:
             # The password MATCH
             if check_password_hash(stored_hashed_password, password):
 
-                # Get publishable user data - because we do not want to bublish for example the password
-                publishable_user_data = self.get_publishable_user_data(username)
+                # Get publishable user data - because we do not want to publish for example the password
+                publishable_user_data = self._get_publishable_user_data(username)
 
                 if publishable_user_data:
                     result = True
@@ -2519,208 +2519,179 @@ class SqlDatabase:
             cur.execute("commit")
             return record
 
-    #
-    # --- Movie series queries ---
-    #
-
-    def get_all_series_of_movies(self, lang, limit=100, json=True):
-        return self.get_general_level(level='series', category='movie', lang=lang, limit=limit, json=json)
-
-    def get_all_series_comedies_of_movies(self, lang, limit=100, json=True):
-        return self.get_all_level(level='series', category='movie', genre='comedy', lang=lang, limit=limit, json=json)
-
-    #
-    # --- Video Music queries ---
-    #
-
-    def get_all_new_wave_bands_of_music_video(self, lang, limit=100, json=True):
-        return self.get_general_level(level='band', category='music_video', genre='new_wave', lang=lang, limit=limit, json=json)
-
-    def get_all_bands_of_music_video_from_decade(self, decade, lang, limit=100, json=True):
-        return self.get_general_level(level='band', category='music_video', decade=decade, lang=lang, limit=limit, json=json)
-
-    #
-    # reviewed
-    #
-    # General - for any kind of Card on a certain level
-    #
-    # GET /collect/general/level
-    #
-    def DELETE_gggget_general_level(self, level, category, genre=None, theme=None, origin=None, decade=None, lang='en', limit=100, json=True):
+    def get_list_of_actors(self, category, minimum=3, limit=15, json=True):
         """
-        It returns a list of the given level cards in the given category, optionally filtered by genre/theme/origin/decade
+        Gives back actor name's list, ordered by the number of the movies they played in
+        limited by the given value
         """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
         with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
 
-            cur = self.conn.cursor()
-            cur.execute("begin")
+                # Get Card list
+                query = '''
+                    WITH RECURSIVE
+                        rec(actor_name, id, id_higher_card) AS (
+                            SELECT
+                                person.name AS actor_name,
+                                card.id,
+                                card.id_higher_card
+                            FROM 
+                                Card card,
+                                Card_Actor card_actor,
+                                Person person,
+                                Category category
+                            WHERE 
+                                card.level IS NULL
+                                AND category.name = :category
+                                AND card.id_category = category.id
+                                AND card_actor.id_actor = person.id
+                                AND card_actor.id_card = card.id
 
-            records = {}
+                            UNION ALL
 
-            # Get Card list
-            query = '''
-                SELECT 
-                    merged.id, 
-                    merged.level level,
-                    MAX(title_req) title_req, 
-                    MAX(lang_req) lang_req, 
-                    MAX(title_orig) title_orig, 
-                    MAX(lang_orig) lang_orig,
+                            SELECT
+                                rec.actor_name,
+                                card.id,
+                                card.id_higher_card
+                            FROM 
+                                rec,
+                                Card card
+                            WHERE 
+                                rec.id_higher_card = card.id
+                        )
+                    SELECT
+                        actor_name,
+                        COUNT(DISTINCT rec.id) AS movie_count
+                    FROM 
+                        rec
+                    WHERE 
+                        rec.id_higher_card IS NULL
+                    GROUP BY 
+                        actor_name
+                    HAVING 
+                        movie_count >= :minimum
+                    ORDER BY 
+                        movie_count DESC, 
+                        actor_name
+                    LIMIT :limit;
+                '''
 
-                    title_on_thumbnail,
-                    title_show_sequence,
+                query_parameters = {'category': category, 'minimum': minimum, 'limit': limit}
 
-                    source_path
-                FROM (
-                    SELECT 
-                        card.id id,
-                        card.level level,
-                        card.id_category id_category,
-                        card.decade decade,
-                        NULL title_req, 
-                        NULL lang_req, 
-                        htl.text title_orig, 
-                        lang.name lang_orig,
+                logging.debug("get_list_of_actors: '{0}' / {1}".format(query, query_parameters))
 
-                        title_on_thumbnail,
-                        title_show_sequence,                        
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
 
-                        card.source_path source_path,
-                        card.sequence sequence,
-                        card.basename
-                    FROM
-                        ''' + SqlDatabase.TABLE_CARD + ''' card,
-                        ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' htl, 
-                        ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
-                    WHERE
-                        card.level=:level
-                        AND htl.id_card=card.id
-                        AND htl.id_language=lang.id
-                        AND card.id_title_orig=lang.id
-                        AND lang.name <> :lang
-                        AND card.isappendix = 0
-    
-                    UNION
-    
-                    SELECT 
-                        card.id id,
-                        card.level level,
-                        card.id_category id_category,
-                        card.decade decade,
-                        htl.text title_req, 
-                        lang.name lang_req, 
-                        NULL title_orig, 
-                        NULL lang_orig,
+                if json:
+                    #records = [{key: record[key] for key in record.keys()} for record in records]
+                    records = [record['actor_name'] for record in records]
 
-                        title_on_thumbnail,
-                        title_show_sequence,
+                result = True
+                error_message = None
 
-                        card.source_path source_path,
-                        card.sequence sequence,
-                        card.basename
-                    FROM
-                        ''' + SqlDatabase.TABLE_CARD + ''' card,
-                        ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' htl, 
-                        ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
-                    WHERE
-                        card.level=:level
-                        AND htl.id_card=card.id
-                        AND htl.id_language=lang.id
-                        AND lang.name = :lang
-                        AND card.isappendix = 0
-                    ) merged,
-            ''' + ('''
-                    --- origin ---
-                    ''' + SqlDatabase.TABLE_COUNTRY + ''' country,
-                    ''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co,                    
-            ''' if origin else '') + ('''
-
-                    --- genre ---
-                    ''' + SqlDatabase.TABLE_GENRE + ''' genre,
-                    ''' + SqlDatabase.TABLE_CARD_GENRE + ''' cg,                    
-            ''' if genre else '') + ('''
-
-                    --- theme ---
-                    ''' + SqlDatabase.TABLE_THEME + ''' theme,
-                    ''' + SqlDatabase.TABLE_CARD_THEME + ''' ct,                    
-            ''' if theme else '') + '''
-
-                    ''' + SqlDatabase.TABLE_CATEGORY + ''' cat
-    
-                WHERE
-                    merged.id_category=cat.id
-                    AND cat.name=:category
-            ''' + ('''
-
-                    --- genre ---
-                    AND cg.id_genre = genre.id
-                    AND cg.id_card = merged.id 
-                    AND genre.name =:genre    
-            ''' if genre else '') + ('''
-
-                    --- theme ---
-                    AND ct.id_theme = theme.id
-                    AND ct.id_card = merged.id 
-                    AND theme.name = :theme
-            ''' if theme else '') + ('''
-
-                    --- origin ---
-                    AND co.id_card = merged.id
-                    AND co.id_origin = country.id
-            ''' if origin else '') + ('''
-
-                    AND country.name = :origin
-            ''' if origin else '') + ('''
-
-                    --- decade ---
-                    AND merged.decade = :decade
-            ''' if decade else '') +  '''
-
-                GROUP BY merged.id
-                ORDER BY CASE 
-                    WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
-                    WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
-                    WHEN sequence<0 THEN basename
-                    WHEN sequence>=0 THEN sequence
-                END
-                LIMIT :limit;
-            '''
-
-            query_parameters = {'level': level, 'decade': decade, 'category': category, 'genre': genre, 'theme': theme, 'origin': origin, 'lang': lang, 'limit':limit}
-
-            logging.debug("get_general_level query: '{0} / {1}'".format(query, query_parameters))
-
-            records=cur.execute(query, query_parameters).fetchall()
-            cur.execute("commit")
-
-            if json:
-                records = [{key: record[key] for key in record.keys()} for record in records]
-
-                #
-                # Translate
-                #
-
-                trans = Translator.getInstance(lang)
-
-                for record in records:
-
-                    # Lang Orig
-                    lang_orig = record["lang_orig"]
-                    lang_orig_translated = trans.translate_language_short(lang_orig)
-                    record["lang_orig"] = lang_orig_translated
-
-                    # Lang Req
-                    lang_req = record["lang_req"]
-                    lang_req_translated = trans.translate_language_short(lang_req)
-                    record["lang_req"] = lang_req_translated
-
-            return records
+            except sqlite3.Error as e:
+                error_message = "Fetching the actor list failed: {0}".format(e)
+                logging.error(error_message)
+                
+            finally:                
+                cur.close()
+                
+        return {"result": result, "data": records, "error": error_message}
 
 
+    def get_list_of_directors(self, category, minimum=3, limit=15, json=True):
+        """
+        Returns a list of director names, ordered by the number of movies they have directed, limited to the specified maximum count
+        """
 
+        result = False
+        error_message = "Lock error"
 
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
 
+                # Get Card list
+                query = '''
+                    WITH RECURSIVE
+                        rec(director_name, id, id_higher_card) AS (
+                            SELECT
+                                person.name AS director_name,
+                                card.id,
+                                card.id_higher_card
+                            FROM 
+                                Card card,
+                                Card_Director card_director,
+                                Person person,
+                                Category category
+                            WHERE 
+                                card.level IS NULL
+                                AND category.name = :category
+                                AND card.id_category = category.id
+                                AND card_director.id_director = person.id
+                                AND card_director.id_card = card.id
 
+                            UNION ALL
+
+                            SELECT
+                                rec.director_name,
+                                card.id,
+                                card.id_higher_card
+                            FROM 
+                                rec,
+                                Card card
+                            WHERE 
+                                rec.id_higher_card = card.id
+                        )
+                    SELECT
+                        director_name,
+                        COUNT(DISTINCT rec.id) AS movie_count
+                    FROM 
+                        rec
+                    WHERE 
+                        rec.id_higher_card IS NULL
+                    GROUP BY 
+                        director_name
+                    HAVING 
+                        movie_count >= :minimum
+                    ORDER BY 
+                        movie_count DESC, 
+                        director_name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'minimum': minimum, 'limit': limit}
+
+                logging.debug("get_list_of_directors: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    #records = [{key: record[key] for key in record.keys()} for record in records]
+                    records = [record['director_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the director list failed: {0}".format(e)
+                logging.error(error_message)
+                
+            finally:                
+                cur.close()
+                
+        return {"result": result, "data": records, "error": error_message}
 
 
 
