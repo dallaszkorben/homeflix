@@ -1,4 +1,6 @@
 <meta charset="UTF-8" comntent="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta name="LG-webOS-TV-SDK-version" content="1.0.0">
+
 <!DOCTYPE html>
 <html>
 
@@ -24,6 +26,13 @@
     <link rel="icon" href="favicon.ico">
 
     <script>
+        // Then add this JavaScript code to enable remote debugging
+        if (window.PalmSystem && window.PalmSystem.enableInspector) {
+            window.PalmSystem.enableInspector();
+        }
+
+
+        let PREFIX_LOCAL_STORAGE = "homeflix"
 
         //let host = "192.168.0.21"
         //let host = "localhost"
@@ -152,12 +161,56 @@
         //     });
         // };
 
+        function print(value){
+            let stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+            console.log(stringValue);
+        }
+
+
         function pathJoin(parts, sep) {
             var separator = sep || '/';
             var replace = new RegExp(separator + '{1,}', 'g');
             return parts.join(separator).replace(replace, separator);
         }
 
+
+        /**
+         * LocalStorage
+         */
+        function getLocalStorage(key, defaultValue){
+
+            let value = localStorage.getItem(key);
+            return value;
+        }
+
+        function setLocalStorage(key, value){
+            localStorage.setItem(key,value);
+        }
+
+        function deleteLocalStorage(key) {
+            localStorage.removeItem(key);
+        }
+
+        function deleteLocalStorageStartingWith(prefix) {
+            const keysToDelete = [];
+    
+            // First collect all matching keys
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(prefix)) {
+                    keysToDelete.push(key);
+                }
+            }            
+    
+            // Then remove them
+            keysToDelete.forEach(key => {
+                localStorage.removeItem(key);
+            });
+        }
+
+        /**
+         *  Cookies
+         */
         function getExistingCookie(key){
             let name = key + "=";
             let decodedCookie = decodeURIComponent(document.cookie);
@@ -171,6 +224,7 @@
                     return value = c.substring(name.length, c.length);
                 }
             }
+
             return null;
         }
 
@@ -576,6 +630,9 @@
 
                     Generator.startSpinner();
 
+                     // Delete all request/response in the Local Storage
+                     deleteLocalStorageStartingWith(PREFIX_LOCAL_STORAGE);
+
                     setTimeout(function(){
                         rq_method = "POST";
                         rq_url = "http://" + host + port + "/control/rebuild/db/static";
@@ -603,6 +660,9 @@
                 }else if(setting=="update-sw"){
 
                     Generator.startSpinner();
+
+                    // Delete all request/response in the Local Storage
+                    deleteLocalStorageStartingWith(PREFIX_LOCAL_STORAGE);
 
                     setTimeout(function(){                    
                         rq_method = "POST";

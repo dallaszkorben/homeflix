@@ -2420,15 +2420,15 @@ class ThumbnailController {
         let rq_url = "http://" + host + port + "/personal/history/request";
         let rq_assync = false;
         let rq_data = {"card_id": card_id, "limit_records": "1", "limit_days": limit_days}
-        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });  
     
         let response_dict = response.responseJSON;
-        let result = response_dict['result']
-        let data_list = response_dict['data']
+        let result = response_dict['result'];
+        let data_list = response_dict['data'];
 
         // If the query was OK and there was 1 record
         if (result && data_list.length > 0){
-            let result_dict = data_list[0]
+            let result_dict = data_list[0];
             return result_dict['recent_position'];
         }else{
             return 0;
