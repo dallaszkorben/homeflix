@@ -119,7 +119,7 @@ class SqlDatabase:
         try:
             self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=20)
             logging.debug( "Connection to {0} SQLite was successful".format(self.db_path))
-            self.conn.row_factory = sqlite3.Row 
+            self.conn.row_factory = sqlite3.Row
         except Error as e:
             logging.error( "Connection to {0} SQLite failed. Error: {1}".format(self.db_path, e))
 
@@ -154,7 +154,7 @@ class SqlDatabase:
                     raise NotExistingTable("{0} 'Static' table does not exist. All 'Static' tables will be recreated".format(table), error_code)
 
         except NotExistingTable as e:
-            logging.debug(e.message)   
+            logging.debug(e.message)
             return False
 
         finally:
@@ -175,7 +175,7 @@ class SqlDatabase:
                     raise NotExistingTable("{0} 'Personal' table does not exist. All 'Personal' tables will be recreated".format(table), error_code)
 
         except NotExistingTable as e:
-            logging.debug(e.message)   
+            logging.debug(e.message)
             return False
 
         finally:
@@ -271,7 +271,7 @@ class SqlDatabase:
         ''')
 
         self.conn.execute('''
-            CREATE TABLE ''' + SqlDatabase.TABLE_TAG + '''(               
+            CREATE TABLE ''' + SqlDatabase.TABLE_TAG + '''(
                 id_card              TEXT    NOT NULL,
                 id_user              INTEGER NOT NULL,
                 name                 TEXT    NOT NULL,
@@ -288,7 +288,7 @@ class SqlDatabase:
 
         with self.lock:
             try:
-                
+
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
@@ -330,7 +330,7 @@ class SqlDatabase:
 
             finally:
                 cur.execute("commit")
-                cur.close        
+                cur.close
 
 
     def create_static_tables(self):
@@ -415,7 +415,7 @@ class SqlDatabase:
                 title_on_thumbnail  BOOLEAN     NOT NULL CHECK (title_on_thumbnail IN (0, 1)),
                 title_show_sequence TEXT        NOT NULL,
                 FOREIGN KEY (id_title_orig) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                FOREIGN KEY (id_higher_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id) 
+                FOREIGN KEY (id_higher_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id)
             );
         ''')
 
@@ -429,7 +429,7 @@ class SqlDatabase:
                 id_genre INTEGER      NOT NULL,
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_genre) REFERENCES ''' + SqlDatabase.TABLE_GENRE + ''' (id),
-                PRIMARY KEY (id_card, id_genre) 
+                PRIMARY KEY (id_card, id_genre)
             );
         ''')
 
@@ -439,7 +439,7 @@ class SqlDatabase:
                 id_theme INTEGER      NOT NULL,
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_theme) REFERENCES ''' + SqlDatabase.TABLE_THEME + ''' (id),
-                PRIMARY KEY (id_card, id_theme) 
+                PRIMARY KEY (id_card, id_theme)
             );
         ''' )
 
@@ -449,7 +449,7 @@ class SqlDatabase:
                 id_sound INTEGER      NOT NULL,
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_sound) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                PRIMARY KEY (id_card, id_sound) 
+                PRIMARY KEY (id_card, id_sound)
             );
         ''')
 
@@ -459,7 +459,7 @@ class SqlDatabase:
                 id_sub  INTEGER      NOT NULL,
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_sub) REFERENCES ''' + SqlDatabase.TABLE_LANGUAGE + ''' (id),
-                PRIMARY KEY (id_card, id_sub) 
+                PRIMARY KEY (id_card, id_sub)
             );
         ''' )
 
@@ -469,7 +469,7 @@ class SqlDatabase:
                 id_origin INTEGER      NOT NULL,
                 FOREIGN KEY (id_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_origin) REFERENCES ''' + SqlDatabase.TABLE_COUNTRY + ''' (id),
-                PRIMARY KEY (id_card, id_origin) 
+                PRIMARY KEY (id_card, id_origin)
             );
         ''')
 
@@ -479,7 +479,7 @@ class SqlDatabase:
                 id_actor INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_actor) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_actor) 
+                PRIMARY KEY (id_card, id_actor)
             );
         ''')
 
@@ -489,7 +489,7 @@ class SqlDatabase:
                 id_star INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_star) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_star) 
+                PRIMARY KEY (id_card, id_star)
             );
         ''')
 
@@ -499,7 +499,7 @@ class SqlDatabase:
                 id_voice INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)  REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_voice) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_voice) 
+                PRIMARY KEY (id_card, id_voice)
             );
         ''')
 
@@ -509,7 +509,7 @@ class SqlDatabase:
                 id_director INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)     REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_director) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_director) 
+                PRIMARY KEY (id_card, id_director)
             );
         ''')
 
@@ -519,7 +519,7 @@ class SqlDatabase:
                 id_writer INTEGER        NOT NULL,
                 FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_writer)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_writer) 
+                PRIMARY KEY (id_card, id_writer)
             );
         ''')
 
@@ -529,7 +529,7 @@ class SqlDatabase:
                 id_host INTEGER          NOT NULL,
                 FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_host)    REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_host) 
+                PRIMARY KEY (id_card, id_host)
             );
         ''')
 
@@ -539,7 +539,7 @@ class SqlDatabase:
                 id_guest INTEGER         NOT NULL,
                 FOREIGN KEY (id_card)    REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_guest)   REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_guest) 
+                PRIMARY KEY (id_card, id_guest)
             );
         ''')
 
@@ -549,7 +549,7 @@ class SqlDatabase:
                 id_interviewer INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)        REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_interviewer) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_interviewer) 
+                PRIMARY KEY (id_card, id_interviewer)
             );
         ''')
 
@@ -559,7 +559,7 @@ class SqlDatabase:
                 id_interviewee INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)        REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_interviewee) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_interviewee) 
+                PRIMARY KEY (id_card, id_interviewee)
             );
         ''')
 
@@ -569,7 +569,7 @@ class SqlDatabase:
                 id_presenter INTEGER       NOT NULL,
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_presenter) REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_presenter) 
+                PRIMARY KEY (id_card, id_presenter)
             );
         ''')
 
@@ -579,7 +579,7 @@ class SqlDatabase:
                 id_lecturer INTEGER        NOT NULL,
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_lecturer)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_lecturer) 
+                PRIMARY KEY (id_card, id_lecturer)
             );
         ''')
 
@@ -589,7 +589,7 @@ class SqlDatabase:
                 id_performer INTEGER        NOT NULL,
                 FOREIGN KEY (id_card)       REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_performer)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_performer) 
+                PRIMARY KEY (id_card, id_performer)
             );
         ''')
 
@@ -599,7 +599,7 @@ class SqlDatabase:
                 id_reporter INTEGER        NOT NULL,
                 FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_reporter)  REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
-                PRIMARY KEY (id_card, id_reporter) 
+                PRIMARY KEY (id_card, id_reporter)
             );
         ''')
 
@@ -621,7 +621,7 @@ class SqlDatabase:
                 id_card      INTEGER  NOT NULL,
                 id_mediatype INTEGER  NOT NULL,
 
-                FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id), 
+                FOREIGN KEY (id_card)      REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id),
                 FOREIGN KEY (id_mediatype) REFERENCES ''' + SqlDatabase.TABLE_MEDIATYPE + ''' (id),
                 PRIMARY KEY (id_card, id_mediatype, name)
             );
@@ -648,7 +648,7 @@ class SqlDatabase:
            CREATE TABLE ''' + SqlDatabase.TABLE_ACTOR_ROLE + '''(
                id_actor      INTEGER  NOT NULL,
                id_role       INTEGER  NOT NULL,
-               FOREIGN KEY (id_actor)     REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id), 
+               FOREIGN KEY (id_actor)     REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
                FOREIGN KEY (id_role)      REFERENCES ''' + SqlDatabase.TABLE_ROLE + ''' (id),
                PRIMARY KEY (id_actor, id_role)
            );
@@ -787,8 +787,8 @@ class SqlDatabase:
     def fill_up_country_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
-        self.country_name_id_dict = {}        
-        self.country_id_name_dict = {}        
+        self.country_name_id_dict = {}
+        self.country_id_name_dict = {}
         country_list = self.translator.get_all_country_codes()
         for country in country_list:
             id = self.append_country(cur, country)
@@ -802,19 +802,19 @@ class SqlDatabase:
         id_language = self.language_name_id_dict[language_code]
         if user_id:
             cur.execute(
-                'INSERT INTO ' + SqlDatabase.TABLE_USER + ''' 
-                    (name, password, is_admin, id, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously, history_days) 
-                VALUES 
-                    (:username, :password, :is_admin, :user_id, :created_epoch, :id_language, :show_original_title, :descriptor_color, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously, :history_days) 
-                RETURNING id''', 
+                'INSERT INTO ' + SqlDatabase.TABLE_USER + '''
+                    (name, password, is_admin, id, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously, history_days)
+                VALUES
+                    (:username, :password, :is_admin, :user_id, :created_epoch, :id_language, :show_original_title, :descriptor_color, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously, :history_days)
+                RETURNING id''',
                 (username, password, is_admin, user_id, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously, history_days))
         else:
             cur.execute(
-                'INSERT INTO ' + SqlDatabase.TABLE_USER + ''' 
-                    (name, password, is_admin, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously, history_days) 
-                VALUES 
-                    (:username, :password, :is_admin, :created_epoch, :id_language, :descriptor_color, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously, :history_days) 
-                RETURNING id''', 
+                'INSERT INTO ' + SqlDatabase.TABLE_USER + '''
+                    (name, password, is_admin, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously, history_days)
+                VALUES
+                    (:username, :password, :is_admin, :created_epoch, :id_language, :descriptor_color, :show_original_title, :show_lyrics_anyway, :show_storyline_anyway, :play_continuously, :history_days)
+                RETURNING id''',
                 (username, password, is_admin, created_epoch, id_language, descriptor_color, show_original_title, show_lyrics_anyway, show_storyline_anyway, play_continuously, history_days))
         record = cur.fetchone()
         (user_id, ) = record if record else (None,)
@@ -909,14 +909,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': writer})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_WRITER + ''' 
-                            (id_writer, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_WRITER + '''
+                            (id_writer, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -941,14 +941,14 @@ class SqlDatabase:
 
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': actor})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_ACTOR + ''' 
-                            (id_actor, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_ACTOR + '''
+                            (id_actor, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -965,15 +965,15 @@ class SqlDatabase:
                     if not role_id:
 
                         # Creates to Role
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_ROLE + ''' 
-                           (id_card, name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_ROLE + '''
+                           (id_card, name)
                            VALUES (:card_id, :name);'''
                         res = cur.execute(query, {'card_id': card_id, 'name': role})
                         role_id = res.lastrowid
 
                     # Connects the Role to the Actor
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_ACTOR_ROLE + ''' 
-                        (id_actor, id_role) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_ACTOR_ROLE + '''
+                        (id_actor, id_role)
                         VALUES (:person_id, :role_id);'''
                     cur.execute(query, {'person_id': person_id, 'role_id': role_id})
 
@@ -998,14 +998,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': star})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_STAR + ''' 
-                            (id_star, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_STAR + '''
+                            (id_star, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1022,14 +1022,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': director})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_DIRECTOR + ''' 
-                            (id_director, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_DIRECTOR + '''
+                            (id_director, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1046,14 +1046,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': voice})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_VOICE + ''' 
-                            (id_voice, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_VOICE + '''
+                            (id_voice, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1070,14 +1070,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': host})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_HOST + ''' 
-                            (id_host, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_HOST + '''
+                            (id_host, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1095,14 +1095,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': guest})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_GUEST + ''' 
-                            (id_guest, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_GUEST + '''
+                            (id_guest, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1119,14 +1119,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': interviewer})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWER + ''' 
-                            (id_interviewer, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWER + '''
+                            (id_interviewer, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1143,14 +1143,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': interviewee})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWEE + ''' 
-                            (id_interviewee, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_INTERVIEWEE + '''
+                            (id_interviewee, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1167,14 +1167,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': presenter})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PRESENTER + ''' 
-                            (id_presenter, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PRESENTER + '''
+                            (id_presenter, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1191,14 +1191,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': lecturer})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_LECTURER + ''' 
-                            (id_lecturer, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_LECTURER + '''
+                            (id_lecturer, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1215,14 +1215,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': performer})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PERFORMER + ''' 
-                            (id_performer, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PERFORMER + '''
+                            (id_performer, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1239,14 +1239,14 @@ class SqlDatabase:
                     (person_id, ) = record if record else (None,)
                     if not person_id:
 
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + ''' 
-                                (name) 
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
                                 VALUES (:name);'''
                         res = cur.execute(query, {'name': reporter})
                         person_id = res.lastrowid
 
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_REPORTER + ''' 
-                            (id_reporter, id_card) 
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_REPORTER + '''
+                            (id_reporter, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -1308,7 +1308,7 @@ class SqlDatabase:
                     (id_language, id_card, text, type)
                     VALUES (?, ?, ?, "T");
                 '''
-                cur.execute(query, (self.language_name_id_dict[lang], card_id, title))    
+                cur.execute(query, (self.language_name_id_dict[lang], card_id, title))
 
             #
             # INSERT into TABLE_TEXT_CARD_LANG Storyline
@@ -1328,7 +1328,7 @@ class SqlDatabase:
                     (id_language, id_card, text, type)
                     VALUES (?, ?, ?, "L");
                 '''
-                cur.execute(query, (self.language_name_id_dict[lang], card_id, lyrics))    
+                cur.execute(query, (self.language_name_id_dict[lang], card_id, lyrics))
 
             #
             # INSERT into TABLE_CARD_MEDIA
@@ -1347,7 +1347,7 @@ class SqlDatabase:
                             (name, id_card, id_mediatype)
                             VALUES (:medium, :card_id, :mediatype_id);
                         '''
-                        cur.execute(query, (medium, card_id, mediatype_id))   
+                        cur.execute(query, (medium, card_id, mediatype_id))
 
         except sqlite3.Error as e:
             logging.error("To append media failed with: '{0}' while inserting record, configured in {1} card".format(e, card_path))
@@ -1395,7 +1395,7 @@ class SqlDatabase:
                     (id_language, id_card, text, type)
                     VALUES (?, ?, ?, "T");
                 '''
-                cur.execute(query, (self.language_name_id_dict[lang], hierarchy_id, title))    
+                cur.execute(query, (self.language_name_id_dict[lang], hierarchy_id, title))
 
             #
             # INSERT into TABLE_CARD_GENRE
@@ -1425,7 +1425,7 @@ class SqlDatabase:
                     (id_origin, id_card)
                     VALUES (?, ?);
                 '''
-                cur.execute(query, (self.country_name_id_dict[origin], hierarchy_id))    
+                cur.execute(query, (self.country_name_id_dict[origin], hierarchy_id))
 
             #
             # INSERT into TABLE_TEXT_CARD_LANG Storyline
@@ -1458,13 +1458,13 @@ class SqlDatabase:
         """
         Updates the player's position of a movie. This method is periodically called from the browser
         It returns with the start_epoch value if the UPDATE or INSERT was successful.
-        If the start_epoch is given, it is an UPDATE, if it is not given, it is INSERT.        
-        If something went wrong, it returns with None        
+        If the start_epoch is given, it is an UPDATE, if it is not given, it is INSERT.
+        If something went wrong, it returns with None
         card_id           Card ID
         recent_position   Player's recent position in seconds
         start_epoch       Timestamp when the play started. This method generates this value
         """
-        
+
         with self.lock:
             result = False
             data = {}
@@ -1490,9 +1490,9 @@ class SqlDatabase:
 
                 # Verify user existence
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as user_number
-                FROM 
+                FROM
                     ''' + SqlDatabase.TABLE_USER + ''' user
 
                 WHERE
@@ -1508,9 +1508,9 @@ class SqlDatabase:
 
                 # Verify card existence
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as card_number
-                    FROM 
+                    FROM
                         ''' + SqlDatabase.TABLE_CARD + ''' card
                     WHERE
                         card.id=:card_id
@@ -1526,9 +1526,9 @@ class SqlDatabase:
 
                 # Verify history existence
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as history_number
-                    FROM 
+                    FROM
                         ''' + SqlDatabase.TABLE_HISTORY + ''' history
                     WHERE
                         history.id_card=:card_id
@@ -1569,9 +1569,9 @@ class SqlDatabase:
                             history.id_card=:card_id
                             AND history.id_user=:user_id
                             AND history.start_epoch=:start_epoch
-                    '''                
+                    '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'recent_epoch': recent_epoch, 'recent_position': recent_position})
-                    record = cur.fetchone()                
+                    record = cur.fetchone()
 
                 # Something went wrong
                 else:
@@ -1590,8 +1590,8 @@ class SqlDatabase:
             finally:
                 cur.execute("commit")
                 cur.close()
-                return {"result": result, "data": data, "error": error_message}    
-        
+                return {"result": result, "data": data, "error": error_message}
+
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
 
@@ -1600,13 +1600,13 @@ class SqlDatabase:
         result = False
         data = {}
         error_message = "Lock error"
-        
+
         user_data = session.get('logged_in_user', None)
         if user_data:
             username = user_data['username']
         else:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
-            
+
         with self.lock:
 
             try:
@@ -1614,15 +1614,15 @@ class SqlDatabase:
 
                 # Verify user existence
                 query = '''
-                    SELECT 
+                    SELECT
                         user.is_admin as is_admin,
                         user.name as name,
                         lang.name as language_code,
                         user.show_original_title   as show_original_title,
                         user.show_lyrics_anyway    as show_lyrics_anyway,
                         user.show_storyline_anyway as show_storyline_anyway,
-                        user.play_continuously     as play_continuously 
-                FROM 
+                        user.play_continuously     as play_continuously
+                FROM
                     ''' + SqlDatabase.TABLE_USER + ''' user,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
@@ -1657,7 +1657,7 @@ class SqlDatabase:
     #
     def _get_user_data_with_password(self, username):
         data = {}
-        
+
         with self.lock:
 
             try:
@@ -1665,7 +1665,7 @@ class SqlDatabase:
 
                 # Verify user existence
                 query = '''
-                    SELECT 
+                    SELECT
                         user.id                    as id,
                         user.password              as password,
                         user.is_admin              as is_admin,
@@ -1676,8 +1676,8 @@ class SqlDatabase:
                         user.show_original_title   as show_original_title,
                         user.show_lyrics_anyway    as show_lyrics_anyway,
                         user.show_storyline_anyway as show_storyline_anyway,
-                        user.play_continuously     as play_continuously 
-                FROM 
+                        user.play_continuously     as play_continuously
+                FROM
                     ''' + SqlDatabase.TABLE_USER + ''' user,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
@@ -1710,7 +1710,7 @@ class SqlDatabase:
 
                 # Verify user existence
                 query = '''
-                    SELECT 
+                    SELECT
                         user.is_admin              as is_admin,
                         user.name                  as name,
                         lang.name                  as language_code,
@@ -1718,8 +1718,8 @@ class SqlDatabase:
                         user.show_original_title   as show_original_title,
                         user.show_lyrics_anyway    as show_lyrics_anyway,
                         user.show_storyline_anyway as show_storyline_anyway,
-                        user.play_continuously     as play_continuously 
-                FROM 
+                        user.play_continuously     as play_continuously
+                FROM
                     ''' + SqlDatabase.TABLE_USER + ''' user,
                     ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                 WHERE
@@ -1737,7 +1737,7 @@ class SqlDatabase:
             finally:
                 cur.close()
                 return data
-        
+
         # If the lock failed
         return data
 
@@ -1761,9 +1761,9 @@ class SqlDatabase:
 
                 # User check
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as user_number
-                    FROM 
+                    FROM
                         ''' + SqlDatabase.TABLE_USER + ''' user
                     WHERE
                         user.name=:username;
@@ -1779,9 +1779,9 @@ class SqlDatabase:
                 language_id = None
                 if language_code:
                     query = '''
-                        SELECT 
+                        SELECT
                             id
-                        FROM 
+                        FROM
                             ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
                         WHERE
                             lang.name = :language_code;
@@ -1823,7 +1823,7 @@ class SqlDatabase:
 
                 query = '''
                         UPDATE ''' + SqlDatabase.TABLE_USER + '''
-                        SET 
+                        SET
                             ''' + ", ".join(set_list) + '''
                         WHERE
                             user.name=:username
@@ -1831,13 +1831,13 @@ class SqlDatabase:
 
                 cur.execute(query, {'username': username, 'password': hashed_password, 'language_id': language_id, 'descriptor_color': descriptor_color, 'show_original_title': show_original_title, 'show_lyrics_anyway': show_lyrics_anyway, 'show_storyline_anyway': show_storyline_anyway, 'play_continuously': play_continuously, 'history_days': history_days})
                 number_of_updated_rows = cur.rowcount
-                
+
                 if number_of_updated_rows == 1:
                     result = True
                     error_message = None
                 else:
                     error_message = "User update failed"
-                
+
             except sqlite3.Error as e:
                 error_message = "The User update for user: '{0}' failed because of an error: {1}".format(username, e)
                 logging.error(error_message)
@@ -1846,7 +1846,7 @@ class SqlDatabase:
                 cur.execute("commit")
                 cur.close()
                 return {"result": result, "data": data, "error": error_message}
-    
+
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
 
@@ -1873,9 +1873,9 @@ class SqlDatabase:
 
                 # Verify user existence
                 query = '''
-                    SELECT 
+                    SELECT
                         *
-                    FROM 
+                    FROM
                         ''' + SqlDatabase.TABLE_HISTORY + ''' history
                     WHERE
                         id_user=:user_id
@@ -1900,7 +1900,7 @@ class SqlDatabase:
             except sqlite3.Error as e:
                 error_message = "The operation for user: '{0}' failed because of an error: {1}".format(username, e)
                 logging.error(error_message)
-    
+
             finally:
                 #                cur.execute("commit")
                 cur.close()
@@ -1923,7 +1923,7 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-        
+
             try:
                 cur = self.conn.cursor()
                 cur.execute("begin")
@@ -1933,9 +1933,9 @@ class SqlDatabase:
                 #
                 # User
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as rating_number
-                FROM 
+                FROM
                     ''' + SqlDatabase.TABLE_RATING + ''' rating
 
                 WHERE
@@ -1966,11 +1966,11 @@ class SqlDatabase:
                         INSERT INTO ''' + SqlDatabase.TABLE_RATING + '''
                              (id_card, id_user, rate, skip_continuous_play)
                         VALUES
-                            (:card_id, :user_id, :rate, :skip_continuous_play) 
+                            (:card_id, :user_id, :rate, :skip_continuous_play)
                     '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'rate': rate, 'skip_continuous_play': skip_continuous_play})
-                    record = cur.fetchone() 
-               
+                    record = cur.fetchone()
+
                 # it was was already rated
                 else:
                     logging.debug("Rating updates for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, username, rate, skip_continuous_play))
@@ -1985,15 +1985,15 @@ class SqlDatabase:
 
                     query = '''
                         UPDATE ''' + SqlDatabase.TABLE_RATING + '''
-                        SET 
+                        SET
                             ''' + ", ".join(set_list) + '''
                         WHERE
                             id_user = :user_id
                             AND id_card = :card_id
-                    '''                
+                    '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'rate': rate, 'skip_continuous_play': skip_continuous_play})
-                    record = cur.fetchone() 
-                    
+                    record = cur.fetchone()
+
                 cur.execute("commit")
                 result = True
                 error_message = None
@@ -2003,7 +2003,7 @@ class SqlDatabase:
                 logging.error(error_message)
                 cur.execute("rollback")
 
-            finally:                
+            finally:
                 cur.close()
                 return {"result": result, "data": data, "error": error_message}
 
@@ -2024,7 +2024,7 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-        
+
             try:
                 cur = self.conn.cursor()
 
@@ -2033,9 +2033,9 @@ class SqlDatabase:
                 #
                 # User
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as tag_number
-                FROM 
+                FROM
                     ''' + SqlDatabase.TABLE_TAG + ''' tag
 
                 WHERE
@@ -2044,7 +2044,7 @@ class SqlDatabase:
                     AND name=:name
                 '''
                 query_parameters = {'user_id': user_id, 'card_id': card_id, 'name': name}
-                record=cur.execute(query, query_parameters).fetchone()                
+                record=cur.execute(query, query_parameters).fetchone()
                 (tag_number, ) = record if record else (0,)
 
                 # there was no tag for this media by this user for this card
@@ -2057,7 +2057,7 @@ class SqlDatabase:
                         INSERT INTO ''' + SqlDatabase.TABLE_TAG + '''
                              (id_card, id_user, name)
                         VALUES
-                            (:card_id, :user_id, :name) 
+                            (:card_id, :user_id, :name)
                     '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'name': name})
                     cur.execute("commit")
@@ -2080,7 +2080,7 @@ class SqlDatabase:
                 cur.execute("rollback")
 
             finally:
-                
+
                 cur.close()
                 return {"result": result, "data": data, "error": error_message}
 
@@ -2101,7 +2101,7 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-        
+
             try:
                 cur = self.conn.cursor()
                 cur.execute("begin")
@@ -2111,9 +2111,9 @@ class SqlDatabase:
                 #
                 # User
                 query = '''
-                    SELECT 
+                    SELECT
                         COUNT(*) as tag_number
-                FROM 
+                FROM
                     ''' + SqlDatabase.TABLE_TAG + ''' tag
 
                 WHERE
@@ -2131,13 +2131,13 @@ class SqlDatabase:
 
                     query = '''
                         DELETE FROM ''' + SqlDatabase.TABLE_TAG + '''
-                        WHERE 
+                        WHERE
                             id_card = :card_id
                             AND id_user = :user_id
                             AND name = :name
                     '''
                     cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'name': name})
-                    cur.execute("commit")               
+                    cur.execute("commit")
 
                     data["id_card"]=card_id
                     data["username"]=username
@@ -2147,7 +2147,7 @@ class SqlDatabase:
                 else:
                     error_message = "The tag does not exist"
                     raise sqlite3.Error(error_message)
-                    
+
 
                 result = True
                 error_message = None
@@ -2156,7 +2156,7 @@ class SqlDatabase:
                 error_message = "Deleting the '{2}' tag from the card: {0} by user: {1} failed! {3}".format(card_id, username, name, e)
                 logging.error(error_message)
                 cur.execute("rollback")
-            finally:                
+            finally:
                 cur.close()
                 return {"result": result, "data": data, "error": error_message}
 
@@ -2198,7 +2198,7 @@ class SqlDatabase:
                 cur.execute("begin")            #Otherwise "no transaction is active"
 
                 level = None
-                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}            
+                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -2459,7 +2459,7 @@ class SqlDatabase:
         # Login without credentials - goal: at the beginning of the client (index.html) tries to restore the previous session
         if (username is None and password is None) or (not username and not password):
             if session.get('logged_in_user'):
-               
+
                 username = session['logged_in_user']['username']
                 data = self._get_publishable_user_data(username)
                 result = True
@@ -2473,7 +2473,7 @@ class SqlDatabase:
         self.logout()
 
         hashed_password = generate_password_hash(password)
-        
+
         full_user_data = self._get_user_data_with_password(username)
 
         # If the username was found in the DB
@@ -2514,7 +2514,7 @@ class SqlDatabase:
             cur.execute("begin")
 
             # Get Card list
-            query = "SELECT COUNT(*) FROM " + SqlDatabase.TABLE_CARD + ";" 
+            query = "SELECT COUNT(*) FROM " + SqlDatabase.TABLE_CARD + ";"
             record=cur.execute(query).fetchone()
             cur.execute("commit")
             return record
@@ -2542,12 +2542,12 @@ class SqlDatabase:
                                 person.name AS actor_name,
                                 card.id,
                                 card.id_higher_card
-                            FROM 
+                            FROM
                                 Card card,
                                 Card_Actor card_actor,
                                 Person person,
                                 Category category
-                            WHERE 
+                            WHERE
                                 card.level IS NULL
                                 AND category.name = :category
                                 AND card.id_category = category.id
@@ -2560,25 +2560,25 @@ class SqlDatabase:
                                 rec.actor_name,
                                 card.id,
                                 card.id_higher_card
-                            FROM 
+                            FROM
                                 rec,
                                 Card card
-                            WHERE 
+                            WHERE
                                 rec.id_higher_card = card.id
                         )
                     SELECT
                         actor_name,
                         COUNT(DISTINCT rec.id) AS movie_count
-                    FROM 
+                    FROM
                         rec
-                    WHERE 
+                    WHERE
                         rec.id_higher_card IS NULL
-                    GROUP BY 
+                    GROUP BY
                         actor_name
-                    HAVING 
+                    HAVING
                         movie_count >= :minimum
-                    ORDER BY 
-                        movie_count DESC, 
+                    ORDER BY
+                        movie_count DESC,
                         actor_name
                     LIMIT :limit;
                 '''
@@ -2600,10 +2600,10 @@ class SqlDatabase:
             except sqlite3.Error as e:
                 error_message = "Fetching the actor list failed: {0}".format(e)
                 logging.error(error_message)
-                
-            finally:                
+
+            finally:
                 cur.close()
-                
+
         return {"result": result, "data": records, "error": error_message}
 
 
@@ -2629,12 +2629,12 @@ class SqlDatabase:
                                 person.name AS director_name,
                                 card.id,
                                 card.id_higher_card
-                            FROM 
+                            FROM
                                 Card card,
                                 Card_Director card_director,
                                 Person person,
                                 Category category
-                            WHERE 
+                            WHERE
                                 card.level IS NULL
                                 AND category.name = :category
                                 AND card.id_category = category.id
@@ -2647,25 +2647,25 @@ class SqlDatabase:
                                 rec.director_name,
                                 card.id,
                                 card.id_higher_card
-                            FROM 
+                            FROM
                                 rec,
                                 Card card
-                            WHERE 
+                            WHERE
                                 rec.id_higher_card = card.id
                         )
                     SELECT
                         director_name,
                         COUNT(DISTINCT rec.id) AS movie_count
-                    FROM 
+                    FROM
                         rec
-                    WHERE 
+                    WHERE
                         rec.id_higher_card IS NULL
-                    GROUP BY 
+                    GROUP BY
                         director_name
-                    HAVING 
+                    HAVING
                         movie_count >= :minimum
-                    ORDER BY 
-                        movie_count DESC, 
+                    ORDER BY
+                        movie_count DESC,
                         director_name
                     LIMIT :limit;
                 '''
@@ -2687,10 +2687,10 @@ class SqlDatabase:
             except sqlite3.Error as e:
                 error_message = "Fetching the director list failed: {0}".format(e)
                 logging.error(error_message)
-                
-            finally:                
+
+            finally:
                 cur.close()
-                
+
         return {"result": result, "data": records, "error": error_message}
 
 
@@ -2703,11 +2703,11 @@ class SqlDatabase:
 # ================================================================================================================================================
 # TODO: use variables for tables
 #''' + SqlDatabase.TABLE_CARD + ''' card,
-#''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
-#''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
+#''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl,
+#''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
 #''' + SqlDatabase.TABLE_CARD + ''' card,
-#''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl, 
-#''' + SqlDatabase.TABLE_LANGUAGE + ''' lang                    
+#''' + SqlDatabase.TABLE_TEXT_CARD_LANG + ''' tcl,
+#''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
 #''' + SqlDatabase.TABLE_COUNTRY + ''' country,
 #''' + SqlDatabase.TABLE_CARD_ORIGIN + ''' co,
 #''' + SqlDatabase.TABLE_PERSON + ''' actor,
@@ -2733,20 +2733,20 @@ class SqlDatabase:
         Why need to use recursive search?                ---
         Because I filter by the lower level card (media) ---
         but I show the highest                           ---
-                                                                       
+
         Parameters for filtering:
           - category
           - level
-          - decade                                                     
-          - language                                                   
-                                                                       
-          logical operands (_AND_, _NOT_) in                           
-          - genres                                                     
-          - themes                                                     
-          - actors                                                     
-          - directors                                                  
-          - lecturers                                                 
-          - origins                                                    
+          - decade
+          - language
+
+          logical operands (_AND_, _NOT_) in
+          - genres
+          - themes
+          - actors
+          - directors
+          - lecturers
+          - origins
         """
         records = {}
         user_data = session.get('logged_in_user', None)
@@ -2777,8 +2777,8 @@ class SqlDatabase:
             except sqlite3.Error as e:
                 error_message = "Fetching the highest level card failed: {0}".format(e)
                 logging.error(error_message)
-                
-            finally:                
+
+            finally:
                 cur.close()
 
                 return records
@@ -2794,22 +2794,22 @@ class SqlDatabase:
     def get_next_level_cards(self, card_id, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
-        Returns the next child cards which could ne:                                           
-          - media card        
+        Returns the next child cards which could ne:
+          - media card
           - level cards
-                                                                       
+
         Parameters for filtering:
-          - category                                                   
-          - decade                                                     
-          - language                                                   
-                                                                       
-          logical operands (_AND_, _NOT_) in                           
-          - genres                                                     
-          - themes                                                     
-          - actors                                                     
-          - directors                                                  
-          - lecturers                                                 
-          - origins                                                    
+          - category
+          - decade
+          - language
+
+          logical operands (_AND_, _NOT_) in
+          - genres
+          - themes
+          - actors
+          - directors
+          - lecturers
+          - origins
         """
 
         user_data = session.get('logged_in_user', None)
@@ -2831,7 +2831,7 @@ class SqlDatabase:
 
                 query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
 
-                query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'filter_on': filter_on, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}            
+                query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'filter_on': filter_on, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_next_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -2844,8 +2844,8 @@ class SqlDatabase:
             except sqlite3.Error as e:
                 error_message = "Fetching the next level card failed: {0}".format(e)
                 logging.error(error_message)
-                
-            finally:                
+
+            finally:
                 cur.close()
                 return records
         return records
@@ -2858,11 +2858,11 @@ class SqlDatabase:
     # ✅
     #
     def get_lowest_level_cards(self, category, playlist=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
-    
+
         """
         FULL QUERY for lowest (medium) level list
         Returns only medium level cards level cards
-        With filters category/genre/theme/origin/director/actor 
+        With filters category/genre/theme/origin/director/actor
 
         Parameters for playlist:
           - *
@@ -2873,17 +2873,17 @@ class SqlDatabase:
 
         Parameters for filtering:
           - category
-          - level                                                  
-          - decade                                                     
-          - language                                                   
-                                                                       
-          logical operands (_AND_, _NOT_) in                           
-          - genres                                                     
-          - themes                                                     
-          - actors                                                     
-          - directors                                                  
-          - lecturers                                                 
-          - origins                                                    
+          - level
+          - decade
+          - language
+
+          logical operands (_AND_, _NOT_) in
+          - genres
+          - themes
+          - actors
+          - directors
+          - lecturers
+          - origins
         """
 
         user_data = session.get('logged_in_user', None)
@@ -2891,7 +2891,7 @@ class SqlDatabase:
             user_id = user_data['user_id']
         else:
             user_id = -1
-            
+
         records = {}
 
         with self.lock:
@@ -2919,7 +2919,6 @@ class SqlDatabase:
                             raw_query.start_epoch >= :history_back
                         WHEN :playlist = 'most_watched' THEN
                             raw_query.start_epoch >= :history_back
-                            AND raw_query.recent_position > raw_query.net_start_time
                         ELSE 1
                     END
                 '''.format(query) + ( 'ORDER BY raw_query.start_epoch DESC' if playlist == 'interrupted' or playlist == 'last_watched' else 'ORDER BY raw_query.play_count DESC' if playlist == 'most_watched' else 'ORDER BY raw_query.ord' ) + '''
@@ -2928,7 +2927,7 @@ class SqlDatabase:
 
                 #logging.error("MY QUERY: {0}".format(query))
 
-                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}            
+                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -2941,8 +2940,8 @@ class SqlDatabase:
             except sqlite3.Error as e:
                 error_message = "Fetching the lowest level card failed: {0}".format(e)
                 logging.error(error_message)
-                
-            finally:                
+
+            finally:
                 cur.close()
                 return records
         return records
@@ -2975,7 +2974,7 @@ class SqlDatabase:
                 mixed_id_list.category,
                 mixed_id_list.level,
                 mixed_id_list.source_path,
-                mixed_id_list.basename,        
+                mixed_id_list.basename,
                 mixed_id_list.sequence,
 
                 mixed_id_list.title_on_thumbnail,
@@ -2983,9 +2982,9 @@ class SqlDatabase:
 
                 mixed_id_list.decade,
                 mixed_id_list.date,
-                mixed_id_list.length,  
-                mixed_id_list.full_time, 
-                mixed_id_list.net_start_time,    
+                mixed_id_list.length,
+                mixed_id_list.full_time,
+                mixed_id_list.net_start_time,
                 mixed_id_list.net_stop_time,
 
                 mixed_id_list.themes,
@@ -3028,8 +3027,8 @@ class SqlDatabase:
                     rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
 
                     (
-                        SELECT                 
-                            card.id, 
+                        SELECT
+                            card.id,
                             card.id_higher_card,
                             category.name category,
                             card.level,
@@ -3043,7 +3042,7 @@ class SqlDatabase:
                             card.decade,
                             card.date,
                             card.length,
-                            card.full_time,  
+                            card.full_time,
                             card.net_start_time,
                             card.net_stop_time,
 
@@ -3058,7 +3057,7 @@ class SqlDatabase:
                             subs,
                             writers,
                             voices,
-                            stars,        
+                            stars,
                             hosts,
                             guests,
                             interviewers,
@@ -3072,7 +3071,7 @@ class SqlDatabase:
                             ttitle_orig,
                             llang_orig
 
-                        FROM 
+                        FROM
                             Card card,
 
                             --- Conditional ---
@@ -3081,13 +3080,13 @@ class SqlDatabase:
                             -------------
                             --- GENRE ---
                             -------------
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT group_concat(genre.name) genres, card_genre.id_card
                                 FROM
                                     Genre genre,
                                     Card_Genre card_genre
-                                WHERE            
+                                WHERE
                                     card_genre.id_genre=genre.id
                                 GROUP BY card_genre.id_card
                             )gnr
@@ -3096,13 +3095,13 @@ class SqlDatabase:
                             -------------
                             --- THEME ---
                             -------------
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT group_concat(theme.name) themes, card_theme.id_card
                                 FROM
                                     Theme theme,
                                     Card_Theme card_theme
-                                WHERE            
+                                WHERE
                                     card_theme.id_theme=theme.id
                                 GROUP BY card_theme.id_card
                             )thm
@@ -3121,18 +3120,18 @@ class SqlDatabase:
                                     card_origin.id_origin=origin.id
                                 GROUP BY card_origin.id_card
                             )rgn
-                            ON rgn.id_card=card.id    
+                            ON rgn.id_card=card.id
 
                             -----------------
                             --- DIRECTORS ---
                             -----------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) directors,  card_dir.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Director card_dir
-                                WHERE 
+                                WHERE
                                     card_dir.id_director = person.id
                                 GROUP BY card_dir.id_card
                             ) dr
@@ -3141,13 +3140,13 @@ class SqlDatabase:
                             --------------
                             --- ACTORS ---
                             --------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) actors,  card_actor.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Actor card_actor
-                                WHERE 
+                                WHERE
                                     card_actor.id_actor = person.id
                                 GROUP BY card_actor.id_card
                             ) act
@@ -3156,31 +3155,31 @@ class SqlDatabase:
                             ----------------
                             --- LECTURER ---
                             ----------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Lecturer card_lecturer
-                                WHERE 
+                                WHERE
                                     card_lecturer.id_lecturer = person.id
                                 GROUP BY card_lecturer.id_card
                             ) lctr
-                            ON lctr.id_card=card.id           
+                            ON lctr.id_card=card.id
 
                             --- No Filter ---
 
                             --------------
                             --- SOUNDS ---
                             --------------
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT group_concat(language.name) sounds, card_sound.id_card
-                                FROM 
+                                FROM
                                     Language language,
                                     Card_Sound card_sound
-                                WHERE 
-                                    card_sound.id_sound=language.id 
+                                WHERE
+                                    card_sound.id_sound=language.id
                                 GROUP BY card_sound.id_card
                             ) snd
                             ON snd.id_card=card.id
@@ -3191,10 +3190,10 @@ class SqlDatabase:
                             LEFT JOIN
                             (
                                 SELECT group_concat(language.name) subs, card_sub.id_card
-                                FROM 
+                                FROM
                                     Language language,
                                     Card_Sub card_sub
-                                WHERE 
+                                WHERE
                                     card_sub.id_sub=language.id
                                 GROUP BY card_sub.id_card
                             ) sb
@@ -3203,13 +3202,13 @@ class SqlDatabase:
                             ---------------
                             --- WRITERS ---
                             ---------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) writers,  card_writer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Writer card_writer
-                                WHERE 
+                                WHERE
                                     card_writer.id_writer = person.id
                                 GROUP BY card_writer.id_card
                             ) wr
@@ -3218,28 +3217,28 @@ class SqlDatabase:
                             --------------
                             --- VOICES ---
                             --------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) voices,  card_voice.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Voice card_voice
-                                WHERE 
+                                WHERE
                                     card_voice.id_voice = person.id
                                 GROUP BY card_voice.id_card
                             ) vc
-                            ON vc.id_card=card.id    
+                            ON vc.id_card=card.id
 
                             -------------
                             --- STARS ---
                             -------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) stars,  card_star.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Star card_star
-                                WHERE 
+                                WHERE
                                     card_star.id_star = person.id
                                 GROUP BY card_star.id_card
                             ) str
@@ -3248,28 +3247,28 @@ class SqlDatabase:
                             -------------
                             --- HOSTS ---
                             -------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) hosts,  card_host.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Host card_host
-                                WHERE 
+                                WHERE
                                     card_host.id_host = person.id
                                 GROUP BY card_host.id_card
                             ) hst
-                            ON hst.id_card=card.id    
+                            ON hst.id_card=card.id
 
                             --------------
                             --- GUESTS ---
                             --------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) guests,  card_guest.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Guest card_guest
-                                WHERE 
+                                WHERE
                                     card_guest.id_guest = person.id
                                 GROUP BY card_guest.id_card
                             ) gst
@@ -3278,13 +3277,13 @@ class SqlDatabase:
                             ---------------------
                             --- INTERVIEWERS  ---
                             ---------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Interviewer card_interviewer
-                                WHERE 
+                                WHERE
                                     card_interviewer.id_interviewer = person.id
                                 GROUP BY card_interviewer.id_card
                             ) ntrvwr
@@ -3293,13 +3292,13 @@ class SqlDatabase:
                             ---------------------
                             --- INTERVIEWEES  ---
                             ---------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Interviewee card_interviewee
-                                WHERE 
+                                WHERE
                                     card_interviewee.id_interviewee = person.id
                                 GROUP BY card_interviewee.id_card
                             ) ntrw
@@ -3308,13 +3307,13 @@ class SqlDatabase:
                             -------------------
                             --- PRESENTERS  ---
                             -------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) presenters,  card_presenter.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Presenter card_presenter
-                                WHERE 
+                                WHERE
                                     card_presenter.id_presenter = person.id
                                 GROUP BY card_presenter.id_card
                             ) prsntr
@@ -3323,13 +3322,13 @@ class SqlDatabase:
                             ------------------
                             --- REPORTERS  ---
                             ------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) reporters,  card_reporter.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Reporter card_reporter
-                                WHERE 
+                                WHERE
                                     card_reporter.id_reporter = person.id
                                 GROUP BY card_reporter.id_card
                             ) rprtr
@@ -3338,29 +3337,29 @@ class SqlDatabase:
                             ------------------
                             --- PERFORMER  ---
                             ------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) performers,  card_performer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Performer card_performer
-                                WHERE 
+                                WHERE
                                     card_performer.id_performer = person.id
                                 GROUP BY card_performer.id_card
                             ) prfrmr
-                            ON prfrmr.id_card=card.id            
+                            ON prfrmr.id_card=card.id
 
                             --------------------------------------------
                             ---         TITLE REQUESTED              ---
                             --- On the requested language, if exists ---
-                            --------------------------------------------    
+                            --------------------------------------------
                             LEFT JOIN
                             (
                                 SELECT tcl.id_card id_card, tcl.text ttitle_req, lang.name llang_req, lang.id lang_id
-                                FROM 
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE                
+                                FROM
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_language=lang.id
                                     AND tcl.type="T"
 
@@ -3376,23 +3375,23 @@ class SqlDatabase:
                             LEFT JOIN
                             (
                                 SELECT tcl.id_card id_card, tcl.text ttitle_orig, lang.name llang_orig, lang.id lang_id
-                                FROM 
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE                
+                                FROM
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_language=lang.id
                                     AND tcl.type="T"
 
                                     AND lang.name <> :lang
                             ) ttlor
                             ON ttlor.id_card=card.id AND ttlor.lang_id=card.id_title_orig
-                    
+
                         ------------------------
                         --- INITIAL WHERE    ---
                         --- the lowest level ---
                         ------------------------
 
-                        WHERE 
+                        WHERE
                             -- card can not be appendix --
                             card.isappendix == 0
 
@@ -3422,11 +3421,11 @@ class SqlDatabase:
                                 AND CASE
                                     WHEN ttitle_req IS NOT NULL THEN ''' + titles_req_where + '''
                                     ELSE ''' + titles_orig_where + '''
-                                END                                
+                                END
                                 ''' if titles_orig_where else ''' '''
                             ) + '''
 
-                            ''' + ('''                
+                            ''' + ('''
                             --- WHERE THEMES - conditional ---
                             AND ''' + themes_where if themes_where else '') + '''
 
@@ -3434,7 +3433,7 @@ class SqlDatabase:
                             --- WHERE GENRES - conditional ---
                             AND ''' + genres_where if genres_where else '') + '''
 
-                            ''' + ('''               
+                            ''' + ('''
                             --- WHERE DIRECTORS - conditional ---
                             AND ''' + directors_where if directors_where else '') + '''
 
@@ -3448,7 +3447,7 @@ class SqlDatabase:
 
                             ''' + ('''
                             --- WHERE PERFORMERS - conditional ---
-                            AND ''' + performers_where if performers_where else '') + ''' 
+                            AND ''' + performers_where if performers_where else '') + '''
 
                             ''' + ('''
                             --- WHERE LECTURERS - conditional ---
@@ -3476,7 +3475,7 @@ class SqlDatabase:
 
                         UNION ALL
 
-                        SELECT 
+                        SELECT
                             card.id,
                             card.id_higher_card,
                             category.name category,
@@ -3563,28 +3562,28 @@ class SqlDatabase:
                 --- unioned with title ---
                 --------------------------
                 (
-                SELECT 
+                SELECT
                     unioned.id id,
 
-                    MAX(title_req) title_req, 
-                    MAX(title_orig) title_orig, 
+                    MAX(title_req) title_req,
+                    MAX(title_orig) title_orig,
                     MAX(lang_orig) lang_orig,
                     MAX(lang_req) lang_req
 
-                FROM 
+                FROM
                     (
-                    SELECT 
-                        card.id id, 
+                    SELECT
+                        card.id id,
 
-                        NULL title_req, 
-                        NULL lang_req, 
-                        tcl.text title_orig, 
+                        NULL title_req,
+                        NULL lang_req,
+                        tcl.text title_orig,
                         lang.name lang_orig
-                    FROM                     
+                    FROM
                         Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE                
+                        Text_Card_Lang tcl,
+                        Language lang
+                    WHERE
                         tcl.id_card=card.id
                         AND tcl.id_language=lang.id
                         AND tcl.type="T"
@@ -3594,18 +3593,18 @@ class SqlDatabase:
                         AND lang.name <> :lang
                     UNION
 
-                    SELECT 
+                    SELECT
                         card.id id,
 
-                        tcl.text title_req, 
-                        lang.name lang_req, 
-                        NULL title_orig, 
+                        tcl.text title_req,
+                        lang.name lang_req,
+                        NULL title_orig,
                         NULL lang_orig
-                    FROM               
+                    FROM
                         Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE               
+                        Text_Card_Lang tcl,
+                        Language lang
+                    WHERE
                         tcl.id_card=card.id
                         AND tcl.id_language=lang.id
                         AND tcl.type="T"
@@ -3615,7 +3614,7 @@ class SqlDatabase:
                     ) unioned
 
                 -- because of the title required and origin
-                GROUP BY unioned.id               
+                GROUP BY unioned.id
 
                 ) core
 
@@ -3648,15 +3647,15 @@ class SqlDatabase:
                         --- Select the storyline on the original language ---
 
                         SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM 
+                        FROM
                             Text_Card_Lang tcl,
                             Language language,
                             Card card
-                        WHERE 
+                        WHERE
                             tcl.type = "S" AND
                             tcl.id_language = language.id AND
                             tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
+                            card.id_title_orig=language.id AND
                             tcl.text IS NOT NULL
                     )
                     GROUP BY id_card
@@ -3694,20 +3693,20 @@ class SqlDatabase:
                         --- Select the lyrics on the original language ---
 
                         SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM 
+                        FROM
                             Text_Card_Lang tcl,
                             Language language,
                             Card card
-                        WHERE 
+                        WHERE
                             tcl.type = "L" AND
                             tcl.id_language = language.id AND
                             tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
+                            card.id_title_orig=language.id AND
                             tcl.text IS NOT NULL
                     )
                     GROUP BY id_card
                 )lrx
-                ON lrx.id_card=core.id       
+                ON lrx.id_card=core.id
 
                 --------------
                 --- MEDIUM ---
@@ -3727,40 +3726,40 @@ class SqlDatabase:
                 ----------------
                 --- APPENDIX ---
                 ----------------
-                 LEFT JOIN    
-                (    
+                 LEFT JOIN
+                (
                     SELECT
                         card_id,
                         group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
                     FROM
 
                         (
-                        SELECT                
+                        SELECT
                             merged_appendix.id,
                             merged_appendix.card_id,
-                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_req) title_req,
                             MAX(merged_appendix.title_orig) title_orig,
                             merged_appendix.show,
                             merged_appendix.download,
                             merged_appendix.source_path,
                             mt.name media_type,
-                            cm.name contact_media                
+                            cm.name contact_media
                         FROM
                             (
-                            SELECT 
+                            SELECT
                                 app_card.id id,
                                 id_higher_card card_id,
                                 app_card.isappendix,
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
-                                "" title_req, 
+                                "" title_req,
                                 tcl.text title_orig
-                            FROM 
+                            FROM
                                 CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE                
+                                TEXT_CARD_LANG tcl,
+                                LANGUAGE lang
+                            WHERE
                                 app_card.isappendix=1
                                 AND tcl.id_card=app_card.id
                                 AND tcl.id_language=lang.id
@@ -3770,19 +3769,19 @@ class SqlDatabase:
 
                             UNION
 
-                            SELECT 
+                            SELECT
                                 app_card.id id,
                                 id_higher_card card_id,
                                 app_card.isappendix,
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
-                                tcl.text title_req, 
+                                tcl.text title_req,
                                 "" title_orig
-                            FROM 
+                            FROM
                                 CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
+                                TEXT_CARD_LANG tcl,
+                                LANGUAGE lang
                             WHERE
                                 app_card.isappendix=1
                                 AND tcl.id_card=app_card.id
@@ -3808,7 +3807,7 @@ class SqlDatabase:
                 ---------------
                 LEFT JOIN
                 (
-                    SELECT 
+                    SELECT
                         ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
                         id_card
                     FROM (
@@ -3835,14 +3834,14 @@ class SqlDatabase:
                 ---------------
                 --- TAGGING ---
                 ---------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
-                   SELECT 
+                   SELECT
                       group_concat(name) tags,
                       id_card
-                   FROM 
-                      Tag tag          
-                   WHERE 
+                   FROM
+                      Tag tag
+                   WHERE
                       id_user=:user_id
                    GROUP BY id_card
                 ) tggng
@@ -3851,7 +3850,7 @@ class SqlDatabase:
             WHERE
                 mixed_id_list.id=core.id
 
-            ORDER BY CASE 
+            ORDER BY CASE
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
                 WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
                 WHEN sequence<0 THEN basename
@@ -3862,7 +3861,7 @@ class SqlDatabase:
         return query
 
     def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
-        
+
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
@@ -3876,20 +3875,20 @@ class SqlDatabase:
                            --- WHERE TITLE ---
                             AND CASE
                                 WHEN :title IS NOT NULL AND ttitle_req IS NOT NULL THEN ttitle_req LIKE :title
-                                WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title                              
+                                WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title
                                 ELSE 1
                             END
                             --- WHERE DECADE ---
                             AND CASE
                                 WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
                             END
-                            ''' + ('''                
+                            ''' + ('''
                             --- WHERE THEMES - conditional ---
                             AND ''' + themes_where if themes_where else '') + '''
                             ''' + ('''
                             --- WHERE GENRES - conditional ---
                             AND ''' + genres_where if genres_where else '') + '''
-                            ''' + ('''               
+                            ''' + ('''
                             --- WHERE DIRECTORS - conditional ---
                             AND ''' + directors_where if directors_where else '') + '''
                             ''' + ('''
@@ -3903,7 +3902,7 @@ class SqlDatabase:
                             AND ''' + lecturers_where if lecturers_where else '') + '''
                             ''' + ('''
                             --- WHERE PERFORMERS - conditional ---
-                            AND ''' + performers_where if performers_where else '') + '''                         
+                            AND ''' + performers_where if performers_where else '') + '''
         '''
 
         query = '''
@@ -3914,7 +3913,7 @@ class SqlDatabase:
                 mixed_id_list.category,
                 mixed_id_list.level,
                 mixed_id_list.source_path,
-                mixed_id_list.basename,        
+                mixed_id_list.basename,
                 mixed_id_list.sequence,
 
                 mixed_id_list.title_on_thumbnail,
@@ -3923,7 +3922,7 @@ class SqlDatabase:
                 mixed_id_list.decade,
                 mixed_id_list.date,
                 mixed_id_list.length,
-                mixed_id_list.full_time,     
+                mixed_id_list.full_time,
                 mixed_id_list.net_start_time,
                 mixed_id_list.net_stop_time,
 
@@ -3952,7 +3951,7 @@ class SqlDatabase:
                 lyrics,
                 medium,
                 appendix,
-    
+
                 hstr.recent_state,
                 rtng.rate,
                 rtng.skip_continuous_play,
@@ -3967,8 +3966,8 @@ class SqlDatabase:
                     rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
 
                     (
-                        SELECT                 
-                            card.id, 
+                        SELECT
+                            card.id,
                             card.id_higher_card,
                             category.name category,
                             card.level,
@@ -3981,7 +3980,7 @@ class SqlDatabase:
 
                             card.decade,
                             card.date,
-                            card.length, 
+                            card.length,
                             card.full_time,
                             card.net_start_time,
                             card.net_stop_time,
@@ -3997,7 +3996,7 @@ class SqlDatabase:
                             subs,
                             writers,
                             voices,
-                            stars,        
+                            stars,
                             hosts,
                             guests,
                             interviewers,
@@ -4011,7 +4010,7 @@ class SqlDatabase:
                             ttitle_orig,
                             llang_orig
 
-                        FROM 
+                        FROM
                             Card card,
 
                             --- Conditional ---
@@ -4020,13 +4019,13 @@ class SqlDatabase:
                             -------------
                             --- GENRE ---
                             -------------
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT group_concat(genre.name) genres, card_genre.id_card
                                 FROM
                                     Genre genre,
                                     Card_Genre card_genre
-                                WHERE            
+                                WHERE
                                     card_genre.id_genre=genre.id
                                 GROUP BY card_genre.id_card
                             )gnr
@@ -4035,13 +4034,13 @@ class SqlDatabase:
                             -------------
                             --- THEME ---
                             -------------
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT group_concat(theme.name) themes, card_theme.id_card
                                 FROM
                                     Theme theme,
                                     Card_Theme card_theme
-                                WHERE            
+                                WHERE
                                     card_theme.id_theme=theme.id
                                 GROUP BY card_theme.id_card
                             )thm
@@ -4060,18 +4059,18 @@ class SqlDatabase:
                                     card_origin.id_origin=origin.id
                                 GROUP BY card_origin.id_card
                             )rgn
-                            ON rgn.id_card=card.id    
+                            ON rgn.id_card=card.id
 
                             -----------------
                             --- DIRECTORS ---
                             -----------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) directors,  card_dir.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Director card_dir
-                                WHERE 
+                                WHERE
                                     card_dir.id_director = person.id
                                 GROUP BY card_dir.id_card
                             ) dr
@@ -4080,13 +4079,13 @@ class SqlDatabase:
                             --------------
                             --- ACTORS ---
                             --------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) actors,  card_actor.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Actor card_actor
-                                WHERE 
+                                WHERE
                                     card_actor.id_actor = person.id
                                 GROUP BY card_actor.id_card
                             ) act
@@ -4095,31 +4094,31 @@ class SqlDatabase:
                             ----------------
                             --- LECTURER ---
                             ----------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Lecturer card_lecturer
-                                WHERE 
+                                WHERE
                                     card_lecturer.id_lecturer = person.id
                                 GROUP BY card_lecturer.id_card
                             ) lctr
-                            ON lctr.id_card=card.id           
+                            ON lctr.id_card=card.id
 
                             --- No Filter ---
 
                             --------------
                             --- SOUNDS ---
                             --------------
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT group_concat(language.name) sounds, card_sound.id_card
-                                FROM 
+                                FROM
                                     Language language,
                                     Card_Sound card_sound
-                                WHERE 
-                                    card_sound.id_sound=language.id 
+                                WHERE
+                                    card_sound.id_sound=language.id
                                 GROUP BY card_sound.id_card
                             ) snd
                             ON snd.id_card=card.id
@@ -4130,10 +4129,10 @@ class SqlDatabase:
                             LEFT JOIN
                             (
                                 SELECT group_concat(language.name) subs, card_sub.id_card
-                                FROM 
+                                FROM
                                     Language language,
                                     Card_Sub card_sub
-                                WHERE 
+                                WHERE
                                     card_sub.id_sub=language.id
                                 GROUP BY card_sub.id_card
                             ) sb
@@ -4142,13 +4141,13 @@ class SqlDatabase:
                             ---------------
                             --- WRITERS ---
                             ---------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) writers,  card_writer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Writer card_writer
-                                WHERE 
+                                WHERE
                                     card_writer.id_writer = person.id
                                 GROUP BY card_writer.id_card
                             ) wr
@@ -4157,28 +4156,28 @@ class SqlDatabase:
                             --------------
                             --- VOICES ---
                             --------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) voices,  card_voice.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Voice card_voice
-                                WHERE 
+                                WHERE
                                     card_voice.id_voice = person.id
                                 GROUP BY card_voice.id_card
                             ) vc
-                            ON vc.id_card=card.id    
+                            ON vc.id_card=card.id
 
                             -------------
                             --- STARS ---
                             -------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) stars,  card_star.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Star card_star
-                                WHERE 
+                                WHERE
                                     card_star.id_star = person.id
                                 GROUP BY card_star.id_card
                             ) str
@@ -4187,28 +4186,28 @@ class SqlDatabase:
                             -------------
                             --- HOSTS ---
                             -------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) hosts,  card_host.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Host card_host
-                                WHERE 
+                                WHERE
                                     card_host.id_host = person.id
                                 GROUP BY card_host.id_card
                             ) hst
-                            ON hst.id_card=card.id    
+                            ON hst.id_card=card.id
 
                             --------------
                             --- GUESTS ---
                             --------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) guests,  card_guest.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Guest card_guest
-                                WHERE 
+                                WHERE
                                     card_guest.id_guest = person.id
                                 GROUP BY card_guest.id_card
                             ) gst
@@ -4217,13 +4216,13 @@ class SqlDatabase:
                             ---------------------
                             --- INTERVIEWERS  ---
                             ---------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Interviewer card_interviewer
-                                WHERE 
+                                WHERE
                                     card_interviewer.id_interviewer = person.id
                                 GROUP BY card_interviewer.id_card
                             ) ntrvwr
@@ -4232,13 +4231,13 @@ class SqlDatabase:
                             ---------------------
                             --- INTERVIEWEES  ---
                             ---------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Interviewee card_interviewee
-                                WHERE 
+                                WHERE
                                     card_interviewee.id_interviewee = person.id
                                 GROUP BY card_interviewee.id_card
                             ) ntrw
@@ -4247,13 +4246,13 @@ class SqlDatabase:
                             -------------------
                             --- PRESENTERS  ---
                             -------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) presenters,  card_presenter.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Presenter card_presenter
-                                WHERE 
+                                WHERE
                                     card_presenter.id_presenter = person.id
                                 GROUP BY card_presenter.id_card
                             ) prsntr
@@ -4262,13 +4261,13 @@ class SqlDatabase:
                             ------------------
                             --- REPORTERS  ---
                             ------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) reporters,  card_reporter.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Reporter card_reporter
-                                WHERE 
+                                WHERE
                                     card_reporter.id_reporter = person.id
                                 GROUP BY card_reporter.id_card
                             ) rprtr
@@ -4277,29 +4276,29 @@ class SqlDatabase:
                             ------------------
                             --- PERFORMER  ---
                             ------------------
-                            LEFT JOIN    
+                            LEFT JOIN
                             (
                                 SELECT group_concat(person.name) performers,  card_performer.id_card
-                                FROM 
+                                FROM
                                     Person person,
                                     Card_Performer card_performer
-                                WHERE 
+                                WHERE
                                     card_performer.id_performer = person.id
                                 GROUP BY card_performer.id_card
                             ) prfrmr
-                            ON prfrmr.id_card=card.id            
+                            ON prfrmr.id_card=card.id
 
                             --------------------------------------------
                             ---         TITLE REQUESTED              ---
                             --- On the requested language, if exists ---
-                            --------------------------------------------    
+                            --------------------------------------------
                             LEFT JOIN
                             (
                                 SELECT tcl.id_card id_card, tcl.text ttitle_req, lang.name llang_req, lang.id lang_id
-                                FROM 
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE                
+                                FROM
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_language=lang.id
                                     AND tcl.type="T"
 
@@ -4315,10 +4314,10 @@ class SqlDatabase:
                             LEFT JOIN
                             (
                                 SELECT tcl.id_card id_card, tcl.text ttitle_orig, lang.name llang_orig, lang.id lang_id
-                                FROM 
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE                
+                                FROM
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_language=lang.id
                                     AND tcl.type="T"
 
@@ -4331,7 +4330,7 @@ class SqlDatabase:
                         --- the lowest level ---
                         ------------------------
 
-                        WHERE 
+                        WHERE
                             -- card can not be appendix --
                             card.isappendix == 0
 
@@ -4351,13 +4350,13 @@ class SqlDatabase:
                             -------------------
                             -------------------
 
-                            ''' + ('''                
+                            ''' + ('''
                             --- LOWEST FILTER IF NEEDED - conditional ---
                             ''' + lowest_level_where if filter_on is None or filter_on == 'v' else '') + '''
 
                         UNION ALL
 
-                        SELECT 
+                        SELECT
                             card.id,
                             card.id_higher_card,
                             category.name category,
@@ -4430,28 +4429,28 @@ class SqlDatabase:
                 --- unioned with title ---
                 --------------------------
                 (
-                SELECT 
+                SELECT
                     unioned.id id,
 
-                    MAX(title_req) title_req, 
-                    MAX(title_orig) title_orig, 
+                    MAX(title_req) title_req,
+                    MAX(title_orig) title_orig,
                     MAX(lang_orig) lang_orig,
                     MAX(lang_req) lang_req
 
-                FROM 
+                FROM
                     (
-                    SELECT 
-                        card.id id, 
+                    SELECT
+                        card.id id,
 
-                        NULL title_req, 
-                        NULL lang_req, 
-                        tcl.text title_orig, 
+                        NULL title_req,
+                        NULL lang_req,
+                        tcl.text title_orig,
                         lang.name lang_orig
-                    FROM                     
+                    FROM
                         Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE                
+                        Text_Card_Lang tcl,
+                        Language lang
+                    WHERE
                         tcl.id_card=card.id
                         AND tcl.id_language=lang.id
                         AND tcl.type="T"
@@ -4461,18 +4460,18 @@ class SqlDatabase:
                         AND lang.name <> :lang
                     UNION
 
-                    SELECT 
+                    SELECT
                         card.id id,
 
-                        tcl.text title_req, 
-                        lang.name lang_req, 
-                        NULL title_orig, 
+                        tcl.text title_req,
+                        lang.name lang_req,
+                        NULL title_orig,
                         NULL lang_orig
-                    FROM               
+                    FROM
                         Card card,
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE               
+                        Text_Card_Lang tcl,
+                        Language lang
+                    WHERE
                         tcl.id_card=card.id
                         AND tcl.id_language=lang.id
                         AND tcl.type="T"
@@ -4482,7 +4481,7 @@ class SqlDatabase:
                     ) unioned
 
                 -- because of the title required and origin
-                GROUP BY unioned.id               
+                GROUP BY unioned.id
 
                 ) core
 
@@ -4515,15 +4514,15 @@ class SqlDatabase:
                         --- Select the storyline on the original language ---
 
                         SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM 
+                        FROM
                             Text_Card_Lang tcl,
                             Language language,
                             Card card
-                        WHERE 
+                        WHERE
                             tcl.type = "S" AND
                             tcl.id_language = language.id AND
                             tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
+                            card.id_title_orig=language.id AND
                             tcl.text IS NOT NULL
                     )
                     GROUP BY id_card
@@ -4561,20 +4560,20 @@ class SqlDatabase:
                         --- Select the lyrics on the original language ---
 
                         SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM 
+                        FROM
                             Text_Card_Lang tcl,
                             Language language,
                             Card card
-                        WHERE 
+                        WHERE
                             tcl.type = "L" AND
                             tcl.id_language = language.id AND
                             tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
+                            card.id_title_orig=language.id AND
                             tcl.text IS NOT NULL
                     )
                     GROUP BY id_card
                 )lrx
-                ON lrx.id_card=core.id       
+                ON lrx.id_card=core.id
 
                 --------------
                 --- MEDIUM ---
@@ -4594,40 +4593,40 @@ class SqlDatabase:
                 ----------------
                 --- APPENDIX ---
                 ----------------
-                 LEFT JOIN    
-                (    
+                 LEFT JOIN
+                (
                     SELECT
                         card_id,
                         group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
                     FROM
 
                         (
-                        SELECT                
+                        SELECT
                             merged_appendix.id,
                             merged_appendix.card_id,
-                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_req) title_req,
                             MAX(merged_appendix.title_orig) title_orig,
                             merged_appendix.show,
                             merged_appendix.download,
                             merged_appendix.source_path,
                             mt.name media_type,
-                            cm.name contact_media                
+                            cm.name contact_media
                         FROM
                             (
-                            SELECT 
+                            SELECT
                                 app_card.id id,
                                 id_higher_card card_id,
                                 app_card.isappendix,
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
-                                "" title_req, 
+                                "" title_req,
                                 tcl.text title_orig
-                            FROM 
+                            FROM
                                 CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE                
+                                TEXT_CARD_LANG tcl,
+                                LANGUAGE lang
+                            WHERE
                                 app_card.isappendix=1
                                 AND tcl.id_card=app_card.id
                                 AND tcl.id_language=lang.id
@@ -4637,19 +4636,19 @@ class SqlDatabase:
 
                             UNION
 
-                            SELECT 
+                            SELECT
                                 app_card.id id,
                                 id_higher_card card_id,
                                 app_card.isappendix,
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
-                                tcl.text title_req, 
+                                tcl.text title_req,
                                 "" title_orig
-                            FROM 
+                            FROM
                                 CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
+                                TEXT_CARD_LANG tcl,
+                                LANGUAGE lang
                             WHERE
                                 app_card.isappendix=1
                                 AND tcl.id_card=app_card.id
@@ -4675,7 +4674,7 @@ class SqlDatabase:
                 ---------------
                 LEFT JOIN
                 (
-                    SELECT 
+                    SELECT
                         ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
                         id_card
                     FROM (
@@ -4702,14 +4701,14 @@ class SqlDatabase:
                 ---------------
                 --- TAGGING ---
                 ---------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
-                   SELECT 
+                   SELECT
                       group_concat(name) tags,
                       id_card
-                   FROM 
-                      Tag tag          
-                   WHERE 
+                   FROM
+                      Tag tag
+                   WHERE
                       id_user=:user_id
                    GROUP BY id_card
                 ) tggng
@@ -4718,7 +4717,7 @@ class SqlDatabase:
             WHERE
                 mixed_id_list.id=core.id
 
-            ORDER BY CASE 
+            ORDER BY CASE
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
                 WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
                 WHEN sequence<0 THEN basename
@@ -4730,7 +4729,7 @@ class SqlDatabase:
         return query
 
     def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
-        
+
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
@@ -4741,7 +4740,7 @@ class SqlDatabase:
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
 
         query = '''
-            SELECT 
+            SELECT
                 recursive_list.*,
 
                 category.name category,
@@ -4771,9 +4770,6 @@ class SqlDatabase:
                 medium,
                 appendix,
 
-                recursive_list.net_stop_time,
-                recursive_list.net_start_time,
-                recursive_list.ord,
                 hstr.start_epoch,
                 hstr.recent_position,
                 hstr.play_count,
@@ -4790,13 +4786,13 @@ class SqlDatabase:
                     (
                         SELECT
 
-                            card.id, 
-                            card.id_higher_card, 
+                            card.id,
+                            card.id_higher_card,
                             card.level,
                             card.source_path,
 
-                            core.title_req, 
-                            core.title_orig, 
+                            core.title_req,
+                            core.title_orig,
                             core.lang_orig,
                             core.lang_req,
 
@@ -4812,38 +4808,39 @@ class SqlDatabase:
                             card.net_start_time,
                             card.net_stop_time,
 
-                            CASE 
+                            CASE
                                 WHEN sequence IS NULL AND core.title_req IS NOT NULL THEN core.title_req
                                 WHEN sequence IS NULL AND core.title_orig IS NOT NULL THEN core.title_orig
                                 WHEN sequence<0 THEN basename
+                                WHEN sequence>=0 THEN sequence
                             END ord
 
-                        FROM 
+                        FROM
                             Card card,
 
                             (
-                            SELECT 
+                            SELECT
                                 unioned.id id,
 
-                                MAX(title_req) title_req, 
-                                MAX(title_orig) title_orig, 
+                                MAX(title_req) title_req,
+                                MAX(title_orig) title_orig,
                                 MAX(lang_orig) lang_orig,
                                 MAX(lang_req) lang_req
 
-                            FROM 
+                            FROM
                                 (
-                                SELECT 
-                                    card.id id, 
+                                SELECT
+                                    card.id id,
 
-                                    NULL title_req, 
-                                    NULL lang_req, 
-                                    tcl.text title_orig, 
+                                    NULL title_req,
+                                    NULL lang_req,
+                                    tcl.text title_orig,
                                     lang.name lang_orig
-                                FROM                     
+                                FROM
                                     Card card,
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE                
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_card=card.id
                                     AND tcl.id_language=lang.id
                                     AND tcl.type="T"
@@ -4853,18 +4850,18 @@ class SqlDatabase:
                                     AND lang.name <> :lang
                                 UNION
 
-                                SELECT 
+                                SELECT
                                     card.id id,
 
-                                    tcl.text title_req, 
-                                    lang.name lang_req, 
-                                    NULL title_orig, 
+                                    tcl.text title_req,
+                                    lang.name lang_req,
+                                    NULL title_orig,
                                     NULL lang_orig
-                                FROM               
+                                FROM
                                     Card card,
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE               
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_card=card.id
                                     AND tcl.id_language=lang.id
                                     AND tcl.type="T"
@@ -4874,9 +4871,9 @@ class SqlDatabase:
                                 ) unioned
 
                             -- because of the title required and origin
-                            GROUP BY unioned.id               
+                            GROUP BY unioned.id
 
-                            ) core,               
+                            ) core,
 
 
                             --- Conditional ---
@@ -4887,7 +4884,7 @@ class SqlDatabase:
                         --- the lowest level ---
                         ------------------------
 
-                        WHERE 
+                        WHERE
 
                             core.id = card.id
 
@@ -4902,23 +4899,23 @@ class SqlDatabase:
                             --- if :level is NOT set, then takes the highest level
                             AND CASE
                                 WHEN :level IS NULL THEN id_higher_card IS NULL ELSE card.level = :level
-                            END                
+                            END
 
                             -- Select the given category --
                             AND category.name = :category
 
                         UNION ALL
 
-                        SELECT                
+                        SELECT
                             card.id,
                             card.id_higher_card,
                             card.level,
                             card.source_path,
 
-                            core.title_req, 
-                            core.title_orig, 
+                            core.title_req,
+                            core.title_orig,
                             core.lang_orig,
-                            core.lang_req,                
+                            core.lang_req,
 
                             card.basename,
                             card.sequence,
@@ -4927,17 +4924,17 @@ class SqlDatabase:
 
                             card.decade,
                             card.date,
-                            card.length, 
-                            card.full_time,  
+                            card.length,
+                            card.full_time,
                             card.net_start_time,
                             card.net_stop_time,
 
-                            CASE 
+                            CASE
                                 WHEN card.sequence IS NULL AND core.title_req IS NOT NULL THEN ord || '_' || core.title_req
                                 WHEN card.sequence IS NULL AND core.title_orig IS NOT NULL THEN ord || '_' || core.title_orig
                                 WHEN card.sequence<0 THEN ord || '_' || card.basename
                                 WHEN card.sequence>=0 THEN ord || '_' || card.sequence
-                            END ord                
+                            END ord
 
                         FROM
                             rec,
@@ -4945,28 +4942,28 @@ class SqlDatabase:
 
 
                             (
-                            SELECT 
+                            SELECT
                                 unioned.id id,
 
-                                MAX(title_req) title_req, 
-                                MAX(title_orig) title_orig, 
+                                MAX(title_req) title_req,
+                                MAX(title_orig) title_orig,
                                 MAX(lang_orig) lang_orig,
                                 MAX(lang_req) lang_req
 
-                            FROM 
+                            FROM
                                 (
-                                SELECT 
-                                    card.id id, 
+                                SELECT
+                                    card.id id,
 
-                                    NULL title_req, 
-                                    NULL lang_req, 
-                                    tcl.text title_orig, 
+                                    NULL title_req,
+                                    NULL lang_req,
+                                    tcl.text title_orig,
                                     lang.name lang_orig
-                                FROM                     
+                                FROM
                                     Card card,
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE                
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_card=card.id
                                     AND tcl.id_language=lang.id
                                     AND tcl.type="T"
@@ -4976,18 +4973,18 @@ class SqlDatabase:
                                     AND lang.name <> :lang
                                 UNION
 
-                                SELECT 
+                                SELECT
                                     card.id id,
 
-                                    tcl.text title_req, 
-                                    lang.name lang_req, 
-                                    NULL title_orig, 
+                                    tcl.text title_req,
+                                    lang.name lang_req,
+                                    NULL title_orig,
                                     NULL lang_orig
-                                FROM               
+                                FROM
                                     Card card,
-                                    Text_Card_Lang tcl, 
-                                    Language lang                    
-                                WHERE               
+                                    Text_Card_Lang tcl,
+                                    Language lang
+                                WHERE
                                     tcl.id_card=card.id
                                     AND tcl.id_language=lang.id
                                     AND tcl.type="T"
@@ -4997,9 +4994,9 @@ class SqlDatabase:
                                 ) unioned
 
                             -- because of the title required and origin
-                            GROUP BY unioned.id               
+                            GROUP BY unioned.id
 
-                            ) core                                
+                            ) core
 
 
                         WHERE
@@ -5025,13 +5022,13 @@ class SqlDatabase:
                 -------------
                 --- GENRE ---
                 -------------
-                LEFT JOIN 
+                LEFT JOIN
                 (
                     SELECT group_concat(genre.name) genres, card_genre.id_card
                     FROM
                         Genre genre,
                         Card_Genre card_genre
-                    WHERE            
+                    WHERE
                         card_genre.id_genre=genre.id
                     GROUP BY card_genre.id_card
                 )gnr
@@ -5040,17 +5037,17 @@ class SqlDatabase:
                 -------------
                 --- THEME ---
                 -------------
-                LEFT JOIN 
+                LEFT JOIN
                 (
                     SELECT group_concat(theme.name) themes, card_theme.id_card
                     FROM
                         Theme theme,
                         Card_Theme card_theme
-                    WHERE            
+                    WHERE
                         card_theme.id_theme=theme.id
                     GROUP BY card_theme.id_card
                 )thm
-                ON thm.id_card=card.id            
+                ON thm.id_card=card.id
 
                 ---------------
                 --- ORIGINS ---
@@ -5065,18 +5062,18 @@ class SqlDatabase:
                         card_origin.id_origin=origin.id
                     GROUP BY card_origin.id_card
                 )rgn
-                ON rgn.id_card=card.id    
+                ON rgn.id_card=card.id
 
                 -----------------
                 --- DIRECTORS ---
                 -----------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) directors,  card_dir.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Director card_dir
-                    WHERE 
+                    WHERE
                         card_dir.id_director = person.id
                     GROUP BY card_dir.id_card
                 ) dr
@@ -5085,13 +5082,13 @@ class SqlDatabase:
                 --------------
                 --- ACTORS ---
                 --------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) actors,  card_actor.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Actor card_actor
-                    WHERE 
+                    WHERE
                         card_actor.id_actor = person.id
                     GROUP BY card_actor.id_card
                 ) act
@@ -5100,31 +5097,31 @@ class SqlDatabase:
                 -----------------
                 --- LECTURERS ---
                 -----------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Lecturer card_lecturer
-                    WHERE 
+                    WHERE
                         card_lecturer.id_lecturer = person.id
                     GROUP BY card_lecturer.id_card
                 ) lctr
-                ON lctr.id_card=card.id       
+                ON lctr.id_card=card.id
 
                 --- No filter ---
 
                 --------------
                 --- SOUNDS ---
                 --------------
-                LEFT JOIN 
+                LEFT JOIN
                 (
                     SELECT group_concat(language.name) sounds, card_sound.id_card
-                    FROM 
+                    FROM
                         Language language,
                         Card_Sound card_sound
-                    WHERE 
-                        card_sound.id_sound=language.id 
+                    WHERE
+                        card_sound.id_sound=language.id
                     GROUP BY card_sound.id_card
                 ) snd
                 ON snd.id_card=card.id
@@ -5135,10 +5132,10 @@ class SqlDatabase:
                 LEFT JOIN
                 (
                     SELECT group_concat(language.name) subs, card_sub.id_card
-                    FROM 
+                    FROM
                         Language language,
                         Card_Sub card_sub
-                    WHERE 
+                    WHERE
                         card_sub.id_sub=language.id
                     GROUP BY card_sub.id_card
                 ) sb
@@ -5147,13 +5144,13 @@ class SqlDatabase:
                 ---------------
                 --- WRITERS ---
                 ---------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) writers,  card_writer.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Writer card_writer
-                    WHERE 
+                    WHERE
                         card_writer.id_writer = person.id
                     GROUP BY card_writer.id_card
                 ) wr
@@ -5162,13 +5159,13 @@ class SqlDatabase:
                 --------------
                 --- VOICES ---
                 --------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) voices,  card_voice.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Voice card_voice
-                    WHERE 
+                    WHERE
                         card_voice.id_voice = person.id
                     GROUP BY card_voice.id_card
                 ) vc
@@ -5177,13 +5174,13 @@ class SqlDatabase:
                 -------------
                 --- STARS ---
                 -------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) stars,  card_star.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Star card_star
-                    WHERE 
+                    WHERE
                         card_star.id_star = person.id
                     GROUP BY card_star.id_card
                 ) str
@@ -5192,13 +5189,13 @@ class SqlDatabase:
                 -------------
                 --- HOSTS ---
                 -------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) hosts,  card_host.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Host card_host
-                    WHERE 
+                    WHERE
                         card_host.id_host = person.id
                     GROUP BY card_host.id_card
                 ) hst
@@ -5207,13 +5204,13 @@ class SqlDatabase:
                 --------------
                 --- GUESTS ---
                 --------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) guests,  card_guest.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Guest card_guest
-                    WHERE 
+                    WHERE
                         card_guest.id_guest = person.id
                     GROUP BY card_guest.id_card
                 ) gst
@@ -5222,13 +5219,13 @@ class SqlDatabase:
                 ---------------------
                 --- INTERWIEVERS  ---
                 ---------------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Interviewer card_interviewer
-                    WHERE 
+                    WHERE
                         card_interviewer.id_interviewer = person.id
                     GROUP BY card_interviewer.id_card
                 ) ntrvwr
@@ -5237,13 +5234,13 @@ class SqlDatabase:
                 ---------------------
                 --- INTERVIEWEES  ---
                 ---------------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Interviewee card_interviewee
-                    WHERE 
+                    WHERE
                         card_interviewee.id_interviewee = person.id
                     GROUP BY card_interviewee.id_card
                 ) ntrw
@@ -5252,13 +5249,13 @@ class SqlDatabase:
                 -------------------
                 --- PRESENTERS  ---
                 -------------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) presenters,  card_presenter.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Presenter card_presenter
-                    WHERE 
+                    WHERE
                         card_presenter.id_presenter = person.id
                     GROUP BY card_presenter.id_card
                 ) prsntr
@@ -5267,13 +5264,13 @@ class SqlDatabase:
                 ------------------
                 --- REPORTERS  ---
                 ------------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) reporters,  card_reporter.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Reporter card_reporter
-                    WHERE 
+                    WHERE
                         card_reporter.id_reporter = person.id
                     GROUP BY card_reporter.id_card
                 ) rprtr
@@ -5282,29 +5279,29 @@ class SqlDatabase:
                 ------------------
                 --- PERFORMER  ---
                 ------------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
                     SELECT group_concat(person.name) performers,  card_performer.id_card
-                    FROM 
+                    FROM
                         Person person,
                         Card_Performer card_performer
-                    WHERE 
+                    WHERE
                         card_performer.id_performer = person.id
                     GROUP BY card_performer.id_card
                 ) prfrmr
-                ON prfrmr.id_card=card.id    
+                ON prfrmr.id_card=card.id
 
                 --------------------------------------------
                 ---         TITLE REQUESTED              ---
                 --- On the requested language, if exists ---
-                --------------------------------------------    
+                --------------------------------------------
                 LEFT JOIN
                 (
                     SELECT tcl.id_card id_card, tcl.text ttitle_req, lang.name llang_req, lang.id lang_id
-                    FROM 
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE                
+                    FROM
+                        Text_Card_Lang tcl,
+                        Language lang
+                    WHERE
                         tcl.id_language=lang.id
                         AND tcl.type="T"
                         AND lang.name = :lang
@@ -5317,10 +5314,10 @@ class SqlDatabase:
                 LEFT JOIN
                 (
                     SELECT tcl.id_card id_card, tcl.text ttitle_orig, lang.name llang_orig, lang.id lang_id
-                    FROM 
-                        Text_Card_Lang tcl, 
-                        Language lang                    
-                    WHERE                
+                    FROM
+                        Text_Card_Lang tcl,
+                        Language lang
+                    WHERE
                         tcl.id_language=lang.id
                         AND tcl.type="T"
                         AND lang.name <> :lang
@@ -5361,15 +5358,15 @@ class SqlDatabase:
                         --- Select the storyline on the original language ---
 
                         SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
-                        FROM 
+                        FROM
                             Text_Card_Lang tcl,
                             Language language,
                             Card card
-                        WHERE 
+                        WHERE
                             tcl.type = "S" AND
                             tcl.id_language = language.id AND
                             tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
+                            card.id_title_orig=language.id AND
                             tcl.text IS NOT NULL
                     )
                     GROUP BY id_card
@@ -5405,20 +5402,20 @@ class SqlDatabase:
                         --- Select the lyrics on the original language ---
 
                         SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
-                        FROM 
+                        FROM
                             Text_Card_Lang tcl,
                             Language language,
                             Card card
-                        WHERE 
+                        WHERE
                             tcl.type = "L" AND
                             tcl.id_language = language.id AND
                             tcl.id_card = card.id AND
-                            card.id_title_orig=language.id AND        
+                            card.id_title_orig=language.id AND
                             tcl.text IS NOT NULL
                     )
                     GROUP BY id_card
                 )lrx
-                ON lrx.id_card=card.id       
+                ON lrx.id_card=card.id
 
                 --------------
                 --- MEDIUM ---
@@ -5438,40 +5435,40 @@ class SqlDatabase:
                 ----------------
                 --- APPENDIX ---
                 ----------------
-                 LEFT JOIN    
-                (    
+                 LEFT JOIN
+                (
                     SELECT
                         card_id,
                         group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
                     FROM
 
                         (
-                        SELECT                
+                        SELECT
                             merged_appendix.id,
                             merged_appendix.card_id,
-                            MAX(merged_appendix.title_req) title_req, 
+                            MAX(merged_appendix.title_req) title_req,
                             MAX(merged_appendix.title_orig) title_orig,
                             merged_appendix.show,
                             merged_appendix.download,
                             merged_appendix.source_path,
                             mt.name media_type,
-                            cm.name contact_media                
+                            cm.name contact_media
                         FROM
                             (
-                            SELECT 
+                            SELECT
                                 app_card.id id,
                                 id_higher_card card_id,
                                 app_card.isappendix,
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
-                                "" title_req, 
+                                "" title_req,
                                 tcl.text title_orig
-                            FROM 
+                            FROM
                                 CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
-                            WHERE                
+                                TEXT_CARD_LANG tcl,
+                                LANGUAGE lang
+                            WHERE
                                 app_card.isappendix=1
                                 AND tcl.id_card=app_card.id
                                 AND tcl.id_language=lang.id
@@ -5481,19 +5478,19 @@ class SqlDatabase:
 
                             UNION
 
-                            SELECT 
+                            SELECT
                                 app_card.id id,
                                 id_higher_card card_id,
                                 app_card.isappendix,
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
-                                tcl.text title_req, 
+                                tcl.text title_req,
                                 "" title_orig
-                            FROM 
+                            FROM
                                 CARD app_card,
-                                TEXT_CARD_LANG tcl, 
-                                LANGUAGE lang                    
+                                TEXT_CARD_LANG tcl,
+                                LANGUAGE lang
                             WHERE
                                 app_card.isappendix=1
                                 AND tcl.id_card=app_card.id
@@ -5519,7 +5516,7 @@ class SqlDatabase:
                 ---------------
                 LEFT JOIN
                 (
-                    SELECT 
+                    SELECT
                         ('start_epoch=' || start_epoch || ';recent_epoch=' || recent_epoch || ';recent_position=' || recent_position || ';play_count=' || count(*) ) recent_state,
                         id_card,
                         start_epoch,
@@ -5544,19 +5541,19 @@ class SqlDatabase:
                     FROM Rating
                     WHERE id_user=:user_id
                 )rtng
-                ON rtng.id_card=card.id  
+                ON rtng.id_card=card.id
 
                 ---------------
                 --- TAGGING ---
                 ---------------
-                LEFT JOIN    
+                LEFT JOIN
                 (
-                   SELECT 
+                   SELECT
                       group_concat(name) tags,
                       id_card
-                   FROM 
-                      Tag tag          
-                   WHERE 
+                   FROM
+                      Tag tag
+                   WHERE
                       id_user=:user_id
                    GROUP BY id_card
                 ) tggng
@@ -5576,7 +5573,7 @@ class SqlDatabase:
                 --- WHERE TITLE ---
                 AND CASE
                     WHEN :title IS NOT NULL AND ttitle_req IS NOT NULL THEN ttitle_req LIKE :title
-                    WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title                              
+                    WHEN :title IS NOT NULL THEN ttitle_orig LIKE :title
                     ELSE 1
                 END
 
@@ -5584,13 +5581,13 @@ class SqlDatabase:
                 AND CASE
                     WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
                 END
-                ''' + ('''                
+                ''' + ('''
                 --- WHERE THEMES - conditional ---
                 AND ''' + themes_where if themes_where else '') + '''
                 ''' + ('''
                 --- WHERE GENRES - conditional ---
                 AND ''' + genres_where if genres_where else '') + '''
-                ''' + ('''               
+                ''' + ('''
                 --- WHERE DIRECTORS - conditional ---
                 AND ''' + directors_where if directors_where else '') + '''
                 ''' + ('''
@@ -5604,10 +5601,10 @@ class SqlDatabase:
                 AND ''' + lecturers_where if lecturers_where else '') + '''
                 ''' + ('''
                 --- WHERE PERFORMERS - conditional ---
-                AND ''' + performers_where if performers_where else '') + '''  
+                AND ''' + performers_where if performers_where else '') + '''
                 ''' + ('''
                 --- WHERE TAGS - conditional ---
-                AND ''' + tags_where if tags_where else '') + '''  
+                AND ''' + tags_where if tags_where else '') + '''
         '''
 
         return query

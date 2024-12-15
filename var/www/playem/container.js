@@ -8,7 +8,7 @@ sectionIndex : The index of the HTML's scroll-section <div> (inside the thumbnal
 class ObjScrollSection {
     /**
      * Delete the existing Containers and create a given number of Containers
-     * 
+     *
      * <div id="scroll-section">
      *   <div class="thumbnail-container-block" id="container-block-1">
      *       <div class="thumbnail-container-title">Comedy</div>
@@ -21,10 +21,10 @@ class ObjScrollSection {
      *       <div class="thumbnail-container" id="container-1">
      *       </div>
      *       <div class="thumbnail-container-space" id="container-space-1"></div>
-     *   </div>   
+     *   </div>
      * </div>
-     * 
-     * @param {number} numberOfContainers 
+     *
+     * @param {number} numberOfContainers
      */
     // TODO: change current to focused
     constructor({ oContainerGenerator, historyLevels = { text: "", link: "" }, objThumbnailController = null }) {
@@ -203,16 +203,16 @@ class ObjScrollSection {
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
         let extras = thumbnail.getExtras();
         let recent_state = extras["recent_state"];
-        let full_time = extras["full_time"]; 
+        let full_time = extras["full_time"];
         let net_start_time = extras["net_start_time"];
         let net_stop_time = extras["net_stop_time"];
-      
+
         recent_state["recent_position"] = recent_position;
         extras["recent_state"] = recent_state;
         thumbnail.setExtras(extras);
 
         let progress_percentage;
-        // full_time != null && full_time > 600 && 
+        // full_time != null && full_time > 600 &&
         if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
             progress_percentage = 100 * recent_position / full_time;
         }else{
@@ -355,34 +355,37 @@ class ObjScrollSection {
 
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
-        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
-        // Vertical scroll 
-        let sectionHeight = this.domScrollSection.height();
-        let thumbnailContainerBlockHeight = this.domThumbnailContainerBlocks.eq(0).outerHeight(true);
+//        if (typeof focusedThumbnailList !== 'undefined') {
+            let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
-        let sectionScrollTop = this.domScrollSection.scrollTop();
-        let visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
+            // Vertical scroll
+            let sectionHeight = this.domScrollSection.height();
+            let thumbnailContainerBlockHeight = this.domThumbnailContainerBlocks.eq(0).outerHeight(true);
 
-        if (this.currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
-            this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
-        } else if (this.currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
-            this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
-        }
+            let sectionScrollTop = this.domScrollSection.scrollTop();
+            let visibleContainers = Math.floor(sectionHeight / thumbnailContainerBlockHeight);
 
-        // Horizontal scroll
-        let domContainer = $('#container-' + this.currentContainerIndex);
-        let containerWidth = domContainer.width();
-        let thumbnailWidth = domThumbnails.eq(0).outerWidth(true);
+            if (this.currentContainerIndex >= visibleContainers + sectionScrollTop / thumbnailContainerBlockHeight) {
+                this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * (this.currentContainerIndex - visibleContainers + 1) }, 200);
+            } else if (this.currentContainerIndex < sectionScrollTop / thumbnailContainerBlockHeight) {
+                this.domScrollSection.animate({ scrollTop: thumbnailContainerBlockHeight * this.currentContainerIndex }, 200);
+            }
 
-        let containerScrollLeft = domContainer.scrollLeft();
-        let visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
+            // Horizontal scroll
+            let domContainer = $('#container-' + this.currentContainerIndex);
+            let containerWidth = domContainer.width();
+            let thumbnailWidth = domThumbnails.eq(0).outerWidth(true);
 
-        if (currentThumbnailIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
-            domContainer.animate({ scrollLeft: thumbnailWidth * (currentThumbnailIndex - visibleThumbnails + 1) }, 200);
-        } else if (currentThumbnailIndex < containerScrollLeft / thumbnailWidth) {
-            domContainer.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
-        }
+            let containerScrollLeft = domContainer.scrollLeft();
+            let visibleThumbnails = Math.floor(containerWidth / thumbnailWidth);
+
+            if (currentThumbnailIndex >= visibleThumbnails + containerScrollLeft / thumbnailWidth) {
+                domContainer.animate({ scrollLeft: thumbnailWidth * (currentThumbnailIndex - visibleThumbnails + 1) }, 200);
+            } else if (currentThumbnailIndex < containerScrollLeft / thumbnailWidth) {
+                domContainer.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
+            }
+//        }
     }
 }
 
@@ -446,14 +449,14 @@ class ObjThumbnailContainer {
     }
 
     /**
-     * 
+     *
      * Add a new Thumbnail to the DOM
-     * It is called at the beginning. 
+     * It is called at the beginning.
      * In short, it is called when you click on ENTER
-     * 
-     * @param {Number} recordId 
-     * @param {Dict} thumbnail 
-     * 
+     *
+     * @param {Number} recordId
+     * @param {Dict} thumbnail
+     *
      * thumbnailDict = {
      *    "record_id": 123,
      *    "thumbnail_src": "images/categories/movie1.jpg",
@@ -470,16 +473,16 @@ class ObjThumbnailContainer {
      *       "actors": ["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"],
      *    }
      *    "extras": {
-     *       "length": "01:47:57", 
-     *       "year": 1989, 
-     *       "origin": ["Hungary", "Germany", "Australia"], 
-     *       "genre": ["Action", "Sci-fi"], 
+     *       "length": "01:47:57",
+     *       "year": 1989,
+     *       "origin": ["Hungary", "Germany", "Australia"],
+     *       "genre": ["Action", "Sci-fi"],
      *       "theme": ["War", "AI", "Life"]
      *    }
      * };
      *
      * ====================================================
-     *  
+     *
      * <div class="thumbnail" id="container-1_thumbnail-0">
      *   <div class="thumbnail-text-wrapper">
      *     <div class="thumbnail-text">1. box</div>
@@ -498,9 +501,9 @@ class ObjThumbnailContainer {
      * Buld up one Thumbnail
      * It is called from 'addThumbnail()' and from 'buildUpDom()'
      * This is a common part of creating Thumbnail
-     * 
-     * @param {*} thumbnailIndex 
-     * @param {*} objThumbnail 
+     *
+     * @param {*} thumbnailIndex
+     * @param {*} objThumbnail
      */
     coreDomeBuild(thumbnailIndex, objThumbnail){
         let title_thumb = objThumbnail.getThumbnailTitle();
@@ -545,7 +548,7 @@ class ObjThumbnailContainer {
         let recent_state = extras["recent_state"];
         if(recent_state != undefined && recent_state['recent_position'] != undefined){
             let recent_position = recent_state['recent_position'];
-            
+
             // Create the Progress bar
             let domPlayProgressWrapper = $("<div>", {
                 class: "thumbnail-play-progress-bar-wrapper"
@@ -559,14 +562,14 @@ class ObjThumbnailContainer {
             let progress_percentage;
             let net_start_time = extras["net_start_time"];
             let net_stop_time = extras["net_stop_time"];
-            let full_time = extras["full_time"]; 
+            let full_time = extras["full_time"];
 
             // This media:
             // - has been played at least once
             // - and the recent_position is not 0
             // - and the recent_position is between the net play time
             //
-            // full_time != null && full_time > 600 && 
+            // full_time != null && full_time > 600 &&
             if(recent_state['start_epoch'] != undefined && recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
                 let full_time = extras["full_time"];
 
@@ -607,10 +610,10 @@ class Thumbnail {
     *       "actors": ["Woody Harrelson", "Jesse Eisenberg", "Emma Stone"],
     *    }
     *    "extras": {
-    *       "length": "01:47:57", 
-    *       "year": 1989, 
-    *       "origin": ["Hungary", "Germany", "Australia"], 
-    *       "genre": ["Action", "Sci-fi"], 
+    *       "length": "01:47:57",
+    *       "year": 1989,
+    *       "origin": ["Hungary", "Germany", "Australia"],
+    *       "genre": ["Action", "Sci-fi"],
     *       "theme": ["War", "AI", "Life"]
     *    }
     * };
@@ -638,7 +641,7 @@ class Thumbnail {
         if (thumbnail_src != undefined) {
             this.thumbnailDict["thumbnail_src"] = thumbnail_src;
         }
-        
+
         if (description_src != undefined) {
             this.thumbnailDict["description_src"] = description_src;
         }
@@ -859,7 +862,7 @@ class ObjDescriptionContainer {
     * It configures an onload listener on the new image.
     * When the image loaded, this function will calculate the size of the elements in the description and
     * it will show the details
-    * 
+    *
     * <div id="description-section">
     *   <div id="description-text-div">
     *       <div id="description-text-wrapper">
@@ -886,10 +889,10 @@ class ObjDescriptionContainer {
     *   </div>
     *   <div id="description-image"></div>
     *<div>
-    * 
-    * @param {*} fileName 
-    * @param {*} storyline 
-    * @param {*} credential 
+    *
+    * @param {*} fileName
+    * @param {*} storyline
+    * @param {*} credential
     */
     refreshDescription(thumbnail, card_id, fileName, title, storyline, lyrics, credentials, extra, appendix_list) {
         let mainObject = this;
@@ -908,7 +911,7 @@ class ObjDescriptionContainer {
                 mainObject.description_img.width = descImg.width;
 
                 // -------------
-                // --- title ---        
+                // --- title ---
                 // -------------
                 let descTextTitle = $("#description-text-title");
                 descTextTitle.empty();
@@ -921,19 +924,19 @@ class ObjDescriptionContainer {
                 if (storyline) {
 
                     // -----------------
-                    // --- storyline ---        
+                    // --- storyline ---
                     // -----------------
                     descTextStoryline.html(storyline);
 
                 } else if (lyrics) {
                     // --------------
-                    // --- lyrics ---        
+                    // --- lyrics ---
                     // --------------
                     descTextStoryline.html(lyrics);
 
                 } else{
                     // -------------
-                    // --- empty ---        
+                    // --- empty ---
                     // -------------
 
                     descTextStoryline.html("");
@@ -1056,7 +1059,7 @@ class ObjDescriptionContainer {
                     descTagging.append(tagButton);
 
                     // Construct TAG buttons
-                    for (let i = 0; i < extra["tags"].length; i++ ){  
+                    for (let i = 0; i < extra["tags"].length; i++ ){
                         let tag_name = extra["tags"][i];
                         let hash = tag_name.hashCode();
                         let tagButton = $('<div>', {
@@ -1070,7 +1073,7 @@ class ObjDescriptionContainer {
                         let tagButtonClose = $('<span>', {
                             class: "description-tagging-button-close",
                             //🗙❌
-                            text: '\u{274C}' , 
+                            text: '\u{274C}' ,
                             tag_name: tag_name,
                             hash: hash
                         });
@@ -1082,11 +1085,11 @@ class ObjDescriptionContainer {
 
                     // 'Add TAG' listener
                     tagButtonText.on("click", function() {
-                        
+
                         // Disable the global key event listener
                         let orig_focus_task = refToObjThumbnailController.focusTask
                         refToObjThumbnailController.focusTask = FocusTask.Text;
-                        
+
                         tagButton.hide(); // Hide the + button
 
                         // Create text field
@@ -1096,7 +1099,7 @@ class ObjDescriptionContainer {
                         });
                         // put the text field in the first position
                         descTagging.prepend(textField); // Add text field
-                        
+
                         // Focus on the text field
                         textField.focus();
 
@@ -1131,7 +1134,7 @@ class ObjDescriptionContainer {
 
                                     // If the removal was successful
                                     if(response.status == 200 && response.responseJSON["result"]){
-                                        
+
                                         // Show the tag from the screen
                                         let tagButton = $('<div>', {
                                         id: 'description-tagging-' + hash,
@@ -1144,7 +1147,7 @@ class ObjDescriptionContainer {
                                         let tagButtonClose = $('<span>', {
                                             class: "description-tagging-button-close",
                                             //🗙❌
-                                            text: '\u{274C}' , 
+                                            text: '\u{274C}' ,
                                             tag_name: tag_name,
                                             hash: hash
                                         });
@@ -1161,16 +1164,16 @@ class ObjDescriptionContainer {
                                             let thumbnailList = objThumbnailContainer.thumbnailList
                                             for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
                                                 let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
-                                            
+
                                                 let single = thumbnail.function_for_selection.single;
                                                 if("medium_dict" in single){
                                                     let other_card_id = single.medium_dict["card_id"];
-                                                
+
                                                     if(other_card_id == card_id){
-                                                    
+
                                                         thumbnail.addExtraTag(tag_name);
 
-                                                    }                                    
+                                                    }
                                                 }
                                             }
                                         }
@@ -1225,7 +1228,7 @@ class ObjDescriptionContainer {
                                         if(other_card_id == card_id){
 
                                             thumbnail.removeExtrasTag(tag_name);
-                                        }                                    
+                                        }
                                     }
                                 }
                             }
@@ -1250,19 +1253,19 @@ class ObjDescriptionContainer {
                     //
                     // Generate the stars dynamically when the page loads
                     //
-            
+
                     // Dynamically generate the star divs with img elements
                     for (let i = 1; i <= max_rate; i++) {
                         let starDiv = $('<div>', {
                             id: 'description-rating-' + i,
                             class: 'description-rating-rate'
                         });
-            
+
                         let starImg = $('<img>', {
                             key: i,
                             src: 'images/rating/star-not-selected.png' // Initially set to 'not-selected'
                         });
-            
+
                         starDiv.append(starImg);
                         descRating.append(starDiv);
 
@@ -1279,7 +1282,7 @@ class ObjDescriptionContainer {
                     $('.description-rating-rate img').hover(function() {
                         //let index = $(this).index() + 1;
                         let imgSrc = $(this).attr('src');
-                
+
                         // Change focus images on hover
                         if (imgSrc.includes('star-selected')) {
                             $(this).attr('src', 'images/rating/star-selected-focus.png');
@@ -1289,7 +1292,7 @@ class ObjDescriptionContainer {
                     }, function(){
                         //let index = $(this).index() + 1;
                         let imgSrc = $(this).attr('src');
-                
+
                         // Reset images on mouse leave
                         if (imgSrc.includes('star-selected-focus') || imgSrc.includes('star-selected')) {
                             $(this).attr('src', 'images/rating/star-selected.png');
@@ -1304,7 +1307,7 @@ class ObjDescriptionContainer {
                     $('.description-rating-rate img').click(function() {
                         //let index = $(this).index() + 1; // Get the clicked star index
                         let index = parseInt($(this).attr('key'));
-                
+
                         // Three scenarios:
                         if (index > rate) {
                             // 1. Image was 'not selected', select all to the left including this one
@@ -1316,7 +1319,7 @@ class ObjDescriptionContainer {
                             // 3. Image was 'selected', deselect all on the right side but keep the left side
                             rate = index;
                         }
-                
+
                         //
                         // Update the stars based on the new rate
                         //
@@ -1333,7 +1336,7 @@ class ObjDescriptionContainer {
                         let rq_assync = false;
                         let rq_data = {"card_id": card_id, "rate": rate}
                         let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
-                        
+
                         if(response.status == 200){
 
                             //
@@ -1355,7 +1358,7 @@ class ObjDescriptionContainer {
                                             // console.log("  thumbnail: " + thumbnailIndex + ", card: " + card_id + ", rate: " + rate);
 
                                             thumbnail.setExtrasRate(rate);
-                                        }                                    
+                                        }
                                     }
                                 }
                             }
@@ -1455,7 +1458,7 @@ class ObjDescriptionContainer {
                     // Every media in the appendix, will be shown, one by one, as show/play button except the media_type=picture
                     // All media with media_type=picture in one appendix will be shown as ONE show/play button
                     if (show == 1) {
-                        // Unicode Character: 25B6 ▶, 23EF ⏯, 
+                        // Unicode Character: 25B6 ▶, 23EF ⏯,
                         let title_with_icon = '\u{25B6}' + " " + appendix_list[i]['title'];
 
                         // Through the keys: mediaTypes: text/picture/ebook
@@ -1517,7 +1520,7 @@ class ObjDescriptionContainer {
     * It resizes the description image and the description text wrapper (in the CSS) according to the available place
     * It is called when the size of the description section changed
     * Typically used by the ResizeObserver
-    * 
+    *
     */
     resizeDescriptionSection() {
         let domDescriptionSectionDiv = $("#description-section");
@@ -1643,7 +1646,7 @@ class ThumbnailController {
         this.focusTask = FocusTask.Menu;
         this.updateMediaHistoryIntervalId = null;
         this.media_history_start_epoch = null;
-       
+
         this.objScrollSection = new ObjScrollSection({ oContainerGenerator: mainMenuGenerator, objThumbnailController: this });
 
         let tshl = $("#history-section-link");
@@ -1719,11 +1722,11 @@ class ThumbnailController {
                 this.playMediaPdf(medium_dict);
 
             } else if ("txt" in functionSingle) {
-                let medium_dict = functionSingle["medium_dict"];                
+                let medium_dict = functionSingle["medium_dict"];
                 this.playMediaText(medium_dict);
 
             } else if ("code" in functionSingle) {
-                let medium_dict = functionSingle["medium_dict"];                
+                let medium_dict = functionSingle["medium_dict"];
                 this.playMediaCode(medium_dict);
             }
         }
@@ -1733,17 +1736,17 @@ class ThumbnailController {
     Generates the actual media_dict for the player_list
     */
     getMediumDict(hit){
-                       
+
         let media;
         let medium_dict = {};
         let screenshot_path = null;
-        
+
         if(!hit["is_appendix"]){
             screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
         }
 
         let media_type = Object.keys(hit["medium"])[0]
-          
+
         // if picture
         if( media_type == "picture" ){
             media = hit["medium"][media_type][0]
@@ -1759,7 +1762,7 @@ class ThumbnailController {
             }else{
                 medium_dict["medium_path"] = null
             }
-        }   
+        }
 
         medium_dict["media_type"] = media_type;
         medium_dict["screenshot_path"] = screenshot_path,
@@ -1770,7 +1773,7 @@ class ThumbnailController {
         medium_dict["net_stop_time"] = hit["net_stop_time"];
         medium_dict["full_time"] = hit["full_time"];
 
-        return medium_dict;            
+        return medium_dict;
     }
 
 
@@ -1779,7 +1782,7 @@ class ThumbnailController {
     // Play Appendix Media
     playAppendixMedia(medium_dict){
         let media_type = medium_dict["media_type"];
-        
+
         if(media_type == "audio" || media_type == "video"){
             this.playMediaAudioVideo([medium_dict]);
         }else if(media_type == "pdf"){
@@ -1795,7 +1798,7 @@ class ThumbnailController {
 
 
     playMediaAudioVideo(continuous_list){
-        
+
         // Takes the first element from the list
         let medium_dict = continuous_list[0];
 
@@ -1816,7 +1819,7 @@ class ThumbnailController {
             let recent_position = refToThis.getMediaPositionInLatestHistory(card_id, limit_days)
 
             // The length of the media >= 10 minutes and Recent Position is between the Net Play interval then I handle the continuous play
-            // full_time != null && full_time > 600 && 
+            // full_time != null && full_time > 600 &&
             if (recent_position != null && (recent_position < net_stop_time) && (recent_position >= net_start_time) && recent_position != 0){
 
                 // Disable keys behind the Dialog()
@@ -1842,7 +1845,7 @@ class ThumbnailController {
                         buttons: {
                             [continue_button]: function() {
                                 $( this ).dialog( "close" );
-                                refToThis.configurePlayer(refToThis, continuous_list, recent_position);                       
+                                refToThis.configurePlayer(refToThis, continuous_list, recent_position);
                             },
                             [from_beginning_button]: function() {
                                 $( this ).dialog( "close" );
@@ -1873,11 +1876,11 @@ class ThumbnailController {
                         beforeClose: function(event){
 
                             if (event.originalEvent && event.originalEvent.key === "Escape") {
-                                
+
                                 // Delay needed to not propagate ESC
-                                setTimeout(function () {      
+                                setTimeout(function () {
                                     refToThis.focusTask = refToThis.originalTask;
-                                }, 200);    
+                                }, 200);
                             }else{
                                 refToThis.focusTask = refToThis.originalTask;
                             }
@@ -1903,10 +1906,10 @@ class ThumbnailController {
 
 
     /**
-     * 
-     * @param {*} refToThis 
+     *
+     * @param {*} refToThis
      * @param {*} continuous_list - Still contains the recent playing media - first element
-     * @param {*} recent_position 
+     * @param {*} recent_position
      */
     configurePlayer(refToThis, continuous_list, recent_position){
 
@@ -1956,10 +1959,10 @@ class ThumbnailController {
             player.poster = "";
         }
 
-        // this part works together with startPlayer() and pausePlayer() 
+        // this part works together with startPlayer() and pausePlayer()
         // Using this, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
         // The below code is a temporary solution. I kept it to learn:
-        //        setTimeout(function () {      
+        //        setTimeout(function () {
         //            player.play();
         //         }, 550);
         //        player.play();
@@ -2006,7 +2009,7 @@ class ThumbnailController {
         // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
         $('#video_player').focus();
 
-        refToThis.focusTask = FocusTask.Player;        
+        refToThis.focusTask = FocusTask.Player;
     }
 
 
@@ -2050,7 +2053,7 @@ class ThumbnailController {
                     retToThis.focusTask = FocusTask.Menu;
                 }
             });
-        }    
+        }
     }
 
 
@@ -2086,7 +2089,7 @@ class ThumbnailController {
             });
         }
     }
-    
+
     playMediaText(medium_dict){
         let medium_path = medium_dict["medium_path"];
 
@@ -2128,15 +2131,15 @@ class ThumbnailController {
 
                 retToThis.focusTask = FocusTask.Menu;
             });
-        }        
+        }
     }
 
 
     /**
      * Come here when the recent media stopped playing
      * Make decision if the next media should be played, and start to play it if needed
-     * 
-     * @param {*} event 
+     *
+     * @param {*} event
      * @param {*} continuous_list - Still contains the recent playing media - first element
      */
     finishedPlaying(event, continuous_list) {
@@ -2156,7 +2159,7 @@ class ThumbnailController {
         let card_id = medium_dict["card_id"];
 
         // Update the Current Position at the finished position
-        if (this.media_history_start_epoch != null){            
+        if (this.media_history_start_epoch != null){
             //let card_id = medium_dict["card_id"];
             this.updateMediaHistory(this.media_history_start_epoch, card_id)
         }
@@ -2171,48 +2174,48 @@ class ThumbnailController {
         // Set the progressbar in the hierarchy for ALL Thumbnails in all ThumbnailContainer
         //
         for (let containerIndex = 0; containerIndex < this.objScrollSection.thumbnailContainerList.length; containerIndex++) {
-        
+
             let domThumbnails = $('#container-' + containerIndex + ' .thumbnail');
             let objThumbnailContainer = this.objScrollSection.thumbnailContainerList[containerIndex];
             let thumbnailList = objThumbnailContainer.thumbnailList
             for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
                 let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
-            
+
                 let single = thumbnail.function_for_selection.single;
                 if("medium_dict" in single){
                     let other_card_id = single.medium_dict["card_id"];
-                
+
                     if(other_card_id == card_id){
-                    
+
                         let extras = thumbnail.getExtras();
                         let recent_state = extras["recent_state"];
-                        let full_time = extras["full_time"]; 
+                        let full_time = extras["full_time"];
                         let net_start_time = extras["net_start_time"];
                         let net_stop_time = extras["net_stop_time"];
-                        
+
                         recent_state["recent_position"] = recent_position;
                         extras["recent_state"] = recent_state;
                         thumbnail.setExtras(extras);
-                        
+
                         let progress_percentage;
-                        // full_time != null && full_time > 600 && 
+                        // full_time != null && full_time > 600 &&
                         if(recent_position != 0 && recent_position >= net_start_time && recent_position < net_stop_time){
                             progress_percentage = 100 * recent_position / full_time;
                         }else{
                             progress_percentage = 0;
                         }
-                        
+
                         let bar_wrapper = domThumbnails.eq(thumbnailIndex).find(".thumbnail-play-progress-bar-wrapper");
                         let bar = domThumbnails.eq(thumbnailIndex).find(".thumbnail-play-progress-bar")
-                        
+
                         bar.css('width', progress_percentage + '%');
-                        
+
                         if(progress_percentage == 0){
                             bar_wrapper.hide()
                         }else{
                             bar_wrapper.show()
                         }
-                    }                                    
+                    }
                 }
             }
         }
@@ -2227,7 +2230,7 @@ class ThumbnailController {
         if (event == 'ended' && continuous_list.length > 0) {
 
             this.objScrollSection.arrowRight()
-            
+
             let medium_dict = continuous_list[0];
             let medium_path = medium_dict["medium_path"];
             let screenshot_path = medium_dict["screenshot_path"];
@@ -2242,14 +2245,14 @@ class ThumbnailController {
                 screenshot_path = medium_dict["screenshot_path"];
                 card_id = medium_dict["card_id"];
                 title = medium_dict["title"];
-                
+
                 // next focus on the thumbnails
                 this.objScrollSection.arrowRight()
             }
-           
+
             // if the recent element is media
             if(medium_path != null){
-            
+
                 // Creates a new source element
                 let sourceElement = $('<source>');
                 sourceElement.attr('src', medium_path);
@@ -2293,7 +2296,7 @@ class ThumbnailController {
 
         domPlayer.hide();
 
-        this.pausePlayer()        
+        this.pausePlayer()
         //player.pause();
 
         player.height = 0;
@@ -2364,9 +2367,9 @@ class ThumbnailController {
 
     /**
      * POST REST request to register the recent media in the History
-     */ 
+     */
     registerMediaInHistory(card_id, recent_position){
-        
+
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/personal/history/update";
         let rq_assync = false;
@@ -2392,10 +2395,10 @@ class ThumbnailController {
 
     /**
      * POST REST request to update the recent media in the History
-     * 
-     * @param {*} refToThis 
-     * @param {*} start_epoch 
-     * @param {*} card_id 
+     *
+     * @param {*} refToThis
+     * @param {*} start_epoch
+     * @param {*} card_id
      */
     updateMediaHistory(start_epoch, card_id){
         let player = $("#video_player")[0];
@@ -2420,8 +2423,8 @@ class ThumbnailController {
         let rq_url = "http://" + host + port + "/personal/history/request";
         let rq_assync = false;
         let rq_data = {"card_id": card_id, "limit_records": "1", "limit_days": limit_days}
-        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });  
-    
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
+
         let response_dict = response.responseJSON;
         let result = response_dict['result'];
         let data_list = response_dict['data'];

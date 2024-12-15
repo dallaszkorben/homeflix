@@ -10,14 +10,14 @@ class Generator{
 
     static startSpinner(){
         $("#spinner").show();
-        $("#spinner").attr("width", "100%");    
-        $("#spinner").attr("height", "100%");    
+        $("#spinner").attr("width", "100%");
+        $("#spinner").attr("height", "100%");
     }
 
     static stopSpinner(){
         $("#spinner").hide();
-        $("#spinner").attr("width", "0");    
-        $("#spinner").attr("height", "0");    
+        $("#spinner").attr("width", "0");
+        $("#spinner").attr("height", "0");
     }
 
     showContainers(objScrollSection){
@@ -59,9 +59,9 @@ class RestGenerator extends Generator{
     generateThumbnail(filter, play_list){
         throw new Error("Implement generateThumbnails() method in the " + this.constructor.name + " class!");
     }
-    
+
     getTruncatedTitle(text, max_length){
-        let tail = "...";    
+        let tail = "...";
         if (text.length > max_length + tail.length)
             text = text.slice(0, max_length) + tail;
         return text;
@@ -72,32 +72,32 @@ class RestGenerator extends Generator{
         let container_list = [];
 
         for(let request of requestList){
-    
+
             // Build up the request url out of filter
             for (const [key, value] of Object.entries(request['filter'])) {
                 request['rq_url'] = request['rq_url'].format(key, value);
             }
 
-            let oContainer = new ObjThumbnailContainer(request["title"]);            
+            let oContainer = new ObjThumbnailContainer(request["title"]);
             container_list.push(oContainer);
 
             // // Asyncronous GET
             // $.getJSON(request['rq_url'], function(request_result, status, xhr){
             //     if( status == 'success'){
             //         for(let index=0; index<request_result.length; index++){
-                    
+
             //             let line = request_result[index];
             //             let play_list = [];
-                    
+
             //             //
             //             // Collects all media which needs to continuous play
             //             //
             //             for(let sub_index=index; sub_index<request_result.length; sub_index++){
             //                 play_list.push(request_result[sub_index]);
             //             }
-                    
+
             //             let thumbnail = refToThis.generateThumbnail(request['filter'], play_list);
-                    
+
             //             oContainer.addThumbnail(line["id"], thumbnail);
             //         }
             //         if(request_result.length == 0){
@@ -110,6 +110,9 @@ class RestGenerator extends Generator{
             // });
 
 
+            // In order to save time, we only send REST list requests if they have not already been sent and stored in the LokalStorage
+            // Unfortunately, this has not fundamentally accelerated the process on WebOS. Here, it is actually the thumbnail objects that take a lot of time to render.
+            // :(
             let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
             let saved_request = getLocalStorage(request_id);
             let request_result = undefined;
@@ -128,7 +131,7 @@ class RestGenerator extends Generator{
             }else{
                 request_result = JSON.parse(saved_request);
             }
-            
+
             //for(let index in request_result){
             for(let index=0; index<request_result.length; index++){
                 let line = request_result[index];
@@ -144,7 +147,8 @@ class RestGenerator extends Generator{
                 oContainer.addThumbnail(line["id"], thumbnail);
             }
 
-            if(request_result.length == 0){
+            // Remove the thumbnail line if the content is empty and the request is static. If the request is dynamic, then the empty result is can be different later
+            if(request_result.length == 0 && request['rq_static']){
                 const index = container_list.findIndex(item => item === oContainer);
                 if (index !== -1) {
                     container_list.splice(index, 1);
@@ -162,7 +166,7 @@ class RestGenerator extends Generator{
         if(!hit["lang_orig"]){
             hit["lang_orig"] = "";
         }
-        
+
         if(hit["title_on_thumbnail"]){
 
             // request was not on the original language
@@ -253,7 +257,7 @@ class RestGenerator extends Generator{
     static getRandomFileFromDirectory(path,filter){
         let file_list = [];
         let rawText = $.ajax({url: path, async: false}).responseText;
-        $(rawText).find('tr > td > a').not(':first').each(function(){                          
+        $(rawText).find('tr > td > a').not(':first').each(function(){
             let file_name = $(this).attr("href");
             if(filter.test(file_name))
                 file_list.push(file_name);
@@ -264,12 +268,12 @@ class RestGenerator extends Generator{
         return random_file;
     }
 
-    static getRandomSnapshotPath(source_path){       
+    static getRandomSnapshotPath(source_path){
         return RestGenerator.getRandomFilePath(source_path, "thumbnails", "images/thumbnails/thumbnail_empty_460x600.jpg");
     }
 
-    static getRandomScreenshotPath(source_path){   
-        return RestGenerator.getRandomFilePath(source_path, "screenshots", "images/thumbnails/screenshot_empty_1100x500.jpg");  
+    static getRandomScreenshotPath(source_path){
+        return RestGenerator.getRandomFilePath(source_path, "screenshots", "images/thumbnails/screenshot_empty_1100x500.jpg");
     }
 
     static getRandomFilePath(source_path, folder_name, default_path){
@@ -294,11 +298,9 @@ class RestGenerator extends Generator{
         let history_title = this.getHistoryTitle(hit);
         let main_title = RestGenerator.getMainTitle(hit);
 
-//        let card_id = hit["id"];
-
         // If any numbers of appendix belong to the card (regardles of it is media card or level)
         if(hit["appendix"]){
- 
+
             let appendix_list = [];
             for(let appendix of hit["appendix"]){
 
@@ -317,7 +319,7 @@ class RestGenerator extends Generator{
                 let media = {};
                 media[appendix["mt"]] = appendix["cm"];
                 appendix_dic["media"] = media;
-                appendix_list.push(appendix_dic);                
+                appendix_list.push(appendix_dic);
             }
 
             // save the appendix list
@@ -336,9 +338,9 @@ class RestGenerator extends Generator{
             thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"] });
 
             thumbnail.setFunctionForSelection({
-                "single": 
+                "single":
                     {
-                        "menu": 
+                        "menu":
                             (function(hierarchy_id, filters) {
                                 return function() {
                                     return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id, filters);
@@ -429,9 +431,9 @@ class RestGenerator extends Generator{
             // TODO: fix it
             // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I choose. It could be changed
             thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], full_time: card["full_time"],net_start_time: card["net_start_time"], net_stop_time: card["net_stop_time"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"], recent_state: hit["recent_state"], 'rate': hit['rate'], 'skip_continuous_play': hit['skip_continuous_play'], 'tags': hit['tags']});
-    
+
             thumbnail.setFunctionForSelection({
-                "single": 
+                "single":
                     {
                         [mode]: null,
                         "medium_dict": medium_dict
@@ -440,7 +442,7 @@ class RestGenerator extends Generator{
             });
         }
         return thumbnail;
-    }    
+    }
 }
 
 
@@ -495,7 +497,7 @@ class SubLevelRestGenerator extends  RestGenerator{
 // MAIN MENU
 // =========
 //
-class MainMenuGenerator extends Generator{  
+class MainMenuGenerator extends Generator{
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -508,14 +510,14 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie.jpg", description_src: "images/categories/movie.jpg"});
         thumbnail.setTitles({main: translated_titles['movies'], thumb: translated_titles['movies'], history: translated_titles['movies']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                     (function(movie_type) {
                         return function() {
                             return new MovieMenuGenerator(refToThis.language_code);
                         };
-                    })("movies")            
+                    })("movies")
                 },
             "continuous": []
         });
@@ -526,9 +528,9 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music.jpg", description_src: "images/categories/music.jpg"});
         thumbnail.setTitles({main: translated_titles['music'], thumb: translated_titles['music'], history: translated_titles['music']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicMenuGenerator(refToThis.language_code);
@@ -544,9 +546,9 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/radioplay.jpg", description_src: "images/categories/radioplay.jpg"});
         thumbnail.setTitles({main: translated_titles['radioplay'], thumb: translated_titles['radioplay'], history: translated_titles['radioplay']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new RadioplayMenuGenerator(refToThis.language_code);
@@ -555,16 +557,16 @@ class MainMenuGenerator extends Generator{
                 },
             "continuous": []
         });
-        oContainer.addThumbnail(3, thumbnail);        
+        oContainer.addThumbnail(3, thumbnail);
 
         // Audiobook
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/audiobook.jpg", description_src: "images/categories/audiobook.jpg"});
         thumbnail.setTitles({main: translated_titles['audiobook'], thumb: translated_titles['audiobook'], history: translated_titles['audiobook']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new AudiobookMenuGenerator(refToThis.language_code);
@@ -580,9 +582,9 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/ebook.jpg", description_src: "images/categories/ebook.jpg"});
         thumbnail.setTitles({main: translated_titles['ebook'], thumb: translated_titles['ebook'], history: translated_titles['ebook']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new EbookMenuGenerator(refToThis.language_code);
@@ -598,9 +600,9 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/dia.jpg", description_src: "images/categories/dia.jpg"});
         thumbnail.setTitles({main: translated_titles['dia'], thumb: translated_titles['dia'], history: translated_titles['dia']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new DiaMenuGenerator(refToThis.language_code);
@@ -609,16 +611,16 @@ class MainMenuGenerator extends Generator{
                 },
             "continuous": []
         });
-        oContainer.addThumbnail(6, thumbnail);        
+        oContainer.addThumbnail(6, thumbnail);
 
         // Entertainment
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/entertainment.jpg", description_src: "images/categories/entertainment.jpg"});
         thumbnail.setTitles({main: translated_titles['entertainments'], thumb: translated_titles['entertainments'], history: translated_titles['entertainments']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(){
                             return function(){
                                 return new EntertainmentLevelRestGenerator(refToThis.language_code, translated_titles['entertainment']);
@@ -634,9 +636,9 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/knowledge.jpg", description_src: "images/categories/knowledge.jpg"});
         thumbnail.setTitles({main: translated_titles['knowledge'], thumb: translated_titles['knowledge'], history: translated_titles['knowledge']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(){
                             return function(){
                                 return new KnowledgeLevelRestGenerator(refToThis.language_code, translated_titles['knowledge']);
@@ -652,9 +654,9 @@ class MainMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/personal.jpg", description_src: "images/categories/personal.jpg"});
         thumbnail.setTitles({main: translated_titles['personal'], thumb: translated_titles['personal'], history: translated_titles['personal']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(){
                             return function(){
                                 return new PersonalLevelRestGenerator(refToThis.language_code, translated_titles['personal']);
@@ -666,9 +668,9 @@ class MainMenuGenerator extends Generator{
         oContainer.addThumbnail(9, thumbnail);
 
         containerList.push(oContainer);
- 
+
         return containerList;
-    }  
+    }
 }
 
 
@@ -677,7 +679,7 @@ class MainMenuGenerator extends Generator{
 // ==========
 //
 // I changed the parent because I need mixed content inside (normal and rest)
-class MovieMenuGenerator extends GeneralRestGenerator{    
+class MovieMenuGenerator extends GeneralRestGenerator{
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -690,9 +692,9 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_mixed.jpg", description_src: "images/categories/movie_mixed.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_mixed'], thumb: translated_titles['movie_mixed'], history: translated_titles['movie_mixed']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieFilterRestGenerator(refToThis.language_code);
@@ -708,9 +710,9 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_series.jpg", description_src: "images/categories/movie_series.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_series'], thumb: translated_titles['movie_series'], history: translated_titles['movie_series']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieSerialsLevelRestGenerator(refToThis.language_code, translated_titles['movie_series']);
@@ -726,9 +728,9 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_sequels.jpg", description_src: "images/categories/movie_sequels.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_sequels'], thumb: translated_titles['movie_sequels'], history: translated_titles['movie_sequels']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieSequelsLevelRestGenerator(refToThis.language_code, translated_titles['movie_sequels']);
@@ -744,9 +746,9 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_remakes.jpg", description_src: "images/categories/movie_remakes.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_remakes'], thumb: translated_titles['movie_remakes'], history: translated_titles['movie_remakes']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieRemakesLevelRestGenerator(refToThis.language_code, translated_titles['movie_remakes']);
@@ -763,9 +765,9 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_playlists.jpg", description_src: "images/categories/movie_playlists.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_playlists'], thumb: translated_titles['movie_playlists'], history: translated_titles['movie_playlists']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MoviePlaylistsRestGenerator(refToThis.language_code, translated_titles['movie_playlists']);
@@ -779,15 +781,15 @@ class MovieMenuGenerator extends GeneralRestGenerator{
         // ---
 
         containerList.push(oContainer);
- 
+
         return containerList;
-    }  
+    }
 }
 
 
 
 
-class MovieFilterRestGenerator extends GeneralRestGenerator{    
+class MovieFilterRestGenerator extends GeneralRestGenerator{
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -799,9 +801,9 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_by_genre.jpg", description_src: "images/categories/movie_by_genre.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_by_genre'], thumb: translated_titles['movie_by_genre'], history: translated_titles['movie_by_genre']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieFilterGenreRestGenerator(refToThis.language_code);
@@ -817,9 +819,9 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_by_theme.jpg", description_src: "images/categories/movie_by_theme.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_by_theme'], thumb: translated_titles['movie_by_theme'], history: translated_titles['movie_by_theme']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieFilterThemeRestGenerator(refToThis.language_code);
@@ -835,9 +837,9 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_by_director.jpg", description_src: "images/categories/movie_by_director.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_by_director'], thumb: translated_titles['movie_by_director'], history: translated_titles['movie_by_director']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieFilterDirectorRestGenerator(refToThis.language_code);
@@ -853,9 +855,9 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_by_actor.jpg", description_src: "images/categories/movie_by_actor.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_by_actor'], thumb: translated_titles['movie_by_actor'], history: translated_titles['movie_by_actor']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieFilterActorRestGenerator(refToThis.language_code);
@@ -871,9 +873,9 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/movie_by_title_abc.jpg", description_src: "images/categories/movie_by_title_abc.jpg"});
         thumbnail.setTitles({main: translated_titles['movie_by_title_abc'], thumb: translated_titles['movie_by_title_abc'], history: translated_titles['movie_by_title_abc']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MovieFilterAbcRestGenerator(refToThis.language_code);
@@ -887,7 +889,7 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
         // ---
 
         containerList.push(oContainer);
- 
+
         return containerList;
     }
 }
@@ -980,8 +982,8 @@ class MovieFilterDirectorRestGenerator extends  GeneralRestGenerator{
         let rq_url = "http://" + host + port + "/collect/directors/by/movie/count";
         let rq_assync = false;
         let rq_data = {"category": "movie", "minimum": 2, "limit": 40}
-        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
-    
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
+
         let response_dict = response.responseJSON;
         let result = response_dict['result']
         let data_list = response_dict['data']
@@ -1005,15 +1007,15 @@ class MovieFilterDirectorRestGenerator extends  GeneralRestGenerator{
                     lecturers: '*',
                     performers: '*',
                     origins: '*',
-                    decade: '*'  
+                    decade: '*'
                 }
                 let line_dict = {
                     title: value,
                     rq_static: true,
                     rq_method: "GET",
-                    rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  refToThis.language_code, 
+                    rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  refToThis.language_code,
                     filter: filter
-                }                
+                }
                 requestList.push(line_dict);
             });
         }
@@ -1035,8 +1037,8 @@ class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
         let rq_url = "http://" + host + port + "/collect/actors/by/role/count";
         let rq_assync = false;
         let rq_data = {"category": "movie", "minimum": 3, "limit": 40}
-        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })     
-    
+        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data })
+
         let response_dict = response.responseJSON;
         let result = response_dict['result']
         let data_list = response_dict['data']
@@ -1060,15 +1062,15 @@ class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
                     lecturers: '*',
                     performers: '*',
                     origins: '*',
-                    decade: '*'  
+                    decade: '*'
                 }
                 let line_dict = {
                     title: value,
                     rq_static: true,
                     rq_method: "GET",
-                    rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  refToThis.language_code, 
+                    rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  refToThis.language_code,
                     filter: filter
-                }                
+                }
                 requestList.push(line_dict);
             });
         }
@@ -1175,7 +1177,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
             {title: this.container_title + "-" + translated_genre_movie['tale'],        rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_tail_filter},
             {title: this.container_title + "-" + translated_genre_movie['drama'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_drama_filter},
             {title: this.container_title + "-" + translated_genre_movie['comedy'],      rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_comedy_filter},
-            {title: this.container_title + "-" + translated_genre_movie['thriller'],    rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_thriller_filter},           
+            {title: this.container_title + "-" + translated_genre_movie['thriller'],    rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_thriller_filter},
             {title: this.container_title + "-" + translated_genre_movie['scifi'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_scifi_filter},
             {title: this.container_title + "-" + translated_genre_movie['documentary'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_documentary_filter},
 
@@ -1284,7 +1286,7 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
     }
 }
 
-    
+
 
 
 
@@ -1294,7 +1296,7 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
 //
 // ==========
 //
-class MusicMenuGenerator extends Generator{  
+class MusicMenuGenerator extends Generator{
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -1308,9 +1310,9 @@ class MusicMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_decade.jpg", description_src: "images/categories/music_by_decade.jpg"});
         thumbnail.setTitles({main: translated_titles['music_by_decade'], thumb: translated_titles['music_by_decade'], history: translated_titles['music_by_decade']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterDecadeRestGenerator(refToThis.language_code);
@@ -1326,9 +1328,9 @@ class MusicMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_genre.jpg", description_src: "images/categories/music_by_genre.jpg"});
         thumbnail.setTitles({main: translated_titles['music_by_genre'], thumb: translated_titles['music_by_genre'], history: translated_titles['music_by_genre']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterGenreRestGenerator(refToThis.language_code);
@@ -1337,16 +1339,16 @@ class MusicMenuGenerator extends Generator{
                 },
             "continuous": []
         });
-        oContainerVideo.addThumbnail(2, thumbnail);        
+        oContainerVideo.addThumbnail(2, thumbnail);
 
         // ABC
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_band_abc.jpg", description_src: "images/categories/music_by_band_abc.jpg"});
         thumbnail.setTitles({main: translated_titles['music_by_band_abc'], thumb: translated_titles['music_by_band_abc'], history: translated_titles['music_by_band_abc']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterGroupAbcRestGenerator(refToThis.language_code);
@@ -1356,15 +1358,15 @@ class MusicMenuGenerator extends Generator{
             "continuous": []
         });
         oContainerVideo.addThumbnail(3, thumbnail);
-        
+
         // Playlist
         thumbnail = new Thumbnail();
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_video_playlists.jpg", description_src: "images/categories/music_video_playlists.jpg"});
         thumbnail.setTitles({main: translated_titles['music_video_playlists'], thumb: translated_titles['music_video_playlists'], history: translated_titles['music_video_playlists']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoPlaylistsRestGenerator(refToThis.language_code, translated_titles['music_video_playlists']);
@@ -1385,9 +1387,9 @@ class MusicMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_decade.jpg", description_src: "images/categories/music_by_decade.jpg"});
         thumbnail.setTitles({main: translated_titles['music_by_decade'], thumb: translated_titles['music_by_decade'], history: translated_titles['music_by_decade']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterDecadeRestGenerator(refToThis.language_code);
@@ -1403,9 +1405,9 @@ class MusicMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_genre.jpg", description_src: "images/categories/music_by_genre.jpg"});
         thumbnail.setTitles({main: translated_titles['music_by_genre'], thumb: translated_titles['music_by_genre'], history: translated_titles['music_by_genre']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterGenreRestGenerator(refToThis.language_code);
@@ -1421,9 +1423,9 @@ class MusicMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_by_band_abc.jpg", description_src: "images/categories/music_by_band_abc.jpg"});
         thumbnail.setTitles({main: translated_titles['music_by_band_abc'], thumb: translated_titles['music_by_band_abc'], history: translated_titles['music_by_band_abc']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterGroupAbcRestGenerator(refToThis.language_code);
@@ -1439,9 +1441,9 @@ class MusicMenuGenerator extends Generator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_audio_playlists.jpg", description_src: "images/categories/music_audio_playlists.jpg"});
         thumbnail.setTitles({main: translated_titles['music_audio_playlists'], thumb: translated_titles['music_audio_playlists'], history: translated_titles['music_audio_playlists']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioPlaylistsRestGenerator(refToThis.language_code, translated_titles['music_audio_playlists']);
@@ -1453,12 +1455,12 @@ class MusicMenuGenerator extends Generator{
         oContainerAudio.addThumbnail(4, thumbnail);
 
         // ===
- 
+
         containerList.push(oContainerVideo);
         containerList.push(oContainerAudio);
- 
+
         return containerList;
-    }  
+    }
 }
 
 
@@ -1483,9 +1485,9 @@ class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_band.jpg", description_src: "images/categories/music_band.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_band'], thumb: translated_titles['music_level_band'], history: translated_titles['music_level_band']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterDecadeOnBandRestGenerator(refToThis.language_code);
@@ -1501,9 +1503,9 @@ class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_record.jpg", description_src: "images/categories/music_record.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_record'], thumb: translated_titles['music_level_record'], history: translated_titles['music_level_record']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterDecadeOnRecordRestGenerator(refToThis.language_code);
@@ -1512,12 +1514,12 @@ class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
                 },
             "continuous": []
         });
-        oContainerDecades.addThumbnail(2, thumbnail);        
+        oContainerDecades.addThumbnail(2, thumbnail);
 
         containerList.push(oContainerDecades);
- 
+
         return containerList;
-    }  
+    }
 }
 
 
@@ -1538,9 +1540,9 @@ class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_band.jpg", description_src: "images/categories/music_band.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_band'], thumb: translated_titles['music_level_band'], history: translated_titles['music_level_band']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterGenreOnBandRestGenerator(refToThis.language_code);
@@ -1556,9 +1558,9 @@ class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_record.jpg", description_src: "images/categories/music_record.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_record'], thumb: translated_titles['music_level_record'], history: translated_titles['music_level_record']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicVideoFilterGenreOnRecordRestGenerator(refToThis.language_code);
@@ -1567,14 +1569,14 @@ class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
                 },
             "continuous": []
         });
-        oContainerGenre.addThumbnail(2, thumbnail);      
+        oContainerGenre.addThumbnail(2, thumbnail);
 
         // ===
 
         containerList.push(oContainerGenre);
- 
+
         return containerList;
-    } 
+    }
 }
 
 
@@ -1697,7 +1699,7 @@ class MusicVideoPlaylistsRestGenerator  extends GeneralRestGenerator{
 // ===================
 
 // ===   Decade    ===
-   
+
 class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
 
     getContainerList(){
@@ -1713,9 +1715,9 @@ class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_band.jpg", description_src: "images/categories/music_band.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_band'], thumb: translated_titles['music_level_band'], history: translated_titles['music_level_band']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterDecadeOnBandRestGenerator(refToThis.language_code);
@@ -1731,9 +1733,9 @@ class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_record.jpg", description_src: "images/categories/music_record.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_record'], thumb: translated_titles['music_level_record'], history: translated_titles['music_level_record']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterDecadeOnRecordRestGenerator(refToThis.language_code);
@@ -1742,12 +1744,12 @@ class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
                 },
             "continuous": []
         });
-        oContainerDecades.addThumbnail(2, thumbnail);        
+        oContainerDecades.addThumbnail(2, thumbnail);
 
         containerList.push(oContainerDecades);
- 
+
         return containerList;
-    }  
+    }
 }
 
 
@@ -1768,9 +1770,9 @@ class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_band.jpg", description_src: "images/categories/music_band.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_band'], thumb: translated_titles['music_level_band'], history: translated_titles['music_level_band']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterGenreOnBandRestGenerator(refToThis.language_code);
@@ -1786,9 +1788,9 @@ class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/music_record.jpg", description_src: "images/categories/music_record.jpg"});
         thumbnail.setTitles({main: translated_titles['music_level_record'], thumb: translated_titles['music_level_record'], history: translated_titles['music_level_record']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(movie_type) {
                             return function() {
                                 return new MusicAudioFilterGenreOnRecordRestGenerator(refToThis.language_code);
@@ -1797,14 +1799,14 @@ class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
                 },
             "continuous": []
         });
-        oContainerGenre.addThumbnail(2, thumbnail);      
+        oContainerGenre.addThumbnail(2, thumbnail);
 
         // ===
 
         containerList.push(oContainerGenre);
- 
+
         return containerList;
-    }  
+    }
 }
 
 // === ABC ===
@@ -2164,8 +2166,8 @@ class RadioplayMenuGenerator extends  GeneralRestGenerator{
 
         let requestList = [
             {title: translated_titles['radioplay'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_radioplay},
-        ];        
-        
+        ];
+
         containerList = this.generateContainers(requestList);
         return containerList;
     }
@@ -2197,9 +2199,9 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
         thumbnail.setImageSources({thumbnail_src: "images/categories/audiobook_playlists.jpg", description_src: "images/categories/audiobook_playlists.jpg"});
         thumbnail.setTitles({main: translated_titles['audiobook_playlists'], thumb: translated_titles['audiobook_playlists'], history: translated_titles['audiobook_playlists']});
         thumbnail.setFunctionForSelection({
-            "single": 
+            "single":
                 {
-                    "menu": 
+                    "menu":
                         (function(music_type) {
                             return function() {
                                 return new AudiobookPlaylistsRestGenerator(refToThis.language_code, translated_titles['audiobook_playlists']);
@@ -2210,7 +2212,7 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
         });
         oContainer.addThumbnail(1, thumbnail);
         containerList.push(oContainer);
- 
+
         return containerList;
     }
 }
@@ -2266,7 +2268,7 @@ class EbookMenuGenerator extends  GeneralRestGenerator{
         let containerList = [];
 
         let filter_ebook = {category: 'ebook', playlist: '*',  tags: '*', level: 'menu', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        
+
         let requestList = [
 //            {title: translated_titles['ebook'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/ebook/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
             {title: translated_titles['ebook'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_ebook},
@@ -2277,7 +2279,7 @@ class EbookMenuGenerator extends  GeneralRestGenerator{
     }
 }
 
-    
+
 // ========
 // Dia MENU
 // ========
@@ -2292,7 +2294,7 @@ class DiaMenuGenerator extends  GeneralRestGenerator{
 
         let requestList = [
 //            {title: translated_titles['dia'],  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/standalone/category/dia/genre/*/theme/*/director/*/actor/*/origin/*/decade/*/lang/" +  this.language_code},
-            {title: translated_titles['dia'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_dia},            
+            {title: translated_titles['dia'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_dia},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -2338,7 +2340,7 @@ class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
 
         let requestList = [
 //            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/general/level/menu/category/knowledge/genre/*/theme/*/origin/*/decade/*/lang/" +  this.language_code},
-            {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},                        
+            {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},
         ];
 
         containerList = this.generateContainers(requestList);
@@ -2359,7 +2361,7 @@ class PersonalLevelRestGenerator extends  GeneralRestGenerator{
         let filter_knowledge = {category: 'personal', playlist: '*',  tags: '*', level: 'menu', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
 
         let requestList = [
-            {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},                        
+            {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},
         ];
 
         containerList = this.generateContainers(requestList);
