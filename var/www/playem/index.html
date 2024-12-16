@@ -63,7 +63,7 @@
         let translated_genre_movie;
         let translated_categories;
         let translated_themes;
-        
+
         // Load Version
         rq_method = "GET";
         rq_url = "http://" + host + port + "/info/version";
@@ -92,28 +92,28 @@
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_genre_movie = result.responseJSON;
-        
+
         // Load Translated Themes
         rq_method = "GET";
         rq_url = "http://" + host + port + "/translate/themes/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_themes = result.responseJSON;
-     
+
         // Load Translated Categories
         rq_method = "GET";
         rq_url = "http://" + host + port + "/translate/categories/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_categories = result.responseJSON;
-     
+
         // Load Translated Genre: Music
         rq_method = "GET";
         rq_url = "http://" + host + port + "/translate/genres/category/music/lang/" + user_data['language_code'];
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_genre_music = result.responseJSON;
-     
+
         // Load Translated Levels
         rq_method = "GET";
         rq_url = "http://" + host + port + "/translate/levels/lang/" + user_data['language_code'];
@@ -155,6 +155,9 @@
         //     });
         // };
 
+        // Delay in any async function: await delay(100);
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
         function print(value){
             let stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
             console.log(stringValue);
@@ -187,15 +190,15 @@
 
         function deleteLocalStorageStartingWith(prefix) {
             const keysToDelete = [];
-    
+
             // First collect all matching keys
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith(prefix)) {
                     keysToDelete.push(key);
                 }
-            }            
-    
+            }
+
             // Then remove them
             keysToDelete.forEach(key => {
                 localStorage.removeItem(key);
@@ -241,16 +244,16 @@
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
             const secs = Math.floor(seconds % 60);
-        
+
             // Format hours, minutes, and seconds into the desired string
             const formattedTime = `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        
+
             return formattedTime;
         }
 
         function formatTimeCodeToSeconds(timeCode){
             const [hours, minutes, seconds] = timeCode.split(':').map(Number);
-        
+
             // Convert to seconds
             const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
 
@@ -376,13 +379,13 @@
             // find diff
             let difference = max - min;
 
-            // generate random number 
+            // generate random number
             let rand = Math.random();
 
-            // multiply with difference 
+            // multiply with difference
             rand = Math.floor(rand * difference);
 
-            // add with min value 
+            // add with min value
             rand = rand + min;
 
             return rand;
@@ -446,7 +449,7 @@
                     currentImg.attr('src', currentImg.data('selected')); // Leaving selected image
                 }
             });
-        
+
             // Image clicked
             $('.description-rating-rate img').click(function() {
                 if (selectedImg) {
@@ -658,7 +661,7 @@
                     // Delete all request/response in the Local Storage
                     deleteLocalStorageStartingWith(PREFIX_LOCAL_STORAGE);
 
-                    setTimeout(function(){                    
+                    setTimeout(function(){
                         rq_method = "POST";
                         rq_url = "http://" + host + port + "/control/update/sw";
                         rq_assync = false;
@@ -747,14 +750,14 @@
             //
             let login_sub_menu = translated_interaction_labels['menu']['login']['sub_menus']['login'];
             let logout_sub_menu = translated_interaction_labels['menu']['login']['sub_menus']['logout'];
-            
+
             let user_prefix = translated_interaction_labels['menu']['login']['user_prefix'];
             let user_not_logged_in = translated_interaction_labels['menu']['login']['user_not_logged_in'];
             let personal = user_data["name"] != null ? user_data["name"] : user_not_logged_in;
 
             $("#personal-menu li[value='login']" ).text(login_sub_menu);
             $("#personal-menu li[value='logout']" ).text(logout_sub_menu);
-            
+
             $('#personal-menu .main-menu-text' ).text(user_prefix + ": " + personal);
             $('.option.personal').on('click', function() {
                 let personal = $(this).attr("value");
@@ -764,7 +767,7 @@
 
                     $('#username').val("");
                     $('#password').val("");
-                    
+
                     originalTask = oThumbnailController.focusTask;
                     oThumbnailController.focusTask = FocusTask.Modal_Login;
 
@@ -792,23 +795,23 @@
                                     var username = $("#username").val();
                                     var password = $("#password").val();
 
-                                    // Login message to the server                                
+                                    // Login message to the server
                                     let rq_method = "POST";
                                     let rq_url = "http://" + host + port + "/auth/login";
                                     let rq_assync = false;
                                     let data = { "username": username, "password": password }
                                     let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
-                                    
+
                                     let response_dict = response.responseJSON;
                                     let result = response_dict['result']
                                     let data_dict = response_dict['data']
                                     let error = response_dict['error']
-                                    
+
                                     $(this).dialog("close");
 
                                     //window.alert(JSON.stringify(response_dict))
 
-                                    if(result){                                
+                                    if(result){
                                         window.location.reload(true);
                                     }
                                 }
@@ -832,7 +835,7 @@
                             $(document).off("keydown.arrowKeys"); // Remove listener on close
 
                             // Delay needed to not propagate ESC
-                            setTimeout(function () {      
+                            setTimeout(function () {
                                 oThumbnailController.focusTask = originalTask;
                             }, 500);
 
@@ -842,14 +845,14 @@
 
                 // LOGOUT
                 }else if(personal=="logout"){
-                    
-                    // Login message to the server                                
+
+                    // Login message to the server
                     let rq_method = "POST";
                     let rq_url = "http://" + host + port + "/auth/logout";
                     let rq_assync = false;
                     let data = '{}'
                     let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data })
-                    
+
                     if(response.status == 200){
                         let response_dict = response.responseJSON;
                         let result = response_dict['result']
@@ -878,7 +881,7 @@
 </head>
 
 <body>
-  
+
     <div id="dialog-warning-update-failed" title="Failure" style="display:none">
         <div class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></div><p></p>
     </div>
@@ -900,7 +903,7 @@
               <input type="text" name="name" id="username" value="" autocomplete="off" class="text ui-widget-content ui-corner-all">
               <label for="password">Password</label>
               <input type="password" name="password" autocomplete="off" id="password" value="" class="text ui-widget-content ui-corner-all">
-            
+
               <!-- Allow form submission with keyboard without duplicating the dialog button -->
               <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
             </fieldset>
@@ -972,7 +975,7 @@
                         <div id="description-appendix">
                             <div id="description-appendix-download"></div>
                             <div id="description-appendix-play"></div>
-                        </div>                        
+                        </div>
 
                     </div>
                 </div>

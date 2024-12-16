@@ -20,20 +20,45 @@ class Generator{
         $("#spinner").attr("height", "0");
     }
 
+    containerListInOne(){
+        return false;
+    }
+
     showContainers(objScrollSection){
         let refToThis = this
         Generator.startSpinner();
 
+        // Force GUI refresh to make the spinner visible
         setTimeout(function () {
 
-            let containerList = refToThis.getContainerList();
+            let containerList;
+
+            if(refToThis.containerListInOne()){
+                containerList = refToThis.getContainerList();
+            }else{
+                containerList = refToThis.getContainerList(
+                    function(){
+                        Generator.stopSpinner();
+                        objScrollSection.focusDefault();
+                        objScrollSection.buildUpDom()
+                    },
+                    function(){
+                        //Generator.stopSpinner();
+                        //objScrollSection.focusDefault();
+                        objScrollSection.buildUpDom()
+                    }
+                );
+            }
+
             containerList.forEach(oContainer => {
                 objScrollSection.addThumbnailContainerObject(oContainer);
-            });
+                }
+            );
 
-            Generator.stopSpinner();
-
-            objScrollSection.focusDefault();
+            if(refToThis.containerListInOne()){
+                Generator.stopSpinner();
+                objScrollSection.focusDefault();
+            }
 
         }, 0);
     }
@@ -67,9 +92,10 @@ class RestGenerator extends Generator{
         return text;
     }
 
-    generateContainers(requestList){
+    generateContainers(requestList, minimalThumbnails, allThumbnails){
         let refToThis = this;
         let container_list = [];
+        let response_list = [];
 
         for(let request of requestList){
 
@@ -78,40 +104,66 @@ class RestGenerator extends Generator{
                 request['rq_url'] = request['rq_url'].format(key, value);
             }
 
-            let oContainer = new ObjThumbnailContainer(request["title"]);
-            container_list.push(oContainer);
+//            // Syncronous GET
+//            //
+//            // In order to save time, we only send REST list requests if they have not already been sent and stored in the LokalStorage
+//            // Unfortunately, this has not fundamentally accelerated the speed on WebOS. Here, it is actually the thumbnail objects that take a lot of time to render.
+//            // It is fast on my desktop pc (3 sec) but it is pretty slow on WebOS tv (20 sec)
+//            // :(
+//            let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
+//            let saved_request = getLocalStorage(request_id);
+//            let request_result = undefined;
+//
+//            if(saved_request == null || !request["rq_static"]){
+//
+//                // Send REST request
+//                request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);
+//                let stringified_result = JSON.stringify(request_result);
+//
+//                // It saves only if the request is static. If it is for example playlist (last seen ...), it should be generated always generated
+//                if(request["rq_static"]){
+//                    setLocalStorage(request_id, stringified_result);
+//                }
+//
+//            }else{
+//                request_result = JSON.parse(saved_request);
+//            }
+//
+//            // Add this container to the container list if it is possible and needed
+//            // Add the thumbnail line if the content is not empty or the request not is static. If the request is dynamic, then the empty result can be different later
+//            if(request_result.length > 0 || !request['rq_static']){
+//                let oContainer = new ObjThumbnailContainer(request["title"]);
+//                container_list.push(oContainer);
+//
+//                //for(let index in request_result){
+//                // Go through all the thumbnails in on line
+//                for(let index=0; index<Math.min(request_result.length, 11); index++){
+//                    let line = request_result[index];
+//                    let play_list = [];
+//
+//                    //
+//                    // Collects all media which needs to continuous play
+//                    //
+//                    for(let sub_index=index; sub_index<request_result.length; sub_index++){
+//                        play_list.push(request_result[sub_index]);
+//                    }
+//                    let thumbnail = this.generateThumbnail(request['filter'], play_list);
+//                    oContainer.addThumbnail(line["id"], thumbnail);
+//                }
+//            }
+//        }
 
-            // // Asyncronous GET
-            // $.getJSON(request['rq_url'], function(request_result, status, xhr){
-            //     if( status == 'success'){
-            //         for(let index=0; index<request_result.length; index++){
+            //
+            // Syncronous GET / Async fill up
+            //
 
-            //             let line = request_result[index];
-            //             let play_list = [];
-
-            //             //
-            //             // Collects all media which needs to continuous play
-            //             //
-            //             for(let sub_index=index; sub_index<request_result.length; sub_index++){
-            //                 play_list.push(request_result[sub_index]);
-            //             }
-
-            //             let thumbnail = refToThis.generateThumbnail(request['filter'], play_list);
-
-            //             oContainer.addThumbnail(line["id"], thumbnail);
-            //         }
-            //         if(request_result.length == 0){
-            //             const index = container_list.findIndex(item => item === oContainer);
-            //             if (index !== -1) {
-            //                 container_list.splice(index, 1);
-            //             }
-            //         }
-            //     }
-            // });
-
-
-            // In order to save time, we only send REST list requests if they have not already been sent and stored in the LokalStorage
-            // Unfortunately, this has not fundamentally accelerated the process on WebOS. Here, it is actually the thumbnail objects that take a lot of time to render.
+            // === Caching Strategy for REST Responses ===
+            // We use LocalStorage to cache REST responses and avoid redundant server requests.
+            // A new REST request is only made when either:
+            // 1. It's the first time accessing this data
+            // 2. The data is dynamic (!request["rq_static"])
+            //
+            // Note: On WebOS, performance bottleneck remains due to slow thumbnail rendering, rather than REST request latency.
             // :(
             let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
             let saved_request = getLocalStorage(request_id);
@@ -132,30 +184,205 @@ class RestGenerator extends Generator{
                 request_result = JSON.parse(saved_request);
             }
 
-            //for(let index in request_result){
-            for(let index=0; index<request_result.length; index++){
-                let line = request_result[index];
-                let play_list = [];
+            // Now I have the request_result for the recent thumbnail container
+            // Add this container to the container list if it is possible and needed
+            // Add the thumbnail line if the content is not empty or the request not is static. If the request is dynamic, then the empty result can be different later
+            if(request_result.length > 0 || !request['rq_static']){
+                let oContainer = new ObjThumbnailContainer(request["title"]);
+                container_list.push(oContainer);
 
-                //
-                // Collects all media which needs to continuous play
-                //
-                for(let sub_index=index; sub_index<request_result.length; sub_index++){
-                    play_list.push(request_result[sub_index]);
-                }
-                let thumbnail = this.generateThumbnail(request['filter'], play_list);
-                oContainer.addThumbnail(line["id"], thumbnail);
+                // Add the result to a dictionary to a later process after this loop
+                response_list.push({filter: request['filter'], container: oContainer, result: request_result})
             }
-
-            // Remove the thumbnail line if the content is empty and the request is static. If the request is dynamic, then the empty result is can be different later
-            if(request_result.length == 0 && request['rq_static']){
-                const index = container_list.findIndex(item => item === oContainer);
-                if (index !== -1) {
-                    container_list.splice(index, 1);
-                }
-            }
-
         }
+
+        // Now every response are collected in 'response_dict'
+
+        // === Thumbnail load section ===
+        async function processContainers() {
+
+            // Waiting needed to be sure the function will return before the 'minimalThumbnails() callback function returns
+            await delay(100);
+
+            // Phase 1: Synchronous generation of initial thumbnails
+            const MAX_LINES = 3;       // Maximum number of lines to process initially
+            const MAX_THUMBNAILS = 11; // Maximum number of thumbnails per line initially
+
+            const actualLines = Math.min(response_list.length, MAX_LINES);
+            for (let lineIndex = 0; lineIndex < actualLines; lineIndex++) {
+                const response = response_list[lineIndex];
+                const actualThumbnails = Math.min(response['result'].length, MAX_THUMBNAILS);
+
+                for (let index = 0; index < actualThumbnails; index++) {
+                    let line = response['result'][index];
+                    let play_list = [];
+
+                    for (let sub_index = index; sub_index < response['result'].length; sub_index++) {
+                        play_list.push(response['result'][sub_index]);
+                    }
+
+                    let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+                    response['container'].addThumbnail(line["id"], thumbnail);
+                }
+            }
+
+            // Initial batch is done, call the callback
+            minimalThumbnails();
+            await delay(100);
+
+            // Phase 2: Asynchronous generation of remaining thumbnails
+            const linePromises = response_list.map((response, lineIndex) => {
+                return new Promise(async (resolve) => {
+
+                    // For lines we already processed partially
+                    if (lineIndex < MAX_LINES) {
+
+                        // Continue from where we left off
+                        for (let index = MAX_THUMBNAILS; index < response['result'].length; index++) {
+                            await delay(1);
+
+                            let line = response['result'][index];
+                            let play_list = [];
+
+                            for (let sub_index = index; sub_index < response['result'].length; sub_index++) {
+                                play_list.push(response['result'][sub_index]);
+                            }
+
+                            let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+                            response['container'].addThumbnail(line["id"], thumbnail);
+                        }
+                    }
+
+                    // For lines we haven't processed at all
+                    else {
+                        for (let index = 0; index < response['result'].length; index++) {
+                            await delay(1);
+                            let line = response['result'][index];
+                            let play_list = [];
+
+                            for (let sub_index = index; sub_index < response['result'].length; sub_index++) {
+                                play_list.push(response['result'][sub_index]);
+                            }
+
+                            let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+                            response['container'].addThumbnail(line["id"], thumbnail);
+                        }
+                    }
+                    resolve();
+                });
+            });
+
+            try {
+                // Wait for all remaining thumbnails to complete
+                await Promise.all(linePromises);
+                allThumbnails();
+            } catch (error) {
+                console.error('Error processing containers:', error);
+            }
+        }
+
+        // Start the processing
+        processContainers();
+
+
+
+
+
+//            // Syncronous GET / Async fill up
+//            //
+//            // In order to save time, we only send REST list requests if they have not already been sent and stored in the LokalStorage
+//            // Unfortunately, this has not fundamentally accelerated the speed on WebOS. Here, it is actually the thumbnail objects that take a lot of time to render.
+//            // :(
+//            let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
+//            let saved_request = getLocalStorage(request_id);
+//            let request_result = undefined;
+//
+//            if(saved_request == null || !request["rq_static"]){
+//
+//                // Send REST request
+//                request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);
+//                let stringified_result = JSON.stringify(request_result);
+//
+//                // It saves only if the request is static. If it is for example playlist (last seen ...), it should be generated always generated
+//                if(request["rq_static"]){
+//                    setLocalStorage(request_id, stringified_result);
+//                }
+//
+//            }else{
+//                request_result = JSON.parse(saved_request);
+//            }
+//
+//            // Now I have the request_result for the recent thumbnail container
+//            // Add this container to the container list if it is possible and needed
+//            // Add the thumbnail line if the content is not empty or the request not is static. If the request is dynamic, then the empty result can be different later
+//            if(request_result.length > 0 || !request['rq_static']){
+//                let oContainer = new ObjThumbnailContainer(request["title"]);
+//                container_list.push(oContainer);
+//
+//                // Add the result to a dictionary to a later process after this loop
+//                response_list.push({filter: request['filter'], container: oContainer, result: request_result})
+//            }
+//        }
+//
+//        // Now every response are collected in 'response_dict'
+//
+//        async function processContainers() {
+//            const MINIMUM_THUMBNAILS = 1;
+//            const totalLines = response_list.length;
+//
+//            try {
+//                const linePromises = response_list.map(response => {
+//                    return new Promise(async (resolve) => {
+//
+//                        for(let index = 0; index < response['result'].length; index++) {
+//                            if(index % 11 == 0){
+//                                await delay(0);
+//                            }
+//                            let line = response['result'][index];
+//                            let play_list = [];
+//
+//                            for(let sub_index = index; sub_index < response['result'].length; sub_index++) {
+//                                play_list.push(response['result'][sub_index]);
+//                            }
+//
+//                            let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+//                            response['container'].addThumbnail(line["id"], thumbnail);
+//
+//                            if (index >= (MINIMUM_THUMBNAILS-1) || index >= response['result'].length) {
+//                                callbackContainerGenerationFinished();
+//                            }
+//                        }
+//                        resolve();
+//                    });
+//                });
+//
+//                // Wait for all lines to complete (continues loading all thumbnails)
+//                await Promise.all(linePromises);
+//
+//            } catch (error) {
+//                console.error('Error processing containers:', error);
+//            }
+//        }
+//
+//        // Start the processing
+//        processContainers();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // It is time to return the container list with yet empty thumbnail containers
+        // The caller will add the containers to the scroll section
         return container_list;
     }
 
@@ -474,7 +701,7 @@ class SubLevelRestGenerator extends  RestGenerator{
         this.filters = filters;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         // TODO: we just added the filter in the constructor. Now I add it again
@@ -483,7 +710,7 @@ class SubLevelRestGenerator extends  RestGenerator{
             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed/card_id/" + this.hierarchy_id + "/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: this.filters},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -498,6 +725,10 @@ class SubLevelRestGenerator extends  RestGenerator{
 // =========
 //
 class MainMenuGenerator extends Generator{
+    containerListInOne(){
+        return true;
+    }
+
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -680,6 +911,10 @@ class MainMenuGenerator extends Generator{
 //
 // I changed the parent because I need mixed content inside (normal and rest)
 class MovieMenuGenerator extends GeneralRestGenerator{
+    containerListInOne(){
+        return true;
+    }
+
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -790,6 +1025,10 @@ class MovieMenuGenerator extends GeneralRestGenerator{
 
 
 class MovieFilterRestGenerator extends GeneralRestGenerator{
+    containerListInOne(){
+        return true;
+    }
+
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -896,21 +1135,23 @@ class MovieFilterRestGenerator extends GeneralRestGenerator{
 
 
 class MovieFilterGenreRestGenerator extends  GeneralRestGenerator{
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
-        let filter_drama       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'drama',                  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_scifi       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'scifi',                  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_drama       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'drama_AND__NOT_comedy_AND__NOT_war_AND__NOT_satire_AND__NOT_crime_AND__NOT_thriller_AND__NOT_fantasy_AND__NOT_music_AND__NOT_scifi_AND__NOT_horror',                  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_scifi       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'scifi_AND__NOT_trash',   themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_fantasy     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'fantasy',                themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_comedy      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'comedy_AND__NOT_teen',   themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_teen        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'teen',                   themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_satire      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'satire',                 themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_crime       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'crime',                  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_action      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'action',                 themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_crime       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'crime_AND__NOT_trash',   themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_action      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'action_AND__NOT_trash',  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_thriller    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'thriller',               themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_horror      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'horror_AND__NOT_trash',  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_western     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'western',                themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_war         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'war',                    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_music       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'music',                  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_history     = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'history',                themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_documentary = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'documentary',            themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
         let filter_trash       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'trash',                  themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
 
@@ -924,33 +1165,36 @@ class MovieFilterGenreRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_movie['crime'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_crime},
             {title: translated_genre_movie['action'],      rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_action},
             {title: translated_genre_movie['thriller'],    rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_thriller},
+            {title: translated_genre_movie['horror'],      rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_horror},
             {title: translated_genre_movie['western'],     rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_western},
             {title: translated_genre_movie['war'],         rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_war},
             {title: translated_genre_movie['music'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_music},
+            {title: translated_genre_movie['history'],     rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_history},
             {title: translated_genre_movie['documentary'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_documentary},
             {title: translated_genre_movie['trash'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_trash},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
 
 
 class MovieFilterThemeRestGenerator extends  GeneralRestGenerator{
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
-        let filter_apocalypse    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'apocalypse', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_dystopia      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'dystopia',   directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_conspiracy    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'conspiracy', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_drog          = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'drog',       directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_maffia        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'maffia',     directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_broker        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'broker',     directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_media         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'media',      directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_evil          = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'evil',       directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_alien         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'alien',      directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
-        let filter_revenge       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'revenge',    directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_apocalypse    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'apocalypse',  directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_dystopia      = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'dystopia',    directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_conspiracy    = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'conspiracy',  directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_drog          = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'drog',        directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_maffia        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'maffia',      directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_broker        = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'broker',      directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_media         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'media',       directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_psychopathy   = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'psychopathy', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_evil          = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'evil',        directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_alien         = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'alien',       directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
+        let filter_revenge       = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: 'revenge',     directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
 
         let requestList = [
             {title: translated_themes['apocalypse'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_apocalypse},
@@ -960,19 +1204,20 @@ class MovieFilterThemeRestGenerator extends  GeneralRestGenerator{
             {title: translated_themes['maffia'],           rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_maffia},
             {title: translated_themes['broker'],           rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_broker},
             {title: translated_themes['media'],            rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_media},
+            {title: translated_themes['psychopathy'],      rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_psychopathy},
             {title: translated_themes['evil'],             rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_evil},
             {title: translated_themes['alien'],            rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_alien},
             {title: translated_themes['revenge'],          rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_revenge},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
 
 
 class MovieFilterDirectorRestGenerator extends  GeneralRestGenerator{
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let refToThis = this;
 
         let containerList = [];
@@ -1020,14 +1265,14 @@ class MovieFilterDirectorRestGenerator extends  GeneralRestGenerator{
             });
         }
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
 
 
 class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let refToThis = this;
 
         let containerList = [];
@@ -1075,7 +1320,7 @@ class MovieFilterActorRestGenerator extends  GeneralRestGenerator{
             });
         }
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1086,7 +1331,7 @@ class MovieFilterAbcRestGenerator extends  GeneralRestGenerator{
     //
     // TODO: need REST request to select by Name*
     //
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_0_9  = {category: 'movie', playlist: '*',  tags: '*', level: '*', filter_on: '-', title: '0%25_OR_1%25_OR_2%25_OR_3%25_OR_4%25_OR_5%25_OR_6%25_OR_7%25_OR_8%25_OR_9%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1147,7 +1392,7 @@ class MovieFilterAbcRestGenerator extends  GeneralRestGenerator{
             {title: 'Z',    rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_z},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -1161,7 +1406,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let series_tail_filter         = {category: 'movie', playlist: '*',  tags: '*', level: 'series', filter_on: '*', title: '*', genres:'tale',        themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1184,7 +1429,7 @@ class MovieSerialsLevelRestGenerator extends  GeneralRestGenerator{
         //    {title: this.container_title + "-", rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: series_filter}
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1198,7 +1443,7 @@ class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let sequel_drama_filter    = {category: 'movie', playlist: '*',  tags: '*', level: 'sequel', filter_on: '*', title: '*', genres:'drama',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1219,7 +1464,7 @@ class MovieSequelsLevelRestGenerator extends  GeneralRestGenerator{
         //    {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: sequel_filter}
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1230,7 +1475,7 @@ class MovieRemakesLevelRestGenerator extends GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let remake_filter = {category: 'movie', playlist: '*',  tags: '*', level: 'remake', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1239,7 +1484,7 @@ class MovieRemakesLevelRestGenerator extends GeneralRestGenerator{
             {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: remake_filter}
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1254,7 +1499,7 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let interrupted_filter =  {category: 'movie', playlist: 'interrupted',  tags: '*', level: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1281,7 +1526,7 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
             }
         }
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1297,6 +1542,10 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
 // ==========
 //
 class MusicMenuGenerator extends Generator{
+    containerListInOne(){
+        return true;
+    }
+
     getContainerList(){
         let refToThis = this;
         let containerList = [];
@@ -1471,6 +1720,9 @@ class MusicMenuGenerator extends Generator{
 // ===   Decade    ===
 
 class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
+    containerListInOne(){
+        return true;
+    }
 
     getContainerList(){
         let refToThis = this;
@@ -1526,6 +1778,9 @@ class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
 // ===   Genre    ===
 
 class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
+    containerListInOne(){
+        return true;
+    }
 
     getContainerList(){
         let refToThis = this;
@@ -1586,7 +1841,7 @@ class MusicVideoFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
     //
     // TODO: need REST request to select by Name*
     //
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_a    = {category: 'music_video', playlist: '*',  tags: '*', level: 'band', filter_on: '-', title: 'A%25', genres:'*',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1645,7 +1900,7 @@ class MusicVideoFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
             {title: 'Z', rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_z},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -1661,7 +1916,7 @@ class MusicVideoPlaylistsRestGenerator  extends GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         //let interrupted_filter =  {category: 'music_video', playlist: 'interrupted',  tags: '*', level: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1688,7 +1943,7 @@ class MusicVideoPlaylistsRestGenerator  extends GeneralRestGenerator{
             }
         }
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1701,6 +1956,9 @@ class MusicVideoPlaylistsRestGenerator  extends GeneralRestGenerator{
 // ===   Decade    ===
 
 class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
+    containerListInOne(){
+        return true;
+    }
 
     getContainerList(){
         let refToThis = this;
@@ -1756,6 +2014,9 @@ class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
 // ===   Genre    ===
 
 class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
+    containerListInOne(){
+        return true;
+    }
 
     getContainerList(){
         let refToThis = this;
@@ -1815,7 +2076,7 @@ class MusicAudioFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
     //
     // TODO: need REST request to select by Name*
     //
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_0_9 = {category: 'music_audio', playlist: '*',  tags: '*', level: 'band', filter_on: '-', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '0%25_OR_1%25_OR_2%25_OR_3%25_OR_4%25_OR_5%25_OR_6%25_OR_7%25_OR_8%25_OR_9%25_OR_9%25', origins: '*', decade: '*'};
@@ -1876,7 +2137,7 @@ class MusicAudioFilterGroupAbcRestGenerator extends  GeneralRestGenerator{
             {title: 'Y',   rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_y},
             {title: 'Z',   rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_z},
         ];
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -1890,7 +2151,7 @@ class MusicAudioPlaylistsRestGenerator  extends GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let last_watched_filter = {category: 'music_audio', playlist: 'last_watched', tags: '*', level: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1914,7 +2175,7 @@ class MusicAudioPlaylistsRestGenerator  extends GeneralRestGenerator{
                 requestList.push(request);
             }
         }
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -1923,7 +2184,7 @@ class MusicAudioPlaylistsRestGenerator  extends GeneralRestGenerator{
 // === Music-Video ===
 class MusicVideoFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_60s   = {category: 'music_video', playlist: '*',  tags: '*', level: 'band', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '60s'};
@@ -1942,7 +2203,7 @@ class MusicVideoFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
             {title: "2010s", rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -1950,7 +2211,7 @@ class MusicVideoFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
 
 class MusicVideoFilterGenreOnBandRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_new_wave    = {category: 'music_video', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -1971,14 +2232,14 @@ class MusicVideoFilterGenreOnBandRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_music['punk'],        rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
 
 class MusicVideoFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_60s   = {category: 'music_video', playlist:'*', tags: '*', level: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '60s'};
@@ -1997,7 +2258,7 @@ class MusicVideoFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
             {title: "2010s", rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2005,7 +2266,7 @@ class MusicVideoFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
 
 class MusicVideoFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_new_wave    = {category: 'music_video', playlist:'*', tags: '*', level: '*', title: '*', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2026,7 +2287,7 @@ class MusicVideoFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_music['punk'],        rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2042,7 +2303,7 @@ class MusicVideoFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
 // === Music-Audio ===
 class MusicAudioFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_60s   = {category: 'music_audio', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '60s'};
@@ -2061,7 +2322,7 @@ class MusicAudioFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
             {title: "2010s", rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2069,7 +2330,7 @@ class MusicAudioFilterDecadeOnBandRestGenerator extends  GeneralRestGenerator{
 
 class MusicAudioFilterGenreOnBandRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_new_wave    = {category: 'music_audio', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2090,14 +2351,14 @@ class MusicAudioFilterGenreOnBandRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_music['punk'],        rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
 
 class MusicAudioFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_60s   = {category: 'music_audio', playlist:'*', tags: '*', level: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '60s'};
@@ -2116,7 +2377,7 @@ class MusicAudioFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
             {title: "2010s", rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_2010s},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2124,7 +2385,7 @@ class MusicAudioFilterDecadeOnRecordRestGenerator extends  GeneralRestGenerator{
 
 class MusicAudioFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_new_wave    = {category: 'music_audio', playlist:'*', tags: '*', level: '*', title: '*', genres:'new_wave',    themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2145,7 +2406,7 @@ class MusicAudioFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_music['punk'],        rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_punk},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2159,7 +2420,7 @@ class MusicAudioFilterGenreOnRecordRestGenerator extends  GeneralRestGenerator{
 //class RadioplayMenuGenerator extends  IndividualRestGenerator{
 class RadioplayMenuGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_radioplay = {category: 'radio_play', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2168,7 +2429,7 @@ class RadioplayMenuGenerator extends  GeneralRestGenerator{
             {title: translated_titles['radioplay'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_radioplay},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -2180,7 +2441,7 @@ class RadioplayMenuGenerator extends  GeneralRestGenerator{
 //
 class AudiobookMenuGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let refToThis = this;
         let containerList = [];
 
@@ -2191,7 +2452,7 @@ class AudiobookMenuGenerator extends  GeneralRestGenerator{
             {title: translated_titles['audiobook'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_audiobook},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
 
         // Playlist
         let oContainer = new ObjThumbnailContainer(translated_titles['audiobook']);
@@ -2224,7 +2485,7 @@ class AudiobookPlaylistsRestGenerator  extends GeneralRestGenerator{
         this.container_title = container_title;
     }
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let interrupted_filter =  {category: 'audiobook', playlist: 'interrupted',  tags: '*', level: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2251,7 +2512,7 @@ class AudiobookPlaylistsRestGenerator  extends GeneralRestGenerator{
                 requestList.push(request);
             }
         }
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -2264,7 +2525,7 @@ class AudiobookPlaylistsRestGenerator  extends GeneralRestGenerator{
 //
 class EbookMenuGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_ebook = {category: 'ebook', playlist: '*',  tags: '*', level: 'menu', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2274,7 +2535,7 @@ class EbookMenuGenerator extends  GeneralRestGenerator{
             {title: translated_titles['ebook'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_ebook},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -2287,7 +2548,7 @@ class EbookMenuGenerator extends  GeneralRestGenerator{
 //class DiaMenuGenerator extends  IndividualRestGenerator{
 class DiaMenuGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_dia = {category: 'dia', playlist: '*',  tags: '*', level: '*', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2297,7 +2558,7 @@ class DiaMenuGenerator extends  GeneralRestGenerator{
             {title: translated_titles['dia'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_dia},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
 }
@@ -2310,7 +2571,7 @@ class DiaMenuGenerator extends  GeneralRestGenerator{
 //class EntertainmentLevelRestGenerator extends  LevelRestGenerator{
 class EntertainmentLevelRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_entertainment = {category: 'entertainment', playlist: '*',  tags: '*', level: 'menu', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2320,7 +2581,7 @@ class EntertainmentLevelRestGenerator extends  GeneralRestGenerator{
             {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_entertainment},
            ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2333,7 +2594,7 @@ class EntertainmentLevelRestGenerator extends  GeneralRestGenerator{
 //class KnowledgeLevelRestGenerator extends  LevelRestGenerator{
 class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_knowledge = {category: 'knowledge', playlist: '*',  tags: '*', level: 'menu', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2343,7 +2604,7 @@ class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
             {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
@@ -2355,7 +2616,7 @@ class KnowledgeLevelRestGenerator extends  GeneralRestGenerator{
 //
 class PersonalLevelRestGenerator extends  GeneralRestGenerator{
 
-    getContainerList(){
+    getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
         let filter_knowledge = {category: 'personal', playlist: '*',  tags: '*', level: 'menu', filter_on: '*', title: '*', genres:'*', themes: '*', directors: '*', actors: '*', lecturers: '*', performers: '*', origins: '*', decade: '*'};
@@ -2364,7 +2625,7 @@ class PersonalLevelRestGenerator extends  GeneralRestGenerator{
             {title: this.container_title, rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_knowledge},
         ];
 
-        containerList = this.generateContainers(requestList);
+        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
    }
 }
