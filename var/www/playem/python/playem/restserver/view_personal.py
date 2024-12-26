@@ -17,6 +17,7 @@ from playem.restserver.endpoints.ep_personal_rating_update import EPPersonalRati
 from playem.restserver.endpoints.ep_personal_tag_insert import EPPersonalTagInsert
 from playem.restserver.endpoints.ep_personal_tag_delete import EPPersonalTagDelete
 from playem.restserver.endpoints.ep_personal_tag_get import EPPersonalTagGet
+from playem.restserver.endpoints.ep_personal_card_menu_get import EPPersonalCardMenuGet
 
 # -----------------------------------
 #
@@ -37,6 +38,7 @@ from playem.restserver.endpoints.ep_personal_tag_get import EPPersonalTagGet
 # curl  --header "Content-Type: application/json" --request POST --data '{"card_id": "5583062bccde422e47378450068cc5a2", "name": "my_tag"}' http://localhost:80/personal/tag/insert
 # curl  --header "Content-Type: application/json" --request DELETE --data '{"card_id": "5583062bccde422e47378450068cc5a2", "name": "my_tag"}' http://localhost:80/personal/tag/delete
 #
+# curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/card_menu/get
 # -----------------------------------
 #
 class PersonalView(FlaskView):
@@ -54,7 +56,7 @@ class PersonalView(FlaskView):
         self.ePPersonalTagInsert = EPPersonalTagInsert(web_gadget)
         self.ePPersonalTagDelete = EPPersonalTagDelete(web_gadget)
         self.ePPersonalTagGet = EPPersonalTagGet(web_gadget)
-
+        self.ePPersonalCardMenuGet = EPPersonalCardMenuGet(web_gadget)
     #
     # GET http://localhost:5000/personal/
     #
@@ -71,7 +73,7 @@ class PersonalView(FlaskView):
     #
     # example:
     #    curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request
-    # response: 
+    # response:
     #   {
     #       language_code: "en"
     #       name: "admin"
@@ -100,7 +102,7 @@ class PersonalView(FlaskView):
     # example:
     #    curl  --header "Content-Type: application/json" --request POST --data '{"language_code": "hu"}' http://localhost:80/personal/user_data/update
     # response:
-    #     { 
+    #     {
     #        "name": "admin",
     #        "language_code": "hu",
     #        "show_original_title": true,
@@ -140,7 +142,7 @@ class PersonalView(FlaskView):
     # TODO: remove user_id, repace it with user_name
     #        "card_id": "5583062bccde422e47378450068cc5a2",
     #        "limit_days": 5,
-    #        "limit_records": 5    
+    #        "limit_records": 5
     #      }
     #
     # example:
@@ -148,7 +150,7 @@ class PersonalView(FlaskView):
     #    curl  --header "Content-Type: application/json" --request GET --data '{}' http://localhost:80/personal/history/request
     # response:
     #     [
-    #       {"start_epoch": 1725117021, "last_epoch": 1725142600, "recent_position": "3.5125", "id_card": "5583062bccde422e47378450068cc5a2", "id_user": 1}, 
+    #       {"start_epoch": 1725117021, "last_epoch": 1725142600, "recent_position": "3.5125", "id_card": "5583062bccde422e47378450068cc5a2", "id_user": 1},
     #       {"start_epoch": 1725142641, "last_epoch": 1725142641, "recent_position": "43.253", "id_card": "5583062bccde422e47378450068cc5a2", "id_user": 1}
     #      ]
     #
@@ -164,7 +166,7 @@ class PersonalView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -195,7 +197,7 @@ class PersonalView(FlaskView):
     #      body: {
     #        "card_id": "5583062bccde422e47378450068cc5a2",
     #        "recent_position": 123.2,
-    #        "start_epoch": 1725117021   
+    #        "start_epoch": 1725117021
     #      }
     #
     # example:
@@ -351,7 +353,7 @@ class PersonalView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -374,4 +376,19 @@ class PersonalView(FlaskView):
     @route(EPPersonalTagGet.PATH_PAR_URL, methods=[EPPersonalTagGet.METHOD])
     def personalTagGetWithParameters(self, category, title, genres, themes, directors, actors, lecturers, origins, decade, lang):
         out = self.ePPersonalTagGet.executeByParameters(category=category, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        return out
+
+
+
+# === Get Card Menu ===
+
+    #
+    # Get tags
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/card_menu/get
+    #
+    #@route('/card_menu/get', methods=['GET'])
+    @route(EPPersonalCardMenuGet.PATH_PAR_URL, methods=[EPPersonalCardMenuGet.METHOD])
+    def personalCardMenuGetWithParameters(self):
+        out = self.ePPersonalCardMenuGet.executeByParameters()
         return out

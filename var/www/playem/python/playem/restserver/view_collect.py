@@ -28,6 +28,9 @@ from playem.restserver.endpoints.ep_collect_general_standalone import EPCollectG
 from playem.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCollectAllAppendixByCardId
 from playem.restserver.endpoints.ep_collect_actors_by_role_count import EPCollectActorsByRoleCount
 from playem.restserver.endpoints.ep_collect_directors_by_movie_count import EPCollectDirectorsByMovieCount
+from playem.restserver.endpoints.ep_collect_abc_by_movie_title_count import EPCollectAbcByMovieTitleCount
+
+
 
 # -----------------------------------
 #
@@ -70,6 +73,7 @@ class CollectView(FlaskView):
         self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
         self.epCollectActorsByRoleCount = EPCollectActorsByRoleCount(web_gadget)
         self.epCollectDirectorsByMovieCount = EPCollectDirectorsByMovieCount(web_gadget)
+        self.epCollectAbcByMovieTitleCount = EPCollectAbcByMovieTitleCount(web_gadget)
 
 # ---
 
@@ -164,7 +168,7 @@ class CollectView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -236,7 +240,7 @@ class CollectView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -314,7 +318,7 @@ class CollectView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -472,7 +476,7 @@ class CollectView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -505,7 +509,7 @@ class CollectView(FlaskView):
     #
     # GET http://localhost:80/collect/directors/by/movie/count
     #      body: {
-    #       "category": "movei",
+    #       "category": "movie",
     #       "minimum": 3,
     #       "limit": 15,
     #      }
@@ -516,7 +520,7 @@ class CollectView(FlaskView):
         # CURL
         if request.is_json:
             json_data = request.json
-        
+
         # WEB
         elif request.form:
             json_data = request.form
@@ -526,4 +530,48 @@ class CollectView(FlaskView):
             json_data = request.args
 
         out = self.epCollectDirectorsByMovieCount.executeByPayload(json_data)
+        return out
+
+
+# === collect ABC by movie title count ===
+
+    #
+    # Gives back abc of the highest movie title count
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/abc/by/movie_title/count/category/<category>/maximum/<aximum>/lang/<lang>
+    #
+    #@route('/abc/by/movie_title/count/category/<category>/maximum/<maximum>/lang/<lang>')
+    @route(EPCollectAbcByMovieTitleCount.PATH_PAR_URL, methods=[EPCollectAbcByMovieTitleCount.METHOD])
+    def collectAbcByMovieTitleWithParameter(self, category, maximum, lang):
+        out = self.EPCollectAbcByMovieTitleCount.executeByParameters(category, maximum=maximum)
+        return out
+
+    #
+    # Gives back list of the highest movie title count
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "minimum": 3, "limit": 15}' http://localhost:80/collect/abc/by/movie_title/count
+    #
+    # GET http://localhost:80/collect/abc/by/movie_title/count
+    #      body: {
+    #       "category": "movie",
+    #       "maximum": 15,
+    #       "lang": "en"
+    #      }
+    #
+    #@route('/abc/by/movie_title/count', methods=['GET'])
+    @route(EPCollectAbcByMovieTitleCount.PATH_PAR_PAYLOAD, methods=[EPCollectAbcByMovieTitleCount.METHOD])
+    def collectAbcByMovieTitleWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectAbcByMovieTitleCount.executeByPayload(json_data)
         return out

@@ -2694,7 +2694,23 @@ class SqlDatabase:
         return {"result": result, "data": records, "error": error_message}
 
 
+    def get_abc_of_movie_title(self, category, maximum, lang):
+        """
+        Returns the list of the ABC of the movie titles on the highest level. If the number of movies > maximum on a single letter (like A%), then it narrows the the filter (like An%) to make the list to fit to the maximum.
+        But of course,
 
+        Right now it does not work, I did not implement the expected behaviour, I return only an
+        """
+        result = True
+        error_message = None
+
+        trans = Translator.getInstance(lang)
+        alphabet_string = trans.get_alphabet(case="upper")
+        alphabet_list = list(alphabet_string)
+        records = [{'name': letter, 'filter': letter + '%'} for letter in alphabet_list]
+        records.insert(0, {"filter": "0%_OR_1%_OR_2%_OR_3%_OR_4%_OR_5%_OR_6%_OR_7%_OR_8%_OR_9%", "name": "0-9"})
+
+        return {"result": result, "data": records, "error": error_message}
 
 
 
@@ -2794,7 +2810,7 @@ class SqlDatabase:
     def get_next_level_cards(self, card_id, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
-        Returns the next child cards which could ne:
+        Returns the next child cards which could be:
           - media card
           - level cards
 

@@ -18,6 +18,7 @@ from playem.card.database import SqlDatabase as DB
 from playem.card.card_handle import CardHandle
 
 from playem.config.config import getConfig
+from playem.config.card_menu import getCardMenuInstance
 
 from playem.restserver.view_info import InfoView
 from playem.restserver.view_collect import CollectView
@@ -51,11 +52,13 @@ class WSPlayem(Flask):
         self.mediaRelativePath = self.cg["media-relative-path"]
         self.projectPath = self.cg["project-path"]
 
-        # LOG 
+        self.card_menu = getCardMenuInstance()
+
+        # LOG
         self.logPath = os.path.join(self.configPath, self.logFileName)
         logging.basicConfig(
             handlers=[RotatingFileHandler(self.logPath, maxBytes=5*1024*1024, backupCount=5)],
-            format="%(asctime)s %(levelname)8s - %(message)s", 
+            format="%(asctime)s %(levelname)8s - %(message)s",
             level = logging.ERROR if logLevel == 'ERROR' else logging.WARNING if logLevel == 'WARNING' else logging.INFO if logLevel == 'INFO' else logging.DEBUG if logLevel == 'DEBUG' else 'CRITICAL' )
 
         # This will enable CORS for all routes
@@ -76,12 +79,6 @@ class WSPlayem(Flask):
         self.db=DB(self)
         end = time.time()
         diff = end-start
-
-#        # TODO: TEMPORARY SOLUTION
-#        #       I login with admin, until I develop the login process on GUI
-#        login_result = self.db.login('admin', 'admin')
-#        if not login_result['result']:
-#            logging.error('!!! It was not possible to login with "admin" !!!')
 
         records = self.db.get_numbers_of_records_in_card()
         print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))

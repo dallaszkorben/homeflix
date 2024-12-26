@@ -20,7 +20,7 @@ class Generator{
         $("#spinner").attr("height", "0");
     }
 
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return false;
     }
 
@@ -33,7 +33,7 @@ class Generator{
 
             let containerList;
 
-            if(refToThis.containerListInOne()){
+            if(refToThis.isThumbnailShowSynchronous()){
                 containerList = refToThis.getContainerList();
             }else{
                 containerList = refToThis.getContainerList(
@@ -55,7 +55,7 @@ class Generator{
                 }
             );
 
-            if(refToThis.containerListInOne()){
+            if(refToThis.isThumbnailShowSynchronous()){
                 Generator.stopSpinner();
                 objScrollSection.focusDefault();
             }
@@ -75,13 +75,19 @@ class Generator{
 //
 class RestGenerator extends Generator{
 
-    static sendRestRequest(rq_method, rq_url){
+    static sendRestRequest(rq_method, rq_url, rq_data){
         let rq_assync = false;
-        let result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
+        let result;
+
+        if( rq_data !== null && rq_data !== undefined){
+            result = $.getJSON({method: rq_method, url: rq_url, data: rq_data, async: rq_assync, dataType: "json"});
+        }else{
+            result = $.getJSON({method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
+        }
         return result.responseJSON;
     }
 
-    generateThumbnail(filter, play_list){
+    generateThumbnail(data_dict, play_list){
         throw new Error("Implement generateThumbnails() method in the " + this.constructor.name + " class!");
     }
 
@@ -92,66 +98,72 @@ class RestGenerator extends Generator{
         return text;
     }
 
+
+    /**
+     *
+     * TODO:
+     *
+     * make the containers generation faster:
+     * - read the next element
+     * - if it is empty, skip and get the next element
+     * - if it is not empty, in an async function show it
+     *
+     */
+    async FixIt_generateContainers(requestList, callBackMinimalThumbnails, callBackAllThumbnails){
+        let refToThis = this;
+        let container_list = [];
+        let response_list = [];
+        let processingPromises = []; // To track all async operations
+
+        for(let request of requestList){
+            let thumbnail_list = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
+
+            if(thumbnail_list.length > 0){
+                let oContainer = new ObjThumbnailContainer(request["title"]);
+                container_list.push(oContainer);
+
+                async function processContainer(rq_data, oContainer, thumbnail_list) {
+
+//                    // Waiting needed to be sure the function will return before the 'minimalThumbnails() callback function returns
+                    await delay(100);
+
+                    for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
+
+                        let thumbnail_dict = thumbnail_list[thumbnail_index];
+                        let play_list = [];
+
+                        for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
+                            play_list.push(thumbnail_list[sub_index]);
+                        }
+
+                        // request["rq_data"] needed by parameter
+                        let thumbnail = refToThis.generateThumbnail(rq_data, play_list);
+                        oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
+                    }
+                }
+
+                const processPromise = processContainer(
+                    request["rq_data"],
+                    oContainer,
+                    thumbnail_list
+                );
+
+                // Start the processing
+                await processContainer(request["rq_data"], oContainer, thumbnail_list);
+
+            }
+
+        }
+
+        return container_list;
+    }
+
     generateContainers(requestList, minimalThumbnails, allThumbnails){
         let refToThis = this;
         let container_list = [];
         let response_list = [];
 
         for(let request of requestList){
-
-            // Build up the request url out of filter
-            for (const [key, value] of Object.entries(request['filter'])) {
-                request['rq_url'] = request['rq_url'].format(key, value);
-            }
-
-//            // Syncronous GET
-//            //
-//            // In order to save time, we only send REST list requests if they have not already been sent and stored in the LokalStorage
-//            // Unfortunately, this has not fundamentally accelerated the speed on WebOS. Here, it is actually the thumbnail objects that take a lot of time to render.
-//            // It is fast on my desktop pc (3 sec) but it is pretty slow on WebOS tv (20 sec)
-//            // :(
-//            let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
-//            let saved_request = getLocalStorage(request_id);
-//            let request_result = undefined;
-//
-//            if(saved_request == null || !request["rq_static"]){
-//
-//                // Send REST request
-//                request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);
-//                let stringified_result = JSON.stringify(request_result);
-//
-//                // It saves only if the request is static. If it is for example playlist (last seen ...), it should be generated always generated
-//                if(request["rq_static"]){
-//                    setLocalStorage(request_id, stringified_result);
-//                }
-//
-//            }else{
-//                request_result = JSON.parse(saved_request);
-//            }
-//
-//            // Add this container to the container list if it is possible and needed
-//            // Add the thumbnail line if the content is not empty or the request not is static. If the request is dynamic, then the empty result can be different later
-//            if(request_result.length > 0 || !request['rq_static']){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
-//                container_list.push(oContainer);
-//
-//                //for(let index in request_result){
-//                // Go through all the thumbnails in on line
-//                for(let index=0; index<Math.min(request_result.length, 11); index++){
-//                    let line = request_result[index];
-//                    let play_list = [];
-//
-//                    //
-//                    // Collects all media which needs to continuous play
-//                    //
-//                    for(let sub_index=index; sub_index<request_result.length; sub_index++){
-//                        play_list.push(request_result[sub_index]);
-//                    }
-//                    let thumbnail = this.generateThumbnail(request['filter'], play_list);
-//                    oContainer.addThumbnail(line["id"], thumbnail);
-//                }
-//            }
-//        }
 
             //
             // Syncronous GET / Async fill up
@@ -165,14 +177,14 @@ class RestGenerator extends Generator{
             //
             // Note: On WebOS, performance bottleneck remains due to slow thumbnail rendering, rather than REST request latency.
             // :(
-            let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
-            let saved_request = getLocalStorage(request_id);
+            let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode() + "-" + JSON.stringify(request["rq_data"]).hashCode()
+//            let saved_request = getLocalStorage(request_id);
             let request_result = undefined;
 
-            if(saved_request == null || !request["rq_static"]){
+//            if(saved_request === null || saved_request === undefined || !request["rq_static"]){
 
                 // Send REST request
-                request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);
+                request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
                 let stringified_result = JSON.stringify(request_result);
 
                 // It saves only if the request is static. If it is for example playlist (last seen ...), it should be generated always generated
@@ -180,19 +192,22 @@ class RestGenerator extends Generator{
                     setLocalStorage(request_id, stringified_result);
                 }
 
-            }else{
-                request_result = JSON.parse(saved_request);
-            }
+//            }else{
+//                request_result = JSON.parse(saved_request);
+//            }
 
             // Now I have the request_result for the recent thumbnail container
             // Add this container to the container list if it is possible and needed
-            // Add the thumbnail line if the content is not empty or the request not is static. If the request is dynamic, then the empty result can be different later
-            if(request_result.length > 0 || !request['rq_static']){
+            // Add the thumbnail line if the content is not empty or the request is not static. If the request is dynamic, then the empty result can be different later
+//            if(request_result.length > 0 || !request['rq_static']){
+            if(request_result.length > 0){
+
                 let oContainer = new ObjThumbnailContainer(request["title"]);
                 container_list.push(oContainer);
 
                 // Add the result to a dictionary to a later process after this loop
-                response_list.push({filter: request['filter'], container: oContainer, result: request_result})
+                response_list.push({data_dict: request['rq_data'], container: oContainer, result: request_result})
+
             }
         }
 
@@ -221,7 +236,7 @@ class RestGenerator extends Generator{
                         play_list.push(response['result'][sub_index]);
                     }
 
-                    let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+                    let thumbnail = refToThis.generateThumbnail(response['data_dict'], play_list);
                     response['container'].addThumbnail(line["id"], thumbnail);
                 }
             }
@@ -248,7 +263,7 @@ class RestGenerator extends Generator{
                                 play_list.push(response['result'][sub_index]);
                             }
 
-                            let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+                            let thumbnail = refToThis.generateThumbnail(response['data_dict'], play_list);
                             response['container'].addThumbnail(line["id"], thumbnail);
                         }
                     }
@@ -264,7 +279,7 @@ class RestGenerator extends Generator{
                                 play_list.push(response['result'][sub_index]);
                             }
 
-                            let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
+                            let thumbnail = refToThis.generateThumbnail(response['data_dict'], play_list);
                             response['container'].addThumbnail(line["id"], thumbnail);
                         }
                     }
@@ -283,103 +298,6 @@ class RestGenerator extends Generator{
 
         // Start the processing
         processContainers();
-
-
-
-
-
-//            // Syncronous GET / Async fill up
-//            //
-//            // In order to save time, we only send REST list requests if they have not already been sent and stored in the LokalStorage
-//            // Unfortunately, this has not fundamentally accelerated the speed on WebOS. Here, it is actually the thumbnail objects that take a lot of time to render.
-//            // :(
-//            let request_id = PREFIX_LOCAL_STORAGE + "-" + request["rq_url"].hashCode()
-//            let saved_request = getLocalStorage(request_id);
-//            let request_result = undefined;
-//
-//            if(saved_request == null || !request["rq_static"]){
-//
-//                // Send REST request
-//                request_result = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"]);
-//                let stringified_result = JSON.stringify(request_result);
-//
-//                // It saves only if the request is static. If it is for example playlist (last seen ...), it should be generated always generated
-//                if(request["rq_static"]){
-//                    setLocalStorage(request_id, stringified_result);
-//                }
-//
-//            }else{
-//                request_result = JSON.parse(saved_request);
-//            }
-//
-//            // Now I have the request_result for the recent thumbnail container
-//            // Add this container to the container list if it is possible and needed
-//            // Add the thumbnail line if the content is not empty or the request not is static. If the request is dynamic, then the empty result can be different later
-//            if(request_result.length > 0 || !request['rq_static']){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
-//                container_list.push(oContainer);
-//
-//                // Add the result to a dictionary to a later process after this loop
-//                response_list.push({filter: request['filter'], container: oContainer, result: request_result})
-//            }
-//        }
-//
-//        // Now every response are collected in 'response_dict'
-//
-//        async function processContainers() {
-//            const MINIMUM_THUMBNAILS = 1;
-//            const totalLines = response_list.length;
-//
-//            try {
-//                const linePromises = response_list.map(response => {
-//                    return new Promise(async (resolve) => {
-//
-//                        for(let index = 0; index < response['result'].length; index++) {
-//                            if(index % 11 == 0){
-//                                await delay(0);
-//                            }
-//                            let line = response['result'][index];
-//                            let play_list = [];
-//
-//                            for(let sub_index = index; sub_index < response['result'].length; sub_index++) {
-//                                play_list.push(response['result'][sub_index]);
-//                            }
-//
-//                            let thumbnail = refToThis.generateThumbnail(response['filter'], play_list);
-//                            response['container'].addThumbnail(line["id"], thumbnail);
-//
-//                            if (index >= (MINIMUM_THUMBNAILS-1) || index >= response['result'].length) {
-//                                callbackContainerGenerationFinished();
-//                            }
-//                        }
-//                        resolve();
-//                    });
-//                });
-//
-//                // Wait for all lines to complete (continues loading all thumbnails)
-//                await Promise.all(linePromises);
-//
-//            } catch (error) {
-//                console.error('Error processing containers:', error);
-//            }
-//        }
-//
-//        // Start the processing
-//        processContainers();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         // It is time to return the container list with yet empty thumbnail containers
         // The caller will add the containers to the scroll section
@@ -515,7 +433,7 @@ class RestGenerator extends Generator{
         return path;
     }
 
-    generateThumbnail(filters, play_list){
+    generateThumbnail(data_dict, play_list){
         let hit = play_list[0];
 
         let refToThis = this;
@@ -568,11 +486,11 @@ class RestGenerator extends Generator{
                 "single":
                     {
                         "menu":
-                            (function(hierarchy_id, filters) {
+                            (function(hierarchy_id, data_dict) {
                                 return function() {
-                                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id, filters);
+                                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id, data_dict);
                                 };
-                            })(hit["id"], filters )
+                            })(hit["id"], data_dict )
                     },
                 "continuous": []
             });
@@ -694,25 +612,262 @@ class GeneralRestGenerator extends RestGenerator{
 // -----------------------
 //
 class SubLevelRestGenerator extends  RestGenerator{
-    constructor(language_code, container_title, hierarchy_id, filters){
+    constructor(language_code, container_title, hierarchy_id, data_dict){
         super(language_code);
         this.container_title = container_title;
         this.hierarchy_id = hierarchy_id;
-        this.filters = filters;
+        this.data_dict = data_dict;
     }
 
     getContainerList(minimalThumbnails, allThumbnails){
         let containerList = [];
 
-        // TODO: we just added the filter in the constructor. Now I add it again
-
+        this.data_dict['card_id'] = this.hierarchy_id;
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed/card_id/" + this.hierarchy_id + "/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: this.filters},
+//            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed/card_id/" + this.hierarchy_id + "/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: this.filters},
+            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed", rq_data: this.data_dict},
         ];
 
         containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function generateMenu(menuDict){
+    let ext = menuDict.extends ?? null;
+    let isThumbnailShowSynchronous = menuDict.is_thumbnail_show_synchronous ?? false;
+    let retClass;
+
+    if (ext === 'Generator' || ext == 'GeneralRestGenerator') {
+        let getContainerListBody = `
+                        let refToThis = _this;
+                        let containerList = [];
+                        let requestList = [];
+                        let request;
+                        let translator;
+                        let title;
+        `;
+        let isRequest = false;
+
+        let containerList = menuDict.container_list ?? [];
+        for (let containerDict of containerList) {
+            let descriptorStaticHardCodedDict = containerDict.static_hard_coded ?? null;
+            let descriptorDynamicHardCodedDict = containerDict.dynamic_hard_coded ?? null;
+            let descriptorDynamicQueried = containerDict.dynamic_queried ?? null;
+            let order = containerDict.order ?? 0
+
+            // Static - Hard Coded Container Definitions
+            if(descriptorStaticHardCodedDict !== null){
+
+                let container_title_keycontainerTitleKey = descriptorStaticHardCodedDict.container_title_key ?? "unknown";
+                getContainerListBody += `
+                        let oContainer${order} = new ObjThumbnailContainer(translated_titles['${container_title_keycontainerTitleKey}']);
+                        let thumbnail;
+                `;
+
+                let thumbnailList = descriptorStaticHardCodedDict.thumbnails ?? [];
+                for (let thumbnailDict of thumbnailList){
+
+                    let thumbnailOrder = thumbnailDict.order ?? "";
+                    let thumbnailImage = thumbnailDict.thumbnail.image ?? "";
+                    let thumbnailtitleKey = thumbnailDict.thumbnail.title_key ?? "";
+                    let descriptionImage = thumbnailDict.description.image ?? "";
+                    let descriptiontitleKey = thumbnailDict.description.title_key ?? "";
+                    let historytitleKey = thumbnailDict.history.title_key ?? "";
+                    let menuDict = thumbnailDict.execution ?? {};
+                    let menuDictString = JSON.stringify(menuDict);
+
+                    getContainerListBody += `
+                        thumbnail = new Thumbnail();
+                        thumbnail.setImageSources({thumbnail_src: "${thumbnailImage}", description_src: "${descriptionImage}"});
+                        thumbnail.setTitles({main: translated_titles["${thumbnailtitleKey}"], thumb: translated_titles["${descriptiontitleKey}"], history: translated_titles["${historytitleKey}"]});
+                        thumbnail.setFunctionForSelection({
+                            "single":
+                                {
+                                    "menu": ( function(movie_type) {
+                                                return function() {
+                                                    let menuClass = generateMenu(${menuDictString});
+                                                    let menu = new menuClass(refToThis.language_code);
+                                                    return menu;
+                                                };
+                                            })("for_later_use")
+                                },
+                            "continuous": []
+                        });
+                        oContainer${order}.addThumbnail(${thumbnailOrder}, thumbnail);
+                `
+                }
+
+                getContainerListBody += `
+                        containerList.push(oContainer${order});
+                `
+
+            // Dynamic - Hard Coded Container Definitions
+            }else if(descriptorDynamicHardCodedDict !== null){
+
+                let translator = descriptorDynamicHardCodedDict.title.dict_translator ?? null;
+                let title = descriptorDynamicHardCodedDict.title.key ?? "unknown";
+                let data = descriptorDynamicHardCodedDict.data ?? {};
+                let request = descriptorDynamicHardCodedDict.request ?? {static: true, method: "GET", protocol: "http", url: ""}
+                let rq_static = request.static
+                let rq_method = request.method
+                let rq_protocol = request.protocol
+                let rq_path = request.path
+
+                let rq_data = `{`;
+                for( const[key, value] of Object.entries(data)){
+                    rq_data += `${key}: "${value}", `
+                }
+                rq_data += `lang: refToThis.language_code}`
+
+                title = (translator !== null) ? `${translator}["${title}"]` : `"${title}"`;
+
+                getContainerListBody += `
+                        request = {title: ${title}, rq_static:${rq_static}, rq_method: "${rq_method}", rq_url: "${rq_protocol}://" + host + port + "${rq_path}", rq_data: ${rq_data}};
+                        requestList.push(request);
+                `
+                isRequest = true;
+
+            // Dynamic - Queried Container Definitions
+            }else if(descriptorDynamicQueried !== null){
+
+                let pre_query_dict = descriptorDynamicQueried.pre_query ?? {};
+                let pre_query_data_dict = pre_query_dict.data ?? {};
+                let pre_query_request_dict = pre_query_dict.request ?? {};
+                let pre_rq_satic = pre_query_request_dict.static ?? true;
+                let pre_rq_method = pre_query_request_dict.method ?? "GET";
+                let pre_rq_protocol = pre_query_request_dict.protocol ?? "http";
+                let pre_rq_path = pre_query_request_dict.path ?? "";
+                let pre_rq_assync = false;
+                let query_loop_dict = descriptorDynamicQueried.query_loop ?? {};
+                let query_data_dict = query_loop_dict.data ?? {};
+
+                let query_data_dict_map_dict = null;
+                let query_data_list_map_value = null;
+                let data_from_pre_response_list_dict = query_loop_dict.data_from_pre_response_list ?? {};
+                let data_from_pre_response_list_type = data_from_pre_response_list_dict.type ?? "value";
+                if(data_from_pre_response_list_type === 'dict'){
+                    query_data_dict_map_dict = data_from_pre_response_list_dict.dict ?? null;
+                }else if(data_from_pre_response_list_type === 'value'){
+                    query_data_list_map_value = data_from_pre_response_list_dict.value;
+                }
+
+                let query_request_dict = query_loop_dict.request ?? {};
+                let rq_static = query_request_dict.static ?? false;
+                let rq_method = query_request_dict.method ?? "GET";
+                let rq_protocol = query_request_dict.protocol ?? "http";
+                let rq_path = query_request_dict.path ?? "";
+                let query_title_dict = query_loop_dict.title ?? {};
+                let query_title_dict_translator = query_title_dict.dict_translator ?? null;
+                let query_title_key = query_title_dict.key ?? "unknown";
+
+                let pre_rq_data = `{`;
+                for( const[key, value] of Object.entries(pre_query_data_dict)){
+                    pre_rq_data += `${key}: "${value}", `
+                }
+                // It was not asked but I add the language anyway.
+                pre_rq_data += `lang: refToThis.language_code}`
+
+                let rq_data = `{`;
+                for( const[key, value] of Object.entries(query_data_dict)){
+                    rq_data += `${key}: "${value}", `
+                }
+                if(query_data_dict_map_dict !== null){
+                    for( const[key, value] of Object.entries(query_data_dict_map_dict)){
+                        rq_data += `${key}: data_dict["${value}"], `
+                    }
+                }else if(query_data_list_map_value !== null){
+                    rq_data += `${query_data_list_map_value}: data_value, `
+                }
+                // It was not asked but I add the language anyway.
+                rq_data += `lang: refToThis.language_code}`
+
+                getContainerListBody += `
+                        let response = $.getJSON({ method: "${pre_rq_method}", url: "${pre_rq_protocol}://" + host + port + "${pre_rq_path}", data: ${pre_rq_data}, async: ${pre_rq_assync}});
+                        if(response.status == 200 && response.responseJSON["result"]){`
+
+
+                //title = (query_title_dict_translator !== null) ? `${query_title_dict_translator}["${title}"]` : `"${query_title_dict_translator}"`;
+                //title = (translator !== null) ? `${translator}["${title}"]` : `"${title}"`;
+
+                // In case of DICT list response from the pre-request
+                if(query_data_dict_map_dict !== null){
+
+                    let title = (query_title_dict_translator !== null) ? `${query_title_dict_translator}[data_dict["${query_title_key}"]]` : `data_dict["${query_title_key}"]`;
+
+                    getContainerListBody += `
+                            for (let data_dict of response.responseJSON["data"]){
+                                let request = {title: ${title}, rq_static: ${rq_static}, rq_method: "${rq_method}", rq_url: "${rq_protocol}://" + host + port + "${rq_path}", rq_data: ${rq_data}};
+                                requestList.push(request);
+                            }
+                        }`
+                    isRequest = true;
+
+                // In case of VALUE list response from the pre-request
+                }else if(query_data_list_map_value !== null){
+
+                    let title = (query_title_dict_translator !== null) ? `${query_title_dict_translator}[data_value]` : `data_value`;
+
+                    getContainerListBody += `
+                            for (let data_value of response.responseJSON["data"]){
+                                let request = {title: ${title}, rq_static: ${rq_static}, rq_method: "${rq_method}", rq_url: "${rq_protocol}://" + host + port + "${rq_path}", rq_data: ${rq_data}};
+                                requestList.push(request);
+                            }
+                        }`
+                    isRequest = true;
+                }
+            }
+        }
+
+        if(isRequest){
+            getContainerListBody += `
+                        containerList = refToThis.generateContainers(requestList, minimalThumbnails, allThumbnails);
+            `;
+        }
+
+        getContainerListBody += `
+                        return containerList;
+        `;
+
+//        console.log(`                   getContinerList(minimalThumbnails, allThumbnails){\n` + getContainerListBody + `\n                   }`);
+
+        retClass = class extends eval(ext) {
+            isThumbnailShowSynchronous() {
+                return (new Function('_this', `return ${isThumbnailShowSynchronous};`))(this);
+            }
+
+            // If getContainerList has multiple parameters
+            // getContainerList(param1, param2) {
+            // return (new Function('param1', 'param2', getContainerListBody))(param1, param2);}
+            getContainerList(minimalThumbnails, allThumbnails) {
+
+               return (new Function('_this', 'minimalThumbnails', 'allThumbnails', `
+                    ${getContainerListBody}`))(this, minimalThumbnails, allThumbnails);
+            }
+        }
+
+    }else{
+        retClass = class extends Generator {
+            getContainerList() {
+                return [];
+            }
+        }
+    }
+
+    return retClass;
 }
 
 
@@ -725,7 +880,7 @@ class SubLevelRestGenerator extends  RestGenerator{
 // =========
 //
 class MainMenuGenerator extends Generator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -911,7 +1066,7 @@ class MainMenuGenerator extends Generator{
 //
 // I changed the parent because I need mixed content inside (normal and rest)
 class MovieMenuGenerator extends GeneralRestGenerator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -1025,7 +1180,7 @@ class MovieMenuGenerator extends GeneralRestGenerator{
 
 
 class MovieFilterRestGenerator extends GeneralRestGenerator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -1173,6 +1328,10 @@ class MovieFilterGenreRestGenerator extends  GeneralRestGenerator{
             {title: translated_genre_movie['documentary'], rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_documentary},
             {title: translated_genre_movie['trash'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/filter_on/{filter_on}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: filter_trash},
         ];
+
+//            let requestList = [ {title: translated_genre_movie['drama'],       rq_static: true, rq_method: "GET", rq_url: "http://" + host + port + "/collect/highest/mixed", rq_data: {category: 'movie', genres:'scifi', lang: this.language_code}, filter: {}} ];
+
+
 
         containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
         return containerList;
@@ -1512,7 +1671,7 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
             {title: translated_titles['movie_most_watched'], rq_static: false, rq_method: "GET", rq_url: "http://" + host + port + "/collect/lowest/category/{category}/playlist/{playlist}/tags/{tags}/level/{level}/title/{title}/genres/{genres}/themes/{themes}/directors/{directors}/actors/{actors}/lecturers/{lecturers}/performers/{performers}/origins/{origins}/decade/{decade}/lang/" +  this.language_code, filter: most_watched_filter}
         ];
 
-        // Get the existion TAGs
+        // Get the existing TAGs
         let rq_method = "GET";
         let rq_url = "http://" + host + port + "/personal/tag/get";
         let rq_data = {"category": "movie"};
@@ -1542,7 +1701,7 @@ class MoviePlaylistsRestGenerator  extends GeneralRestGenerator{
 // ==========
 //
 class MusicMenuGenerator extends Generator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -1720,7 +1879,7 @@ class MusicMenuGenerator extends Generator{
 // ===   Decade    ===
 
 class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -1778,7 +1937,7 @@ class MusicVideoFilterDecadeRestGenerator extends  GeneralRestGenerator{
 // ===   Genre    ===
 
 class MusicVideoFilterGenreRestGenerator extends  GeneralRestGenerator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -1956,7 +2115,7 @@ class MusicVideoPlaylistsRestGenerator  extends GeneralRestGenerator{
 // ===   Decade    ===
 
 class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 
@@ -2014,7 +2173,7 @@ class MusicAudioFilterDecadeRestGenerator extends  GeneralRestGenerator{
 // ===   Genre    ===
 
 class MusicAudioFilterGenreRestGenerator extends  GeneralRestGenerator{
-    containerListInOne(){
+    isThumbnailShowSynchronous(){
         return true;
     }
 

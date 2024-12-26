@@ -35,7 +35,7 @@ class Translator( Property ):
 
         expected_file_name = Translator.DEFAULT_FILE_NAME + "_" + self.language + Translator.EXTENSION
         expected_file_full_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), expected_file_name)
-            
+
         try:
             super().__init__( expected_file_full_path)
             self.actual_dictionary = self.getDict()
@@ -44,7 +44,7 @@ class Translator( Property ):
             super().__init__( default_file_full_path)
             self.actual_dictionary = self.getDict()
             self.language = Translator.DEFAULT_LANGUAGE
- 
+
     def get_actual_language_code(self):
         return self.language
 
@@ -84,7 +84,7 @@ class Translator( Property ):
         category_list = self.actual_dictionary['category']
         for category in category_list:
             output[title] = self.translate_category(category)
-        return output        
+        return output
 
     def translate_genre(self, category, genre):
         try:
@@ -104,7 +104,7 @@ class Translator( Property ):
         return output
 
     def translate_theme(self, theme):
-        try:        
+        try:
             tr = self.actual_dictionary['theme'][theme]
         except KeyError:
             tr = theme
@@ -118,7 +118,7 @@ class Translator( Property ):
         return output
 
     def translate_level(self, level):
-        try:        
+        try:
             tr = self.actual_dictionary['level'][level]
         except KeyError:
             tr = level
@@ -132,7 +132,7 @@ class Translator( Property ):
         return output
 
     def translate_mediatype(self, mediatype):
-        try:        
+        try:
             tr = self.actual_dictionary['mediatype'][mediatype]
         except KeyError:
             tr = mediatype
@@ -165,6 +165,44 @@ class Translator( Property ):
         except KeyError:
             tr = text
         return tr
+
+    def get_alphabet(self, case: str = "lower") -> str:
+        """
+        Returns the alphabet for the specified language.
+
+        Args:
+            case: 'lower' or 'upper' (default: 'lower')
+
+        Returns:
+            String containing the alphabet for the specified language
+        """
+        alphabets = {
+            'hu': 'aábcdeéfghiíjklmnoóöőpqrstuúüűvwxyz',
+            'en': 'abcdefghijklmnopqrstuvwxyz',
+            'sv': 'abcdefghijklmnopqrstuvwxyzåäö',
+            'fr': 'abcdefghijklmnopqrstuvwxyzàâæçéèêëîïôœùûüÿ',
+            'es': 'abcdefghijklmnopqrstuvwxyzáéíñóúü',
+            'it': 'abcdefghijklmnopqrstuvwxyzàèéìíîòóùú',
+            'de': 'abcdefghijklmnopqrstuvwxyzäöüß',
+            'ru': 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя',
+            'pl': 'aąbcćdeęfghijklłmnńoóprsśtuwyzźż',
+            'no': 'abcdefghijklmnopqrstuvwxyzæøå',
+            'dk': 'abcdefghijklmnopqrstuvwxyzæøå',
+            'cs': 'aábcčdďeéěfghiíjklmnňoópqrřsštťuúůvwxyýzž',
+            'hr': 'abcčćdđefghijklmnoprsštuvwxyzž',
+            'ga': 'abcdefghilmnoprstuv',
+            'nl': 'abcdefghijklmnopqrstuvwxyzij',
+            'fi': 'abcdefghijklmnopqrstuvwxyzåäö',
+        }
+
+        # Get the alphabet (fallback to English if language not found)
+        alphabet = alphabets.get(self.language.lower(), alphabets['en'])
+
+        # Handle case
+        if case.lower() == "upper":
+            return alphabet.upper()
+        return alphabet
+
 
 # ---
 
