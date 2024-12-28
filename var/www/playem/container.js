@@ -37,13 +37,14 @@ class ObjScrollSection {
         this.currentContainerIndex = -1;
         this.thumbnailContainerList = [];
         this.focusedThumbnailList = [];
+        this.objThumbnailController = objThumbnailController;
 
         this.oDescriptionContainer = new ObjDescriptionContainer(this);
         this.oDescriptionContainer.setThumbnailController(objThumbnailController);
 
         this.resetDom();
 
-        this.oContainerGenerator.showContainers(this)
+        this.oContainerGenerator.produceContainers(this);
     }
 
     resetDom() {
@@ -115,6 +116,11 @@ class ObjScrollSection {
         return this.oDescriptionContainer;
     }
 
+    /**
+     * It was written when the card menu configuration was hard coded and this method was called after all thumbnail was added to the container.
+     * Consequently if you add thumbnail to the container later, the click listener will be skipped to add, so you will be not able to click on the thumbnail
+     * Plus even the Thumbnail's '<div> id=container-{???}' will not be substituted
+     */
     addThumbnailContainerObject(thumbnailContainer) {
         let refToThis = this;
         let containerIndex = this.focusedThumbnailList.length;
@@ -165,6 +171,11 @@ class ObjScrollSection {
 
         // this variable should be refreshed every time when a new thumbnail is added
         this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
+
+        // Inform the ThumbnailContainer that it was added to the ObjScrollSection
+        thumbnailContainer.setParent(this, containerIndex);
+
+        return containerIndex
     }
 
     focusDefault() {
@@ -406,7 +417,16 @@ class ObjThumbnailContainer {
         this.currentThumbnailIndex = undefined;
         this.thumbnailList = [];
 
+        // this part is newly added
+        this.index = null;
+        this.objScrollSection = null;
+
         this.resetDom();
+    }
+
+    setParent(objScrollSection, index) {
+        this.index = index;
+        this.objScrollSection = objScrollSection;
     }
 
     resetDom() {
@@ -491,10 +511,19 @@ class ObjThumbnailContainer {
      * </div>
      */
     addThumbnail(recordId, objThumbnail) {
+        let refToThis = this;
         let thumbnailIndex = this.thumbnailList.length;
         this.thumbnailList.push(objThumbnail);
 
         this.coreDomeBuild(thumbnailIndex, objThumbnail);
+
+        // If the ObjThumbnailContainer was already added to the ObjScrollSection, then the click listener should be configured
+        if(this.objScrollSection !== null && this.objScrollSection !== undefined && this.index != null){
+            let domThumbnail = $(`div.thumbnail#container-${this.index}-thumbnail-${thumbnailIndex}`)
+            domThumbnail.click(function () {
+                refToThis.objScrollSection.clickedOnThumbnail($(this).attr('id'));
+            });
+        }
     }
 
     /**
@@ -513,8 +542,9 @@ class ObjThumbnailContainer {
 
         let domThumbnail = $("<div>", {
             class: "thumbnail",
-            id: "container-{???}-thumbnail-" + thumbnailIndex
-        });
+
+            // if it has index => the container was already added to the ScrollSection
+            id: "container-" + (this.index ?? "{???}") + "-thumbnail-" + thumbnailIndex });
         let domThumbnailTextWrapper = $("<div>", {
             class: "thumbnail-text-wrapper",
         });
@@ -529,6 +559,49 @@ class ObjThumbnailContainer {
 
         domThumbnailTextWrapper.append(domThumbnailText);
         domThumbnail.append(domThumbnailTextWrapper);
+
+
+//---
+//
+//
+//let domThumbnailContainerBlock = $('<div>', {
+//    class: "thumbnail-container-block",
+//    id: "container-block-" + containerIndex
+//});
+//
+//// Creates the Title JQuery element of the Thumbnail Container
+//let domThumbnailContainerTitle = $("<div>", {
+//    class: "thumbnail-container-title",
+//    text: thumbnailContainer.getTitle()
+//});
+//
+//// Gets the Thumbnail Container JQuery Element
+//let domThumbnailContainer = thumbnailContainer.getDom();
+//
+//// The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjScrollSection)
+//let currentThumbnailIndex = thumbnailContainer.getDefaultThumbnailIndex();
+//this.focusedThumbnailList.push(currentThumbnailIndex);
+//this.thumbnailContainerList.push(thumbnailContainer);
+//this.numberOfContainers++;
+//
+//let id = domThumbnailContainer.attr("id");
+//domThumbnailContainer.attr("id", id.format("???", containerIndex));
+//domThumbnailContainer.children('.thumbnail').each(function () {
+//    let thumbnailElement = $(this);
+//    let id = thumbnailElement.attr("id");
+//    thumbnailElement.attr("id", id.format("???", containerIndex));
+//
+//    // Add click listener on thumbnail
+//    thumbnailElement.click(function () {
+//        refToThis.clickedOnThumbnail($(this).attr('id'));
+//    });
+//});
+//
+//
+//
+//
+//---
+
 
         // Add LEVEL RIBBON if necessary
         if(level && ( level == "series" || level =="remake" || level == "sequel" )){
