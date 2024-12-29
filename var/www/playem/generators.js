@@ -59,198 +59,6 @@ class RestGenerator extends Generator{
         return text;
     }
 
-
-    /**
-     *
-     * TODO:
-     *
-     * make the containers generation faster:
-     * - read the next element
-     * - if it is empty, skip and get the next element
-     * - if it is not empty, in an async function show it
-     *
-     */
-    generateContainers(requestList, callbackMinimalThumbnails, callbackFinished){
-        let refToThis = this;
-        let container_list = [];
-        let response_list = [];
-        let processingPromises = []; // To track all async operations
-
-        for(let request of requestList){
-            let thumbnail_list = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
-
-            if(thumbnail_list.length > 0){
-                let oContainer = new ObjThumbnailContainer(request["title"]);
-                container_list.push(oContainer);
-
-                for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-
-                    let thumbnail_dict = thumbnail_list[thumbnail_index];
-                    let play_list = [];
-
-                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-                        play_list.push(thumbnail_list[sub_index]);
-                    }
-
-                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
-                }
-            }
-        }
-
-        //callbackMinimalThumbnails();
-        //callbackFinished();
-
-        return container_list;
-    }
-
-    // async showAllThumbnails(requestList, objScrollSection){
-    //     let refToThis = this;
-
-    //     for(let request of requestList){
-    //         let thumbnail_list = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
-    //         if(thumbnail_list.length > 0){
-    //             let oContainer = new ObjThumbnailContainer(request["title"]);
-    //             objScrollSection.addThumbnailContainerObject(oContainer);
-    //             await new Promise(resolve => setTimeout(resolve, 1));
-    //             //containerList.push(oContainer);
-    //             for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-    //                 //await new Promise(resolve => setTimeout(resolve, 1));
-    //                 let thumbnail_dict = thumbnail_list[thumbnail_index];
-    //                 let play_list = [];
-    //                 for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-    //                     play_list.push(thumbnail_list[sub_index]);
-    //                 }
-    //                 let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-    //                 oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
-    //             }
-    //         }
-    //     }
-
-    //     Generator.stopSpinner();
-    //     objScrollSection.focusDefault();
-    // }
-
-//    async showAllThumbnails(requestList, objScrollSection){
-//        let refToThis = this;
-//
-//        // Phase 1: Show only the minimal number of thumbnails - which can be seen in the window
-//        const MAX_LINES = 3;       // Maximum number of lines to process initially
-//        const MAX_THUMBNAILS = 11; // Maximum number of thumbnails per line initially
-//
-//        const actualLines = Math.min(requestList.length, MAX_LINES);
-//        for (let lineIndex = 0; lineIndex < actualLines; lineIndex++) {
-//            const request = requestList[lineIndex];
-//
-//
-//            let thumbnail_list = RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
-//            if(thumbnail_list.length > 0){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
-//                objScrollSection.addThumbnailContainerObject(oContainer);
-//                await new Promise(resolve => setTimeout(resolve, 1));
-//
-//                const actualThumbnails = Math.min(thumbnail_list.length, MAX_THUMBNAILS);
-//                for(let thumbnail_index = 0; thumbnail_index < actualThumbnails; thumbnail_index++){
-//                    //await new Promise(resolve => setTimeout(resolve, 1));
-//                    let thumbnail_dict = thumbnail_list[thumbnail_index];
-//                    let play_list = [];
-//                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-//                        play_list.push(thumbnail_list[sub_index]);
-//                    }
-//                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-//                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
-//                }
-//            }
-//        }
-//
-//        Generator.stopSpinner();
-//        objScrollSection.focusDefault();
-//
-//
-//    }
-
-
-//    async showAllThumbnails(requestList, objScrollSection){
-//        let refToThis = this;
-//        let containerList = [];  // Array to store the containers
-//
-//        Generator.startSpinner();
-//
-//        // Phase 1: Show only the minimal number of thumbnails - which can be seen in the window
-//        const INITIAL_VISIBLE_LINES = 3;       // Maximum number of lines to process initially
-//        const INITIAL_VISIBLE_THUMBNAILS = 14; // Maximum number of thumbnails per line initially
-//
-//        const initial_lines = Math.min(requestList.length, INITIAL_VISIBLE_LINES);
-//        for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
-//            const request = requestList[lineIndex];
-//
-//            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
-//            if(thumbnail_list.length > 0){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
-//                containerList.push(oContainer);  // Store the container
-//
-//                const initial_thumbnails = Math.min(thumbnail_list.length, INITIAL_VISIBLE_THUMBNAILS);
-//                for(let thumbnail_index = 0; thumbnail_index < initial_thumbnails; thumbnail_index++){
-//                    let thumbnail_dict = thumbnail_list[thumbnail_index];
-//                    let play_list = [];
-//                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-//                        play_list.push(thumbnail_list[sub_index]);
-//                    }
-//                    //let thumbnail = await refToThis.generateThumbnail(request["rq_data"], play_list);
-//                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-//                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
-//                }
-//
-//                objScrollSection.addThumbnailContainerObject(oContainer);
-//                await new Promise(resolve => setTimeout(resolve, 10));
-//            }
-//        }
-//
-//        Generator.stopSpinner();
-//        objScrollSection.focusDefault();
-//
-//        // Phase 2: Continue processing the remaining thumbnails for the first INITIAL_VISIBLE_LINES
-//        for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
-//            const request = requestList[lineIndex];
-//            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
-//            if(thumbnail_list.length > INITIAL_VISIBLE_THUMBNAILS){
-//                let oContainer = containerList[lineIndex];  // Get the stored container
-//                await new Promise(resolve => setTimeout(resolve, 1));
-//
-//                for(let thumbnail_index = INITIAL_VISIBLE_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-//                    let thumbnail_dict = thumbnail_list[thumbnail_index];
-//                    let play_list = [];
-//                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-//                        play_list.push(thumbnail_list[sub_index]);
-//                    }
-//                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-//                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
-//                }
-//            }
-//        }
-//
-//        // Phase 3: Process all remaining lines
-//        for (let lineIndex = initial_lines; lineIndex < requestList.length; lineIndex++) {
-//            const request = requestList[lineIndex];
-//            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
-//            if(thumbnail_list.length > 0){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
-//
-//                for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-//                    let thumbnail_dict = thumbnail_list[thumbnail_index];
-//                    let play_list = [];
-//                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-//                        play_list.push(thumbnail_list[sub_index]);
-//                    }
-//                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-//                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
-//                }
-//                objScrollSection.addThumbnailContainerObject(oContainer);
-//                await new Promise(resolve => setTimeout(resolve, 1));
-//            }
-//        }
-//    }
-
     async showAllThumbnails(requestList, objScrollSection){
         let refToThis = this;
         let containerList = [];  // Array to store the containers
@@ -258,14 +66,14 @@ class RestGenerator extends Generator{
 
         // Phase 1: Show only the minimal number of thumbnails - which can be seen in the window
         const INITIAL_VISIBLE_LINES = 3;    // Maximum number of lines to process initially
-        const MAX_THUMBNAILS = 11;          // Maximum number of thumbnails per line initially
+        const INITIAL_THUMBNAILS = 11;          // Maximum number of thumbnails per line initially
 
         let startedHash = this.getHistoryHash(objScrollSection);
 
         Generator.startSpinner();
 
-        const actualLines = Math.min(requestList.length, INITIAL_VISIBLE_LINES);
-        for (let lineIndex = 0; lineIndex < actualLines; lineIndex++) {
+        const initial_lines = Math.min(requestList.length, INITIAL_VISIBLE_LINES);
+        for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
             const request = requestList[lineIndex];
 
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
@@ -275,7 +83,7 @@ class RestGenerator extends Generator{
                 let oContainer = new ObjThumbnailContainer(request["title"]);
                 containerList.push(oContainer);
 
-                const actualThumbnails = Math.min(thumbnail_list.length, MAX_THUMBNAILS);
+                const actualThumbnails = Math.min(thumbnail_list.length, INITIAL_THUMBNAILS);
                 for(let thumbnail_index = 0; thumbnail_index < actualThumbnails; thumbnail_index++){
                     let thumbnail_dict = thumbnail_list[thumbnail_index];
                     let play_list = [];
@@ -286,7 +94,7 @@ class RestGenerator extends Generator{
                     oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
                 }
                 objScrollSection.addThumbnailContainerObject(oContainer);
-                await new Promise(resolve => setTimeout(resolve, 1));
+                //await new Promise(resolve => setTimeout(resolve, 100));
 
             }
         }
@@ -295,14 +103,14 @@ class RestGenerator extends Generator{
         objScrollSection.focusDefault();
 
         // Phase 2: Continue processing the remaining thumbnails for the first INITIAL_VISIBLE_LINES
-        for (let lineIndex = 0; lineIndex < actualLines; lineIndex++) {
+        for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
             const request = requestList[lineIndex];
             let thumbnail_list = thumbnailListCache[lineIndex];  // Use cached result
-            if(thumbnail_list.length > MAX_THUMBNAILS){
+            if(thumbnail_list.length > INITIAL_THUMBNAILS){
                 let oContainer = containerList[lineIndex];
-                await new Promise(resolve => setTimeout(resolve, 1));
+                await new Promise(resolve => setTimeout(resolve, 100));
 
-                for(let thumbnail_index = MAX_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
+                for(let thumbnail_index = INITIAL_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
                     let thumbnail_dict = thumbnail_list[thumbnail_index];
                     let play_list = [];
                     for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
@@ -315,7 +123,7 @@ class RestGenerator extends Generator{
         }
 
         // Phase 3: Process all remaining lines
-        for (let lineIndex = actualLines; lineIndex < requestList.length; lineIndex++) {
+        for (let lineIndex = initial_lines; lineIndex < requestList.length; lineIndex++) {
             const request = requestList[lineIndex];
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
             if(thumbnail_list.length > 0){
@@ -331,29 +139,21 @@ class RestGenerator extends Generator{
                     oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
                 }
 
-                // If meanwhile the history changed - user went back
+                // If meanwhile the history changed - user went back - the load of the thumbnails STOPPED
+                // If a media is played, it does not change the history, sot the load is countinued !
                 if( startedHash !== this.getHistoryHash(objScrollSection)){
-                    console.log("returning: " + this.getHistoryHash(objScrollSection))
                     return;
                 }
                 objScrollSection.addThumbnailContainerObject(oContainer);
-                console.log("i'm still adding")
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
         }
     }
-
-
-
-
 
     getHistoryHash(objScrollSection){
         let levels = objScrollSection.objThumbnailController.history.getLevels();
         return (levels.link + levels.text).hashCode();
     }
-
-
-
 
     getThumbnailTitle(hit){
         let max_length = 20;
@@ -403,8 +203,6 @@ class RestGenerator extends Generator{
     static getMainTitle(hit){
         let title;
 
-//        let lang_orig = hit['lang_orig']
-
         //                                                                requested title    original title    original language    requested language
         // requested = original                                                        ✔               ❌                    ❌                    ✔
         // requested ≠ original requested exist,          original exist               ✔               ✔                    ✔                    ✔
@@ -433,7 +231,6 @@ class RestGenerator extends Generator{
         }
 
         title = RestGenerator.getTitleWithPart(hit, title, " - ");
-//        title = this.getTitleWithPart(hit, title, " - ");
         return title
     }
 
@@ -537,11 +334,11 @@ class RestGenerator extends Generator{
                 "single":
                     {
                         "menu":
-                            (function(hierarchy_id, data_dict) {
+                            (function(history_title, hierarchy_id, data_dict, thumbnail_title) {
                                 return function() {
-                                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id, data_dict);
+                                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id, data_dict, thumbnail_title);
                                 };
-                            })(hit["id"], data_dict )
+                            })(history_title, hit["id"], data_dict, thumbnail_title )
                     },
                 "continuous": []
             });
@@ -647,9 +444,9 @@ class RestGenerator extends Generator{
 // ----------------------
 //
 class GeneralRestGenerator extends RestGenerator{
-    constructor(language_code, container_title){
+    constructor(language_code, parent_thumbnail_title){
         super(language_code);
-        this.container_title = container_title;
+        this.parent_thumbnail_title = parent_thumbnail_title;
     }
 
     produceContainers(){
@@ -663,45 +460,24 @@ class GeneralRestGenerator extends RestGenerator{
 // -----------------------
 //
 class SubLevelRestGenerator extends  RestGenerator{
-    constructor(language_code, container_title, hierarchy_id, data_dict){
+    constructor(language_code, container_title, hierarchy_id, data_dict, parent_thumbnail_title){
         super(language_code);
         this.container_title = container_title;
         this.hierarchy_id = hierarchy_id;
         this.data_dict = data_dict;
+        this.parent_thumbnail_title = parent_thumbnail_title;
     }
 
     produceContainers(objScrollSection, minimalThumbnails, allThumbnails){
-
-        let containerList = [];
 
         this.data_dict['card_id'] = this.hierarchy_id;
         let requestList = [
             {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed", rq_data: this.data_dict},
         ];
 
-        containerList = this.generateContainers(requestList, minimalThumbnails, allThumbnails);
-
-        // TODO: This object should be created in produceContainers
-        containerList.forEach(oContainer => {
-            objScrollSection.addThumbnailContainerObject(oContainer);
-        });
-        Generator.stopSpinner();
-        objScrollSection.focusDefault();
-
+        this.showAllThumbnails(requestList, objScrollSection)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 function generateMenu(menuDict){
@@ -720,12 +496,14 @@ function generateMenu(menuDict){
 
         `;
         let requestType = null;
+        let timeoutAdded = false;
 
         let containerList = menuDict.container_list ?? [];
         for (let containerDict of containerList) {
             let descriptorStaticHardCodedDict = containerDict.static_hard_coded ?? null;
             let descriptorDynamicHardCodedDict = containerDict.dynamic_hard_coded ?? null;
             let descriptorDynamicQueried = containerDict.dynamic_queried ?? null;
+
             let order = containerDict.order ?? 0
 
             // Static - Hard Coded Container Definitions
@@ -735,6 +513,7 @@ function generateMenu(menuDict){
                 produceContainersBody += `
                         let oContainer${order} = new ObjThumbnailContainer(translated_titles['${container_title_keycontainerTitleKey}']);
                         let thumbnail;
+                        let thumbnailTitle;
                 `;
 
                 let thumbnailList = descriptorStaticHardCodedDict.thumbnails ?? [];
@@ -750,19 +529,20 @@ function generateMenu(menuDict){
                     let menuDictString = JSON.stringify(menuDict);
 
                     produceContainersBody += `
+                        thumbnailTitle = translated_titles["${thumbnailtitleKey}"];
                         thumbnail = new Thumbnail();
-                        thumbnail.setImageSources({thumbnail_src: "${thumbnailImage}", description_src: "${descriptionImage}"});
-                        thumbnail.setTitles({main: translated_titles["${thumbnailtitleKey}"], thumb: translated_titles["${descriptiontitleKey}"], history: translated_titles["${historytitleKey}"]});
+                        thumbnail.setImageSources({description_src: "${descriptionImage}", thumbnail_src: "${thumbnailImage}"});
+                        thumbnail.setTitles({main: translated_titles["${descriptiontitleKey}"], thumb: thumbnailTitle, history: translated_titles["${historytitleKey}"]});
                         thumbnail.setFunctionForSelection({
                             "single":
                                 {
-                                    "menu": ( function(movie_type) {
+                                    "menu": ( function(thumbnailTitle) {
                                                 return function() {
                                                     let menuClass = generateMenu(${menuDictString});
-                                                    let menu = new menuClass(refToThis.language_code);
+                                                    let menu = new menuClass(refToThis.language_code, thumbnailTitle);
                                                     return menu;
                                                 };
-                                            })("for_later_use")
+                                            })(thumbnailTitle)
                                 },
                             "continuous": []
                         });
@@ -782,11 +562,11 @@ function generateMenu(menuDict){
                 let translator = descriptorDynamicHardCodedDict.title.dict_translator ?? null;
                 let title = descriptorDynamicHardCodedDict.title.key ?? "unknown";
                 let data = descriptorDynamicHardCodedDict.data ?? {};
-                let request = descriptorDynamicHardCodedDict.request ?? {static: true, method: "GET", protocol: "http", url: ""}
-                let rq_static = request.static
-                let rq_method = request.method
-                let rq_protocol = request.protocol
-                let rq_path = request.path
+                let request = descriptorDynamicHardCodedDict.request ?? {static: true, method: "GET", protocol: "http", url: ""};
+                let rq_static = request.static;
+                let rq_method = request.method;
+                let rq_protocol = request.protocol;
+                let rq_path = request.path;
 
                 let rq_data = `{`;
                 for( const[key, value] of Object.entries(data)){
@@ -797,8 +577,9 @@ function generateMenu(menuDict){
                 title = (translator !== null) ? `${translator}["${title}"]` : `"${title}"`;
 
                 // First time here => setTimeout() needed
-                if(requestType !== "dynamic"){
+                if(!timeoutAdded){
                     produceContainersBody += `
+                        console.log("parent_thumbnail_title: " + refToThis.parent_thumbnail_title);
                         Generator.startSpinner();
 
                         // Needed because of the Generator.startSpinner(). If no setTimeout, the spinner does not start
@@ -810,6 +591,8 @@ function generateMenu(menuDict){
                             request = {title: ${title}, rq_static:${rq_static}, rq_method: "${rq_method}", rq_url: "${rq_protocol}://" + host + port + "${rq_path}", rq_data: ${rq_data}};
                             requestList.push(request);
                 `
+
+                timeoutAdded = true;
                 requestType = "dynamic";
 
             // Dynamic - Queried Container Definitions
@@ -866,12 +649,19 @@ function generateMenu(menuDict){
                 // It was not asked but I add the language anyway.
                 rq_data += `lang: refToThis.language_code}`
 
-                produceContainersBody += `
-
+                if( !timeoutAdded){
+                    produceContainersBody += `
+                        console.log("parent_thumbnail_title: " + refToThis.parent_thumbnail_title)
                         Generator.startSpinner();
 
                         // Needed because of the Generator.startSpinner(). If no setTimeout, the spinner does not start
                         setTimeout(function() {
+                    `
+                }
+
+                timeoutAdded = true;
+
+                produceContainersBody += `
                             let response = $.getJSON({ method: "${pre_rq_method}", url: "${pre_rq_protocol}://" + host + port + "${pre_rq_path}", data: ${pre_rq_data}, async: ${pre_rq_assync}});
                             if(response.status == 200 && response.responseJSON["result"]){
                 `
@@ -924,6 +714,11 @@ function generateMenu(menuDict){
 
             produceContainersBody += `
                             refToThis.showAllThumbnails(requestList, objScrollSection);
+            `;
+        }
+
+        if(timeoutAdded){
+            produceContainersBody += `
                         }, 1);
             `;
         }
@@ -952,6 +747,11 @@ function generateMenu(menuDict){
 
     return retClass;
 }
+
+
+
+
+
 
 
 
