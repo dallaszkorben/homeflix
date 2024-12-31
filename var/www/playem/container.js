@@ -199,6 +199,10 @@ class ObjScrollSection {
     }
 
     getSelectedThumbnalFunctionForSelection() {
+        if (!this.focusedThumbnailList || !this.focusedThumbnailList.length) {
+            return{"continuous": {}, "single": {}};
+        }
+
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
         let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex];
         let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex);
@@ -244,28 +248,35 @@ class ObjScrollSection {
 
     // TODO: the currentThumbnailIndex should be fetched from ThumbnailContainer !!!
     showDetails() {
-        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
-        let thumbnailContainer = this.thumbnailContainerList[this.currentContainerIndex]
-        let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
-        let card_id = null;
+        let currentThumbnailIndex = this.focusedThumbnailList?.[this.currentContainerIndex];
+        let thumbnailContainer = this.thumbnailContainerList?.[this.currentContainerIndex];
 
-        if (thumbnail != undefined) {
-            let single = thumbnail.function_for_selection.single;
-            if("medium_dict" in single){
-                card_id = single.medium_dict["card_id"];
-            }
-
-            let image = thumbnail.getDescriptionImageSource();
-            let title = thumbnail.getTitle();
-            let storyline = thumbnail.getStoryline();
-            let lyrics = thumbnail.getLyrics();
-            let credentials = thumbnail.getCredentials();
-            let extra = thumbnail.getExtras();
-            let appendix = thumbnail.getAppendix();
-
-            // Shows the actual Description
-            this.oDescriptionContainer.refreshDescription(thumbnail, card_id, image, title, storyline, lyrics, credentials, extra, appendix);
+        if (currentThumbnailIndex === undefined || thumbnailContainer === undefined) {
+            return;
         }
+
+        let thumbnail = thumbnailContainer.getThumbnail(currentThumbnailIndex)
+        if (!thumbnail) {
+            return;
+        }
+
+        let card_id = null;
+        const single = thumbnail.function_for_selection.single;
+        if("medium_dict" in single){
+            card_id = single.medium_dict["card_id"];
+        }
+
+        const image = thumbnail.getDescriptionImageSource();
+        const title = thumbnail.getTitle();
+        const storyline = thumbnail.getStoryline();
+        const lyrics = thumbnail.getLyrics();
+        const credentials = thumbnail.getCredentials();
+        const extra = thumbnail.getExtras();
+        const appendix = thumbnail.getAppendix();
+
+        // Shows the actual Description
+        this.oDescriptionContainer.refreshDescription(thumbnail, card_id, image, title, storyline, lyrics, credentials, extra, appendix);
+
     }
 
     clickedOnThumbnail(id) {
@@ -309,6 +320,10 @@ class ObjScrollSection {
 
     // Take the next thumbnail
     arrowRight() {
+        if (!this.focusedThumbnailList || !this.focusedThumbnailList.length) {
+            return;
+        }
+
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
@@ -322,6 +337,10 @@ class ObjScrollSection {
 
     // Take the previous thumbail
     arrowLeft() {
+        if (!this.focusedThumbnailList || !this.focusedThumbnailList.length) {
+            return;
+        }
+
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
@@ -334,6 +353,10 @@ class ObjScrollSection {
     }
 
     arrowDown() {
+        if (!this.focusedThumbnailList || !this.focusedThumbnailList.length) {
+            return;
+        }
+
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
@@ -349,6 +372,10 @@ class ObjScrollSection {
     };
 
     arrowUp() {
+        if (!this.focusedThumbnailList || !this.focusedThumbnailList.length) {
+            return;
+        }
+
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
@@ -367,7 +394,7 @@ class ObjScrollSection {
     scrollThumbnails() {
         let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
 
-//        if (typeof focusedThumbnailList !== 'undefined') {
+        if (this.focusedThumbnailList && this.focusedThumbnailList.length > 0) {
             let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
             // Vertical scroll
@@ -396,7 +423,7 @@ class ObjScrollSection {
             } else if (currentThumbnailIndex < containerScrollLeft / thumbnailWidth) {
                 domContainer.animate({ scrollLeft: thumbnailWidth * currentThumbnailIndex }, 200);
             }
-//        }
+        }
     }
 }
 
