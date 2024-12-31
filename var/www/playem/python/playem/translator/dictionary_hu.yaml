@@ -149,7 +149,7 @@ mediatype:
     ebook: Ebook
 
 level:
-    series: Sorozat    
+    series: Sorozat
     season: Évad
     sequel: Folytatásos
     remake: Feldolgozás
@@ -506,6 +506,11 @@ title:
 
     # Radioplay
     radioplay: Rádiójáték
+    radioplay_playlists: Lejátszási listák
+    radioplay_interrupted: Folytasd
+    radioplay_last_watched: Utoljára hallgatott
+    radioplay_least_watched: Legritkábban hallgatott
+    radioplay_most_watched: Leggyakrabban hallgatott
 
     # Audiobook
     audiobook: Hangoskönyv
@@ -601,7 +606,7 @@ interaction_labels:
                 logout: Kijelentkezés
         language:
             language_prefix: Nyelv
-        server:            
+        server:
             menu: Server parancsok
             sub_menus:
                 rebuild_static_db: Média adatbázis újraépítése
@@ -619,7 +624,7 @@ interaction_labels:
             buttons:
                 submit: Jóváhagyás
                 cancel: Elvet
-        
+
         continue_interrupted_playback:
             title: Megszakított lejátszás
             message: A média legutóbbi lejátszását megszakították.<br>Szeretné a megszakítástól folytatni, vagy esetleg az elejétől kívánja újranézni?

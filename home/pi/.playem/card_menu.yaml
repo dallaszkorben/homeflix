@@ -1,0 +1,2405 @@
+# ###########
+# DEFINITIONS
+# ###########
+definitions:
+  parts:
+    request_collect_highest_mixed: &request_collect_highest_mixed
+        static: true
+        method: GET
+        protocol: http
+        path: "/collect/highest/mixed"
+
+    request_collect_lowest: &request_collect_lowest
+        static: true
+        method: GET
+        protocol: http
+        path: "/collect/lowest"
+
+  categories:
+
+  # ====================================================================
+
+    # ===============
+    # Movie thumbnail
+    # ===============
+    category_movie: &category_movie
+      thumbnail:
+        image: images/categories/movie.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: movies
+      description:
+        image: images/categories/movie.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: movies
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: movies
+      execution:
+        container_list:
+          # Movie container
+          - order: 0
+            static_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: movies
+              thumbnails:
+                # ---------------
+                # Films thumbnail
+                # ---------------
+                - order: 0
+                  thumbnail:
+                    image: images/categories/movie_mixed.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_mixed
+                  description:
+                    image: images/categories/movie_mixed.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_mixed
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_mixed
+                  execution:
+                    container_list:
+                      # Movie Filte container
+                      - order: 0
+                        static_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_filter
+                          thumbnails:
+                            # Movie filtered by Genre - Hard Coded
+                            - order: 0
+                              thumbnail:
+                                image: images/categories/movie_by_genre.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_genre
+                              description:
+                                image: images/categories/movie_by_genre.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_genre
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_genre
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: drama
+                                      data:
+                                        category: movie
+                                        genres: drama_AND__NOT_comedy_AND__NOT_war_AND__NOT_satire_AND__NOT_crime_AND__NOT_thriller_AND__NOT_fantasy_AND__NOT_music_AND__NOT_scifi_AND__NOT_horror
+                                      request: *request_collect_highest_mixed
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: scifi
+                                      data:
+                                        category: movie
+                                        genres: scifi_AND__NOT_trash
+                                      request: *request_collect_highest_mixed
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: fantasy
+                                      data:
+                                        category: movie
+                                        genres: fantasy
+                                      request: *request_collect_highest_mixed
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: comedy
+                                      data:
+                                        category: movie
+                                        genres: comedy_AND__NOT_teen
+                                      request: *request_collect_highest_mixed
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: teen
+                                      data:
+                                        category: movie
+                                        genres: teen
+                                      request: *request_collect_highest_mixed
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: satire
+                                      data:
+                                        category: movie
+                                        genres: satire
+                                      request: *request_collect_highest_mixed
+                                  - order: 6
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: crime
+                                      data:
+                                        category: movie
+                                        genres: crime_AND__NOT_trash
+                                      request: *request_collect_highest_mixed
+                                  - order: 7
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: action
+                                      data:
+                                        category: movie
+                                        genres: action_AND__NOT_trash
+                                      request: *request_collect_highest_mixed
+                                  - order: 8
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: thriller
+                                      data:
+                                        category: movie
+                                        genres: thriller
+                                      request: *request_collect_highest_mixed
+                                  - order: 9
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: horror
+                                      data:
+                                        category: movie
+                                        genres: horror
+                                      request: *request_collect_highest_mixed
+                                  - order: 10
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: western
+                                      data:
+                                        category: movie
+                                        genres: western
+                                      request: *request_collect_highest_mixed
+                                  - order: 11
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: war
+                                      data:
+                                        category: movie
+                                        genres: war
+                                      request: *request_collect_highest_mixed
+                                  - order: 12
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: music
+                                      data:
+                                        category: movie
+                                        genres: music
+                                      request: *request_collect_highest_mixed
+                                  - order: 13
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: history
+                                      data:
+                                        category: movie
+                                        genres: history
+                                      request: *request_collect_highest_mixed
+                                  - order: 14
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: documentary
+                                      data:
+                                        category: movie
+                                        genres: documentary
+                                      request: *request_collect_highest_mixed
+                                  - order: 15
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_movie
+                                            key: trash
+                                      data:
+                                        category: movie
+                                        genres: trash
+                                      request: *request_collect_highest_mixed
+                            # Movie filtered by Theme - Hard Coded
+                            - order: 1
+                              thumbnail:
+                                image: images/categories/movie_by_theme.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_theme
+                              description:
+                                image: images/categories/movie_by_theme.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_theme
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_theme
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: apocalypse
+                                      data:
+                                        category: movie
+                                        themes: apocalypse
+                                      request: *request_collect_highest_mixed
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: dystopia
+                                      data:
+                                        category: movie
+                                        themes: dystopia
+                                      request: *request_collect_highest_mixed
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: conspiracy
+                                      data:
+                                        category: movie
+                                        themes: conspiracy
+                                      request: *request_collect_highest_mixed
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: drog
+                                      data:
+                                        category: movie
+                                        themes: drog
+                                      request: *request_collect_highest_mixed
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: maffia
+                                      data:
+                                        category: movie
+                                        themes: maffia
+                                      request: *request_collect_highest_mixed
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: broker
+                                      data:
+                                        category: movie
+                                        themes: broker
+                                      request: *request_collect_highest_mixed
+                                  - order: 6
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: media
+                                      data:
+                                        category: movie
+                                        themes: media
+                                      request: *request_collect_highest_mixed
+                                  - order: 7
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: psychopathy
+                                      data:
+                                        category: movie
+                                        themes: psychopathy
+                                      request: *request_collect_highest_mixed
+                                  - order: 8
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: evil
+                                      data:
+                                        category: movie
+                                        themes: evil
+                                      request: *request_collect_highest_mixed
+                                  - order: 9
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: alien
+                                      data:
+                                        category: movie
+                                        themes: alien
+                                      request: *request_collect_highest_mixed
+                                  - order: 10
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_themes
+                                            key: revenge
+                                      data:
+                                        category: movie
+                                        themes: revenge
+                                      request: *request_collect_highest_mixed
+                            # Movie Filtered by Director - Queried
+                            - order: 2
+                              thumbnail:
+                                image: images/categories/movie_by_director.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_director
+                              description:
+                                image: images/categories/movie_by_director.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_director
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_director
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_queried:
+                                      pre_query:
+                                        data:
+                                          category: movie
+                                          minimum: 2
+                                          limit: 40
+                                        request:
+                                          static: -not_needed-
+                                          method: GET
+                                          protocol: http
+                                          path: "/collect/directors/by/movie/count"
+                                      query_loop:
+                                        data:
+                                          category: movie
+                                        # take the value of the response of pre_query and use it as 'directors' in the new request
+                                        data_from_pre_response_list:
+                                          type: value
+                                          value: directors
+                                        request: *request_collect_highest_mixed
+                                        # ! consider to remove this, In case of type: value, the title IS the value
+                                        title:
+                                          - variable: data_value
+                            # Movie Filtered by Actor - Queried
+                            - order: 3
+                              thumbnail:
+                                image: images/categories/movie_by_actor.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_actor
+                              description:
+                                image: images/categories/movie_by_actor.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_actor
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_actor
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_queried:
+                                      pre_query:
+                                        data:
+                                          category: movie
+                                          minimum: 3
+                                          limit: 40
+                                        request:
+                                          static: -not_needed-
+                                          method: GET
+                                          protocol: http
+                                          path: "/collect/actors/by/role/count"
+                                      query_loop:
+                                        data:
+                                          category: movie
+                                        # take the value of the response of pre_query and use it as 'actors' in the new request
+                                        data_from_pre_response_list:
+                                          type: value
+                                          value: actors
+                                        request: *request_collect_highest_mixed
+                                        title:
+                                          - variable: data_value
+                            # Movie Filtered by ABC - Queried
+                            - order: 4
+                              thumbnail:
+                                image: images/categories/movie_by_title_abc.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_title_abc
+                              description:
+                                image: images/categories/movie_by_title_abc.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_title_abc
+                              history:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: movie_by_title_abc
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_queried:
+                                      pre_query:
+                                        data:
+                                          category: movie
+                                          maximum: 20     # this part does not work. The strategy should be figured out and implemented
+                                        request:
+                                          static: -not_needed-
+                                          method: GET
+                                          protocol: http
+                                          path: "/collect/abc/by/movie_title/count"
+                                      query_loop:
+                                        data:
+                                          category: movie
+                                          filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
+                                        # take the value of the response of pre_query and use it as 'title' in the new request
+                                        data_from_pre_response_list:
+                                          type: dict
+                                          dict:
+                                            title: filter
+                                        request: *request_collect_highest_mixed
+                                        title:
+                                          - variable: data_dict["name"]
+                # ----------------
+                # Series thumbnail
+                # ----------------
+                - order: 1
+                  thumbnail:
+                    image: images/categories/movie_series.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_series
+                  description:
+                    image: images/categories/movie_series.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_series
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_series
+                  execution:
+                    container_list:
+                      # Tale
+                      - order: 0
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: tale
+                          data:
+                            category: movie
+                            level: series
+                            genres: tale
+                          request: *request_collect_highest_mixed
+                      # Drama
+                      - order: 1
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: drama
+                          data:
+                            category: movie
+                            level: series
+                            genres: drama
+                          request: *request_collect_highest_mixed
+                      # Comedy
+                      - order: 2
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: comedy
+                          data:
+                            category: movie
+                            level: series
+                            genres: comedy
+                          request: *request_collect_highest_mixed
+                      # Thriller
+                      - order: 3
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: thriller
+                          data:
+                            category: movie
+                            level: series
+                            genres: thriller
+                          request: *request_collect_highest_mixed
+                      # Action
+                      - order: 4
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: action
+                          data:
+                            category: movie
+                            level: series
+                            genres: action
+                          request: *request_collect_highest_mixed
+                      # Scifi
+                      - order: 5
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: scifi
+                          data:
+                            category: movie
+                            level: series
+                            genres: scifi
+                          request: *request_collect_highest_mixed
+                      # Documentary
+                      - order: 6
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: documentary
+                          data:
+                            category: movie
+                            level: series
+                            genres: documentary
+                          request: *request_collect_highest_mixed
+                # ----------------
+                # Sequel thumbnail
+                # ----------------
+                - order: 2
+                  thumbnail:
+                    image: images/categories/movie_sequels.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_sequels
+                  description:
+                    image: images/categories/movie_sequels.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_sequels
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_sequels
+                  execution:
+                    container_list:
+                      # Drama
+                      - order: 0
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: drama
+                          data:
+                            category: movie
+                            level: series
+                            genres: drama
+                          request: *request_collect_highest_mixed
+                      # Comedy
+                      - order: 1
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: comedy
+                          data:
+                            category: movie
+                            level: series
+                            genres: comedy
+                          request: *request_collect_highest_mixed
+                      # Thriller
+                      - order: 2
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: thriller
+                          data:
+                            category: movie
+                            level: series
+                            genres: thriller
+                          request: *request_collect_highest_mixed
+                      # Action
+                      - order: 3
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: action
+                          data:
+                            category: movie
+                            level: series
+                            genres: action
+                          request: *request_collect_highest_mixed
+                      # Scifi
+                      - order: 4
+                        dynamic_hard_coded:
+                          title:
+                            - variable: refToThis.parent_thumbnail_title
+                            - text: "-"
+                            - trans:
+                                translator: translated_genre_movie
+                                key: scifi
+                          data:
+                            category: movie
+                            level: series
+                            genres: scifi
+                          request: *request_collect_highest_mixed
+                # ----------------
+                # Remake thumbnail
+                # ----------------
+                - order: 3
+                  thumbnail:
+                    image: images/categories/movie_remakes.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_remakes
+                  description:
+                    image: images/categories/movie_remakes.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_remakes
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_remakes
+                  execution:
+                    container_list:
+                    #
+                      - order: 0
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_genre_movie
+                                key: drama
+                          data:
+                            category: movie
+                            level: remake
+                          request: *request_collect_highest_mixed
+                # ------------------
+                # Playlist thumbnail
+                # ------------------
+                - order: 4
+                  thumbnail:
+                    image: images/categories/movie_playlists.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_playlists
+                  description:
+                    image: images/categories/movie_playlists.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_playlists
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: movie_playlists
+                  execution:
+                    container_list:
+                      # Interrupted movies
+                      - order: 0
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_interrupted
+                          data:
+                            category: movie
+                            playlist: interrupted
+                          request: *request_collect_lowest
+                      # Last watched movies
+                      - order: 1
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_last_watched
+                          data:
+                            category: movie
+                            playlist: last_watched
+                          request: *request_collect_lowest
+                      # Most watched movies
+                      - order: 2
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_most_watched
+                          data:
+                            category: movie
+                            playlist: most_watched
+                          request: *request_collect_lowest
+                      # Existing TAGs
+                      - order: 3
+                        dynamic_queried:
+                          pre_query:
+                            data:
+                              category: movie
+                            request:
+                              static: -not_needed-
+                              method: GET
+                              protocol: http
+                              path: "/personal/tag/get"
+                          query_loop:
+                            data:
+                              category: movie
+                            # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                tags: name
+                            request: *request_collect_lowest
+                            title:
+                              - variable: data_dict["name"]
+
+# ====================================================================
+
+    # ===============
+    # Music thumbnail
+    # ===============
+    category_music: &category_music
+      thumbnail:
+        image: images/categories/music.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: music
+      description:
+        image: images/categories/music.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: music
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: music
+      execution:
+        container_list:
+          # -------------
+          # Music - Video
+          # -------------
+          - order: 0
+            static_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: music_video
+              thumbnails:
+                # ------------------
+                # Music-Video-Decade
+                # ------------------
+                - order: 0
+                  thumbnail:
+                    image: images/categories/music_by_decade.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_decade
+                  description:
+                    image: images/categories/music_by_decade.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_decade
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_decade
+                  execution:
+                    container_list:
+                      # ------------------
+                      # Music-Video-Decade
+                      # ------------------
+                      - order: 0
+                        static_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: music_by_decade
+                          thumbnails:
+                            # -----------------------
+                            # Music-Video-Decade-Band
+                            # -----------------------
+                            - order: 0
+                              thumbnail:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              description:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "60s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 60s
+                                      request: *request_collect_highest_mixed
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "70s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 70s
+                                      request: *request_collect_highest_mixed
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "80s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 80s
+                                      request: *request_collect_highest_mixed
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "90s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 90s
+                                      request: *request_collect_highest_mixed
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2000s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 2000s
+                                      request: *request_collect_highest_mixed
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2010s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 2010s
+                                      request: *request_collect_highest_mixed
+
+                            # --------------------------
+                            # Music-Video-Decade-Records
+                            # --------------------------
+                            - order: 1
+                              thumbnail:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              description:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "60s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 60s
+                                      request: *request_collect_lowest
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "70s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 70s
+                                      request: *request_collect_lowest
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "80s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 80s
+                                      request: *request_collect_lowest
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "90s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 90s
+                                      request: *request_collect_lowest
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2000s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 2000s
+                                      request: *request_collect_lowest
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2010s"
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        decade: 2010s
+                                      request: *request_collect_lowest
+
+                # -----------------
+                # Music-Video-Genre
+                # -----------------
+                - order: 1
+                  thumbnail:
+                    image: images/categories/music_by_genre.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_genre
+                  description:
+                    image: images/categories/music_by_genre.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_genre
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_genre
+                  execution:
+                    container_list:
+                      # ------------------
+                      # Music-Video-Genre
+                      # ------------------
+                      - order: 0
+                        static_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: music_by_genre
+                          thumbnails:
+                            # -----------------------
+                            # Music-Video-Genre-Band
+                            # -----------------------
+                            - order: 0
+                              thumbnail:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              description:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              execution:
+                                container_list:
+                                  # New wave
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: new_wave
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: new_wave
+                                      request: *request_collect_highest_mixed
+                                  # Electronic
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: electronic
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: electronic
+                                      request: *request_collect_highest_mixed
+                                  # Pop
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: pop
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: pop
+                                      request: *request_collect_highest_mixed
+                                  # Synth
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: synth
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: synth
+                                      request: *request_collect_highest_mixed
+                                  # Rock
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: rock
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: rock
+                                      request: *request_collect_highest_mixed
+                                  # Rock
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: alternative
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: alternative
+                                      request: *request_collect_highest_mixed
+                                  # Punk
+                                  - order: 6
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: punk
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: punk
+                                      request: *request_collect_highest_mixed
+
+                            # -----------------------
+                            # Music-Video-Genre-Record
+                            # -----------------------
+                            - order: 1
+                              thumbnail:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              description:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              execution:
+                                container_list:
+                                  # New wave
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: new_wave
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: new_wave
+                                      request: *request_collect_lowest
+                                  # Electronic
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: electronic
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: electronic
+                                      request: *request_collect_lowest
+                                  # Pop
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: pop
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: pop
+                                      request: *request_collect_lowest
+                                  # Synth
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: synth
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: synth
+                                      request: *request_collect_lowest
+                                  # Rock
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: rock
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: rock
+                                      request: *request_collect_lowest
+                                  # Rock
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: alternative
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: alternative
+                                      request: *request_collect_lowest
+                                  # Punk
+                                  - order: 6
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: punk
+                                      data:
+                                        category: music_video
+                                        level: band
+                                        genres: punk
+                                      request: *request_collect_lowest
+
+                # ---------------
+                # Music-Video-ABC
+                # ---------------
+                - order: 2
+                  thumbnail:
+                    image: images/categories/music_by_band_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_band_abc
+                  description:
+                    image: images/categories/music_by_band_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_band_abc
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_band_abc
+                  execution:
+                    container_list:
+                      - order: 0
+                        dynamic_queried:
+                          pre_query:
+                            data:
+                              category: music_video
+                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
+                            request:
+                              static: -not_needed-
+                              method: GET
+                              protocol: http
+                              path: "/collect/abc/by/movie_title/count"
+                          query_loop:
+                            data:
+                              category: music_video
+                              filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
+                              level: band
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                title: filter
+                            request: *request_collect_highest_mixed
+                            title:
+                              - variable: data_dict["name"]
+
+                # --------------------
+                # Music-Video-Playlist
+                # --------------------
+                - order: 3
+                  thumbnail:
+                    image: images/categories/music_video_playlists.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_video_playlists
+                  description:
+                    image: images/categories/music_video_playlists.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_video_playlists
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_video_playlists
+                  execution:
+                    container_list:
+                      # Last watched movies
+                      - order: 0
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_last_watched
+                          data:
+                            category: music_video
+                            playlist: last_watched
+                          request: *request_collect_lowest
+                      # Most watched movies
+                      - order: 1
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_most_watched
+                          data:
+                            category: music_video
+                            playlist: most_watched
+                          request: *request_collect_lowest
+                      # Existing TAGs
+                      - order: 2
+                        dynamic_queried:
+                          pre_query:
+                            data:
+                              category: music_video
+                            request:
+                              static: -not_needed-
+                              method: GET
+                              protocol: http
+                              path: "/personal/tag/get"
+                          query_loop:
+                            data:
+                              category: music_video
+                            # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                tags: name
+                            request: *request_collect_lowest
+                            title:
+                              - variable: data_dict["name"]
+
+          # -------------
+          # Music - Audio
+          # -------------
+          - order: 1
+            static_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: music_audio
+              thumbnails:
+                # ------------------
+                # Music-Audio-Decade
+                # ------------------
+                - order: 0
+                  thumbnail:
+                    image: images/categories/music_by_decade.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_decade
+                  description:
+                    image: images/categories/music_by_decade.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_decade
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_decade
+                  execution:
+                    container_list:
+                      # ------------------
+                      # Music-Audio-Decade
+                      # ------------------
+                      - order: 0
+                        static_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: music_by_decade
+                          thumbnails:
+                            # -----------------------
+                            # Music-Audio-Decade-Band
+                            # -----------------------
+                            - order: 0
+                              thumbnail:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              description:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "60s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 60s
+                                      request: *request_collect_highest_mixed
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "70s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 70s
+                                      request: *request_collect_highest_mixed
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "80s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 80s
+                                      request: *request_collect_highest_mixed
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "90s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 90s
+                                      request: *request_collect_highest_mixed
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2000s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 2000s
+                                      request: *request_collect_highest_mixed
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2010s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 2010s
+                                      request: *request_collect_highest_mixed
+
+                            # --------------------------
+                            # Music-Audio-Decade-Records
+                            # --------------------------
+                            - order: 1
+                              thumbnail:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              description:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              execution:
+                                container_list:
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "60s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 60s
+                                      request: *request_collect_lowest
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "70s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 70s
+                                      request: *request_collect_lowest
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "80s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 80s
+                                      request: *request_collect_lowest
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "90s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 90s
+                                      request: *request_collect_lowest
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2000s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 2000s
+                                      request: *request_collect_lowest
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - text: "2010s"
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        decade: 2010s
+                                      request: *request_collect_lowest
+
+                # -----------------
+                # Music-Audio-Genre
+                # -----------------
+                - order: 1
+                  thumbnail:
+                    image: images/categories/music_by_genre.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_genre
+                  description:
+                    image: images/categories/music_by_genre.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_genre
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_genre
+                  execution:
+                    container_list:
+                      # ------------------
+                      # Music-Audio-Genre
+                      # ------------------
+                      - order: 0
+                        static_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: music_by_genre
+                          thumbnails:
+                            # -----------------------
+                            # Music-Audio-Genre-Band
+                            # -----------------------
+                            - order: 0
+                              thumbnail:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              description:
+                                image: images/categories/music_band.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_band
+                              execution:
+                                container_list:
+                                  # New wave
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: new_wave
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: new_wave
+                                      request: *request_collect_highest_mixed
+                                  # Electronic
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: electronic
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: electronic
+                                      request: *request_collect_highest_mixed
+                                  # Pop
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: pop
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: pop
+                                      request: *request_collect_highest_mixed
+                                  # Synth
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: synth
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: synth
+                                      request: *request_collect_highest_mixed
+                                  # Rock
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: rock
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: rock
+                                      request: *request_collect_highest_mixed
+                                  # Rock
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: alternative
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: alternative
+                                      request: *request_collect_highest_mixed
+                                  # Punk
+                                  - order: 6
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: punk
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: punk
+                                      request: *request_collect_highest_mixed
+
+                            # -----------------------
+                            # Music-Audio-Genre-Record
+                            # -----------------------
+                            - order: 1
+                              thumbnail:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              description:
+                                image: images/categories/music_record.jpg
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              history:
+                                title:
+                                  - trans:
+                                      translator: translated_titles
+                                      key: music_level_record
+                              execution:
+                                container_list:
+                                  # New wave
+                                  - order: 0
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: new_wave
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: new_wave
+                                      request: *request_collect_lowest
+                                  # Electronic
+                                  - order: 1
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: electronic
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: electronic
+                                      request: *request_collect_lowest
+                                  # Pop
+                                  - order: 2
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: pop
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: pop
+                                      request: *request_collect_lowest
+                                  # Synth
+                                  - order: 3
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: synth
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: synth
+                                      request: *request_collect_lowest
+                                  # Rock
+                                  - order: 4
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: rock
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: rock
+                                      request: *request_collect_lowest
+                                  # Rock
+                                  - order: 5
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: alternative
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: alternative
+                                      request: *request_collect_lowest
+                                  # Punk
+                                  - order: 6
+                                    dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: punk
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: punk
+                                      request: *request_collect_lowest
+
+                # ---------------
+                # Music-Audio-ABC
+                # ---------------
+                - order: 2
+                  thumbnail:
+                    image: images/categories/music_by_band_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_band_abc
+                  description:
+                    image: images/categories/music_by_band_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_band_abc
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_by_band_abc
+                  execution:
+                    container_list:
+                      - order: 0
+                        dynamic_queried:
+                          pre_query:
+                            data:
+                              category: music_audio
+                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
+                            request:
+                              static: -not_needed-
+                              method: GET
+                              protocol: http
+                              path: "/collect/abc/by/movie_title/count"
+                          query_loop:
+                            data:
+                              category: music_audio
+                              filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
+                              level: band
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                title: filter
+                            request: *request_collect_highest_mixed
+                            title:
+                              - variable: data_dict["name"]
+
+                # --------------------
+                # Music-Audio-Playlist
+                # --------------------
+                - order: 3
+                  thumbnail:
+                    image: images/categories/music_audio_playlists.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_audio_playlists
+                  description:
+                    image: images/categories/music_audio_playlists.jpg
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_audio_playlists
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_titles
+                          key: music_audio_playlists
+                  execution:
+                    container_list:
+                      # Last watched movies
+                      - order: 0
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_last_watched
+                          data:
+                            category: music_audio
+                            playlist: last_watched
+                          request: *request_collect_lowest
+                      # Most watched movies
+                      - order: 1
+                        dynamic_hard_coded:
+                          title:
+                            - trans:
+                                translator: translated_titles
+                                key: movie_most_watched
+                          data:
+                            category: music_audio
+                            playlist: most_watched
+                          request: *request_collect_lowest
+                      # Existing TAGs
+                      - order: 2
+                        dynamic_queried:
+                          pre_query:
+                            data:
+                              category: music_audio
+                            request:
+                              static: -not_needed-
+                              method: GET
+                              protocol: http
+                              path: "/personal/tag/get"
+                          query_loop:
+                            data:
+                              category: music_audio
+                            # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                tags: name
+                            request: *request_collect_lowest
+                            title:
+                              - variable: data_dict["name"]
+
+# ====================================================================
+
+    # ===================
+    # Radioplay thumbnail
+    # ===================
+    category_radioplay: &category_radioplay
+      thumbnail:
+        image: images/categories/radioplay.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: radioplay
+      description:
+        image: images/categories/radioplay.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: radioplay
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: radioplay
+      execution:
+        container_list:
+
+          # Radioplay list
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: radioplay
+              data:
+                category: radio_play
+              request: *request_collect_highest_mixed
+
+          # Interrupted
+          - order: 1
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: radioplay_interrupted
+              data:
+                category: radio_play
+                playlist: interrupted
+              request: *request_collect_lowest
+          # Last watched movies
+          - order: 2
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: radioplay_last_watched
+              data:
+                category: radio_play
+                playlist: last_watched
+              request: *request_collect_lowest
+          # Most watched movies
+          - order: 3
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: radioplay_most_watched
+              data:
+                category: radio_play
+                playlist: most_watched
+              request: *request_collect_lowest
+          # Existing TAGs
+          - order: 4
+            dynamic_queried:
+              pre_query:
+                data:
+                  category: radio_play
+                request:
+                  static: -not_needed-
+                  method: GET
+                  protocol: http
+                  path: "/personal/tag/get"
+              query_loop:
+                data:
+                  category: radio_play
+                # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
+                data_from_pre_response_list:
+                  type: dict
+                  dict:
+                    tags: name
+                request: *request_collect_lowest
+                title:
+                  - variable: data_dict["name"]
+# ====================================================================
+
+    # ===================
+    # Audiobook thumbnail
+    # ===================
+    category_audiobook: &category_audiobook
+      thumbnail:
+        image: images/categories/audiobook.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: audiobook
+      description:
+        image: images/categories/audiobook.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: audiobook
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: audiobook
+      execution:
+        container_list:
+
+          # audiobook list
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: audiobook
+              data:
+                category: audiobook
+              request: *request_collect_highest_mixed
+
+          # Interrupted
+          - order: 1
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: audiobook_interrupted
+              data:
+                category: audiobook
+                playlist: interrupted
+              request: *request_collect_lowest
+          # Last watched movies
+          - order: 2
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: audiobook_last_watched
+              data:
+                category: audiobook
+                playlist: last_watched
+              request: *request_collect_lowest
+          # Most watched movies
+          - order: 3
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: audiobook_most_watched
+              data:
+                category: audiobook
+                playlist: most_watched
+              request: *request_collect_lowest
+          # Existing TAGs
+          - order: 4
+            dynamic_queried:
+              pre_query:
+                data:
+                  category: audiobook
+                request:
+                  static: -not_needed-
+                  method: GET
+                  protocol: http
+                  path: "/personal/tag/get"
+              query_loop:
+                data:
+                  category: audiobook
+                # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
+                data_from_pre_response_list:
+                  type: dict
+                  dict:
+                    tags: name
+                request: *request_collect_lowest
+                title:
+                  - variable: data_dict["name"]
+
+
+
+
+
+
+# ====================================================================
+
+    # ===================
+    # Ebook thumbnail
+    # ===================
+    category_ebook: &category_ebook
+      thumbnail:
+        image: images/categories/ebook.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: ebook
+      description:
+        image: images/categories/ebook.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: ebook
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: ebook
+      execution:
+        container_list:
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: ebook
+              data:
+                category: ebook
+              request: *request_collect_highest_mixed
+
+# ====================================================================
+
+    # ===================
+    # Dia thumbnail
+    # ===================
+    category_dia: &category_dia
+      thumbnail:
+        image: images/categories/dia.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: dia
+      description:
+        image: images/categories/dia.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: dia
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: dia
+      execution:
+        container_list:
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: dia
+              data:
+                category: dia
+              request: *request_collect_highest_mixed
+
+# ====================================================================
+
+    # =======================
+    # Entertainment thumbnail
+    # =======================
+    category_entertainments: &category_entertainments
+      thumbnail:
+        image: images/categories/entertainment.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: entertainments
+      description:
+        image: images/categories/entertainment.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: entertainments
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: entertainments
+      execution:
+        container_list:
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: entertainment
+              data:
+                category: entertainment
+              request: *request_collect_highest_mixed
+
+# ====================================================================
+
+    # ===================
+    # Knowledge thumbnail
+    # ===================
+    category_knowledge: &category_knowledge
+      thumbnail:
+        image: images/categories/knowledge.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: knowledge
+      description:
+        image: images/categories/knowledge.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: knowledge
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: knowledge
+      execution:
+        container_list:
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: knowledge
+              data:
+                category: knowledge
+              request: *request_collect_highest_mixed
+
+# ====================================================================
+
+    # ===================
+    # Personal thumbnail
+    # ===================
+    category_personal: &category_personal
+      thumbnail:
+        image: images/categories/personal.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: personal
+      description:
+        image: images/categories/personal.jpg
+        title:
+          - trans:
+              translator: translated_titles
+              key: personal
+      history:
+        title:
+          - trans:
+              translator: translated_titles
+              key: personal
+      execution:
+        container_list:
+          - order: 0
+            dynamic_hard_coded:
+              title:
+                - trans:
+                    translator: translated_titles
+                    key: personal
+              data:
+                category: personal
+              request: *request_collect_highest_mixed
+# ====================================================================
+
+# ############
+# DEFAULT MENU
+# ############
+default:
+  container_list:
+
+    # ==============
+    # = CATEGORIES =
+    # ==============
+    - order: 0
+      static_hard_coded:
+        title:
+          - trans:
+              translator: translated_titles
+              key: categories
+        thumbnails:
+
+          # Categories container
+          - order: 0
+            <<: *category_movie
+          - order: 1
+            <<: *category_music
+          - order: 2
+            <<: *category_radioplay
+          - order: 3
+            <<: *category_audiobook
+          - order: 4
+            <<: *category_ebook
+          - order: 5
+            <<: *category_dia
+          - order: 6
+            <<: *category_entertainments
+          - order: 7
+            <<: *category_knowledge
+          - order: 8
+            <<: *category_personal
