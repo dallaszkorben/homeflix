@@ -430,17 +430,11 @@
                 return;
             }
 
-
             let menu = new GeneralRestGenerator(mainMenuDict, user_data['language_code'], "");
-
-//            let menuClass = generateMenu(mainMenuDict);
-//            let menu = new menuClass(user_data['language_code'], "");
 
             // this triggers the produceContainers()
             let oThumbnailController = new ThumbnailController(menu);
             let oScrollSection = oThumbnailController.getScrollSection();
-
-
 
 //--
 
@@ -460,9 +454,6 @@
             });
             const domDescSectSection = document.querySelector("#description-section");
             resizeObserver.observe(domDescSectSection);
-
-
-
 
             // Mouse enters an image
             $('.description-rating-rate img').hover(function() {
@@ -493,7 +484,6 @@
                 selectedImg.attr('src', selectedImg.data('selected'));
             });
 
-
             //
             // Arrow keyboard event listener
             //
@@ -520,7 +510,6 @@
                 function tab() {
                     oThumbnailController.tab();
                 }
-
 
                 var act = { 27: clickOnEscape, 13: clickOnThumbnail, 32: clickOnThumbnail, 37: arrowLeft, 38: arrowUp, 39: arrowRight, 40: arrowDown, 9: tab };
                 if (act[e.keyCode])
@@ -976,23 +965,24 @@
                     <div id="description-text-wrapper">
 
                         <div id="description-text-title"></div>
+                        <div id="description-text-container-outer">
+                            <div id="description-text-container">
+                                <div id="description-text-extra">
+                                    <div id="description-text-extra-date"></div>
+                                    <div id="description-text-extra-length"></div>
+                                    <div id="description-text-extra-block">
+                                        <div id="description-text-extra-block-origin"></div>
+                                        <div id="description-text-extra-block-genre"></div>
+                                        <div id="description-text-extra-block-theme"></div>
+                                    </div>
+                                </div>
 
-                        <div id="description-text-extra">
-                            <div id="description-text-extra-date"></div>
-                            <div id="description-text-extra-length"></div>
-                            <div id="description-text-extra-block">
-                                <div id="description-text-extra-block-origin"></div>
-                                <div id="description-text-extra-block-genre"></div>
-                                <div id="description-text-extra-block-theme"></div>
+                                <div id="description-text-area-div">
+                                    <div id="description-text-storyline" class="with-scrollbar"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div id="description-text-area-div">
-                            <div id="description-text-storyline" class="with-scrollbar"></div>
                             <div id="description-text-credentials" class="with-scrollbar"></div>
-                            <div id="description-tagging"></div>
-                            <div id="description-rating"></div>
                         </div>
-
                         <div id="description-appendix">
                             <div id="description-appendix-download"></div>
                             <div id="description-appendix-play"></div>
@@ -1001,7 +991,8 @@
                     </div>
                 </div>
                 <div id="description-image">
-
+                    <div id="description-tagging"></div>
+                    <div id="description-rating"></div>
                 </div>
 
             </div>

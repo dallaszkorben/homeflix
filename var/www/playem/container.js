@@ -1652,16 +1652,22 @@ class ObjDescriptionContainer {
         let textWrapperHeight = domDescriptionTextWrapper.innerHeight();
         let domDescriptionTextTitle = $("#description-text-title");
         let titleHeight = domDescriptionTextTitle.outerHeight();
+
+        let domDescriptionTextContainerOuter = $("#description-text-container-outer");
+        let textContainerOuterBorderHeight = domDescriptionTextContainerOuter.outerHeight()- domDescriptionTextContainerOuter.innerHeight();
+
+        let domDescriptionTextContainer = $("#description-text-container");
+        let textContainerBorderHeight = domDescriptionTextContainer.outerHeight()- domDescriptionTextContainer.innerHeight();
+
         let domDescriptionTextExtra = $("#description-text-extra");
         let extraHeight = domDescriptionTextExtra.outerHeight();
         let domDescriptionTextArea = $("#description-text-area-div");
-        let areaOuterHeight = domDescriptionTextArea.outerHeight();
-        let areaInnerHeight = domDescriptionTextArea.innerHeight()
-        let areaHeightBorder = areaOuterHeight - areaInnerHeight;
-        let storylineHeight = textWrapperHeight - titleHeight - extraHeight - appendixHeight - areaHeightBorder;
+        let areaBorderHeight = domDescriptionTextArea.outerHeight() - domDescriptionTextArea.innerHeight()
+        let storylineHeight = textWrapperHeight - titleHeight - textContainerOuterBorderHeight - textContainerBorderHeight - extraHeight - appendixHeight - areaBorderHeight;
+        let credentialHeight = textWrapperHeight - titleHeight -  textContainerOuterBorderHeight - appendixHeight;
 
         t.style.setProperty('--description-text-storyline-height', storylineHeight + 'px');
-        t.style.setProperty('--description-text-credentials-height', storylineHeight + 'px');
+        t.style.setProperty('--description-text-credentials-height', credentialHeight + 'px');
     }
 
     printCredentals(table, dict, id, title) {

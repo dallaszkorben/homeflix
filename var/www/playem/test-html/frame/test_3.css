@@ -39,7 +39,7 @@ body {
 
     background-color: rgb(171, 253, 176);
     border: var(--thumbnail-section-border-width) green solid;
-    box-sizing:border-box;            
+    box-sizing:border-box;
 }
 
 #description-text-div{
@@ -57,7 +57,7 @@ body {
     left: var(--description-text-wrapper-left);
     height: var(--description-text-wrapper-height);
     width: var(--description-text-wrapper-width);
-    overflow: hidden;  
+    overflow: hidden;
     border: 0px red solid;
 }
 
@@ -114,7 +114,7 @@ body {
     word-break: break-word;
 
     height: var(--description-text-storyline-height);
-    overflow: hidden; 
+    overflow: hidden;
     text-align: justify;
     border-left: 10px solid transparent;
     overflow-y: auto;               /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
@@ -134,7 +134,7 @@ body {
     white-space: wrap;
 
     height: var(--description-text-credentials-height);
-    overflow: hidden; 
+    overflow: hidden;
     text-align: justify;
     border-left: 20px solid transparent;
     overflow-y: auto;               /* it shows the vertical scrollbar only if it is necessary. values: scroll/auto */
@@ -176,7 +176,7 @@ body {
     display: flex;              /* flex box layout model */
     flex-direction: column;     /* stacks the flex items vertically */
     flex-wrap: nowrap;          /* the flex items will not wrap */
-    overflow: visible;           
+    overflow: visible;
     border: var(--thumbnail-container-block-border-width) rgb(0, 255, 13) solid;
     background-color: rgb(217, 255, 175);
 }
@@ -190,8 +190,8 @@ body {
 .thumbnail-container {
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
 
-    height: var(--thumbnail-container-height); 
-    min-height: var(--thumbnail-container-height); 
+    height: var(--thumbnail-container-height);
+    min-height: var(--thumbnail-container-height);
     width: 100%;                /* it occupies the whole .thumbnail-section horizontally */
     display: flex;              /* flex box layout model */
     flex-direction: row;        /* stacks the flex items vertically */
@@ -211,7 +211,7 @@ body {
 
 .thumbnail {
     box-sizing:border-box;      /* element and padding and border are included in the width and height */
-    height: 100%;               /* occupies the full height of the .thumbnail-container */       
+    height: 100%;               /* occupies the full height of the .thumbnail-container */
     margin-right: 5px;
     margin-left: 5px;
 
@@ -229,7 +229,7 @@ body {
     object-fit: contain;
 }
 
-.thumbnail-text-wrapper{            
+.thumbnail-text-wrapper{
     position: absolute;         /* relative to the nearestx positioned ancestor: .thumbnail. That is the reason the .thumbnail has position: relative */
     max-width: 300px;           /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
     width: 300px;               /* needed to tell to the absolute positioned element what is the size otherwise the 'absolute' element does not know*/
@@ -240,7 +240,7 @@ body {
     font-weight: bold;
     font-size: 50px;
     color: rgb(70, 26, 231);
-    text-shadow: 
+    text-shadow:
         -1px -1px 0px black,
         1px -1px 0px black,
         1px 1px 0px black,
