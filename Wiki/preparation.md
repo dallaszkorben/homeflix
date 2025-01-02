@@ -2,7 +2,7 @@
 web media player
 
 
-## Prepare Raspberry Pi 4 
+## Prepare Raspberry Pi 4
 
 
 ~~
@@ -14,7 +14,7 @@ sudo rm /usr/bin/python3
 sudo ln -s /usr/bin/python3.7 /usr/bin/python3
 ```
 
-### Get rid of the old python 
+### Get rid of the old python
 ```sh
 sudo apt-get update
 sudo apt-get upgrade
@@ -24,7 +24,7 @@ sudo apt -s remove python2
 sudo apt-get autoremove
 ```
 
-## Get rid of the old pip 
+## Get rid of the old pip
 ```sh
 sudo apt remove python3-pip
 sudo apt install python3-pip
@@ -32,7 +32,7 @@ sudo apt install python3-pip
 ~~
 
 
-## Install python 3.10 
+## Install python 3.10
 ```sh
 sudo apt update && sudo apt upgrade -y
 sudo apt install software-properties-common -y
@@ -54,10 +54,10 @@ sudo ln -s /usr/local/bin/python3.10 /usr/bin/python3
 
 
 ## Update sqlite3 version 2.27.2 to 3.36.0
-at least sqlite3 version 3.35.0 needed 
+at least sqlite3 version 3.35.0 needed
 ```sh
-pi@raspberrypi:~ $ source /var/www/playem/python/env/bin/activate
-(env) pi@raspberrypi:~/.playem $ python3
+pi@raspberrypi:~ $ source /var/www/homeflix/python/env/bin/activate
+(env) pi@raspberrypi:~/.homeflix $ python3
 >>> import sqlite3
 >>> sqlite3.sqlite_version
 '3.27.2'
@@ -86,7 +86,7 @@ sudo chmod a+x /usr/lib/arm-linux-gnueabihf/*sql*
 Check the version now
 ```sh
 (env) pi@raspberrypi:~/tmp/sqlite-autoconf-3360000 $ python
-Python 3.7.3 (default, Oct 31 2022, 14:04:00) 
+Python 3.7.3 (default, Oct 31 2022, 14:04:00)
 [GCC 8.3.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import sqlite3
@@ -103,21 +103,21 @@ Type "help", "copyright", "credits" or "license" for more information.
 ### Install WSGI module to appache2
 ```sh
 sudo apt-get install libapache2-mod-wsgi-py3 python-dev
-sudo a2enmod wsgi 
+sudo a2enmod wsgi
 ```
 
 ### Clone the project
 ```sh
 mkdir ~/Projects
 cd ~/Projects
-git clone https://github.com/dallaszkorben/playem.git
-sudo ln -s  /home/pi/Projects/playem/var/www/playem/ /var/www/playem
-sudo ln -s  /home/pi/Projects/playem/etc/apache2/sites-available/playem.conf /etc/apache2/sites-available/
+git clone https://github.com/dallaszkorben/homeflix.git
+sudo ln -s  /home/pi/Projects/homeflix/var/www/homeflix/ /var/www/homeflix
+sudo ln -s  /home/pi/Projects/homeflix/etc/apache2/sites-available/homeflix.conf /etc/apache2/sites-available/
 sudo rm /etc/apache2/sites-enabled/*.conf
-sudo ln -s  /etc/apache2/sites-available/playem.conf /etc/apache2/sites-enabled/
+sudo ln -s  /etc/apache2/sites-available/homeflix.conf /etc/apache2/sites-enabled/
 
 # I need the MEDIA folder, but I can not keep it in the project - must be created manually (empty folder is ignored by git)
-mkdir /home/pi/Projects/python/playem/var/www/playem/MEDIA
+mkdir /home/pi/Projects/python/homeflix/var/www/homeflix/MEDIA
 ```
 
 ### Create virtual environment
@@ -125,7 +125,7 @@ mkdir /home/pi/Projects/python/playem/var/www/playem/MEDIA
 sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
 python3 -m pip install virtualenv
 echo "PATH=$PARH:/home/pi/.local/bin" >> /home/pi/.bashrc
-cd /home/pi/Projects/playem/var/www/playem/pyton
+cd /home/pi/Projects/homeflix/var/www/homeflix/pyton
 virtualenv --python=python3 env
 ```
 
@@ -133,7 +133,7 @@ virtualenv --python=python3 env
 ```sh
 sudo apt-get install python3-distutils
 
-source /home/pi/Projects/playem/var/www/playem/python/env/bin/activate
+source /home/pi/Projects/homeflix/var/www/homeflix/python/env/bin/activate
 
 python -m pip install Flask==2.1.2
 python -m pip install Flask-Classful==0.15.0b1
@@ -154,28 +154,28 @@ python -m pip install ruamel.yaml
 sudo apt-get install yq
 ```
 
-### Create .playem folder 
-On the /home/pi folder dreate .playem folder
+### Create .homeflix folder
+On the /home/pi folder dreate .homeflix folder
 ```sh
-$ mkdir /home/pi/.playem
+$ mkdir /home/pi/.homeflix
 ```
 
-Create the configuration file in the .playem folder
+Create the configuration file in the .homeflix folder
 ```sh
 $ echo "---
 log:
-    file-name: playem.log
+    file-name: homeflix.log
     level: DEBUG
 media:
     absolute-path: /media/pi/MEDIA
     relative-path: MEDIA
 web:
-    absolute-path: /var/www/playem
-    relative-path: /playem
+    absolute-path: /var/www/homeflix
+    relative-path: /homeflix
 card:
-    db-name: playem.db
+    db-name: homeflix.db
 ...
-" > /home/pi/.playem/config.yaml
+" > /home/pi/.homeflix/config.yaml
 ```
 
 ### Configure automatic connection to wifi
@@ -297,7 +297,7 @@ after you restart the networking service, it reloads the configuration and start
 
 
 ### Mount the media
-Mount your playem media folder to the /var/www/playem/MEDIA folder
+Mount your homeflix media folder to the /var/www/homeflix/MEDIA folder
 1. connect the device
 2. mount the device:
 ```sh
@@ -306,14 +306,14 @@ $ udisksctl mount --block-device /dev/sda1 --no-user-interaction  /media/pi/MEDI
 ```
 3. mount the media folder to the MEDIA folder
 ```sh
-$ sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem /var/www/playem
-$ sudo mount -o bind  /media/pi/MEDIA /var/www/playem/MEDIA/
+$ sudo mount -o bind /home/pi/Projects/python/homeflix/var/www/homeflix /var/www/homeflix
+$ sudo mount -o bind  /media/pi/MEDIA /var/www/homeflix/MEDIA/
 ```
 
 ### Configure Apache
-copy the playem/etc/apache2/site-available folder to the /etc/apache2 folder
+copy the homeflix/etc/apache2/site-available folder to the /etc/apache2 folder
 
-copy the playem/etc/apache2/envvars file to the /etc/apache2 folder
+copy the homeflix/etc/apache2/envvars file to the /etc/apache2 folder
 
 Why do you need the envvars file?
 The critical part is this
@@ -338,32 +338,32 @@ sudo systemctl restart apache2.service
 
 Create shell script
 ```sh
-sudo bash -c 'echo -e "sudo touch /usr/local/bin/startplayem.sh" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo systemctl stop apache2" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "# I got an error before: mount: (hint) your fstab has been modified, but systemd still uses the old version; use `systemctl daemon-reload` to reload" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo systemctl daemon-reload" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "# reload the /etc/network/interfaces" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo systemctl restart networking" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "ABSOLUTE_PATH=\$(yq -r '"'"'.media[\"absolute-path\"]'"'"' /home/pi/.playem/config.yaml)" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "RELATIVE_PATH=\$(yq -r '"'"'.media[\"relative-path\"]'"'"' /home/pi/.playem/config.yaml)" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo mount -o bind \$ABSOLUTE_PATH /var/www/playem/\$RELATIVE_PATH/" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
-sudo chmod 755 /usr/local/bin/startplayem.sh
+sudo bash -c 'echo -e "sudo touch /usr/local/bin/homeflix.sh" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo systemctl stop apache2" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "# I got an error before: mount: (hint) your fstab has been modified, but systemd still uses the old version; use `systemctl daemon-reload` to reload" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo systemctl daemon-reload" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "# reload the /etc/network/interfaces" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo systemctl restart networking" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "ABSOLUTE_PATH=\$(yq -r '"'"'.media[\"absolute-path\"]'"'"' /home/pi/.homeflix/config.yaml)" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "RELATIVE_PATH=\$(yq -r '"'"'.media[\"relative-path\"]'"'"' /home/pi/.homeflix/config.yaml)" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/homeflix/var/www/homeflix/ /var/www/homeflix/" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo mount -o bind \$ABSOLUTE_PATH /var/www/homeflix/\$RELATIVE_PATH/" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/starthomeflix.sh'
+sudo chmod 755 /usr/local/bin/starthomeflix.sh
 
 # --- ignore this part ---
-sudo touch /usr/local/bin/startplayem.sh
-sudo bash -c 'echo -e "#!/bin/bash" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo mount -o bind /media/pi/vegyes/MEDIA /var/www/playem/MEDIA/" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/startplayem.sh'
-sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/startplayem.sh'
+sudo touch /usr/local/bin/starthomeflix.sh
+sudo bash -c 'echo -e "#!/bin/bash" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo mount -o bind /home/pi/Projects/python/homeflix/var/www/homeflix/ /var/www/homeflix/" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo mount -o bind /media/pi/vegyes/MEDIA /var/www/homeflix/MEDIA/" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sleep 20" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'echo -e "sudo systemctl restart apache2" >> /usr/local/bin/starthomeflix.sh'
 ```
 Reason of using '"'"'
 You are not allowed to escape single quote inside single quote.
@@ -379,10 +379,10 @@ Explanation of how '"'"' is interpreted as just ':
 Modify the crontab config file to make the script run after the reboot automatically
 ```sh
 # --- ignore this part, use the next instead ---
-#(crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/startplayem.sh  >> /home/pi/.playem/startplayem.log 2>&1") | crontab -
+#(crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/starthomeflix.sh  >> /home/pi/.homeflix/starthomeflix.log 2>&1") | crontab -
 
 # Unfortunatelly the previous solution does not print the date. Use this solution:
-(crontab -l 2>/dev/null; echo '@reboot /usr/local/bin/startplayem.sh 2>&1 | while IFS= read -r line; do echo "$(date -In): $line"; done >> /home/pi/.playem/startplayem.log') | crontab -
+(crontab -l 2>/dev/null; echo '@reboot /usr/local/bin/starthomeflix.sh 2>&1 | while IFS= read -r line; do echo "$(date -In): $line"; done >> /home/pi/.homeflix/starthomeflix.log') | crontab -
 ```
 
 ### Allow the product to reload Apache config
@@ -499,17 +499,17 @@ handle networking
     sudo systemctl enable networking
     sudo systemctl disable networking
 
-playem
+homeflix
 
     logs
 
-        /var/www/playem/logs/access.log
-        /var/www/playem/logs/error.log
-        /home/pi/.playem/playem.log
-        /home/pi/.playem/startplayem.log
+        /var/www/homeflix/logs/access.log
+        /var/www/homeflix/logs/error.log
+        /home/pi/.homeflix/homeflix.log
+        /home/pi/.homeflix/starthomeflix.log
 
-    start playem - mounting
-        /usr/local/bin/startplayem.sh
+    start homeflix - mounting
+        /usr/local/bin/starthomeflix.sh
 
             sudo systemctl stop apache2
 
@@ -519,11 +519,11 @@ playem
             # reload the /etc/network/interfaces
             sudo systemctl restart networking
 
-            ABSOLUTE_PATH=$(yq -r '.media["absolute-path"]' /home/pi/.playem/config.yaml)
-            RELATIVE_PATH=$(yq -r '.media["relative-path"]' /home/pi/.playem/config.yaml)
-            sudo mount -o bind /home/pi/Projects/python/playem/var/www/playem/ /var/www/playem/
+            ABSOLUTE_PATH=$(yq -r '.media["absolute-path"]' /home/pi/.homeflix/config.yaml)
+            RELATIVE_PATH=$(yq -r '.media["relative-path"]' /home/pi/.homeflix/config.yaml)
+            sudo mount -o bind /home/pi/Projects/python/homeflix/var/www/homeflix/ /var/www/homeflix/
             sleep 20
-            sudo mount -o bind $ABSOLUTE_PATH /var/www/playem/$RELATIVE_PATH/
+            sudo mount -o bind $ABSOLUTE_PATH /var/www/homeflix/$RELATIVE_PATH/
             sleep 20
             sudo systemctl restart apache2
 
@@ -531,7 +531,7 @@ playem
 
         umount media:
 
-            $ sudo umount /var/www/playem/MEDIA
+            $ sudo umount /var/www/homeflix/MEDIA
 
         stop apach:
 
@@ -539,7 +539,7 @@ playem
 
         umount project:
 
-            $ sudo umount /var/www/playem
+            $ sudo umount /var/www/homeflix
 
         umount driver:
 
@@ -554,12 +554,12 @@ playem
 
 ```
 
-### SETTINGS ON THE DEVELOPER MACHINE 
+### SETTINGS ON THE DEVELOPER MACHINE
 
 Normal case we mount the project and the media witht the mount command
 ```sh
-sudo mount -o bind /home/<user>/Projects/python/playem/var/www/playem /var/www/playem
-sudo mount -o bind  /media/<user>/vegyes/MEDIA /var/www/playem/MEDIA/
+sudo mount -o bind /home/<user>/Projects/python/homeflix/var/www/homeflix /var/www/homeflix
+sudo mount -o bind  /media/<user>/vegyes/MEDIA /var/www/homeflix/MEDIA/
 ```
 
 But we want the committed code the same on the developer environment and on the PI machine.
@@ -569,10 +569,10 @@ So we have to intoduce the 'pi' user on our developer environment and set the us
 $ sudo apt install bindfs
 
 # Mount the project with pi:pi
-sudo bindfs -o --force-group=pi --force-user=pi  /home/akoel/Projects/python/playem/var/www/playem /var/www/playem
+sudo bindfs -o --force-group=pi --force-user=pi  /home/akoel/Projects/python/homeflix/var/www/homeflix /var/www/homeflix
 
 # Mount the media with pi:pi
-sudo bindfs -o --force-group=pi --force-user=pi  /media/akoel/vegyes/MEDIA /var/www/playem/MEDIA/
+sudo bindfs -o --force-group=pi --force-user=pi  /media/akoel/vegyes/MEDIA /var/www/homeflix/MEDIA/
 
 # Start the web server
 sudo systemctl restart apache2
@@ -580,9 +580,9 @@ sudo systemctl restart apache2
 
 Dismantle the project
 ```sh
-$ sudo umount /var/www/playem/MEDIA
+$ sudo umount /var/www/homeflix/MEDIA
 $ sudo systemctl stop apache2
-$ sudo umount /var/www/playem
+$ sudo umount /var/www/homeflix
 $ sudo umount /dev/<sda1>
 ```
 
