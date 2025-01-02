@@ -1004,11 +1004,7 @@ class SqlDatabase:
                 voices = tmp_voices
 
             for voice, role in voices.items():
-
                 if voice:
-
-                    print(f'voice: {voice}, role: {role}')
-
                     query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
                         WHERE name= :name;
                     '''
@@ -1038,8 +1034,6 @@ class SqlDatabase:
 
                     # If the Role does not exist for the Card
                     if not role_id:
-
-                        print(f'role: {role} was not stored in table_role table')
 
                         # Creates to Role
                         query = '''INSERT INTO ''' + SqlDatabase.TABLE_ROLE + '''

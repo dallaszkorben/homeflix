@@ -620,7 +620,7 @@ class CardMenu( Property ):
         else:
             user_id = -1
 
-        print("user_id: {0}".format(user_id))
+#        print("user_id: {0}".format(user_id))
 
         return {'result': True, 'data': self.card_menu_dict['default'], 'error': None}
 
