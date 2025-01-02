@@ -1,4 +1,4 @@
-# homeflix
+# HOMEFLIX
 web media player
 
 
