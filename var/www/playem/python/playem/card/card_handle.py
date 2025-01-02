@@ -56,12 +56,12 @@ class CardHandle:
         # this keys must be in the dictionary.yaml file 'mediatype' section
         self.media_type_dict = {
             'video':   ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
-            'audio':   ['mp3', 'ogg', 'm4a'], 
-            'text':    ['txt'], 
-            'pdf':     ['pdf'], 
+            'audio':   ['mp3', 'ogg', 'm4a'],
+            'text':    ['txt'],
+            'pdf':     ['pdf'],
             'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba', 'pdf'],
-            'doc':     ['doc', 'odt', 'rtf'], 
-            'picture': ['jpg', 'jpeg', 'png', 'webp', 'avif'], 
+            'doc':     ['doc', 'odt', 'rtf'],
+            'picture': ['jpg', 'jpeg', 'png', 'webp', 'avif'],
             'code':    ['c', 'java', 'py', 'ino', 'yaml'],
             'archive': ['tar', 'gz', 'zip', 'deb'],
         }
@@ -107,8 +107,8 @@ class CardHandle:
         # Collect files and and dirs in the current directory
         file_list = [f for f in os.listdir(actualDir) if os.path.isfile(os.path.join(actualDir, f)) and self.getPatternCard().match( f )] if os.path.exists(actualDir) else []
         dir_list = [d for d in os.listdir(actualDir) if os.path.isdir(os.path.join(actualDir, d)) and d != CardHandle.MEDIA_FOLDER and d != CardHandle.SCREENSHOT_FOLDER and d != CardHandle.THUMBNAIL_FOLDER] if os.path.exists(actualDir) else []
-        
-        media_dir = os.path.join(actualDir, CardHandle.MEDIA_FOLDER)        
+
+        media_dir = os.path.join(actualDir, CardHandle.MEDIA_FOLDER)
         media_list = [f for f in os.listdir(media_dir) if os.path.isfile(os.path.join(media_dir, f))] if os.path.exists(media_dir) else []
 
         basename = os.path.basename(actualDir)
@@ -118,7 +118,7 @@ class CardHandle:
 
         source_path = None
         card_path = None
-        card_file_name = None    
+        card_file_name = None
         image_file_name = None
 
         card_id = None
@@ -186,7 +186,7 @@ class CardHandle:
                     title_orig = data['title']['orig']
                 except:
                     title_orig = None
-                try:            
+                try:
                     titles = data['title']['titles']
                 except:
                     titles = []
@@ -224,14 +224,16 @@ class CardHandle:
                     actors = data['actors']
                 except:
                     actors = []
-                try:       
+                try:
                     stars = data['stars']
                 except:
-                    stars = []                
-                try:       
+                    stars = []
+                try:
                     voices = data['voices']
                 except:
-                    voices = []                
+                    voices = []
+                if not voices:
+                    voices = []
                 try:
                     hosts = data['hosts']
                 except:
@@ -277,7 +279,7 @@ class CardHandle:
                 except:
                     performers = []
 
-                # TODO: Makers, Contributors     
+                # TODO: Makers, Contributors
 
                 try:
                     full_length = data['length']
@@ -305,7 +307,7 @@ class CardHandle:
                             net_stop_time = full_time - 200
                         else:
                             net_start_time = 0
-                            net_stop_time = full_time                        
+                            net_stop_time = full_time
 
                 # If the media has no configured length
                 else:
@@ -360,7 +362,7 @@ class CardHandle:
                 # filter out empty storylines
                 storylines=dict((language, storyline) for language, storyline in storylines.items() if storylines)
 
-# ---   
+# ---
                 # ---------------------------------------
                 # filter out wrong cards in general case
                 # ---------------------------------------
@@ -409,11 +411,11 @@ class CardHandle:
 #                if is_appendix:
 #                    logging.error( "Appendix:      {0} error: {1}".format(card_path, card_error))
 
- # ---  
+ # ---
 
-# !!!   
+# !!!
 #                logging.debug("SOURCE path: '{0}'".format(source_path))
-# !!!   
+# !!!
 
 
                 # this is a level in the hierarchy / not a media
@@ -438,8 +440,8 @@ class CardHandle:
                         category=category,
                         storylines=storylines,
                         level=level,
-                        genres=genres, 
-                        themes=themes, 
+                        genres=genres,
+                        themes=themes,
                         origins=origins,
                         basename=basename,
                         source_path=source_path,
@@ -447,9 +449,9 @@ class CardHandle:
                         higher_card_id=higher_card_id
                     )
                     card_type = 'level'
-# !!!   
+# !!!
 #                    logging.debug("    level id: '{0}'".format(card_id))
-# !!!   
+# !!!
 
 
 
@@ -497,10 +499,10 @@ class CardHandle:
 
                         card_id=db.append_card_media(
                             card_path=card_path,
-                            title_orig=title_orig, 
+                            title_orig=title_orig,
                             titles=titles,
                             title_on_thumbnail=title_on_thumbnail,
-                            title_show_sequence=title_show_sequence,                           
+                            title_show_sequence=title_show_sequence,
 
 #                            card_id=given_card_id,
 
@@ -509,17 +511,17 @@ class CardHandle:
                             download=download,
                             category=category,
                             storylines=storylines,
-                            lyrics=lyrics,                        
+                            lyrics=lyrics,
                             decade=decade,
-                            date=date, 
+                            date=date,
                             length=full_length,
                             full_time=full_time,
                             net_start_time=net_start_time,
                             net_stop_time=net_stop_time,
-                            sounds=sounds, 
-                            subs=subs, 
-                            genres=genres, 
-                            themes=themes, 
+                            sounds=sounds,
+                            subs=subs,
+                            genres=genres,
+                            themes=themes,
                             origins=origins,
                             writers=writers,
                             directors=directors,

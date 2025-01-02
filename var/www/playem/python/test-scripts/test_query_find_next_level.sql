@@ -50,7 +50,7 @@ from playem.card.database import SqlDatabase as DB
 db=DB()
 
 import sqlite3
-con = sqlite3.connect("/home/akoel/.playem/playem.db")
+con = sqlite3.connect("/home/pi/.playem/playem.db")
 
 
 --------------------------------------------------------
@@ -237,7 +237,7 @@ LEFT JOIN
 (
 SELECT 
     GROUP_CONCAT(
-        person.name || ': ' || COALESCE(role_names, ''), '|'
+        person.name || ': ' || COALESCE(role_names, ''), ';'
     ) as actors,
     card_actor.id_card id_card
 FROM 
@@ -264,7 +264,45 @@ GROUP BY
     card_actor.id_card    
 ) act
 ON act.id_card=card.id
-    
+ 
+            --------------
+            --- VOICES ---
+            --------------
+            LEFT JOIN    
+            (
+
+SELECT 
+    GROUP_CONCAT(
+        person.name || '::::::: ' || COALESCE(role_names, ''), ';'
+    ) as voices,
+    card_voice.id_card id_card
+FROM 
+    Person person,
+    Card_Voice card_voice,
+    (
+        SELECT 
+            voice_role.id_voice,
+            role.id_card,
+            GROUP_CONCAT(role.name, ',') as role_names
+        FROM 
+            role,
+            voice_role 
+        WHERE 
+            voice_role.id_role = role.id
+        GROUP BY 
+            voice_role.id_voice, role.id_card
+    ) roles 
+WHERE 
+    card_voice.id_voice = person.id
+    AND roles.id_voice = person.id 
+    AND roles.id_card = card_voice.id_card
+GROUP BY 
+    card_voice.id_card
+                
+            ) vc
+            ON vc.id_card=card.id   
+
+            
             ----------------
             --- LECTURER ---
             ----------------
@@ -326,21 +364,6 @@ ON act.id_card=card.id
                 GROUP BY card_writer.id_card
             ) wr
             ON wr.id_card=card.id
-
-            --------------
-            --- VOICES ---
-            --------------
-            LEFT JOIN    
-            (
-                SELECT group_concat(person.name) voices,  card_voice.id_card
-                FROM 
-                    Person person,
-                    Card_Voice card_voice
-                WHERE 
-                    card_voice.id_voice = person.id
-                GROUP BY card_voice.id_card
-            ) vc
-            ON vc.id_card=card.id    
 
             -------------
             --- STARS ---

@@ -51,6 +51,7 @@ class SqlDatabase:
 
     TABLE_ROLE = "Role"
     TABLE_ACTOR_ROLE = "Actor_Role"
+    TABLE_VOICE_ROLE = "Voice_Role"
 
     TABLE_USER = "User"
     TABLE_HISTORY = "History"
@@ -103,6 +104,7 @@ class SqlDatabase:
 
             SqlDatabase.TABLE_ROLE,
             SqlDatabase.TABLE_ACTOR_ROLE,
+            SqlDatabase.TABLE_VOICE_ROLE,
         ]
 
         self.table_personal_list = [
@@ -654,6 +656,17 @@ class SqlDatabase:
            );
         ''' )
 
+        self.conn.execute('''
+           CREATE TABLE ''' + SqlDatabase.TABLE_VOICE_ROLE + '''(
+               id_voice      INTEGER  NOT NULL,
+               id_role       INTEGER  NOT NULL,
+               FOREIGN KEY (id_voice)     REFERENCES ''' + SqlDatabase.TABLE_PERSON + ''' (id),
+               FOREIGN KEY (id_role)      REFERENCES ''' + SqlDatabase.TABLE_ROLE + ''' (id),
+               PRIMARY KEY (id_voice, id_role)
+           );
+        ''' )
+
+
         self.fill_up_theme_table_from_dict()
         self.fill_up_genre_table_from_dict()
         self.fill_up_language_table_from_dict()
@@ -924,7 +937,6 @@ class SqlDatabase:
             # INSERT into TABLE_CARD_ACTOR
             #
             if isinstance(actors, list):
-
                 tmp_actors = {}
                 for key in actors:
                     tmp_actors[key] = ""
@@ -980,10 +992,71 @@ class SqlDatabase:
                     # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. role_id: {3}. Role: {4}.".format(card_id, person_id, actor, role_id, role))
                     # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. Role: {3}.".format(card_id, person_id, actor, role))
 
-
-
-        #                    logging.error( "TEST - there is actor: '{0}'. From select query: {1}. Person Id: {2}".format(actor, record, person_id))
         ###################################33
+
+            #
+            # INSERT into TABLE_CARD_VOICE
+            #
+            if isinstance(voices, list):
+                tmp_voices = {}
+                for key in voices:
+                    tmp_voices[key] = ""
+                voices = tmp_voices
+
+            for voice, role in voices.items():
+
+                if voice:
+
+                    print(f'voice: {voice}, role: {role}')
+
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': voice}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': voice})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_VOICE + '''
+                            (id_voice, id_card)
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
+
+        ##################################
+
+                    # Ask if there is Role for this Card
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_ROLE + '''
+                        WHERE name= :name AND id_card= :card_id;
+                    '''
+                    record=cur.execute(query, {'name': role, 'card_id': card_id}).fetchone()
+                    (role_id, ) = record if record else (None,)
+
+                    # If the Role does not exist for the Card
+                    if not role_id:
+
+                        print(f'role: {role} was not stored in table_role table')
+
+                        # Creates to Role
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_ROLE + '''
+                           (id_card, name)
+                           VALUES (:card_id, :name);'''
+                        res = cur.execute(query, {'card_id': card_id, 'name': role})
+                        role_id = res.lastrowid
+
+                    # Connects the Role to the Voice
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_VOICE_ROLE + '''
+                        (id_voice, id_role)
+                        VALUES (:person_id, :role_id);'''
+                    cur.execute(query, {'person_id': person_id, 'role_id': role_id})
+
+                    # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. role_id: {3}. Role: {4}.".format(card_id, person_id, actor, role_id, role))
+                    # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. Role: {3}.".format(card_id, person_id, actor, role))
+
 
             #
             # INSERT into TABLE_CARD_STARS
@@ -1030,30 +1103,6 @@ class SqlDatabase:
 
                     query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_DIRECTOR + '''
                             (id_director, id_card)
-                            VALUES (:person_id, :card_id);'''
-                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
-
-            #
-            # INSERT into TABLE_CARD_VOICE
-            #
-            for voice in voices:
-
-                if voice:
-                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
-                        WHERE name= :name;
-                    '''
-                    record=cur.execute(query, {'name': voice}).fetchone()
-                    (person_id, ) = record if record else (None,)
-                    if not person_id:
-
-                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
-                                (name)
-                                VALUES (:name);'''
-                        res = cur.execute(query, {'name': voice})
-                        person_id = res.lastrowid
-
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_VOICE + '''
-                            (id_voice, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
@@ -2361,11 +2410,20 @@ class SqlDatabase:
             record["actors"] = actors_list
 
             # Voices
-            voices_string = record["voices"]
+            voices_play_string = record["voices"]
             voices_list = []
-            if voices_string:
-                voices_list = voices_string.split(',')
+            if voices_play_string:
+                voices_play_list = voices_play_string.split(';')
+                for voice_string in voices_play_list:
+                    (voice, characters_string) = voice_string.split(':')
+                    characters = []
+                    if characters_string:
+                        character_list = characters_string.split(',')
+                        for character in character_list:
+                            characters.append(character)
+                    voices_list.append({voice: characters})
             record["voices"] = voices_list
+
             # Host
             hosts_string = record.get("hosts")
             hosts_list = []
@@ -3198,6 +3256,43 @@ class SqlDatabase:
                             ) act
                             ON act.id_card=card.id
 
+                            --------------
+                            --- VOICES ---
+                            --------------
+                            LEFT JOIN
+                            (
+                                SELECT
+                                    GROUP_CONCAT(
+                                        person.name || ': ' || COALESCE(role_names, ''), ';'
+                                    ) as voices,
+                                    card_voice.id_card id_card
+                                FROM
+                                    Person person,
+                                    Card_Voice card_voice
+                                    LEFT JOIN
+                                    (
+                                        SELECT
+                                            voice_role.id_voice,
+                                            role.id_card,
+                                            GROUP_CONCAT(role.name, ',') as role_names
+                                        FROM
+                                            role,
+                                            voice_role
+                                        WHERE
+                                            voice_role.id_role = role.id
+                                        GROUP BY
+                                            voice_role.id_voice, role.id_card
+                                    ) roles
+                                    ON
+                                        roles.id_voice = person.id
+                                        AND roles.id_card = card_voice.id_card
+                                WHERE
+                                    card_voice.id_voice = person.id
+                                GROUP BY
+                                    card_voice.id_card
+                            ) vc
+                            ON vc.id_card=card.id
+
                             ----------------
                             --- LECTURER ---
                             ----------------
@@ -3259,21 +3354,6 @@ class SqlDatabase:
                                 GROUP BY card_writer.id_card
                             ) wr
                             ON wr.id_card=card.id
-
-                            --------------
-                            --- VOICES ---
-                            --------------
-                            LEFT JOIN
-                            (
-                                SELECT group_concat(person.name) voices,  card_voice.id_card
-                                FROM
-                                    Person person,
-                                    Card_Voice card_voice
-                                WHERE
-                                    card_voice.id_voice = person.id
-                                GROUP BY card_voice.id_card
-                            ) vc
-                            ON vc.id_card=card.id
 
                             -------------
                             --- STARS ---
@@ -4157,6 +4237,43 @@ class SqlDatabase:
                             ) act
                             ON act.id_card=card.id
 
+                            --------------
+                            --- VOICES ---
+                            --------------
+                            LEFT JOIN
+                            (
+                                SELECT
+                                    GROUP_CONCAT(
+                                        person.name || ': ' || COALESCE(role_names, ''), ';'
+                                    ) as voices,
+                                    card_voice.id_card id_card
+                                FROM
+                                    Person person,
+                                    Card_Voice card_voice
+                                    LEFT JOIN
+                                    (
+                                        SELECT
+                                            voice_role.id_voice,
+                                            role.id_card,
+                                            GROUP_CONCAT(role.name, ',') as role_names
+                                        FROM
+                                            role,
+                                            voice_role
+                                        WHERE
+                                            voice_role.id_role = role.id
+                                        GROUP BY
+                                            voice_role.id_voice, role.id_card
+                                    ) roles
+                                    ON
+                                        roles.id_voice = person.id
+                                        AND roles.id_card = card_voice.id_card
+                                WHERE
+                                    card_voice.id_voice = person.id
+                                GROUP BY
+                                    card_voice.id_card
+                            ) vc
+                            ON vc.id_card=card.id
+
                             ----------------
                             --- LECTURER ---
                             ----------------
@@ -4218,21 +4335,6 @@ class SqlDatabase:
                                 GROUP BY card_writer.id_card
                             ) wr
                             ON wr.id_card=card.id
-
-                            --------------
-                            --- VOICES ---
-                            --------------
-                            LEFT JOIN
-                            (
-                                SELECT group_concat(person.name) voices,  card_voice.id_card
-                                FROM
-                                    Person person,
-                                    Card_Voice card_voice
-                                WHERE
-                                    card_voice.id_voice = person.id
-                                GROUP BY card_voice.id_card
-                            ) vc
-                            ON vc.id_card=card.id
 
                             -------------
                             --- STARS ---
@@ -5179,6 +5281,43 @@ class SqlDatabase:
                         card_actor.id_card
                 ON act.id_card=card.id
 
+                --------------
+                --- VOICES ---
+                --------------
+                LEFT JOIN
+                (
+                    SELECT
+                        GROUP_CONCAT(
+                            person.name || ': ' || COALESCE(role_names, ''), ';'
+                        ) as voices,
+                        card_voice.id_card id_card
+                    FROM
+                        Person person,
+                        Card_Voice card_voice
+                        LEFT JOIN
+                        (
+                            SELECT
+                                voice_role.id_voice,
+                                role.id_card,
+                                GROUP_CONCAT(role.name, ',') as role_names
+                            FROM
+                                role,
+                                voice_role
+                            WHERE
+                                voice_role.id_role = role.id
+                            GROUP BY
+                                voice_role.id_voice, role.id_card
+                        ) roles
+                        ON
+                            roles.id_voice = person.id
+                            AND roles.id_card = card_voice.id_card
+                    WHERE
+                        card_voice.id_voice = person.id
+                    GROUP BY
+                        card_voice.id_card
+                ) vc
+                ON vc.id_card=card.id
+
                 -----------------
                 --- LECTURERS ---
                 -----------------
@@ -5240,21 +5379,6 @@ class SqlDatabase:
                     GROUP BY card_writer.id_card
                 ) wr
                 ON wr.id_card=card.id
-
-                --------------
-                --- VOICES ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT group_concat(person.name) voices,  card_voice.id_card
-                    FROM
-                        Person person,
-                        Card_Voice card_voice
-                    WHERE
-                        card_voice.id_voice = person.id
-                    GROUP BY card_voice.id_card
-                ) vc
-                ON vc.id_card=card.id
 
                 -------------
                 --- STARS ---
