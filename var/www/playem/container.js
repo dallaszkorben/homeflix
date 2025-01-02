@@ -1683,9 +1683,21 @@ class ObjDescriptionContainer {
                 first = false;
                 line.append(column);
 
-                column = $("<td>");
-                column.text(item);
-                line.append(column);
+                if(typeof item === 'object'){
+                    const [key, value] = Object.entries(item)[0];
+                    const joinedString = value.join(', ')
+                    column = $("<td>");
+                    column.text(key + ":");
+                    line.append(column);
+                    column = $("<td>");
+                    column.text(joinedString);
+                    line.append(column);
+
+                }else{
+                    column = $("<td>");
+                    column.text(item);
+                    line.append(column);
+                }
 
                 table.append(line);
             }

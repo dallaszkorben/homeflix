@@ -678,7 +678,7 @@ definitions:
                                 key: drama
                           data:
                             category: movie
-                            level: series
+                            level: sequel
                             genres: drama
                           request: *request_collect_highest_mixed
                       # Comedy
@@ -692,7 +692,7 @@ definitions:
                                 key: comedy
                           data:
                             category: movie
-                            level: series
+                            level: sequel
                             genres: comedy
                           request: *request_collect_highest_mixed
                       # Thriller
@@ -706,7 +706,7 @@ definitions:
                                 key: thriller
                           data:
                             category: movie
-                            level: series
+                            level: sequel
                             genres: thriller
                           request: *request_collect_highest_mixed
                       # Action
@@ -720,7 +720,7 @@ definitions:
                                 key: action
                           data:
                             category: movie
-                            level: series
+                            level: sequel
                             genres: action
                           request: *request_collect_highest_mixed
                       # Scifi
@@ -734,7 +734,7 @@ definitions:
                                 key: scifi
                           data:
                             category: movie
-                            level: series
+                            level: sequel
                             genres: scifi
                           request: *request_collect_highest_mixed
                 # ----------------

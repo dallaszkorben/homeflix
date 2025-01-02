@@ -367,7 +367,6 @@ body {
 ************ */
 
 #description-rating{
-    z-index: 2000;
     position: absolute;
     bottom: 0;
     right: 0;

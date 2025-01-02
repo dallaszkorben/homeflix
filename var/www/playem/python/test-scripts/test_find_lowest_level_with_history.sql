@@ -12,7 +12,7 @@ $ python3
 import sqlite3
 from playem.card.database import SqlDatabase as DB
 db=DB(None)
-con = sqlite3.connect("/home/akoel/.playem/playem.db")
+con = sqlite3.connect("/home/pi/.playem/playem.db")
 
 ---------------------------------------------------------------
 --- FULL QUERY for lowest (medium) level list               ---
@@ -887,6 +887,9 @@ for rec in res.fetchall():
     print(rec) 
 
 {'user_id': 1234, 'history_back': 0, 'playlist': 'interrupted', 'tag': 'Masterpiece', 'level': None, 'category': 'movie', 'genre': None, 'theme': None, 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'})
+    
+    
+    
     
     
     

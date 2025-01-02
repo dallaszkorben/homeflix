@@ -17,7 +17,7 @@ python3
 import sqlite3
 from playem.card.database import SqlDatabase as DB
 db=DB(None)
-con = sqlite3.connect("/home/akoel/.playem/playem.db")
+con = sqlite3.connect("/home/pi/.playem/playem.db")
 
 
 --------------------------------------------------------
@@ -790,6 +790,10 @@ ORDER BY CASE
 END
 
 ''', {'level': 'sequel', 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
+
+8517f7d51625cc213320bc5c89ed3dbb
+
+
 
 
 --''', {'level': 'series', 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'it'}).fetchall()

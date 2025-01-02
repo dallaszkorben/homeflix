@@ -18,7 +18,7 @@ from playem.card.database import SqlDatabase as DB
 db=DB()
 
 import sqlite3
-con = sqlite3.connect("/home/akoel/.playem/playem.db")
+con = sqlite3.connect("/home/pi/.playem/playem.db")
 
 ---------------------------------------------------------------
 --- FULL QUERY for next down level list of a card id        ---
@@ -233,17 +233,37 @@ FROM
             --------------
             --- ACTORS ---
             --------------
-            LEFT JOIN    
-            (
-                SELECT group_concat(person.name) actors,  card_actor.id_card
-                FROM 
-                    Person person,
-                    Card_Actor card_actor
-                WHERE 
-                    card_actor.id_actor = person.id
-                GROUP BY card_actor.id_card
-            ) act
-            ON act.id_card=card.id
+LEFT JOIN    
+(
+SELECT 
+    GROUP_CONCAT(
+        person.name || ': ' || COALESCE(role_names, ''), '|'
+    ) as actors,
+    card_actor.id_card id_card
+FROM 
+    Person person,
+    Card_Actor card_actor,
+    (
+        SELECT 
+            actor_role.id_actor,
+            role.id_card,
+            GROUP_CONCAT(role.name, ',') as role_names
+        FROM 
+            role,
+            actor_role 
+        WHERE 
+            actor_role.id_role = role.id
+        GROUP BY 
+            actor_role.id_actor, role.id_card
+    ) roles 
+WHERE 
+    card_actor.id_actor = person.id
+    AND roles.id_actor = person.id 
+    AND roles.id_card = card_actor.id_card
+GROUP BY 
+    card_actor.id_card    
+) act
+ON act.id_card=card.id
     
             ----------------
             --- LECTURER ---
@@ -835,10 +855,11 @@ END
 LIMIT :limit;
 
 
-''', {'card_id': 335, 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'hu', 'limit': 100}).fetchall()
+''', {'card_id': '8517f7d51625cc213320bc5c89ed3dbb', 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'hu', 'limit': 100}).fetchall()
 
 
-
+8517f7d51625cc213320bc5c89ed3dbb
+036c42c37fd8bdb73bc98e6a06578299
 
 
 
@@ -848,3 +869,51 @@ LIMIT :limit;
 
 (478, None, 'Alien: Covenant', None, None, 'en', 0, '', None, '2017', '2:02:00', 'MEDIA/01.Movie/04.Sequels/Alien/Alien6.Covenant-2017', 'Alien6.Covenant-2017', 'fear,ai,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Danny McBride,Michael Fassbender,Katherine Waterston,Billy Crudup,Demián Bichir,Carmen Ejogo,Jussie Smollett,Callie Hernandez,Amy Seimetz,Nathaniel Dean,Alexander England,Benjamin Rigby,Uli Latukefu,Tess Haubrich,Lorelei King,Goran D. Kleut', 'hu,en', 'hu,en', "Dan O'Bannon,Ronald Shusett,Jack Paglen", None, 'Michael Fassbender,Katherine Waterston,Billy Crudup', None, None, None, None, None, None, None, None, 'Almost eleven years after the disastrous expedition to the distant moon LV-223, the deep-space colonisation vessel Covenant, with more than 2,000 colonists in cryogenic hibernation, is on course for the remote planet Origae-6 with the intention to build a new world. Instead, a rogue transmission entices the crew to a nearby habitable planet which resembles Earth. The unsuspecting crewmembers of the Covenant will have to cope with biological foes beyond human comprehension.\nUltimately, what was intended as a peaceful exploratory mission, will soon turn into a desperate rescue operation in uncharted space.\n', None, 'video=Alien.Covenant-2017.mkv', None)
 ]
+
+
+
+--- fetch <actor>: <role> pairs ---
+con.execute('''
+    select group_concat(role.name), actor_role.id_actor as actor_id from 
+        role,
+        actor_role
+    where 
+        role.id_card=:card_id
+        and actor_role.id_role=role.id
+    group by
+        actor_role.id_actor        
+''', {'card_id': '036c42c37fd8bdb73bc98e6a06578299', 'category': 'music', 'lang': 'hu'}).fetchall()
+
+
+--- final solution ---
+con.execute('''
+SELECT 
+    GROUP_CONCAT(
+        person.name || ': ' || COALESCE(role_names, '')
+    ) as actors,
+    card_actor.id_card
+FROM 
+    Person person,
+    Card_Actor card_actor,
+    (
+        SELECT 
+            actor_role.id_actor,
+            role.id_card,
+            GROUP_CONCAT(role.name) as role_names
+        FROM 
+            role,
+            actor_role 
+        WHERE 
+            actor_role.id_role = role.id
+        GROUP BY 
+            actor_role.id_actor, role.id_card
+    ) roles 
+WHERE 
+    card_actor.id_actor = person.id
+    AND roles.id_actor = person.id 
+    AND roles.id_card = card_actor.id_card
+    AND card_actor.id_card=:card_id
+GROUP BY 
+    card_actor.id_card
+
+''', {'card_id': '036c42c37fd8bdb73bc98e6a06578299', 'category': 'music', 'lang': 'hu'}).fetchall()

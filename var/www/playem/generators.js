@@ -286,7 +286,7 @@ class RestGenerator extends Generator{
         let main_title = RestGenerator.getMainTitle(hit);
 
         // If any numbers of appendix belong to the card (regardles of it is media card or level)
-        if(hit["appendix"]){
+        if(hit["appendix"].length > 0){
 
             let appendix_list = [];
             for(let appendix of hit["appendix"]){

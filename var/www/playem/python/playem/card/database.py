@@ -2344,12 +2344,22 @@ class SqlDatabase:
             if stars_string:
                 stars_list = stars_string.split(',')
             record["stars"] = stars_list
+
             # Actors
-            actors_string = record["actors"]
+            actors_play_string = record["actors"]
             actors_list = []
-            if actors_string:
-                actors_list = actors_string.split(',')
+            if actors_play_string:
+                actors_play_list = actors_play_string.split(';')
+                for actor_string in actors_play_list:
+                    (actor, characters_string) = actor_string.split(':')
+                    characters = []
+                    if characters_string:
+                        character_list = characters_string.split(',')
+                        for character in character_list:
+                            characters.append(character)
+                    actors_list.append({actor: characters})
             record["actors"] = actors_list
+
             # Voices
             voices_string = record["voices"]
             voices_list = []
@@ -3158,13 +3168,33 @@ class SqlDatabase:
                             --------------
                             LEFT JOIN
                             (
-                                SELECT group_concat(person.name) actors,  card_actor.id_card
+                                SELECT
+                                    GROUP_CONCAT(
+                                        person.name || ': ' || COALESCE(role_names, ''), ';'
+                                    ) as actors,
+                                    card_actor.id_card id_card
                                 FROM
                                     Person person,
-                                    Card_Actor card_actor
+                                    Card_Actor card_actor,
+                                    (
+                                        SELECT
+                                            actor_role.id_actor,
+                                            role.id_card,
+                                            GROUP_CONCAT(role.name, ',') as role_names
+                                        FROM
+                                            role,
+                                            actor_role
+                                        WHERE
+                                            actor_role.id_role = role.id
+                                        GROUP BY
+                                            actor_role.id_actor, role.id_card
+                                    ) roles
                                 WHERE
                                     card_actor.id_actor = person.id
-                                GROUP BY card_actor.id_card
+                                    AND roles.id_actor = person.id
+                                    AND roles.id_card = card_actor.id_card
+                                GROUP BY
+                                    card_actor.id_card
                             ) act
                             ON act.id_card=card.id
 
@@ -4097,13 +4127,33 @@ class SqlDatabase:
                             --------------
                             LEFT JOIN
                             (
-                                SELECT group_concat(person.name) actors,  card_actor.id_card
+                                SELECT
+                                    GROUP_CONCAT(
+                                        person.name || ': ' || COALESCE(role_names, ''), ';'
+                                    ) as actors,
+                                    card_actor.id_card id_card
                                 FROM
                                     Person person,
-                                    Card_Actor card_actor
+                                    Card_Actor card_actor,
+                                    (
+                                        SELECT
+                                            actor_role.id_actor,
+                                            role.id_card,
+                                            GROUP_CONCAT(role.name, ',') as role_names
+                                        FROM
+                                            role,
+                                            actor_role
+                                        WHERE
+                                            actor_role.id_role = role.id
+                                        GROUP BY
+                                            actor_role.id_actor, role.id_card
+                                    ) roles
                                 WHERE
                                     card_actor.id_actor = person.id
-                                GROUP BY card_actor.id_card
+                                    AND roles.id_actor = person.id
+                                    AND roles.id_card = card_actor.id_card
+                                GROUP BY
+                                    card_actor.id_card
                             ) act
                             ON act.id_card=card.id
 
@@ -5100,14 +5150,33 @@ class SqlDatabase:
                 --------------
                 LEFT JOIN
                 (
-                    SELECT group_concat(person.name) actors,  card_actor.id_card
+                    SELECT
+                        GROUP_CONCAT(
+                            person.name || ': ' || COALESCE(role_names, ''), ';'
+                        ) as actors,
+                        card_actor.id_card id_card
                     FROM
                         Person person,
-                        Card_Actor card_actor
+                        Card_Actor card_actor,
+                        (
+                            SELECT
+                                actor_role.id_actor,
+                                role.id_card,
+                                GROUP_CONCAT(role.name, ',') as role_names
+                            FROM
+                                role,
+                                actor_role
+                            WHERE
+                                actor_role.id_role = role.id
+                            GROUP BY
+                                actor_role.id_actor, role.id_card
+                        ) roles
                     WHERE
                         card_actor.id_actor = person.id
-                    GROUP BY card_actor.id_card
-                ) act
+                        AND roles.id_actor = person.id
+                        AND roles.id_card = card_actor.id_card
+                    GROUP BY
+                        card_actor.id_card
                 ON act.id_card=card.id
 
                 -----------------
