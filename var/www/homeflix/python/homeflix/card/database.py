@@ -5273,6 +5273,7 @@ class SqlDatabase:
                         AND roles.id_card = card_actor.id_card
                     GROUP BY
                         card_actor.id_card
+                ) act
                 ON act.id_card=card.id
 
                 --------------
