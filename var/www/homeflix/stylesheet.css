@@ -794,6 +794,20 @@ body {
 /* MENU */
 /*      */
 
+#logo-container {
+    display: flex;
+    align-items: center;
+    padding-left: 0.3em;
+    margin-right: auto; /* This pushes all other elements to the right */
+}
+
+#menu-logo {
+    height: 3.1em;
+    width: auto;
+    object-fit: contain;
+}
+
+
 #menu-line {
     position: fixed;
     top: -3.6em;
@@ -810,6 +824,10 @@ body {
     justify-content: flex-end;
     gap: 0em;
 
+/*    display: flex;
+    flex-direction: row;
+    gap: 0em;
+*/
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-size: 1.5em;
     font-weight: bold;
