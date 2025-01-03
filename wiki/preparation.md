@@ -52,6 +52,14 @@ sudo ln -s /usr/local/bin/python3.10 /usr/bin/python3
 ~~~ sudo ln -s /usr/bin/python3 /usr/bin/python ~~~
 ```
 
+### Create virtual environment
+```sh
+sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
+python3 -m pip install virtualenv
+echo "PATH=$PARH:/home/pi/.local/bin" >> /home/pi/.bashrc
+cd /home/pi/Projects/homeflix/var/www/homeflix/pyton
+virtualenv --python=python3 env
+```
 
 ## Update sqlite3 version 2.27.2 to 3.36.0
 at least sqlite3 version 3.35.0 needed
@@ -118,15 +126,6 @@ sudo ln -s  /etc/apache2/sites-available/homeflix.conf /etc/apache2/sites-enable
 
 # I need the MEDIA folder, but I can not keep it in the project - must be created manually (empty folder is ignored by git)
 mkdir /home/pi/Projects/python/homeflix/var/www/homeflix/MEDIA
-```
-
-### Create virtual environment
-```sh
-sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
-python3 -m pip install virtualenv
-echo "PATH=$PARH:/home/pi/.local/bin" >> /home/pi/.bashrc
-cd /home/pi/Projects/homeflix/var/www/homeflix/pyton
-virtualenv --python=python3 env
 ```
 
 ### Install python packages
@@ -559,7 +558,7 @@ homeflix
 Normal case we mount the project and the media witht the mount command
 ```sh
 sudo mount -o bind /home/<user>/Projects/python/homeflix/var/www/homeflix /var/www/homeflix
-sudo mount -o bind  /media/<user>/vegyes/MEDIA /var/www/homeflix/MEDIA/
+sudo mount -o bind  /media/<user>/MEDIA /var/www/homeflix/MEDIA/
 ```
 
 But we want the committed code the same on the developer environment and on the PI machine.
