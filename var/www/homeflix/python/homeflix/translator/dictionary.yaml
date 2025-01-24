@@ -220,6 +220,7 @@ genre:
         police: Police
         political: Political
         teen: Teen
+        road_trip: Road trip
 
     audiobook:
         <<: *common
@@ -440,6 +441,8 @@ theme:
     society: Society
     farming: Farming
     family: Family
+    mad_scientist: Mad scientist
+    transvestism: Transvestism
 
 title:
     title: Title
