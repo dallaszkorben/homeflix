@@ -2282,11 +2282,15 @@ class SqlDatabase:
 
         filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
         filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
-        filter_where =       None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list]) + ')'
 
-        logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
-        logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
-        logging.debug("{} WHERE: {}".format(field_name, filter_where if filter_where is not None else 'None'))
+        if field_name == "actors":
+            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["';' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%;" + filter.removeprefix("_NOT_") + ":%'" for filter in filter_list]) + ')'
+        else:
+            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list]) + ')'
+
+        # logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
+        # logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
+        # logging.debug("{} WHERE: {}".format(field_name, filter_where if filter_where is not None else 'None'))
 
         return filter_where
 
@@ -2848,6 +2852,20 @@ class SqlDatabase:
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
+
+
+
+                logging.error("!!! HELLO !!!")
+                logging.error("\n\n\n")
+
+
+                my_records = [{key: record[key] for key in record.keys()} for record in records]
+
+                for record in my_records:
+                    logging.error(record)
+                logging.error("\n\n\n")
+
+
 
                 if json:
                     records = self.get_converted_query_to_json(records, category, lang)

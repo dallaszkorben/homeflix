@@ -4,13 +4,11 @@
 definitions:
   parts:
     request_collect_highest_mixed: &request_collect_highest_mixed
-        static: true
         method: GET
         protocol: http
         path: "/collect/highest/mixed"
 
     request_collect_lowest: &request_collect_lowest
-        static: true
         method: GET
         protocol: http
         path: "/collect/lowest"
@@ -420,9 +418,8 @@ definitions:
                                         data:
                                           category: movie
                                           minimum: 2
-                                          limit: 40
+                                          limit: 100
                                         request:
-                                          static: -not_needed-
                                           method: GET
                                           protocol: http
                                           path: "/collect/directors/by/movie/count"
@@ -464,9 +461,8 @@ definitions:
                                         data:
                                           category: movie
                                           minimum: 3
-                                          limit: 40
+                                          limit: 100
                                         request:
-                                          static: -not_needed-
                                           method: GET
                                           protocol: http
                                           path: "/collect/actors/by/role/count"
@@ -507,7 +503,6 @@ definitions:
                                           category: movie
                                           maximum: 20     # this part does not work. The strategy should be figured out and implemented
                                         request:
-                                          static: -not_needed-
                                           method: GET
                                           protocol: http
                                           path: "/collect/abc/by/movie_title/count"
@@ -834,7 +829,6 @@ definitions:
                             data:
                               category: movie
                             request:
-                              static: -not_needed-
                               method: GET
                               protocol: http
                               path: "/personal/tag/get"
@@ -1353,7 +1347,6 @@ definitions:
                               category: music_video
                               maximum: 20     # this part does not work. The strategy should be figured out and implemented
                             request:
-                              static: -not_needed-
                               method: GET
                               protocol: http
                               path: "/collect/abc/by/movie_title/count"
@@ -1422,7 +1415,6 @@ definitions:
                             data:
                               category: music_video
                             request:
-                              static: -not_needed-
                               method: GET
                               protocol: http
                               path: "/personal/tag/get"
@@ -1916,7 +1908,6 @@ definitions:
                               category: music_audio
                               maximum: 20     # this part does not work. The strategy should be figured out and implemented
                             request:
-                              static: -not_needed-
                               method: GET
                               protocol: http
                               path: "/collect/abc/by/movie_title/count"
@@ -1985,7 +1976,6 @@ definitions:
                             data:
                               category: music_audio
                             request:
-                              static: -not_needed-
                               method: GET
                               protocol: http
                               path: "/personal/tag/get"
@@ -2078,7 +2068,6 @@ definitions:
                 data:
                   category: radio_play
                 request:
-                  static: -not_needed-
                   method: GET
                   protocol: http
                   path: "/personal/tag/get"
@@ -2170,7 +2159,6 @@ definitions:
                 data:
                   category: audiobook
                 request:
-                  static: -not_needed-
                   method: GET
                   protocol: http
                   path: "/personal/tag/get"
