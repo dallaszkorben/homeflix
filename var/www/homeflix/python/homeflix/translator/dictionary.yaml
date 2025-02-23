@@ -193,6 +193,7 @@ genre:
         reggae: Reggae
         dance: Dance
         noclassical_dark_wave: Neoclassical dark wave
+        heavy_metal: Heavy Metal
 
     movie:
         <<: *common
