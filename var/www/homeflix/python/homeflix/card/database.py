@@ -878,7 +878,7 @@ class SqlDatabase:
         return mediatype_id
 
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -891,9 +891,10 @@ class SqlDatabase:
             category_id = self.category_name_id_dict[category]
 
             # Generate ID
-            hasher = hashlib.md5()
-            hasher.update(card_path.encode('utf-8'))
-            card_id = hasher.hexdigest()
+            if card_id is None:
+                hasher = hashlib.md5()
+                hasher.update(card_path.encode('utf-8'))
+                card_id = hasher.hexdigest()
 
             #
             # INSERT into CARD
@@ -1402,7 +1403,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1413,9 +1414,10 @@ class SqlDatabase:
             title_orig_id = self.language_name_id_dict[title_orig]
 
             # Generate ID
-            hasher = hashlib.md5()
-            hasher.update(card_path.encode('utf-8'))
-            card_id = hasher.hexdigest()
+            if card_id is None:
+                hasher = hashlib.md5()
+                hasher.update(card_path.encode('utf-8'))
+                card_id = hasher.hexdigest()
 
             #
             # INSERT into Level

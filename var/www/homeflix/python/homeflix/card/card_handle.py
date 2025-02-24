@@ -132,7 +132,7 @@ class CardHandle:
                 card_path = os.path.join(actualDir, file_name)
                 card_file_name = file_name
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
-#
+
 #                logging.debug("SOURCE path: '{0}'".format(source_path))
 
                 break
@@ -147,6 +147,11 @@ class CardHandle:
                 with open(card_path, "r", encoding="utf-8") as file_object:
                     # data=yaml.load(file_object, Loader=yaml.SafeLoader) # convert string to number if it is possible
                     data=yaml.load(file_object, Loader=yaml.BaseLoader)  # every value loaded as string
+
+                id_dict = data.get('id', {'name': 'private', 'value': None, 'postfix': ''})
+                id_value = id_dict.get('value', None)
+                id_postfix = id_dict.get('postfix', '')
+                given_card_id = id_value + id_postfix if id_value else None
 
                 try:
                     category = data['category']
@@ -430,7 +435,7 @@ class CardHandle:
                         title_on_thumbnail=title_on_thumbnail,
                         title_show_sequence=title_show_sequence,
 
-#                        card_id=given_card_id,
+                        card_id=given_card_id,
 
                         isappendix=is_appendix,
                         show=show,
@@ -503,9 +508,9 @@ class CardHandle:
                             titles=titles,
                             title_on_thumbnail=title_on_thumbnail,
                             title_show_sequence=title_show_sequence,
-
-#                            card_id=given_card_id,
-
+#
+                            card_id=given_card_id,
+#
                             isappendix=is_appendix,
                             show=show,
                             download=download,
@@ -561,7 +566,23 @@ class CardHandle:
 
                 error_color = CardHandle.COLOR_HIGH_RED
 
-                logging.debug("id: {0} {1} {2} {3} {4} SOURCE Path: {5}".format(card_id, (1 if card_id else 3) * "\t", card_type_color, card_type, CardHandle.COLOR_RESET, source_path))
+                #logging.debug("id: {0} {1} {2} {3} {4} SOURCE Path: {5}".format(card_id, (1 if card_id else 3) * "\t", card_type_color, card_type, CardHandle.COLOR_RESET, source_path))
+#                logging.debug("id: {0:<33} {1} {2} {3} SOURCE Path: {4}".format(
+#                    card_id,
+#                    card_type_color,
+#                    card_type,
+#                    CardHandle.COLOR_RESET,
+#                    source_path
+#                ))
+#                if card_id is not None:
+#                    logging.debug(f'id: {card_id}')
+#                else:
+#                    logging.debug("card_id: NULL")
+#                    logging.debug(f"card_path: {card_path}")
+                if card_id is not None:
+                    logging.debug(f"id: {card_id:<33} {card_type_color} {card_type} {CardHandle.COLOR_RESET} SOURCE Path: {source_path}")
+                else:
+                    logging.debug(f"id: {'None':<33} {card_type_color} {card_type} {CardHandle.COLOR_RESET} SOURCE Path: {source_path}")
 
                 if card_error:
                     logging.error( "{0}{1}{2}".format(error_color, card_error, CardHandle.COLOR_RESET))
