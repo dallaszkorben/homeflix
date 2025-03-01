@@ -381,12 +381,36 @@ class WifiConfigApp:
             wifi_content = wifi_content.replace("<wifi_id>", wifi_name)
             wifi_content = wifi_content.replace("<password>", password)
 
-            # Create directory if it doesn't exist
-            os.makedirs(os.path.dirname(self.wifi_path), exist_ok=True)
 
-            # Write the configuration to the file
-            with open(self.wifi_path, 'w') as file:
+
+
+#            # Create directory if it doesn't exist
+#            os.makedirs(os.path.dirname(self.wifi_path), exist_ok=True)
+#
+#            # Write the configuration to the file
+#            with open(self.wifi_path, 'w') as file:
+#                file.write(wifi_content)
+
+
+            # Create a temporary file with the content
+            temp_wifi_file = os.path.join(os.path.dirname(self.temp_wifi_path), 'temp_wifi.conf')
+            with open(temp_wifi_file, 'w') as file:
                 file.write(wifi_content)
+
+            # Use sudo to copy the file to the destination
+            result = subprocess.run(
+                ["sudo", "cp", temp_wifi_file, self.wifi_path],
+                capture_output=True, text=True
+            )
+
+            if result.returncode != 0:
+                raise Exception(f"sudo cp command failed: {result.stderr}")
+
+            # Clean up the temporary file
+            os.remove(temp_wifi_file)
+
+
+
 
             wifi_success = True
             status_msg = f"Wi-Fi configuration saved to {self.wifi_path}"
@@ -405,12 +429,40 @@ class WifiConfigApp:
             # Replace IP address placeholder with user input
             interface_content = interface_content.replace("<address>", ip_address)
 
-            # Create directory if it doesn't exist
-            os.makedirs(os.path.dirname(self.interface_path), exist_ok=True)
 
-            # Write the interface configuration
-            with open(self.interface_path, 'w') as file:
+
+
+
+#            # Create directory if it doesn't exist
+#            os.makedirs(os.path.dirname(self.interface_path), exist_ok=True)
+#
+#            # Write the interface configuration
+#            with open(self.interface_path, 'w') as file:
+#                file.write(interface_content)
+
+            # Create a temporary file with the content
+            temp_interface_file = os.path.join(os.path.dirname(self.temp_interface_path), 'temp_interface')
+            with open(temp_interface_file, 'w') as file:
                 file.write(interface_content)
+
+            # Use sudo to copy the file to the destination
+            result = subprocess.run(
+                ["sudo", "cp", temp_interface_file, self.interface_path],
+                capture_output=True, text=True
+            )
+
+            if result.returncode != 0:
+                raise Exception(f"sudo cp command failed: {result.stderr}")
+
+            # Clean up the temporary file
+            os.remove(temp_interface_file)
+
+
+
+
+
+
+
 
             interface_success = True
             status_msg = f"Network interface configuration saved to {self.interface_path}"
