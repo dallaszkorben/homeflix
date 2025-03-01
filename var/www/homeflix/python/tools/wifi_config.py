@@ -364,6 +364,7 @@ class WifiConfigApp:
         wifi_name = self.wifi_name.get()
         password = self.password.get()
         ip_address = self.ip_address.get()
+        interface = self.interface_var.get()
 
         # Temporarily disable the OK button during processing
         self.ok_button.config(state=tk.DISABLED)
