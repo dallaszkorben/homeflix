@@ -18,11 +18,11 @@ class WifiConfigApp:
         self.temp_wifi_path = os.path.join(script_dir, 'templates', 'wpa_supplicant.conf')
 
         self.interface_path = '/etc/network/interfaces'
-        self.wifi_path = '/etc/wpa_supplicant/wpa_supplicant-1.conf'
+        self.wifi_path = '/etc/wpa_supplicant/wpa_supplicant.conf'
 
         self.root = root
         self.root.title("Raspberry Pi Wi-Fi Configuration")
-        self.root.geometry("650x350")  # Increased width to accommodate wider message boxes
+        self.root.geometry("780x400")  # Increased width to accommodate wider message boxes
 
         # Get the default background color of the root window
         bg_color = root.cget("background")
@@ -101,14 +101,14 @@ class WifiConfigApp:
 
         # Error message text area (below buttons) - 1.5 times wider
         tk.Label(form_frame, text="Errors:").grid(row=5, column=0, sticky=tk.NW, pady=(10, 0))
-        self.error_text = scrolledtext.ScrolledText(form_frame, width=68, height=3,
+        self.error_text = scrolledtext.ScrolledText(form_frame, width=80, height=3,
                                                   wrap=tk.WORD, fg="red", bg=bg_color)
         self.error_text.grid(row=5, column=1, columnspan=2, sticky=tk.W+tk.E, pady=(10, 0))
         self.error_text.config(state=tk.DISABLED)  # Make it read-only
 
         # Status message text area (below error area) - 1.5 times wider
         tk.Label(form_frame, text="Messages:").grid(row=6, column=0, sticky=tk.NW, pady=(5, 0))
-        self.message_text = scrolledtext.ScrolledText(form_frame, width=68, height=3,
+        self.message_text = scrolledtext.ScrolledText(form_frame, width=80, height=3,
                                                     wrap=tk.WORD, fg="blue", bg=bg_color)
         self.message_text.grid(row=6, column=1, columnspan=2, sticky=tk.W+tk.E, pady=(5, 0))
         self.message_text.config(state=tk.DISABLED)  # Make it read-only
@@ -371,6 +371,7 @@ class WifiConfigApp:
         success = True
         wifi_success = False
         interface_success = False
+        network_restart_success = False
 
         try:
             # Read the template wifi_file
@@ -381,16 +382,12 @@ class WifiConfigApp:
             wifi_content = wifi_content.replace("<wifi_id>", wifi_name)
             wifi_content = wifi_content.replace("<password>", password)
 
-
-
-
 #            # Create directory if it doesn't exist
 #            os.makedirs(os.path.dirname(self.wifi_path), exist_ok=True)
 #
 #            # Write the configuration to the file
 #            with open(self.wifi_path, 'w') as file:
 #                file.write(wifi_content)
-
 
             # Create a temporary file with the content
             temp_wifi_file = os.path.join(os.path.dirname(self.temp_wifi_path), 'temp_wifi.conf')
@@ -409,9 +406,6 @@ class WifiConfigApp:
             # Clean up the temporary file
             os.remove(temp_wifi_file)
 
-
-
-
             wifi_success = True
             status_msg = f"Wi-Fi configuration saved to {self.wifi_path}"
             self.add_status_message(status_msg)
@@ -428,10 +422,6 @@ class WifiConfigApp:
 
             # Replace IP address placeholder with user input
             interface_content = interface_content.replace("<address>", ip_address)
-
-
-
-
 
 #            # Create directory if it doesn't exist
 #            os.makedirs(os.path.dirname(self.interface_path), exist_ok=True)
@@ -457,13 +447,6 @@ class WifiConfigApp:
             # Clean up the temporary file
             os.remove(temp_interface_file)
 
-
-
-
-
-
-
-
             interface_success = True
             status_msg = f"Network interface configuration saved to {self.interface_path}"
             self.add_status_message(status_msg)
@@ -473,12 +456,46 @@ class WifiConfigApp:
             self.add_error_message(error_msg)
             success = False
 
+        # If both configurations were successful, restart the network interface
+        if wifi_success and interface_success:
+            try:
+                self.add_status_message(f"Bringing down interface {interface}...")
+                # First bring down the interface
+                result = subprocess.run(
+                    ["sudo", "ifdown", interface],
+                    capture_output=True, text=True
+                )
+
+                if result.returncode != 0:
+                    self.add_status_message(f"Warning: ifdown returned: {result.stderr}")
+
+                self.add_status_message(f"Bringing up interface {interface}...")
+                # Then bring it back up with the new configuration
+                result = subprocess.run(
+                    ["sudo", "ifup", interface],
+                    capture_output=True, text=True
+                )
+
+                if result.returncode != 0:
+                    raise Exception(f"ifup command failed: {result.stderr}")
+
+                network_restart_success = True
+                self.add_status_message(f"Successfully restarted interface {interface}")
+
+            except Exception as e:
+                error_msg = f"Failed to restart network interface: {str(e)}"
+                self.add_error_message(error_msg)
+                success = False
+
+
         # Final status message
-        if success:
-            self.add_status_message("Configuration completed successfully!")
+        if success and network_restart_success:
+            self.add_status_message("Configuration completed and network restarted successfully!")
+        elif success:
+            self.add_error_message("Configuration completed successfully, but network restart failed.")
         else:
             if wifi_success:
-                self.add_status_message("Wi-Fi configuration was successful, but interface configuration failed.")
+                self.add_error_message("Wi-Fi configuration was successful, but interface configuration failed.")
             elif interface_success:
                 self.add_error_message("Interface configuration was successful, but Wi-Fi configuration failed.")
             else:
