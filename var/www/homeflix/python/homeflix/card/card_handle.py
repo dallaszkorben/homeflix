@@ -150,8 +150,8 @@ class CardHandle:
 
                 id_dict = data.get('id', {'name': 'private', 'value': None, 'postfix': ''})
                 id_value = id_dict.get('value', None)
-                id_postfix = id_dict.get('postfix', '')
-                given_card_id = id_value + id_postfix if id_value else None
+                id_postfix = id_dict.get('postfix', None)
+                given_card_id = '/'.join(filter(None, [id_value, id_postfix])) if id_value else None
 
                 try:
                     category = data['category']
@@ -579,10 +579,12 @@ class CardHandle:
 #                else:
 #                    logging.debug("card_id: NULL")
 #                    logging.debug(f"card_path: {card_path}")
+
+                id_width = 40
                 if card_id is not None:
-                    logging.debug(f"id: {card_id:<33} {card_type_color} {card_type} {CardHandle.COLOR_RESET} SOURCE Path: {source_path}")
+                    logging.debug(f"id: {card_id:<40} {card_type_color} {card_type} {CardHandle.COLOR_RESET} SOURCE Path: {source_path}")
                 else:
-                    logging.debug(f"id: {'None':<33} {card_type_color} {card_type} {CardHandle.COLOR_RESET} SOURCE Path: {source_path}")
+                    logging.debug(f"id: {'None':<40} {card_type_color} {card_type} {CardHandle.COLOR_RESET} SOURCE Path: {source_path}")
 
                 if card_error:
                     logging.error( "{0}{1}{2}".format(error_color, card_error, CardHandle.COLOR_RESET))

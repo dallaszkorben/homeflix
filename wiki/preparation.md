@@ -337,8 +337,7 @@ sudo systemctl restart apache2.service
 
 Create shell script
 ```sh
-sudo bash -c 'echo -e "sudo touch /usr/local/bin/homeflix.sh" >> /usr/local/bin/starthomeflix.sh'
-sudo bash -c 'echo -e "" >> /usr/local/bin/starthomeflix.sh'
+sudo bash -c 'sudo touch /usr/local/bin/homeflix.sh'
 sudo bash -c 'echo -e "sudo systemctl stop apache2" >> /usr/local/bin/starthomeflix.sh'
 sudo bash -c 'echo -e "" >> /usr/local/bin/starthomeflix.sh'
 sudo bash -c 'echo -e "# I got an error before: mount: (hint) your fstab has been modified, but systemd still uses the old version; use `systemctl daemon-reload` to reload" >> /usr/local/bin/starthomeflix.sh'
