@@ -56,15 +56,6 @@
 #
 #The application should be designed for a Raspberry Pi environment but should work on any Linux system with the appropriate dependencies installed.
 
-
-
-
-
-
-
-
-
-#!/usr/bin/env python3
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Pango
@@ -77,6 +68,8 @@ import ipaddress
 import time
 import requests
 import json
+import time
+from datetime import datetime, timedelta
 
 class WifiConfigApp:
     def __init__(self):
@@ -95,6 +88,8 @@ class WifiConfigApp:
 
         self.interface_path = '/etc/network/interfaces'
         self.wifi_path = '/etc/wpa_supplicant/wpa_supplicant.conf'
+
+        self._block_interface_changed = False
 
         # Lists to store interfaces and Wi-Fi networks
         self.interfaces = []
@@ -137,6 +132,7 @@ class WifiConfigApp:
         interface_label.set_halign(Gtk.Align.START)
         form_grid.attach(interface_label, 0, 0, 1, 1)
 
+        # Interface combo
         self.interface_combo = Gtk.ComboBoxText()
         form_grid.attach(self.interface_combo, 1, 0, 1, 1)
         self.interface_combo.connect("changed", self.interface_changed)
@@ -146,6 +142,7 @@ class WifiConfigApp:
         wifi_label.set_halign(Gtk.Align.START)
         form_grid.attach(wifi_label, 0, 1, 1, 1)
 
+        # Wi-Fi combo
         self.wifi_combo = Gtk.ComboBoxText()
         form_grid.attach(self.wifi_combo, 1, 1, 1, 1)
         self.wifi_combo.connect("changed", self.wifi_changed)
@@ -162,8 +159,13 @@ class WifiConfigApp:
 
         self.password_entry = Gtk.Entry()
         self.password_entry.set_width_chars(30)
+        self.password_entry.set_text("")
+        self.password_entry.set_sensitive(False) # grayed out
         form_grid.attach(self.password_entry, 1, 2, 1, 1)
-        self.password_entry.connect("focus-out-event", self.test_wifi_connection)
+
+        # Handle Enter key in password field
+        self.password_entry.connect("key-press-event", self.on_password_key_press)
+        self.password_entry.connect("focus-out-event", lambda w, e: self.test_wifi_connection())
 
         # Hide password checkbox
         self.hide_password = Gtk.CheckButton(label="Hide")
@@ -177,9 +179,8 @@ class WifiConfigApp:
 
         self.ip_entry = Gtk.Entry()
         self.ip_entry.set_width_chars(30)
-        # Start with empty IP field and make it inactive
         self.ip_entry.set_text("")
-        self.ip_entry.set_sensitive(False)
+        self.ip_entry.set_sensitive(False) # grayed out
         form_grid.attach(self.ip_entry, 1, 3, 1, 1)
         self.ip_entry.connect("focus-out-event", self.validate_ip_address)
         self.ip_entry.connect("changed", self.validate_ip_on_change)
@@ -265,6 +266,22 @@ class WifiConfigApp:
         # Show all widgets
         self.window.show_all()
 
+    def on_password_key_press(self, widget, event):
+        """Handle Enter key in password field to behave like Tab"""
+
+        # Get the keyval (key code)
+        keyval = event.keyval
+
+        # Check if Enter/Return was pressed (keyval 65293 is Enter)
+        if keyval == 65293:  # Enter key
+            # Move focus to the next widget (like Tab would do)
+            widget.emit('move-focus', Gtk.DirectionType.TAB_FORWARD)
+            return True  # Event handled
+
+        return False  # Event not handled, continue normal processing
+
+
+
     def disable_ui_elements(self):
         """Disable all UI elements during operations"""
         self.interface_combo.set_sensitive(False)
@@ -326,7 +343,7 @@ class WifiConfigApp:
         self.connection_successful = False
         self.check_fields()
 
-    def test_wifi_connection(self, widget, event=None):
+    def test_wifi_connection(self, widget=None, event=None):
         """Test connection to the selected WiFi when leaving password field"""
         active_id = self.wifi_combo.get_active()
         if active_id == -1:
@@ -336,7 +353,12 @@ class WifiConfigApp:
         password = self.password_entry.get_text()
         interface = self.interface_combo.get_active_text()
 
+        # Check if password is empty
         if not wifi_name or not password:
+            # Disable IP Address field
+            self.ip_entry.set_text("")
+            self.ip_entry.set_sensitive(False)
+            self.connection_successful = False
             return False
 
         # Clear error messages before starting the test
@@ -350,6 +372,7 @@ class WifiConfigApp:
         threading.Thread(target=lambda: self._test_connection_thread(wifi_name, password, interface),
                         daemon=True).start()
         return True
+
 
     def _test_connection_thread(self, wifi_name, password, interface):
         """Background thread for testing WiFi connection"""
@@ -484,6 +507,8 @@ class WifiConfigApp:
             except:
                 pass
 
+            GLib.idle_add(lambda: self.add_status_message("  done."))
+
             # Re-enable UI elements
             GLib.idle_add(lambda: self.enable_ui_elements())
 
@@ -614,6 +639,12 @@ class WifiConfigApp:
 
     def interface_changed(self, combo):
         """Handle interface selection change"""
+
+        if self._block_interface_changed:
+            return
+
+        print(f'interface_changed() with {combo} was called')
+
         # Clear the Wi-Fi dropdown
         self.wifi_combo.remove_all()
         self.wifi_list = []
@@ -667,6 +698,7 @@ class WifiConfigApp:
 
     def _update_interface_dropdown(self):
         """Update the interface dropdown with found interfaces"""
+
         if not self.interfaces:
             # If no wireless interfaces found, add a default one
             self.interfaces = ["wlan0"]
@@ -677,12 +709,19 @@ class WifiConfigApp:
         for iface in self.interfaces:
             self.interface_combo.append_text(iface)
 
-        # Try to select wlan0 by default, or the first available interface
-        default_interface = "wlan0" if "wlan0" in self.interfaces else self.interfaces[0]
-        index = self.interfaces.index(default_interface)
-        self.interface_combo.set_active(index)
+        # Set the flag to block the signal handler
+        self._block_interface_changed = True
 
-        status_msg = f"Found {len(self.interfaces)} wireless interfaces"
+        try:
+            # Try to select wlan0 by default, or the first available interface
+            default_interface = "wlan0" if "wlan0" in self.interfaces else self.interfaces[0]
+            index = self.interfaces.index(default_interface)
+            self.interface_combo.set_active(index)
+        finally:
+            # Make sure to always unblock the signal handler
+            self._block_interface_changed = False
+
+        status_msg = f"Found {len(self.interfaces)} wireless interfaces. Default: {default_interface}"
         self.add_status_message(status_msg)
 
         # Start scanning with the selected interface
@@ -690,13 +729,14 @@ class WifiConfigApp:
 
     def scan_networks(self):
         """Scan for available Wi-Fi networks using selected interface"""
+
         interface = self.interface_combo.get_active_text()
         if not interface:
             return
 
         # Clear error and message boxes
         self.clear_error_messages()
-        self.clear_status_messages()
+#        self.clear_status_messages()
 
         status_msg = f"Scanning for networks on {interface}..."
         self.add_status_message(status_msg)
@@ -709,15 +749,40 @@ class WifiConfigApp:
 
     def _scan_thread(self, interface):
         """Background thread for network scanning"""
+
+        # Set start time for timeout
+        start_time = datetime.now()
+        timeout = timedelta(seconds=15)
+        success = False
+
         try:
             # First bring up the interface to ensure it's active
-            GLib.idle_add(lambda: self.add_status_message(f"Bringing up interface {interface}..."))
+            GLib.idle_add(lambda: self.add_status_message(f"    Bringing up interface {interface}..."))
+
             ifconfig_result=subprocess.run(["sudo", "ifconfig", interface, "up"], capture_output=True, text=True, check=True)
-            time.sleep(4)  # Give it time to initialize
 
             # Run iwlist scan on the selected interface
-            GLib.idle_add(lambda: self.add_status_message(f"Scanning for networks..."))
-            iwlist_result = subprocess.check_output(["sudo", "iwlist", interface, "scan"], universal_newlines=True)
+            GLib.idle_add(lambda: self.add_status_message(f"    Scanning for networks..."))
+
+            # Keep trying until success or timeout
+            while not success and (datetime.now() - start_time) < timeout:
+                try:
+                    iwlist_result = subprocess.check_output(["sudo", "iwlist", interface, "scan"], stderr=subprocess.STDOUT, universal_newlines=True)
+                    print(f'  iwlist_result: no error')
+                    success = True  # If we get here, the command succeeded
+                except subprocess.CalledProcessError as e:
+                    print(f'  exception happend: {e.output}')
+                    time.sleep(1.0)  # Wait half a second before retrying
+                    continue
+
+            # If we exited the loop due to timeout
+            if not success:
+                raise subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=["sudo", "iwlist", interface, "scan"],
+                    output="",
+                    stderr="Timeout after 15 seconds: Device or resource busy"
+                )
 
             # Extract networks and their signal levels
             networks_with_signal = []
@@ -746,21 +811,22 @@ class WifiConfigApp:
             self.wifi_list = [network[0] for network in networks_with_signal]
 
             # Update the dropdown on the main thread
-            GLib.idle_add(self._update_dropdown)
+            GLib.idle_add(self._update_network_dropdown)
 
         except subprocess.CalledProcessError as e:
-            error_msg = f"Scan error: {e.stderr if hasattr(e, 'stderr') else str(e)}"
+            error_msg = f"Scan error 1: {e.stderr if hasattr(e, 'stderr') else str(e)}"
             # Update error message on the main thread
             GLib.idle_add(lambda: self.add_error_message(error_msg))
             GLib.idle_add(lambda: self.enable_ui_elements())
         except Exception as e:
-            error_msg = f"Scan error: {str(e)}"
+            error_msg = f"Scan error 2: {str(e)}"
             # Update error message on the main thread
             GLib.idle_add(lambda: self.add_error_message(error_msg))
             GLib.idle_add(lambda: self.enable_ui_elements())
 
-    def _update_dropdown(self):
+    def _update_network_dropdown(self):
         """Update the dropdown with found networks"""
+
         # Clear and populate the wifi dropdown
         self.wifi_combo.remove_all()
         for network in self.wifi_list:
@@ -768,10 +834,10 @@ class WifiConfigApp:
 
         if self.wifi_list:
             self.wifi_combo.set_active(0)  # Select the first (strongest) network
-            status_msg = f"Found {len(self.wifi_list)} networks"
+            status_msg = f"    Found {len(self.wifi_list)} networks"
             self.add_status_message(status_msg)
         else:
-            error_msg = "No networks found"
+            error_msg = "  No networks found"
             self.add_error_message(error_msg)
 
         # Re-enable UI elements
@@ -813,10 +879,10 @@ class WifiConfigApp:
             try:
                 data = response.json()
                 if response.status_code == 200 and data.get("result") == True:
-                    self.add_success_message("Server health check passed!")
+#                    self.add_status_message("Server health check passed!")
                     return True
                 else:
-                    self.add_error_message(f"Server health check failed. Response: {data}")
+#                    self.add_error_message(f"Server health check failed. Response: {data}")
                     return False
             except json.JSONDecodeError:
                 self.add_error_message(f"Invalid JSON response from server: {response.text}")
@@ -867,6 +933,7 @@ class WifiConfigApp:
             wifi_success = True
             status_msg = f"Wi-Fi configuration saved to {self.wifi_path}"
             self.add_status_message(status_msg)
+
             # Clear error messages on success
             self.clear_error_messages()
 
@@ -946,7 +1013,7 @@ class WifiConfigApp:
                     # Check server health
                     server_healthy = self.check_server_health(ip_address)
                     if server_healthy:
-                        self.add_success_message("Server is healthy and responding!")
+                        self.add_status_message("Server is healthy and responding!")
                     else:
                         self.add_error_message("Server health check failed. The server may not be running or reachable.")
 
@@ -960,7 +1027,7 @@ class WifiConfigApp:
 
         # Final status message
         if success and network_restart_success:
-            self.add_success_message("Configuration completed and network restarted successfully!")
+            self.add_success_message("Configuration completed, network restarted successfully and the server responding")
         elif success:
             self.add_error_message("Configuration completed successfully, but network restart failed.")
         else:
@@ -977,885 +1044,3 @@ class WifiConfigApp:
 if __name__ == "__main__":
     app = WifiConfigApp()
     Gtk.main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#import gi
-#gi.require_version('Gtk', '3.0')
-#from gi.repository import Gtk, GLib, Pango
-#import os
-#import shutil
-#import subprocess
-#import re
-#import threading
-#import ipaddress
-#import time
-#
-#class WifiConfigApp:
-#    def __init__(self):
-#        # Set preferred lowest segment of IP address
-#        self.preferred_ip_segment = "200"
-#
-#        # Get the directory where the script is located
-#        script_dir = os.path.dirname(os.path.abspath(__file__))
-#
-#        # Define paths relative to the script location
-#        self.temp_interface_path = os.path.join(script_dir, 'templates', 'interfaces')
-#        self.temp_wifi_path = os.path.join(script_dir, 'templates', 'wpa_supplicant.conf')
-#
-#        self.interface_path = '/etc/network/interfaces'
-#        self.wifi_path = '/etc/wpa_supplicant/wpa_supplicant.conf'
-#
-#        # Lists to store interfaces and Wi-Fi networks
-#        self.interfaces = []
-#        self.wifi_list = []
-#
-#        # Add a flag to track connection success
-#        self.connection_successful = False
-#
-#        # Flag to track if IP is valid
-#        self.ip_valid = False
-#
-#        # Build the UI
-#        self.build_ui()
-#
-#        # Find available interfaces and start scanning
-#        self.find_interfaces()
-#
-#    def build_ui(self):
-#        # Create main window
-#        self.window = Gtk.Window(title="Raspberry Pi Wi-Fi Configuration")
-#        self.window.set_default_size(780, 540)
-#        self.window.connect("destroy", Gtk.main_quit)
-#
-#        # Create main container
-#        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-#        main_box.set_margin_start(20)
-#        main_box.set_margin_end(20)
-#        main_box.set_margin_top(20)
-#        main_box.set_margin_bottom(20)
-#        self.window.add(main_box)
-#
-#        # Create form grid
-#        form_grid = Gtk.Grid()
-#        form_grid.set_column_spacing(10)
-#        form_grid.set_row_spacing(10)
-#        main_box.pack_start(form_grid, False, False, 0)
-#
-#        # Interface selection
-#        interface_label = Gtk.Label(label="Interface:")
-#        interface_label.set_halign(Gtk.Align.START)
-#        form_grid.attach(interface_label, 0, 0, 1, 1)
-#
-#        self.interface_combo = Gtk.ComboBoxText()
-#        form_grid.attach(self.interface_combo, 1, 0, 1, 1)
-#        self.interface_combo.connect("changed", self.interface_changed)
-#
-#        # Wi-Fi name selection
-#        wifi_label = Gtk.Label(label="Wi-Fi Name:")
-#        wifi_label.set_halign(Gtk.Align.START)
-#        form_grid.attach(wifi_label, 0, 1, 1, 1)
-#
-#        self.wifi_combo = Gtk.ComboBoxText()
-#        form_grid.attach(self.wifi_combo, 1, 1, 1, 1)
-#        self.wifi_combo.connect("changed", self.wifi_changed)
-#
-#        # Scan button
-#        self.scan_button = Gtk.Button(label="Scan")
-#        self.scan_button.connect("clicked", self.on_scan_clicked)
-#        form_grid.attach(self.scan_button, 2, 1, 1, 1)
-#
-#        # Password field
-#        password_label = Gtk.Label(label="Password:")
-#        password_label.set_halign(Gtk.Align.START)
-#        form_grid.attach(password_label, 0, 2, 1, 1)
-#
-#        self.password_entry = Gtk.Entry()
-#        self.password_entry.set_width_chars(30)
-#        form_grid.attach(self.password_entry, 1, 2, 1, 1)
-#        self.password_entry.connect("focus-out-event", self.test_wifi_connection)
-#
-#        # Hide password checkbox
-#        self.hide_password = Gtk.CheckButton(label="Hide")
-#        self.hide_password.connect("toggled", self.toggle_password_visibility)
-#        form_grid.attach(self.hide_password, 2, 2, 1, 1)
-#
-#        # IP Address field
-#        ip_label = Gtk.Label(label="IP Address:")
-#        ip_label.set_halign(Gtk.Align.START)
-#        form_grid.attach(ip_label, 0, 3, 1, 1)
-#
-#        self.ip_entry = Gtk.Entry()
-#        self.ip_entry.set_width_chars(30)
-#        # Start with empty IP field and make it inactive
-#        self.ip_entry.set_text("")
-#        self.ip_entry.set_sensitive(False)
-#        form_grid.attach(self.ip_entry, 1, 3, 1, 1)
-#        self.ip_entry.connect("focus-out-event", self.validate_ip_address)
-#        self.ip_entry.connect("changed", self.validate_ip_on_change)
-#
-#        # Button box
-#        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-#        button_box.set_halign(Gtk.Align.CENTER)
-#        button_box.set_margin_top(10)
-#        main_box.pack_start(button_box, False, False, 0)
-#
-#        # OK button
-#        self.ok_button = Gtk.Button(label="OK")
-#        self.ok_button.connect("clicked", self.on_ok_clicked)
-#        self.ok_button.set_sensitive(False)  # Initially disabled
-#        button_box.pack_start(self.ok_button, False, False, 0)
-#
-#        # Cancel button
-#        cancel_button = Gtk.Button(label="Cancel")
-#        cancel_button.connect("clicked", Gtk.main_quit)
-#        button_box.pack_start(cancel_button, False, False, 0)
-#
-#        # Create a grid for the text areas
-#        text_grid = Gtk.Grid()
-#        text_grid.set_column_spacing(10)
-#        text_grid.set_row_spacing(10)
-#        main_box.pack_start(text_grid, True, True, 0)
-#
-#        # Create a fixed-width label container for consistent alignment
-#        label_width = 80
-#
-#        # Error message label with fixed width container
-#        error_label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-#        error_label_box.set_size_request(label_width, -1)
-#        text_grid.attach(error_label_box, 0, 0, 1, 1)
-#
-#        error_label = Gtk.Label(label="Errors:")
-#        error_label.set_halign(Gtk.Align.START)  # Left align within the box
-#        error_label.set_valign(Gtk.Align.START)
-#        error_label_box.pack_start(error_label, False, False, 0)
-#
-#        # Error message text area
-#        scrolled_error = Gtk.ScrolledWindow()
-#        scrolled_error.set_hexpand(True)
-#        scrolled_error.set_vexpand(True)
-#        scrolled_error.set_min_content_height(100)
-#        text_grid.attach(scrolled_error, 1, 0, 1, 1)
-#
-#        self.error_text = Gtk.TextView()
-#        self.error_text.set_editable(False)
-#        self.error_text.set_wrap_mode(Gtk.WrapMode.WORD)
-#        self.error_buffer = self.error_text.get_buffer()
-#        error_tag = self.error_buffer.create_tag("error", foreground="red")
-#        scrolled_error.add(self.error_text)
-#
-#        # Status message label with fixed width container
-#        message_label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-#        message_label_box.set_size_request(label_width, -1)
-#        text_grid.attach(message_label_box, 0, 1, 1, 1)
-#
-#        message_label = Gtk.Label(label="Messages:")
-#        message_label.set_halign(Gtk.Align.START)  # Left align within the box
-#        message_label.set_valign(Gtk.Align.START)
-#        message_label_box.pack_start(message_label, False, False, 0)
-#
-#        # Status message text area
-#        scrolled_message = Gtk.ScrolledWindow()
-#        scrolled_message.set_hexpand(True)
-#        scrolled_message.set_vexpand(True)
-#        scrolled_message.set_min_content_height(150)
-#        text_grid.attach(scrolled_message, 1, 1, 1, 1)
-#
-#        self.message_text = Gtk.TextView()
-#        self.message_text.set_editable(False)
-#        self.message_text.set_wrap_mode(Gtk.WrapMode.WORD)
-#        self.message_buffer = self.message_text.get_buffer()
-#        message_tag = self.message_buffer.create_tag("message", foreground="blue")
-#        success_tag = self.message_buffer.create_tag("success", foreground="green", weight=Pango.Weight.BOLD)
-#        scrolled_message.add(self.message_text)
-#
-#        # Initialize password field visibility
-#        self.toggle_password_visibility(self.hide_password)
-#
-#        # Show all widgets
-#        self.window.show_all()
-#
-#    def disable_ui_elements(self):
-#        """Disable all UI elements during operations"""
-#        self.interface_combo.set_sensitive(False)
-#        self.wifi_combo.set_sensitive(False)
-#        self.password_entry.set_sensitive(False)
-#        # Don't disable IP field here - it should stay in its current state
-#        self.scan_button.set_sensitive(False)
-#        self.ok_button.set_sensitive(False)
-#        self.hide_password.set_sensitive(False)
-#
-#    def enable_ui_elements(self):
-#        """Re-enable UI elements after operations"""
-#        self.interface_combo.set_sensitive(True)
-#        self.wifi_combo.set_sensitive(True)
-#        self.password_entry.set_sensitive(True)
-#        self.scan_button.set_sensitive(True)
-#        self.hide_password.set_sensitive(True)
-#
-#        # IP entry is only enabled after a successful connection test
-#        # So don't enable it here - it will be enabled in _update_connection_status if needed
-#
-#        # OK button state depends on field validation, so call check_fields
-#        self.check_fields()
-#
-#    def on_scan_clicked(self, button):
-#        """Handle scan button click"""
-#        # Deactivate IP Address field when Scan is clicked
-#        self.ip_entry.set_text("")
-#        self.ip_entry.set_sensitive(False)
-#        self.connection_successful = False
-#        self.scan_networks()
-#
-#    def on_ok_clicked(self, button):
-#        """Handle OK button click"""
-#        # Don't disable the IP field when OK is clicked
-#        # Save the current state of the IP field
-#        ip_field_was_active = self.ip_entry.get_sensitive()
-#
-#        # Disable other UI elements during processing
-#        self.interface_combo.set_sensitive(False)
-#        self.wifi_combo.set_sensitive(False)
-#        self.password_entry.set_sensitive(False)
-#        self.scan_button.set_sensitive(False)
-#        self.ok_button.set_sensitive(False)
-#        self.hide_password.set_sensitive(False)
-#
-#        # Save the configuration
-#        self.save_config()
-#
-#        # Restore the IP field state after save_config re-enables UI elements
-#        self.ip_entry.set_sensitive(ip_field_was_active)
-#        self.check_fields()
-#
-#    def wifi_changed(self, combo):
-#        """Handle WiFi selection change"""
-#        # Deactivate IP Address field when WiFi is changed
-#        self.ip_entry.set_text("")
-#        self.ip_entry.set_sensitive(False)
-#        self.connection_successful = False
-#        self.check_fields()
-#
-#    def test_wifi_connection(self, widget, event=None):
-#        """Test connection to the selected WiFi when leaving password field"""
-#        active_id = self.wifi_combo.get_active()
-#        if active_id == -1:
-#            return False
-#
-#        wifi_name = self.wifi_combo.get_active_text()
-#        password = self.password_entry.get_text()
-#        interface = self.interface_combo.get_active_text()
-#
-#        if not wifi_name or not password:
-#            return False
-#
-#        # Clear error messages before starting the test
-#        self.clear_error_messages()
-#        self.add_status_message(f"Testing connection to {wifi_name}...")
-#
-#        # Disable UI elements during connection test
-#        self.disable_ui_elements()
-#
-#        # Start connection test in a separate thread
-#        threading.Thread(target=lambda: self._test_connection_thread(wifi_name, password, interface),
-#                        daemon=True).start()
-#        return True
-#
-#    def _test_connection_thread(self, wifi_name, password, interface):
-#        """Background thread for testing WiFi connection"""
-#        connection_success = False
-#        temp_dir = "/tmp/wpa_test"
-#        detected_ip_range = None
-#
-#        try:
-#            # Create a temporary control directory for wpa_supplicant
-#            os.makedirs(temp_dir, exist_ok=True)
-#
-#            # Start a temporary wpa_supplicant instance for testing
-#            GLib.idle_add(lambda: self.add_status_message("Starting temporary wpa_supplicant..."))
-#
-#            # Kill any existing wpa_supplicant on this interface
-#            subprocess.run(["sudo", "killall", "-q", "wpa_supplicant"], capture_output=True, text=True)
-#            time.sleep(1)
-#
-#            # Start wpa_supplicant in the background
-#            wpa_process = subprocess.Popen(
-#                ["sudo", "wpa_supplicant", "-B", "-i", interface, "-C", temp_dir, "-f", "/tmp/wpa_test.log"],
-#                stdout=subprocess.PIPE, stderr=subprocess.PIPE
-#            )
-#            time.sleep(4)  # Give it time to start
-#
-#            # Add the network using wpa_cli
-#            GLib.idle_add(lambda: self.add_status_message("Adding network..."))
-#            add_result = subprocess.run(
-#                ["sudo", "wpa_cli", "-p", temp_dir, "add_network"],
-#                capture_output=True, text=True
-#            )
-#            GLib.idle_add(lambda: self.add_status_message(f'add network result:\n{add_result.stdout}'))
-#
-#            # Extract the network ID from the output (last line)
-#            network_id = add_result.stdout.strip().split('\n')[-1]
-#
-#            time.sleep(1)
-#
-#            # Set the network SSID
-#            ssid_result = subprocess.run(
-#                ["sudo", "wpa_cli", "-p", temp_dir, "set_network", network_id, "ssid", f"\"{wifi_name}\""],
-#                capture_output=True, text=True
-#            )
-#            GLib.idle_add(lambda: self.add_status_message(f'ssid result:\n{ssid_result.stdout}'))
-#
-#            # Set the network password
-#            password_result = subprocess.run(
-#                ["sudo", "wpa_cli", "-p", temp_dir, "set_network", network_id, "psk", f"\"{password}\""],
-#                capture_output=True, text=True
-#            )
-#            GLib.idle_add(lambda: self.add_status_message(f'password result:\n{password_result.stdout}'))
-#
-#            # Enable the network
-#            GLib.idle_add(lambda: self.add_status_message("Attempting to connect..."))
-#            status_result = subprocess.run(
-#                ["sudo", "wpa_cli", "-p", temp_dir, "enable_network", network_id],
-#                capture_output=True, text=True
-#            )
-#            GLib.idle_add(lambda: self.add_status_message(f'enable network result:\n{status_result.stdout}'))
-#
-#            # Poll for connection status every 2 seconds, up to 20 seconds
-#            max_wait_time = 20  # seconds
-#            poll_interval = 2    # seconds
-#            elapsed_time = 0
-#
-#            while elapsed_time < max_wait_time:
-#                # Check connection status
-#                status_result = subprocess.run(
-#                    ["sudo", "wpa_cli", "-p", temp_dir, "status"],
-#                    capture_output=True, text=True
-#                )
-#
-#                # Check if we're connected
-#                if "wpa_state=COMPLETED" in status_result.stdout:
-#                    connection_success = True
-#                    GLib.idle_add(lambda: self.add_status_message("WiFi credentials are valid!"))
-#
-#                    # Try to get an IP address via DHCP to determine the network's IP range
-#                    GLib.idle_add(lambda: self.add_status_message("Requesting temporary IP to detect network range..."))
-#
-#                    # Run dhclient to get an IP address
-#                    dhcp_result = subprocess.run(
-#                        ["sudo", "dhclient", "-1", interface],
-#                        capture_output=True, text=True
-#                    )
-#
-#                    # Check the assigned IP address
-#                    ip_result = subprocess.run(
-#                        ["ip", "addr", "show", interface],
-#                        capture_output=True, text=True
-#                    )
-#
-#                    # Extract IP address using regex
-#                    ip_match = re.search(r'inet (\d+\.\d+\.\d+\.\d+)', ip_result.stdout)
-#                    if ip_match:
-#                        assigned_ip = ip_match.group(1)
-#                        # Extract the network prefix (e.g., 192.168.1)
-#                        ip_parts = assigned_ip.split('.')
-#                        if len(ip_parts) == 4:
-#                            detected_ip_range = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}"
-#                            GLib.idle_add(lambda range=detected_ip_range: self.add_status_message(f"Detected network range: {range}.x"))
-#
-#                            # Update the IP address suggestion with preferred segment
-#                            if detected_ip_range:
-#                                GLib.idle_add(lambda range=detected_ip_range: self.update_ip_suggestion(range))
-#                    break
-#
-#                # Wait before checking again
-#                time.sleep(poll_interval)
-#                elapsed_time += poll_interval
-#                GLib.idle_add(lambda et=elapsed_time, mt=max_wait_time: self.add_status_message(f"Waiting for connection... ({et}/{mt}s)"))
-#
-#            if not connection_success:
-#                GLib.idle_add(lambda: self.add_error_message("Failed to connect with provided credentials after timeout"))
-#
-#        except Exception as e:
-#            error_msg = f"WiFi connection test failed: {str(e)}"
-#            GLib.idle_add(lambda: self.add_error_message(error_msg))
-#
-#        finally:
-#            # Release the DHCP lease if we requested one
-#            if connection_success:
-#                subprocess.run(["sudo", "dhclient", "-r", interface], capture_output=True, text=True)
-#
-#            # Clean up - terminate wpa_supplicant
-#            GLib.idle_add(lambda: self.add_status_message("Cleaning up test connection..."))
-#            subprocess.run(["sudo", "killall", "wpa_supplicant"], capture_output=True, text=True)
-#
-#            # Remove temporary directory
-#            try:
-#                subprocess.run(["sudo", "rm", "-rf", temp_dir], capture_output=True, text=True)
-#            except:
-#                pass
-#
-#            # Re-enable UI elements
-#            GLib.idle_add(lambda: self.enable_ui_elements())
-#
-#            # Update connection status and check if OK button should be enabled
-#            GLib.idle_add(lambda: self._update_connection_status(connection_success, detected_ip_range))
-#
-#    def update_ip_suggestion(self, ip_range):
-#        """Update the IP address field with a suggestion based on the detected network range"""
-#        suggested_ip = f"{ip_range}.{self.preferred_ip_segment}"  # Use preferred segment
-#        self.ip_entry.set_text(suggested_ip)
-#        self.validate_ip_on_change(self.ip_entry)  # Validate the new IP
-#
-#    def _update_connection_status(self, connection_success, detected_ip_range=None):
-#        """Update the connection status and check if OK button should be enabled"""
-#        self.connection_successful = connection_success
-#
-#        # Enable and fill IP field only if connection was successful
-#        if connection_success:
-#            self.ip_entry.set_sensitive(True)
-#            if detected_ip_range and not self.ip_entry.get_text():
-#                self.update_ip_suggestion(detected_ip_range)
-#        else:
-#            # If connection failed, disable IP field and clear it
-#            self.ip_entry.set_sensitive(False)
-#            self.ip_entry.set_text("")
-#
-#        self.check_fields()
-#
-#    def validate_ip_on_change(self, widget, *args):
-#        """Validate IP address whenever it changes (but don't show errors)"""
-#        ip = self.ip_entry.get_text()
-#
-#        # Check if IP is valid
-#        try:
-#            # Try to create an IPv4Address object to validate
-#            ipaddress.IPv4Address(ip)
-#            self.ip_valid = True
-#        except ValueError:
-#            # If not a valid IP, check if it's a partial IP (like "192.168.")
-#            if re.match(r'^(\d{1,3}\.){1,3}$', ip):
-#                # It's a partial IP, which is fine while typing
-#                self.ip_valid = False
-#            else:
-#                # Invalid IP format, but don't show error yet
-#                self.ip_valid = False
-#
-#        # Update OK button state
-#        self.check_fields()
-#
-#    def validate_ip_address(self, widget, event=None):
-#        """Validate the IP address when focus leaves the field"""
-#        ip = self.ip_entry.get_text()
-#
-#        # Clear any previous IP-related error messages
-#        self.clear_specific_error_messages("IP address")
-#
-#        # Check if IP is valid
-#        try:
-#            # Try to create an IPv4Address object to validate
-#            ipaddress.IPv4Address(ip)
-#            self.ip_valid = True
-#            self.check_fields()
-#            return True
-#        except ValueError:
-#            # If not a valid IP, check if it's a partial IP (like "192.168.")
-#            if re.match(r'^(\d{1,3}\.){1,3}$', ip):
-#                # It's a partial IP, which is fine while typing
-#                self.ip_valid = False
-#                self.check_fields()
-#                return False
-#            else:
-#                # Invalid IP format - show error message now that focus has left
-#                error_msg = f"Invalid IP address format: {ip}"
-#                self.add_error_message(error_msg)
-#                self.ip_valid = False
-#                self.check_fields()
-#                return False
-#
-#    def clear_specific_error_messages(self, keyword):
-#        """Clear error messages containing a specific keyword"""
-#        text = self.error_buffer.get_text(
-#            self.error_buffer.get_start_iter(),
-#            self.error_buffer.get_end_iter(),
-#            True
-#        )
-#
-#        # Filter out lines containing the keyword
-#        lines = text.split('\n')
-#        filtered_lines = [line for line in lines if keyword not in line]
-#
-#        # Clear and reinsert filtered content
-#        self.error_buffer.set_text('\n'.join(filtered_lines))
-#
-#    def add_error_message(self, message):
-#        """Add an error message to the error text area"""
-#        end_iter = self.error_buffer.get_end_iter()
-#        self.error_buffer.insert_with_tags_by_name(end_iter, message + "\n", "error")
-#
-#        # Scroll to the end
-#        mark = self.error_buffer.create_mark("end", self.error_buffer.get_end_iter(), False)
-#        self.error_text.scroll_to_mark(mark, 0.0, True, 0.0, 1.0)
-#
-#    def clear_error_messages(self):
-#        """Clear all error messages"""
-#        self.error_buffer.set_text("")
-#
-#    def add_status_message(self, message):
-#        """Add a status message to the message text area"""
-#        end_iter = self.message_buffer.get_end_iter()
-#        self.message_buffer.insert_with_tags_by_name(end_iter, message + "\n", "message")
-#
-#        # Scroll to the end
-#        mark = self.message_buffer.create_mark("end", self.message_buffer.get_end_iter(), False)
-#        self.message_text.scroll_to_mark(mark, 0.0, True, 0.0, 1.0)
-#
-#    def add_success_message(self, message):
-#        """Add a success message to the message text area with green bold text"""
-#        end_iter = self.message_buffer.get_end_iter()
-#        self.message_buffer.insert_with_tags_by_name(end_iter, message + "\n", "success")
-#
-#        # Scroll to the end
-#        mark = self.message_buffer.create_mark("end", self.message_buffer.get_end_iter(), False)
-#        self.message_text.scroll_to_mark(mark, 0.0, True, 0.0, 1.0)
-#
-#    def clear_status_messages(self):
-#        """Clear all status messages"""
-#        self.message_buffer.set_text("")
-#
-#    def interface_changed(self, combo):
-#        """Handle interface selection change"""
-#        # Clear the Wi-Fi dropdown
-#        self.wifi_combo.remove_all()
-#        self.wifi_list = []
-#
-#        # Deactivate IP Address field when interface is changed
-#        self.ip_entry.set_text("")
-#        self.ip_entry.set_sensitive(False)
-#        self.connection_successful = False
-#
-#        # Clear error and message boxes
-#        self.clear_error_messages()
-#        self.clear_status_messages()
-#
-#        # Disable UI elements during scan
-#        self.disable_ui_elements()
-#
-#        # Start scanning with the new interface
-#        self.scan_networks()
-#
-#    def find_interfaces(self):
-#        """Find available network interfaces"""
-#        status_msg = "Finding network interfaces..."
-#        self.add_status_message(status_msg)
-#
-#        # Disable UI elements during interface detection
-#        self.disable_ui_elements()
-#
-#        # Start in a separate thread to avoid freezing the UI
-#        threading.Thread(target=self._find_interfaces_thread, daemon=True).start()
-#
-#    def _find_interfaces_thread(self):
-#        """Background thread for finding interfaces"""
-#        try:
-#            # Get list of wireless interfaces
-#            output = subprocess.check_output(["ls", "/sys/class/net"], universal_newlines=True)
-#            all_interfaces = output.strip().split()
-#
-#            # Filter for wireless interfaces (typically wlan*)
-#            self.interfaces = [iface for iface in all_interfaces if
-#                              os.path.exists(f"/sys/class/net/{iface}/wireless") or
-#                              iface.startswith("wlan")]
-#
-#            # Update the dropdown on the main thread
-#            GLib.idle_add(self._update_interface_dropdown)
-#
-#        except Exception as e:
-#            error_msg = f"Interface detection error: {str(e)}"
-#            # Update error message on the main thread
-#            GLib.idle_add(lambda: self.add_error_message(error_msg))
-#            GLib.idle_add(lambda: self.enable_ui_elements())
-#
-#    def _update_interface_dropdown(self):
-#        """Update the interface dropdown with found interfaces"""
-#        if not self.interfaces:
-#            # If no wireless interfaces found, add a default one
-#            self.interfaces = ["wlan0"]
-#            self.add_error_message("No wireless interfaces found. Using default 'wlan0'.")
-#
-#        # Clear and populate the interface dropdown
-#        self.interface_combo.remove_all()
-#        for iface in self.interfaces:
-#            self.interface_combo.append_text(iface)
-#
-#        # Try to select wlan0 by default, or the first available interface
-#        default_interface = "wlan0" if "wlan0" in self.interfaces else self.interfaces[0]
-#        index = self.interfaces.index(default_interface)
-#        self.interface_combo.set_active(index)
-#
-#        status_msg = f"Found {len(self.interfaces)} wireless interfaces"
-#        self.add_status_message(status_msg)
-#
-#        # Start scanning with the selected interface
-#        self.scan_networks()
-#
-#    def scan_networks(self):
-#        """Scan for available Wi-Fi networks using selected interface"""
-#        interface = self.interface_combo.get_active_text()
-#        if not interface:
-#            return
-#
-#        # Clear error and message boxes
-#        self.clear_error_messages()
-#        self.clear_status_messages()
-#
-#        status_msg = f"Scanning for networks on {interface}..."
-#        self.add_status_message(status_msg)
-#
-#        # Disable UI elements during scan
-#        self.disable_ui_elements()
-#
-#        # Start scanning in a separate thread to avoid freezing the UI
-#        threading.Thread(target=lambda: self._scan_thread(interface), daemon=True).start()
-#
-#    def _scan_thread(self, interface):
-#        """Background thread for network scanning"""
-#        try:
-#            # First bring up the interface to ensure it's active
-#            GLib.idle_add(lambda: self.add_status_message(f"Bringing up interface {interface}..."))
-#            ifconfig_result=subprocess.run(["sudo", "ifconfig", interface, "up"], capture_output=True, text=True, check=True)
-#            time.sleep(4)  # Give it time to initialize
-#
-#            # Run iwlist scan on the selected interface
-#            GLib.idle_add(lambda: self.add_status_message(f"Scanning for networks..."))
-#            iwlist_result = subprocess.check_output(["sudo", "iwlist", interface, "scan"], universal_newlines=True)
-#
-#            # Extract networks and their signal levels
-#            networks_with_signal = []
-#
-#            # Split the iwlist_result by "Cell" to process each network separately
-#            cells = iwlist_result.split("Cell ")
-#
-#            for cell in cells[1:]:  # Skip the first element (header)
-#                essid_match = re.search(r'ESSID:"(.*?)"', cell)
-#                signal_match = re.search(r'Signal level=(-\d+) dBm', cell)
-#
-#                if essid_match and signal_match:
-#                    essid = essid_match.group(1)
-#
-#                    # Skip empty or null-filled SSIDs
-#                    if not essid or '\\x00' in essid:
-#                        continue
-#
-#                    signal_level = int(signal_match.group(1))
-#                    networks_with_signal.append((essid, signal_level))
-#
-#            # Sort networks by signal strength (highest first)
-#            networks_with_signal.sort(key=lambda x: x[1], reverse=True)
-#
-#            # Extract just the network names, keeping the sorted order
-#            self.wifi_list = [network[0] for network in networks_with_signal]
-#
-#            # Update the dropdown on the main thread
-#            GLib.idle_add(self._update_dropdown)
-#
-#        except subprocess.CalledProcessError as e:
-#            error_msg = f"Scan error: {e.stderr if hasattr(e, 'stderr') else str(e)}"
-#            # Update error message on the main thread
-#            GLib.idle_add(lambda: self.add_error_message(error_msg))
-#            GLib.idle_add(lambda: self.enable_ui_elements())
-#        except Exception as e:
-#            error_msg = f"Scan error: {str(e)}"
-#            # Update error message on the main thread
-#            GLib.idle_add(lambda: self.add_error_message(error_msg))
-#            GLib.idle_add(lambda: self.enable_ui_elements())
-#
-#    def _update_dropdown(self):
-#        """Update the dropdown with found networks"""
-#        # Clear and populate the wifi dropdown
-#        self.wifi_combo.remove_all()
-#        for network in self.wifi_list:
-#            self.wifi_combo.append_text(network)
-#
-#        if self.wifi_list:
-#            self.wifi_combo.set_active(0)  # Select the first (strongest) network
-#            status_msg = f"Found {len(self.wifi_list)} networks"
-#            self.add_status_message(status_msg)
-#        else:
-#            error_msg = "No networks found"
-#            self.add_error_message(error_msg)
-#
-#        # Re-enable UI elements
-#        self.enable_ui_elements()
-#
-#    def toggle_password_visibility(self, button):
-#        """Toggle password visibility based on checkbox state"""
-#        if button.get_active():
-#            self.password_entry.set_visibility(False)  # Hide password
-#        else:
-#            self.password_entry.set_visibility(True)   # Show password
-#
-#    def check_fields(self):
-#        """Enable OK button only if all fields have content, IP is valid, and IP field is active"""
-#        wifi_selected = self.wifi_combo.get_active() != -1
-#        password_text = self.password_entry.get_text()
-#        ip_text = self.ip_entry.get_text()
-#        ip_field_active = self.ip_entry.get_sensitive()
-#
-#        if (wifi_selected and
-#            password_text and
-#            ip_text and
-#            self.ip_valid and
-#            ip_field_active):  # Check if IP field is active
-#            self.ok_button.set_sensitive(True)
-#        else:
-#            self.ok_button.set_sensitive(False)
-#
-#    def save_config(self):
-#        """Save the Wi-Fi configuration to the specified file"""
-#        wifi_name = self.wifi_combo.get_active_text()
-#        password = self.password_entry.get_text()
-#        ip_address = self.ip_entry.get_text()
-#        interface = self.interface_combo.get_active_text()
-#
-#        success = True
-#        wifi_success = False
-#        interface_success = False
-#        network_restart_success = False
-#
-#        try:
-#            # Read the template wifi_file
-#            with open(self.temp_wifi_path, 'r') as file:
-#                wifi_content = file.read()
-#
-#            # Replace placeholders with user input
-#            wifi_content = wifi_content.replace("<wifi_id>", wifi_name)
-#            wifi_content = wifi_content.replace("<password>", password)
-#
-#            # Create a temporary file with the content
-#            temp_wifi_file = os.path.join(os.path.dirname(self.temp_wifi_path), 'temp_wifi.conf')
-#            with open(temp_wifi_file, 'w') as file:
-#                file.write(wifi_content)
-#
-#            # Use sudo to copy the file to the destination
-#            result = subprocess.run(
-#                ["sudo", "cp", temp_wifi_file, self.wifi_path],
-#                capture_output=True, text=True
-#            )
-#
-#            if result.returncode != 0:
-#                raise Exception(f"sudo cp command failed: {result.stderr}")
-#
-#            # Clean up the temporary file
-#            os.remove(temp_wifi_file)
-#
-#            wifi_success = True
-#            status_msg = f"Wi-Fi configuration saved to {self.wifi_path}"
-#            self.add_status_message(status_msg)
-#            # Clear error messages on success
-#            self.clear_error_messages()
-#
-#        except Exception as e:
-#            error_msg = f"Failed to save Wi-Fi configuration: {str(e)}"
-#            self.add_error_message(error_msg)
-#            success = False
-#
-#        try:
-#            # Read and update the interface template
-#            with open(self.temp_interface_path, 'r') as file:
-#                interface_content = file.read()
-#
-#            # Replace IP address placeholder with user input
-#            interface_content = interface_content.replace("<address>", ip_address)
-#
-#            # Create a temporary file with the content
-#            temp_interface_file = os.path.join(os.path.dirname(self.temp_interface_path), 'temp_interface')
-#            with open(temp_interface_file, 'w') as file:
-#                file.write(interface_content)
-#
-#            # Use sudo to copy the file to the destination
-#            result = subprocess.run(
-#                ["sudo", "cp", temp_interface_file, self.interface_path],
-#                capture_output=True, text=True
-#            )
-#
-#            if result.returncode != 0:
-#                raise Exception(f"sudo cp command failed: {result.stderr}")
-#
-#            # Clean up the temporary file
-#            os.remove(temp_interface_file)
-#
-#            interface_success = True
-#            status_msg = f"Network interface configuration saved to {self.interface_path}"
-#            self.add_status_message(status_msg)
-#            # Clear error messages on success
-#            if not wifi_success:  # Only clear if not already cleared
-#                self.clear_error_messages()
-#
-#        except Exception as e:
-#            error_msg = f"Failed to save interface configuration: {str(e)}"
-#            self.add_error_message(error_msg)
-#            success = False
-#
-#        # If both configurations were successful, restart the network interface
-#        if wifi_success and interface_success:
-#            try:
-#                self.add_status_message(f"Bringing down interface {interface}...")
-#                # First bring down the interface
-#                result = subprocess.run(
-#                    ["sudo", "ifdown", interface],
-#                    capture_output=True, text=True
-#                )
-#
-#                if result.returncode != 0:
-#                    self.add_status_message(f"Warning: ifdown returned: {result.stderr}")
-#
-#                self.add_status_message(f"Bringing up interface {interface}...")
-#                # Then bring it back up with the new configuration
-#                result = subprocess.run(
-#                    ["sudo", "ifup", interface],
-#                    capture_output=True, text=True
-#                )
-#
-#                if result.returncode != 0:
-#                    raise Exception(f"ifup command failed: {result.stderr}")
-#
-#                network_restart_success = True
-#                self.add_status_message(f"Successfully restarted interface {interface}")
-#                # Clear error messages on success
-#                self.clear_error_messages()
-#
-#            except Exception as e:
-#                error_msg = f"Failed to restart network interface: {str(e)}"
-#                self.add_error_message(error_msg)
-#                success = False
-#
-#        # Final status message
-#        if success and network_restart_success:
-#            self.add_success_message("Configuration completed and network restarted successfully!")
-#        elif success:
-#            self.add_error_message("Configuration completed successfully, but network restart failed.")
-#        else:
-#            if wifi_success:
-#                self.add_error_message("Wi-Fi configuration was successful, but interface configuration failed.")
-#            elif interface_success:
-#                self.add_error_message("Interface configuration was successful, but Wi-Fi configuration failed.")
-#            else:
-#                self.add_error_message("Configuration failed completely.")
-#
-#        # Re-enable the UI elements
-#        self.enable_ui_elements()
-#
-#if __name__ == "__main__":
-#    app = WifiConfigApp()
-#    Gtk.main()
