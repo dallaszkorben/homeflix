@@ -2856,9 +2856,8 @@ class SqlDatabase:
                 cur.execute("commit")
 
 
-
-                logging.error("!!! HELLO !!!")
-                logging.error("\n\n\n")
+#                logging.error("!!! HELLO !!!")
+#                logging.error("\n\n\n")
 
 
                 my_records = [{key: record[key] for key in record.keys()} for record in records]
