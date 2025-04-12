@@ -72,6 +72,104 @@ import time
 from datetime import datetime, timedelta
 
 class WifiConfigApp:
+    # Class-level constants for file paths
+    INTERFACE_PATH = '/etc/network/interfaces'
+    WIFI_PATH = '/etc/wpa_supplicant/wpa_supplicant.conf'
+
+    def __init__(self):
+        # Set preferred lowest segment of IP address
+        self.preferred_ip_segment = "200"
+
+        # Server health check endpoint
+        self.health_check_endpoint = "/info/isAlive"
+
+        # Get the directory where the script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Define paths relative to the script location
+        self.temp_interface_path = os.path.join(script_dir, 'templates', 'interfaces')
+        self.temp_wifi_path = os.path.join(script_dir, 'templates', 'wpa_supplicant.conf')
+
+        self._block_interface_changed = False
+
+        # Lists to store interfaces and Wi-Fi networks
+        self.interfaces = []
+        self.wifi_list = []
+
+        # Add a flag to track connection success
+        self.connection_successful = False
+
+        # Flag to track if IP is valid
+        self.ip_valid = False
+
+        # Build the UI
+        self.build_ui()
+
+        # Find available interfaces and start scanning
+        self.find_interfaces()
+
+    def get_configured_settings(self):
+        try:
+            with open(self.INTERFACE_PATH, 'r') as file:
+                content = file.read()
+            interface = None
+
+            # Parse the interfaces file
+            lines = content.split('\n')
+            for line in lines:
+                line = line.strip()
+                # Look for wireless interface definition
+                if line.startswith('auto') or line.startswith('allow-hotplug'):
+                    parts = line.split()
+                    if len(parts) >= 2 and 'wlan' in parts[1]:
+                        interface = parts[1]
+                        break
+            return interface
+
+        except Exception as e:
+            print(f"Error reading interfaces file: {e}")
+            return None
+
+    def save_config(self):
+        """Save the Wi-Fi configuration to the specified file"""
+        wifi_name = self.wifi_combo.get_active_text()
+        password = self.password_entry.get_text()
+        ip_address = self.ip_entry.get_text()
+        interface = self.interface_combo.get_active_text()
+
+        success = True
+        wifi_success = False
+        interface_success = False
+        network_restart_success = False
+
+        try:
+            # Read the template wifi_file
+            with open(self.temp_wifi_path, 'r') as file:
+                wifi_content = file.read()
+
+            # Replace placeholders with user input
+            wifi_content = wifi_content.replace("<wifi_id>", wifi_name)
+            wifi_content = wifi_content.replace("<password>", password)
+
+            # Create a temporary file with the content
+            temp_wifi_file = os.path.join(os.path.dirname(self.temp_wifi_path), 'temp_wifi.conf')
+            with open(temp_wifi_file, 'w') as file:
+                file.write(wifi_content)
+
+            # Use sudo to copy the file to the destination
+            result = subprocess.run(
+                ["sudo", "cp", temp_wifi_file, self.WIFI_PATH],
+                capture_output=True, text=True
+            )
+
+            if result.returncode != 0:
+                raise Exception(f"sudo cp command failed: {result.stderr}")
+
+            # Clean up the temporary file
+            os.remove(temp_wifi_file)
+
+            wifi_success = True
+class WifiConfigApp:
     def __init__(self):
         # Set preferred lowest segment of IP address
         self.preferred_ip_segment = "200"
@@ -280,8 +378,6 @@ class WifiConfigApp:
 
         return False  # Event not handled, continue normal processing
 
-
-
     def disable_ui_elements(self):
         """Disable all UI elements during operations"""
         self.interface_combo.set_sensitive(False)
@@ -373,6 +469,27 @@ class WifiConfigApp:
                         daemon=True).start()
         return True
 
+    def get_configured_settings(self):
+        try:
+            with open('/etc/network/interfaces', 'r') as file:
+                content = file.read()
+            interface = None
+
+            # Parse the interfaces file
+            lines = content.split('\n')
+            for line in lines:
+                line = line.strip()
+                # Look for wireless interface definition
+                if line.startswith('auto') or line.startswith('allow-hotplug'):
+                    parts = line.split()
+                    if len(parts) >= 2 and 'wlan' in parts[1]:
+                        interface = parts[1]
+                        break
+            return interface
+
+        except Exception as e:
+            print(f"Error reading interfaces file: {e}")
+            return None
 
     def _test_connection_thread(self, wifi_name, password, interface):
         """Background thread for testing WiFi connection"""
@@ -678,14 +795,16 @@ class WifiConfigApp:
     def _find_interfaces_thread(self):
         """Background thread for finding interfaces"""
         try:
-            # Get list of wireless interfaces
-            output = subprocess.check_output(["ls", "/sys/class/net"], universal_newlines=True)
-            all_interfaces = output.strip().split()
+            # Get list of wireless interfaces using iwconfig
+            output = subprocess.check_output(["iwconfig"], universal_newlines=True, stderr=subprocess.STDOUT)
 
-            # Filter for wireless interfaces (typically wlan*)
-            self.interfaces = [iface for iface in all_interfaces if
-                              os.path.exists(f"/sys/class/net/{iface}/wireless") or
-                              iface.startswith("wlan")]
+            # Parse output to find wireless interfaces
+            self.interfaces = []
+            for line in output.split('\n'):
+                if line and not line.startswith(' '):  # Only process lines starting with interface names
+                    iface = line.split()[0]
+                    if 'no wireless extensions' not in line:
+                        self.interfaces.append(iface)
 
             # Update the dropdown on the main thread
             GLib.idle_add(self._update_interface_dropdown)
@@ -713,8 +832,15 @@ class WifiConfigApp:
         self._block_interface_changed = True
 
         try:
-            # Try to select wlan0 by default, or the first available interface
-            default_interface = "wlan0" if "wlan0" in self.interfaces else self.interfaces[0]
+            # Get previously configured interface
+            configured_interface = self.get_configured_settings()
+
+            # Select configured interface if it exists, otherwise use wlan0 or first available
+            if configured_interface and configured_interface in self.interfaces:
+                default_interface = configured_interface
+            else:
+                default_interface = "wlan0" if "wlan0" in self.interfaces else self.interfaces[0]
+
             index = self.interfaces.index(default_interface)
             self.interface_combo.set_active(index)
         finally:
