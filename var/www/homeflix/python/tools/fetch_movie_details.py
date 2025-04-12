@@ -7,7 +7,9 @@ from imdb import IMDb
 # Replace with your IMDb API key
 API_KEY = "4388f276"
 
-IMDB_ID = "tt0407362"  # IMDb ID for the series
+IMDB_ID = "tt0407362"  # IMDb ID for the series - Battlestar Galactica
+IMDB_ID = "tt2861424"  # IMDb ID for the series - Rick and Morty
+IMDB_ID = "tt0799862"  # IMDb ID for the series - Caprica
 
 CATEGORY = "movie"
 PRIMARYMEDIATYPE = "video"
@@ -17,8 +19,12 @@ NETSTOP = "0:19:00"
 sounds = ["hu", "en"]
 subs = ["en"]
 themes = []
+orig_lang = "en"
 
-series_path = os.path.expanduser('~/tmp')
+construction_path = os.path.expanduser('~/tmp/homeflix/')
+destination_path = os.path.expanduser('/media/akoel/vegyes/MEDIA/01.Movie/03.Series/02-Series')
+
+need_to_copy_to_destination_path = True
 need_to_file = True
 
 def sanitize_title(title):
@@ -36,27 +42,55 @@ def create_folder(path):
 
 def handle_episode(episode_data, extra_data):
 
+    series_imdb_id = str(extra_data['series_imdb_id'])
+    series_story = str(extra_data['series_story'])
     series_title = str(extra_data['series_title'])
     series_year = int(extra_data['series_year'])
     recent_season = int(extra_data['recent_season'])
-
     recent_episode = int(episode_data['sequence'])
 
-    # Create series folder structure
-    series_folder = os.path.join(series_path, f"{sanitize_title(series_title)}-{series_year}")
+    # fetch series folder structure
+    construction_series_folder = str(extra_data['construction_series_folder'])
+#    construction_series_folder = os.path.join(construction_path, f"{sanitize_title(series_title)}-{series_year}")
     if recent_season == 1 and recent_episode == 1:
         if not need_to_file:
             print("==========")
             print(f"Series: {extra_data['series_title']} - {series_year}")
             print("==========")
         else:
-            print(series_folder)
-            create_folder(series_folder)
-            create_folder(os.path.join(series_folder, 'screenshots'))
-            create_folder(os.path.join(series_folder, 'thumbnails'))
+            print(construction_series_folder)
+            create_folder(construction_series_folder)
+            create_folder(os.path.join(construction_series_folder, 'screenshots'))
+            create_folder(os.path.join(construction_series_folder, 'thumbnails'))
+            series_data = {
+                "category": CATEGORY,
+                "mediatypes": [],
+                "level": "series",
+                "title": {
+                    "onthumbnail": True,
+                    "showsequence": "part",
+                    "orig": orig_lang,
+                    "titles": {"en": series_title, "hu": ""}
+                },
+                "storylines": {
+                    "en": series_story,
+                    "hu": ""
+                },
+                "date": series_year,
+                "origins": episode_data['origins'],
+                "id": {
+                    "name": "imdb",
+                    "value": series_imdb_id
+                }
+            }
+            # Write series data to card.yaml
+            card_path = os.path.join(construction_series_folder, 'card.yaml')
+            with open(card_path, 'w') as f:
+                yaml.dump(series_data, f, allow_unicode=True, default_flow_style=False, Dumper=MyDumper, sort_keys=False, width=500)
 
     # Create season folder structure
-    season_folder = os.path.join(series_folder, f"S{format_number(recent_season)}")
+    formatted_season = f"S{format_number(recent_season)}"
+    season_folder = os.path.join(construction_series_folder, formatted_season)
     if recent_episode == 1:
         if not need_to_file:
             print("---------")
@@ -67,6 +101,22 @@ def handle_episode(episode_data, extra_data):
             create_folder(season_folder)
             create_folder(os.path.join(season_folder, 'screenshots'))
             create_folder(os.path.join(season_folder, 'thumbnails'))
+            season_data = {
+                "category": CATEGORY,
+                "mediatypes": [],
+                "level": "season",
+                "sequence": recent_season,
+                "title": {
+                    "onthumbnail": True,
+                    "showsequence": "part",
+                    "orig": orig_lang,
+                    "titles": {"en": formatted_season, "hu": f"{recent_season}. évad"}
+                }
+            }
+            # Write series data to card.yaml
+            card_path = os.path.join(season_folder, 'card.yaml')
+            with open(card_path, 'w') as f:
+                yaml.dump(season_data, f, allow_unicode=True, default_flow_style=False, Dumper=MyDumper, sort_keys=False, width=500)
 
     episode_folder = os.path.join(season_folder, f"E{format_number(recent_episode)}")
     yaml_output = yaml.dump(episode_data, allow_unicode=True, default_flow_style=False, Dumper=MyDumper, sort_keys=False, width=500)
@@ -91,9 +141,6 @@ def get_episode_details(ia, episode_id):
 
     episode = ia.get_movie(episode_id[2:])  # Remove 'tt' from IMDb ID
 
-    #for key, value in episode.items():
-    #    print(f"{key}: {value}")
-
     sequence = episode.get("episode", 0)
     en_title = episode.get("episode title", "__")
     en_storyline = episode.get('plot')[0]
@@ -106,10 +153,6 @@ def get_episode_details(ia, episode_id):
     actors = {actor["name"]: str(actor.currentRole) if actor.currentRole else "" for actor in episode["cast"]} if "cast" in episode else {}
     stars = [actor["name"] for actor in episode["cast"][:3]]
 
-#    # extra info
-#    recent_season = episode.get('season')
-#    series_title = episode.get("episode of", "___")
-
     episode_data = {
         "category": CATEGORY,
         "primarymediatype": PRIMARYMEDIATYPE,
@@ -117,7 +160,7 @@ def get_episode_details(ia, episode_id):
         "title": {
             "onthumbnail": True,
             "showsequence": "part",
-            "orig": "en",
+            "orig": orig_lang,
             "titles": {"en": en_title, "hu": ""}
         },
         "storylines": {
@@ -143,11 +186,6 @@ def get_episode_details(ia, episode_id):
         }
     }
 
-#    extra_data = {
-#        "series_title": series_title,
-#        "recent_season": recent_season,
-#    }
-
     return episode_data
 
 class MyDumper(yaml.Dumper):
@@ -170,32 +208,34 @@ def main():
     response = requests.get(url)
     data = response.json()
     total_seasons = int(data["totalSeasons"])
+    series_imdb_id = data["imdbID"]
     series_title = data["Title"]
+    series_story = data["Plot"]
     series_year = re.split(r'[-–]', data["Year"])[0]
+
+    # The series folder only once should be created
+    construction_series_folder = os.path.join(construction_path, f"{sanitize_title(series_title)}-{series_year}")
 
     # Go through all the seasons
     for recent_season in range(1, total_seasons + 1):
 
         extra_data = {
+            "series_imdb_id": series_imdb_id,
+            "series_story": series_story,
             "series_title": series_title,
             "series_year": series_year,
-            "recent_season": recent_season
+            "recent_season": recent_season,
+            "construction_series_folder": construction_series_folder
         }
-
 
         # for getting the episode list
         url = f"http://www.omdbapi.com/?i={IMDB_ID}&Season={recent_season}&apikey={API_KEY}"
         response = requests.get(url)
         data = response.json()
 
-#    if "Episodes" not in data:
-#        print(f"Error fetching season {season}: {data.get('Error', 'Unknown error')}")
-#        return
-
         episode_list = []
         for idx, episode in enumerate(data["Episodes"], start=1):
             episode_id = episode["imdbID"]
-
 
 #        url = f"http://www.omdbapi.com/?i={episode_id}&apikey={API_KEY}"
 #        response = requests.get(url)
@@ -203,18 +243,10 @@ def main():
 #        print(data.get("Country", "non"))
 
             episode_data = get_episode_details(ia, episode_id)
-
             handle_episode(episode_data, extra_data)
 
-#            # print only the result
-#            if not need_to_file:
-#                yaml_output = yaml.dump(episode_data, allow_unicode=True, default_flow_style=False, Dumper=MyDumper, sort_keys=False, width=500)
-#                print(yaml_output)
-#                print("\n\n")
-#
-#            # create file structure
-#            else:
-#                write_to_file(episode_data)
+    if need_to_file and need_to_copy_to_destination_path:
+        os.system(f"cp -r {construction_series_folder} {destination_path}")
 
 if __name__ == "__main__":
     main()
