@@ -904,11 +904,11 @@ class WifiConfigApp:
         if configured_wifi_network and configured_wifi_network in self.wifi_list:
             default_wifi_network = configured_wifi_network
         else:
-            default_wifi_network = self.interfaces[0] if self.interfaces else ""
+            default_wifi_network = self.wifi_list[0] if self.wifi_list else ""
 
-        index = self.interfaces.index(default_interface)
+        index = self.wifi_list.index(default_wifi_network)
         print(f' index: {index}')
-        self.interface_combo.set_active(index)
+#        self.wifi_combo.set_active(index)
 
 
         # Re-enable UI elements
