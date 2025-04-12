@@ -373,7 +373,7 @@ class WifiConfigApp:
 
     def get_configured_interface_settings(self):
         try:
-            with open(WifiConfig.INTERFACE_PATH, 'r') as file:
+            with open(WifiConfigApp.INTERFACE_PATH, 'r') as file:
                 content = file.read()
             interface = None
 
@@ -400,7 +400,7 @@ class WifiConfigApp:
 
     def get_configured_wifi_settings(self):
         try:
-            with open(WifiConfig.WIFI_PATH, 'r') as file:
+            with open(WifiConfigApp.WIFI_PATH, 'r') as file:
                 content = file.read()
 
             # Look for ssid and psk in the file
@@ -996,7 +996,7 @@ class WifiConfigApp:
 
             # Use sudo to copy the file to the destination
             result = subprocess.run(
-                ["sudo", "cp", temp_wifi_file, WifiConfig.WIFI_PATH],
+                ["sudo", "cp", temp_wifi_file, WifiConfigApp.WIFI_PATH],
                 capture_output=True, text=True
             )
 
@@ -1007,7 +1007,7 @@ class WifiConfigApp:
             os.remove(temp_wifi_file)
 
             wifi_success = True
-            status_msg = f"Wi-Fi configuration saved to {WifiConfig.WIFI_PATH}"
+            status_msg = f"Wi-Fi configuration saved to {WifiConfigApp.WIFI_PATH}"
             self.add_status_message(status_msg)
 
             # Clear error messages on success
@@ -1038,7 +1038,7 @@ class WifiConfigApp:
 
             # Use sudo to copy the file to the destination
             result = subprocess.run(
-                ["sudo", "cp", temp_interface_file, WifiConfig.INTERFACE_PATH],
+                ["sudo", "cp", temp_interface_file, WifiConfigApp.INTERFACE_PATH],
                 capture_output=True, text=True
             )
 
@@ -1049,7 +1049,7 @@ class WifiConfigApp:
             os.remove(temp_interface_file)
 
             interface_success = True
-            status_msg = f"Network interface configuration saved to {WifiConfig.INTERFACE_PATH}"
+            status_msg = f"Network interface configuration saved to {WifiConfigApp.INTERFACE_PATH}"
             self.add_status_message(status_msg)
 
             # Clear error messages on success
