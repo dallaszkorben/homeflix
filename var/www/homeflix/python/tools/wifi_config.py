@@ -371,23 +371,48 @@ class WifiConfigApp:
                         daemon=True).start()
         return True
 
-    def get_configured_settings(self):
+    def get_configured_interface_settings(self):
         try:
-            with open('/etc/network/interfaces', 'r') as file:
+            with open(self.interface_path, 'r') as file:
                 content = file.read()
             interface = None
 
             # Parse the interfaces file
             lines = content.split('\n')
+            static_section = False
             for line in lines:
                 line = line.strip()
-                # Look for wireless interface definition
-                if line.startswith('auto') or line.startswith('allow-hotplug'):
+                # Look for static ip section
+                if '# static ip' in line:
+                    static_section = True
+                    continue
+                # Look for interface definition in static section
+                if static_section and line.startswith('iface'):
                     parts = line.split()
-                    if len(parts) >= 2 and 'wlan' in parts[1]:
+                    if len(parts) >= 2:
                         interface = parts[1]
-                        break
+                    break
             return interface
+
+        except Exception as e:
+            print(f"Error reading interfaces file: {e}")
+            return None
+
+    def get_configured_wifi_settings(self):
+        try:
+            with open(self.wifi_path, 'r') as file:
+                content = file.read()
+
+            # Look for ssid and psk in the file
+            ssid_match = re.search(r'ssid="(.*?)"', content)
+            psk_match = re.search(r'psk="(.*?)"', content)
+
+            if ssid_match and psk_match:
+                ssid = ssid_match.group(1)
+                password = psk_match.group(1)
+                return ssid, password
+
+            return None
 
         except Exception as e:
             print(f"Error reading interfaces file: {e}")
@@ -735,7 +760,7 @@ class WifiConfigApp:
 
         try:
             # Get previously configured interface
-            configured_interface = self.get_configured_settings()
+            configured_interface = self.get_configured_interface_settings()
 
             # Select configured interface if it exists, otherwise use wlan0 or first available
             if configured_interface and configured_interface in self.interfaces:
@@ -868,8 +893,32 @@ class WifiConfigApp:
             error_msg = "  No networks found"
             self.add_error_message(error_msg)
 
+        # Get previously configured wifi network
+        configured_wifi_network = self.get_configured_interface_settings()
+
+        print(f'configured wifi network: {configured_wifi_network}')
+        print(f' wifi list: {self.wifi_list}')
+
+
+        # Select configured wifi network if it exists, otherwise use the first available
+        if configured_wifi_network and configured_wifi_network in self.wifi_list:
+            default_wifi_network = configured_wifi_network
+        else:
+            default_wifi_network = self.interfaces[0] if self.interfaces else ""
+
+        index = self.interfaces.index(default_interface)
+        print(f' index: {index}')
+        self.interface_combo.set_active(index)
+
+
         # Re-enable UI elements
         self.enable_ui_elements()
+
+
+
+
+
+
 
     def toggle_password_visibility(self, button):
         """Toggle password visibility based on checkbox state"""
