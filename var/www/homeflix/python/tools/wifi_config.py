@@ -72,6 +72,9 @@ import time
 from datetime import datetime, timedelta
 
 class WifiConfigApp:
+    INTERFACE_PATH = '/etc/network/interfaces'
+    WIFI_PATH = '/etc/wpa_supplicant/wpa_supplicant.conf'
+
     def __init__(self):
         # Set preferred lowest segment of IP address
         self.preferred_ip_segment = "200"
@@ -85,9 +88,6 @@ class WifiConfigApp:
         # Define paths relative to the script location
         self.temp_interface_path = os.path.join(script_dir, 'templates', 'interfaces')
         self.temp_wifi_path = os.path.join(script_dir, 'templates', 'wpa_supplicant.conf')
-
-        self.interface_path = '/etc/network/interfaces'
-        self.wifi_path = '/etc/wpa_supplicant/wpa_supplicant.conf'
 
         self._block_interface_changed = False
 
@@ -373,7 +373,7 @@ class WifiConfigApp:
 
     def get_configured_interface_settings(self):
         try:
-            with open(self.interface_path, 'r') as file:
+            with open(WifiConfig.INTERFACE_PATH, 'r') as file:
                 content = file.read()
             interface = None
 
@@ -400,7 +400,7 @@ class WifiConfigApp:
 
     def get_configured_wifi_settings(self):
         try:
-            with open(self.wifi_path, 'r') as file:
+            with open(WifiConfig.WIFI_PATH, 'r') as file:
                 content = file.read()
 
             # Look for ssid and psk in the file
@@ -996,7 +996,7 @@ class WifiConfigApp:
 
             # Use sudo to copy the file to the destination
             result = subprocess.run(
-                ["sudo", "cp", temp_wifi_file, self.wifi_path],
+                ["sudo", "cp", temp_wifi_file, WifiConfig.WIFI_PATH],
                 capture_output=True, text=True
             )
 
@@ -1007,7 +1007,7 @@ class WifiConfigApp:
             os.remove(temp_wifi_file)
 
             wifi_success = True
-            status_msg = f"Wi-Fi configuration saved to {self.wifi_path}"
+            status_msg = f"Wi-Fi configuration saved to {WifiConfig.WIFI_PATH}"
             self.add_status_message(status_msg)
 
             # Clear error messages on success
@@ -1038,7 +1038,7 @@ class WifiConfigApp:
 
             # Use sudo to copy the file to the destination
             result = subprocess.run(
-                ["sudo", "cp", temp_interface_file, self.interface_path],
+                ["sudo", "cp", temp_interface_file, WifiConfig.INTERFACE_PATH],
                 capture_output=True, text=True
             )
 
@@ -1049,8 +1049,9 @@ class WifiConfigApp:
             os.remove(temp_interface_file)
 
             interface_success = True
-            status_msg = f"Network interface configuration saved to {self.interface_path}"
+            status_msg = f"Network interface configuration saved to {WifiConfig.INTERFACE_PATH}"
             self.add_status_message(status_msg)
+
             # Clear error messages on success
             if not wifi_success:  # Only clear if not already cleared
                 self.clear_error_messages()
