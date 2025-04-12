@@ -837,8 +837,6 @@ class WifiConfigApp:
                     stderr="Timeout after 15 seconds: Device or resource busy"
                 )
 
-            print(f'iwlist result: {iwlist_result}')
-
             # Extract networks and their signal levels
             networks_with_signal = []
 
@@ -898,13 +896,14 @@ class WifiConfigApp:
         # Get previously configured wifi network
         configured_wifi_network, configured_wifi_password = self.get_configured_wifi_settings()
 
-        print(f'configured wifi network: {configured_wifi_network}')
-        print(f' wifi list: {self.wifi_list}')
-
-
         # Select configured wifi network if it exists, otherwise use the first available
         if configured_wifi_network and configured_wifi_network in self.wifi_list:
             default_wifi_network = configured_wifi_network
+
+            # Set password field to configured password if it exists
+            if configured_wifi_password:
+                self.password_entry.set_text(configured_wifi_password)
+
         else:
             default_wifi_network = self.wifi_list[0] if self.wifi_list else ""
 
@@ -958,10 +957,8 @@ class WifiConfigApp:
             try:
                 data = response.json()
                 if response.status_code == 200 and data.get("result") == True:
-#                    self.add_status_message("Server health check passed!")
                     return True
                 else:
-#                    self.add_error_message(f"Server health check failed. Response: {data}")
                     return False
             except json.JSONDecodeError:
                 self.add_error_message(f"Invalid JSON response from server: {response.text}")
