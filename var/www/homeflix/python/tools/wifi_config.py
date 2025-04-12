@@ -947,8 +947,13 @@ class WifiConfigApp:
             with open(self.temp_interface_path, 'r') as file:
                 interface_content = file.read()
 
+            # Extract network prefix from IP address (e.g., "192.168.1" from "192.168.1.200")
+            ip_parts = ip_address.split('.')
+            gateway = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.1"
+
             # Replace IP address placeholder with user input
             interface_content = interface_content.replace("<address>", ip_address)
+            interface_content = interface_content.replace("<gateway>", gateway)
 
             # Create a temporary file with the content
             temp_interface_file = os.path.join(os.path.dirname(self.temp_interface_path), 'temp_interface')
