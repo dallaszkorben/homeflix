@@ -705,7 +705,7 @@ class WifiConfigApp:
             for line in output.split('\n'):
                 if line and not line.startswith(' '):  # Only process lines starting with interface names
                     iface = line.split()[0]
-                    if 'no wireless extensions' not in line:
+                    if '!!!no wireless extensions' not in line:
                         self.interfaces.append(iface)
 
             # Update the dropdown on the main thread
