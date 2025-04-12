@@ -837,7 +837,7 @@ class WifiConfigApp:
                     stderr="Timeout after 15 seconds: Device or resource busy"
                 )
 
-            print(f'iwlist result: {iflist_result}')
+            print(f'iwlist result: {iwlist_result}')
 
             # Extract networks and their signal levels
             networks_with_signal = []
