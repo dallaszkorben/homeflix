@@ -412,7 +412,7 @@ class WifiConfigApp:
                 password = psk_match.group(1)
                 return ssid, password
 
-            return None
+            return None, None
 
         except Exception as e:
             print(f"Error reading interfaces file: {e}")
@@ -894,7 +894,7 @@ class WifiConfigApp:
             self.add_error_message(error_msg)
 
         # Get previously configured wifi network
-        configured_wifi_network = self.get_configured_interface_settings()
+        configured_wifi_network, configured_wifi_password = self.get_configured_wifi_settings()
 
         print(f'configured wifi network: {configured_wifi_network}')
         print(f' wifi list: {self.wifi_list}')
