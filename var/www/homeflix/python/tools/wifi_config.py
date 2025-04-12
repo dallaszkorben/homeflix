@@ -837,6 +837,8 @@ class WifiConfigApp:
                     stderr="Timeout after 15 seconds: Device or resource busy"
                 )
 
+            print(f'iwlist result: {iflist_result}')
+
             # Extract networks and their signal levels
             networks_with_signal = []
 
@@ -908,8 +910,8 @@ class WifiConfigApp:
 
         index = self.wifi_list.index(default_wifi_network)
         print(f' index: {index}')
-#        self.wifi_combo.set_active(index)
-
+        self.wifi_combo.set_active(index)
+#---
 
         # Re-enable UI elements
         self.enable_ui_elements()
