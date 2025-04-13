@@ -1060,8 +1060,6 @@ class WifiConfigApp:
         # Start connection test in a separate thread
         threading.Thread(target=lambda: self._on_ok_clicked_thread(), daemon=True).start()
 
-        self.save_config()
-
         # Restore the IP field state after save_config re-enables UI elements
 #        self.ip_entry.set_sensitive(ip_field_was_active)
 #        self.check_fields()
