@@ -78,14 +78,14 @@ class Message:
         self.error_text.set_editable(False)
         self.error_text.set_wrap_mode(Gtk.WrapMode.WORD)
         self.error_buffer = self.error_text.get_buffer()
-        error_tag = self.error_buffer.create_tag("error", foreground="red")
+        error_tag = self.error_buffer.create_tag("error", foreground="red", size_points=8)
 
         self.message_text = Gtk.TextView()
         self.message_text.set_editable(False)
         self.message_text.set_wrap_mode(Gtk.WrapMode.WORD)
         self.message_buffer = self.message_text.get_buffer()
-        message_tag = self.message_buffer.create_tag("message", foreground="blue")
-        success_tag = self.message_buffer.create_tag("success", foreground="green", weight=Pango.Weight.BOLD)
+        message_tag = self.message_buffer.create_tag("message", foreground="blue", size_points=8)
+        success_tag = self.message_buffer.create_tag("success", foreground="green", size_points=8, weight=Pango.Weight.BOLD)
 
     def _clear_specific_error_messages(self, keyword):
         """Clear error messages containing a specific keyword"""
@@ -384,6 +384,15 @@ class WifiConfigApp:
         # Create a fixed-width label container for consistent alignment
         label_width = 80
 
+        css = b"""
+        .error{
+            font-size: 8px
+        },
+        .message{
+            font-size: 8px
+        }
+
+        """
         # Error message label with fixed width container
         self.error_label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.error_label_box.set_size_request(label_width, -1)
@@ -1046,17 +1055,21 @@ class WifiConfigApp:
         """Handle OK button click"""
 
         # Disable UI elements during the process
-#        self.disable_all()
+        self.disable_all()
 
-        # Save the configuration
+        # Start connection test in a separate thread
+        threading.Thread(target=lambda: self._on_ok_clicked_thread(), daemon=True).start()
+
         self.save_config()
 
         # Restore the IP field state after save_config re-enables UI elements
 #        self.ip_entry.set_sensitive(ip_field_was_active)
 #        self.check_fields()
 
-    def save_config(self):
+    def _on_ok_clicked_thread(self):
         """Save the Wi-Fi configuration to the specified file"""
+
+        print("on OK thread started")
 
         iter = self.wifi_combo.get_active_iter()
         if iter is not None:
@@ -1072,6 +1085,9 @@ class WifiConfigApp:
             return False
 
         self.disable_all()
+
+        print("Disabled")
+
 
         password = self.password_entry.get_text()
         ip_address = self.ip_entry.get_text()
@@ -1219,6 +1235,7 @@ class WifiConfigApp:
         # Final status message
         if success and network_restart_success:
             self.message.add_success_message("Configuration completed, network restarted successfully and the server responding")
+            self.enable_all_with_ok()
         elif success:
             self.message.add_error_message("Configuration completed successfully, but network restart failed.")
             self.enable_all_with_ok()
