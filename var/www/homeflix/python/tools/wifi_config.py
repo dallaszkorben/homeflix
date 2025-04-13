@@ -1119,7 +1119,7 @@ class WifiConfigApp:
 
             wifi_success = True
             self.message.add_status_message(f"\n---------------------------------------------------")
-            self.message.add_status_message(f"\nWi-Fi configuration saved to {WifiConfigApp.WIFI_PATH}")
+            self.message.add_status_message(f"Wi-Fi configuration saved to {WifiConfigApp.WIFI_PATH}")
 
             # Clear error messages on success
             self.message.clear_error_messages()
