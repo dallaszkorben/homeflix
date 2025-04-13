@@ -970,7 +970,7 @@ class WifiConfigApp:
                         ip_parts = assigned_ip.split('.')
                         if len(ip_parts) == 4:
                             detected_ip_range = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}"
-                            self.message.add_status_message(f"    Detected network range: {range}.x")
+                            self.message.add_status_message(f"    Detected network range: {detected_ip_range}.x")
 
                             # Update the IP address suggestion with preferred segment
                             if detected_ip_range:
@@ -1046,7 +1046,7 @@ class WifiConfigApp:
         """Handle OK button click"""
 
         # Disable UI elements during the process
-        self.disable_all()
+#        self.disable_all()
 
         # Save the configuration
         self.save_config()
@@ -1070,6 +1070,8 @@ class WifiConfigApp:
             self.message.add_error_message(error_msg)
             self.enable_all_without_ok()
             return False
+
+        self.disable_all()
 
         password = self.password_entry.get_text()
         ip_address = self.ip_entry.get_text()
