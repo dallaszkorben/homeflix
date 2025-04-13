@@ -219,9 +219,6 @@ class WifiNetwork:
             return None
 
 
-
-
-
 class WifiConfigApp:
     INTERFACE_PATH = '/etc/network/interfaces'
     WIFI_PATH = '/etc/wpa_supplicant/wpa_supplicant.conf'
@@ -332,9 +329,7 @@ class WifiConfigApp:
         self.password_entry.set_sensitive(False) # Initially disabled
         form_grid.attach(self.password_entry, 1, 2, 1, 1)
 
-#        # Handle Enter key in password field
-#        self.password_entry.connect("key-press-event", self.on_password_key_press)
-#        self.password_entry.connect("focus-out-event", lambda w, e: self.test_wifi_connection())
+        # Handle Enter key in password field
         self.password_entry.connect("focus-in-event", self.focus_in_password_entry)
         self.password_entry.connect("focus-out-event", self.focus_out_password_entry)
         self.password_entry.connect("changed", self.password_changed)
@@ -384,19 +379,36 @@ class WifiConfigApp:
         # Create a fixed-width label container for consistent alignment
         label_width = 80
 
-        css = b"""
-        .error{
-            font-size: 8px
-        },
-        .message{
-            font-size: 8px
-        }
+        # Status message label with fixed width container
+        message_label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        message_label_box.set_size_request(label_width, -1)
+#        text_grid.attach(message_label_box, 0, 1, 1, 1)
+        text_grid.attach(message_label_box, 0, 0, 1, 1)
 
-        """
+        message_label = Gtk.Label(label="Messages:")
+        message_label.set_halign(Gtk.Align.START)  # Left align within the box
+        message_label.set_valign(Gtk.Align.START)
+        message_label_box.pack_start(message_label, False, False, 0)
+
+        # Status message text area
+        scrolled_message = Gtk.ScrolledWindow()
+        scrolled_message.set_hexpand(True)
+        scrolled_message.set_vexpand(True)
+        scrolled_message.set_min_content_height(250)
+#        text_grid.attach(scrolled_message, 1, 1, 1, 1)
+        text_grid.attach(scrolled_message, 1, 0, 1, 1)
+
+        scrolled_message.add(self.message.message_text)
+
+
+
+
+
         # Error message label with fixed width container
         self.error_label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.error_label_box.set_size_request(label_width, -1)
-        text_grid.attach(self.error_label_box, 0, 0, 1, 1)
+#        text_grid.attach(self.error_label_box, 0, 0, 1, 1)
+        text_grid.attach(self.error_label_box, 0, 1, 1, 1)
 
         error_label = Gtk.Label(label="Errors:")
         error_label.set_halign(Gtk.Align.START)  # Left align within the box
@@ -408,28 +420,15 @@ class WifiConfigApp:
         scrolled_error.set_hexpand(True)
         scrolled_error.set_vexpand(True)
         scrolled_error.set_min_content_height(100)
-        text_grid.attach(scrolled_error, 1, 0, 1, 1)
+#        text_grid.attach(scrolled_error, 1, 0, 1, 1)
+        text_grid.attach(scrolled_error, 1, 1, 1, 1)
 
         scrolled_error.add(self.message.error_text)
 
-        # Status message label with fixed width container
-        message_label_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        message_label_box.set_size_request(label_width, -1)
-        text_grid.attach(message_label_box, 0, 1, 1, 1)
 
-        message_label = Gtk.Label(label="Messages:")
-        message_label.set_halign(Gtk.Align.START)  # Left align within the box
-        message_label.set_valign(Gtk.Align.START)
-        message_label_box.pack_start(message_label, False, False, 0)
 
-        # Status message text area
-        scrolled_message = Gtk.ScrolledWindow()
-        scrolled_message.set_hexpand(True)
-        scrolled_message.set_vexpand(True)
-        scrolled_message.set_min_content_height(150)
-        text_grid.attach(scrolled_message, 1, 1, 1, 1)
 
-        scrolled_message.add(self.message.message_text)
+
 
         # Initialize password field visibility
         self.toggle_password_visibility(self.hide_password)
@@ -450,9 +449,6 @@ class WifiConfigApp:
 
         status_msg = "Collect network interfaces..."
         self.message.add_status_message(status_msg)
-
-        # Disable UI elements during interface detection
-#        self.disable_ui_elements()
 
         # Start in a separate thread to avoid freezing the UI
         threading.Thread(target=self._collect_interfaces_thread, daemon=True).start()
@@ -637,7 +633,7 @@ class WifiConfigApp:
         # Select configured wifi network if it exists, otherwise use the first available
         if configured_wifi_network and any(configured_wifi_network == essid for essid, _ in wifi_list):
 
-            status_msg = f"    Configured wifi network: '{configured_wifi_network}' was found in the networks around"
+            status_msg = f"    Configured wifi network:\t'{configured_wifi_network}' was found in the networks around"
             self.message.add_status_message(status_msg)
 
             default_wifi_network = configured_wifi_network
@@ -649,7 +645,7 @@ class WifiConfigApp:
         else:
             default_wifi_network = wifi_list[0][0] if wifi_list else ""
 
-            status_msg = f"    Configured wifi network: '{configured_wifi_network}' was NOT found in the networks around. The network with strongest signal will be selected: {default_wifi_network}"
+            status_msg = f"    Configured wifi network:\t'{configured_wifi_network}' was NOT found in the networks around.\n\t\t\t\t\t\tThe network with strongest signal will be selected: {default_wifi_network}"
             self.message.add_status_message(status_msg)
 
         index = next((i for i, (essid, _) in enumerate(wifi_list) if essid == default_wifi_network), -1)
@@ -840,8 +836,10 @@ class WifiConfigApp:
         self.disable_all()
 
         # Clear error messages before starting the test
+#        self.message.clear_status_messages()
         self.message.clear_error_messages()
-        self.message.add_status_message(f"Generate recommended IP to {wifi_name}...")
+        self.message.add_status_message(f"---------------------------------------------------")
+        self.message.add_status_message(f"Generate recommended IP to '{wifi_name}' network...")
 
         # Start connection test in a separate thread
         threading.Thread(target=lambda: self._generate_recommended_ip_thread(wifi_name, password, interface), daemon=True).start()
@@ -1067,8 +1065,6 @@ class WifiConfigApp:
     def _on_ok_clicked_thread(self):
         """Save the Wi-Fi configuration to the specified file"""
 
-        print("on OK thread started")
-
         iter = self.wifi_combo.get_active_iter()
         if iter is not None:
             model = self.wifi_combo.get_model()
@@ -1083,9 +1079,6 @@ class WifiConfigApp:
             return False
 
         self.disable_all()
-
-        print("Disabled")
-
 
         password = self.password_entry.get_text()
         ip_address = self.ip_entry.get_text()
@@ -1125,7 +1118,7 @@ class WifiConfigApp:
             os.remove(temp_wifi_file)
 
             wifi_success = True
-            status_msg = f"Wi-Fi configuration saved to {WifiConfigApp.WIFI_PATH}"
+            status_msg = f"\nWi-Fi configuration saved to {WifiConfigApp.WIFI_PATH}"
             self.message.add_status_message(status_msg)
 
             # Clear error messages on success
@@ -1229,7 +1222,6 @@ class WifiConfigApp:
 
         network_restart_success = True
 
-
         # Final status message
         if success and network_restart_success:
             self.message.add_success_message("Configuration completed, network restarted successfully and the server responding")
@@ -1246,422 +1238,6 @@ class WifiConfigApp:
                 self.message.add_error_message("Configuration failed completely.")
             self.enable_all_without_ok()
 
-
-
-
-
-
-
-
-
-
-
-
-
-#----
-#----
-#----
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#    def on_password_key_press(self, widget, event):
-#        """Handle Enter key in password field to behave like Tab"""
-#
-#        # Get the keyval (key code)
-#        keyval = event.keyval
-#
-#        # Check if Enter/Return was pressed (keyval 65293 is Enter)
-#        if keyval == 65293:  # Enter key
-#
-#            print("Password field has been left by Enter")
-#
-#            # Move focus to the next widget (like Tab would do)
-#            widget.emit('move-focus', Gtk.DirectionType.TAB_FORWARD)
-#            return True  # Event handled
-#
-#        return False  # Event not handled, continue normal processing
-#
-#    def disable_ui_elements(self):
-#        """Disable all UI elements during operations"""
-#
-#        print("Disabling UI elements")
-#
-##        self.interface_combo.set_sensitive(False)
-##        self.wifi_combo.set_sensitive(False)
-##        self.password_entry.set_sensitive(False)
-#
-#        # Don't disable IP field here - it should stay in its current state
-##        self.ip_entry.set_sensitive(False)
-#
-#        self.scan_button.set_sensitive(False)
-#        self.ok_button.set_sensitive(False)
-#        self.hide_password.set_sensitive(False)
-#
-#    def enable_ui_elements(self):
-#        """Re-enable UI elements after operations"""
-#
-#        print('Enable UI elements')
-#
-#        self.interface_combo.set_sensitive(True)
-#        self.wifi_combo.set_sensitive(True)
-#        self.password_entry.set_sensitive(True)
-#
-#        self.ip_entry.set_sensitive(True)
-#
-#        self.scan_button.set_sensitive(True)
-#        self.hide_password.set_sensitive(True)
-#
-#        # IP entry is only enabled after a successful connection test
-#        # So don't enable it here - it will be enabled in _update_connection_status if needed
-#
-#        # OK button state depends on field validation, so call check_fields
-#        self.check_fields()
-#
-#    def on_scan_clicked(self, button):
-#        """Handle scan button click"""
-#        # Deactivate IP Address field when Scan is clicked
-#        self.ip_entry.set_text("")
-##        self.ip_entry.set_sensitive(False)
-#        self.connection_successful = False
-#        self.scan_networks()
-#
-#
-#
-#    def wifi_changed(self, combo):
-#        """Handle WiFi selection change"""
-#
-##        print('wifi changed')
-#
-#        # Deactivate IP Address field when WiFi is changed
-#        self.ip_entry.set_text("")
-##        self.ip_entry.set_sensitive(False)
-#        self.connection_successful = False
-#        self.check_fields()
-#
-#        # Set focus to password field and select its content
-#        self.password_entry.grab_focus()
-#        self.password_entry.select_region(0, -1)  # Select all text
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#    def validate_ip_address(self, widget, event=None):
-#        """Validate the IP address when focus leaves the field"""
-#        ip = self.ip_entry.get_text()
-#
-#        # Clear any previous IP-related error messages
-#        self.message.clear_specific_error_messages("IP address")
-#
-#        # Check if IP is valid
-#        try:
-#            # Try to create an IPv4Address object to validate
-#            ipaddress.IPv4Address(ip)
-#            self.ip_valid = True
-#            self.check_fields()
-#            return True
-#        except ValueError:
-#            # If not a valid IP, check if it's a partial IP (like "192.168.")
-#            if re.match(r'^(\d{1,3}\.){1,3}$', ip):
-#                # It's a partial IP, which is fine while typing
-#                self.ip_valid = False
-#                self.check_fields()
-#                return False
-#            else:
-#                # Invalid IP format - show error message now that focus has left
-#                error_msg = f"Invalid IP address format: {ip}"
-#                self.message.add_error_message(error_msg)
-#                self.ip_valid = False
-#                self.check_fields()
-#                return False
-#
-#    def interface_changed(self, combo):
-#        """Handle interface selection change"""
-#
-#        if self._block_interface_changed:
-#            return
-#
-#        print(f'interface_changed() with {combo} was called')
-#
-#        # Clear the Wi-Fi dropdown
-#        self.wifi_combo.remove_all()
-#        self.wifi_list = []
-#
-#        # Deactivate IP Address field when interface is changed
-#        self.ip_entry.set_text("")
-##        self.ip_entry.set_sensitive(False)
-#        self.connection_successful = False
-#
-#        # Clear error and message boxes
-#        self.message.clear_error_messages()
-#        self.message.clear_status_messages()
-#
-#        # Disable UI elements during scan
-##        self.disable_ui_elements()
-#
-#        # Start scanning with the new interface
-#        self.scan_networks()
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-
-#
-#    def check_fields(self):
-#        """Enable OK button only if all fields have content, IP is valid, and IP field is active"""
-#        wifi_selected = self.wifi_combo.get_active() != -1
-#        password_text = self.password_entry.get_text()
-#        ip_text = self.ip_entry.get_text()
-#        ip_field_active = self.ip_entry.get_sensitive()
-#
-#        if (wifi_selected and
-#            password_text and
-#            ip_text and
-#            self.ip_valid and
-#            ip_field_active):  # Check if IP field is active
-#            self.ok_button.set_sensitive(True)
-#        else:
-#            self.ok_button.set_sensitive(False)
-#
-#    def check_server_health(self, ip_address):
-#        """Check if the server is healthy by sending a GET request to the health check endpoint"""
-#        try:
-#            url = f"http://{ip_address}{self.health_check_endpoint}"
-#            self.message.add_status_message(f"Checking server health at {url}...")
-#
-#            # Set a timeout for the request
-#            response = requests.get(url, timeout=10)
-#
-#            # Check if the response is valid JSON
-#            try:
-#                data = response.json()
-#                if response.status_code == 200 and data.get("result") == True:
-#                    return True
-#                else:
-#                    return False
-#            except json.JSONDecodeError:
-#                self.message.add_error_message(f"Invalid JSON response from server: {response.text}")
-#                return False
-#
-#        except requests.exceptions.RequestException as e:
-#            self.message.add_error_message(f"Server health check failed: {str(e)}")
-#            return False
-#
-#    def save_config(self):
-#        """Save the Wi-Fi configuration to the specified file"""
-#        wifi_name = self.wifi_combo.get_active_text()
-#        password = self.password_entry.get_text()
-#        ip_address = self.ip_entry.get_text()
-#        interface = self.interface_combo.get_active_text()
-#
-#        success = True
-#        wifi_success = False
-#        interface_success = False
-#        network_restart_success = False
-#
-#        try:
-#            # Read the template wifi_file
-#            with open(self.temp_wifi_path, 'r') as file:
-#                wifi_content = file.read()
-#
-#            # Replace placeholders with user input
-#            wifi_content = wifi_content.replace("<wifi_id>", wifi_name)
-#            wifi_content = wifi_content.replace("<password>", password)
-#
-#            # Create a temporary file with the content
-#            temp_wifi_file = os.path.join(os.path.dirname(self.temp_wifi_path), 'temp_wifi.conf')
-#            with open(temp_wifi_file, 'w') as file:
-#                file.write(wifi_content)
-#
-#            # Use sudo to copy the file to the destination
-#            result = subprocess.run(
-#                ["sudo", "cp", temp_wifi_file, WifiConfigApp.WIFI_PATH],
-#                capture_output=True, text=True
-#            )
-#
-#            if result.returncode != 0:
-#                raise Exception(f"sudo cp command failed: {result.stderr}")
-#
-#            # Clean up the temporary file
-#            os.remove(temp_wifi_file)
-#
-#            wifi_success = True
-#            status_msg = f"Wi-Fi configuration saved to {WifiConfigApp.WIFI_PATH}"
-#            self.message.add_status_message(status_msg)
-#
-#            # Clear error messages on success
-#            self.message.clear_error_messages()
-#
-#        except Exception as e:
-#            error_msg = f"Failed to save Wi-Fi configuration: {str(e)}"
-#            self.message.add_error_message(error_msg)
-#            success = False
-#
-#        try:
-#            # Read and update the interface template
-#            with open(self.temp_interface_path, 'r') as file:
-#                interface_content = file.read()
-#
-#            # Extract network prefix from IP address (e.g., "192.168.1" from "192.168.1.200")
-#            ip_parts = ip_address.split('.')
-#            gateway = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.1"
-#
-#            # Replace IP address placeholder with user input
-#            interface_content = interface_content.replace("<address>", ip_address)
-#            interface_content = interface_content.replace("<gateway>", gateway)
-#
-#            # Create a temporary file with the content
-#            temp_interface_file = os.path.join(os.path.dirname(self.temp_interface_path), 'temp_interface')
-#            with open(temp_interface_file, 'w') as file:
-#                file.write(interface_content)
-#
-#            # Use sudo to copy the file to the destination
-#            result = subprocess.run(
-#                ["sudo", "cp", temp_interface_file, WifiConfigApp.INTERFACE_PATH],
-#                capture_output=True, text=True
-#            )
-#
-#            if result.returncode != 0:
-#                raise Exception(f"sudo cp command failed: {result.stderr}")
-#
-#            # Clean up the temporary file
-#            os.remove(temp_interface_file)
-#
-#            interface_success = True
-#            status_msg = f"Network interface configuration saved to {WifiConfigApp.INTERFACE_PATH}"
-#            self.message.add_status_message(status_msg)
-#
-#            # Clear error messages on success
-#            if not wifi_success:  # Only clear if not already cleared
-#                self.message.clear_error_messages()
-#
-#        except Exception as e:
-#            error_msg = f"Failed to save interface configuration: {str(e)}"
-#            self.message.add_error_message(error_msg)
-#            success = False
-#
-#        # If both configurations were successful, restart the network interface
-#        if wifi_success and interface_success:
-#            try:
-#                self.message.add_status_message(f"Bringing down interface {interface}...")
-#                # First bring down the interface
-#                result = subprocess.run(
-#                    ["sudo", "ifdown", interface],
-#                    capture_output=True, text=True
-#                )
-#
-#                if result.returncode != 0:
-#                    self.message.add_status_message(f"Warning: ifdown returned: {result.stderr}")
-#
-#                self.message.add_status_message(f"Bringing up interface {interface}...")
-#                # Then bring it back up with the new configuration
-#                result = subprocess.run(
-#                    ["sudo", "ifup", interface],
-#                    capture_output=True, text=True
-#                )
-#
-#                if result.returncode != 0:
-#                    raise Exception(f"ifup command failed: {result.stderr}")
-#
-#                network_restart_success = True
-#                self.message.add_status_message(f"Successfully restarted interface {interface}")
-#
-#                # Check server health after network restart
-#                if network_restart_success:
-#                    self.message.add_status_message("Waiting for network to stabilize...")
-#                    time.sleep(5)  # Give the network some time to stabilize
-#
-#                    # Check server health
-#                    server_healthy = self.check_server_health(ip_address)
-#                    if server_healthy:
-#                        self.message.add_status_message("Server is healthy and responding!")
-#                    else:
-#                        self.add_error_message("Server health check failed. The server may not be running or reachable.")
-#
-#                # Clear error messages on success
-#                self.message.clear_error_messages()
-#
-#            except Exception as e:
-#                error_msg = f"Failed to restart network interface: {str(e)}"
-#                self.message.add_error_message(error_msg)
-#                success = False
-#
-#        # Final status message
-#        if success and network_restart_success:
-#            self.message.add_success_message("Configuration completed, network restarted successfully and the server responding")
-#        elif success:
-#            self.message.add_error_message("Configuration completed successfully, but network restart failed.")
-#        else:
-#            if wifi_success:
-#                self.message.add_error_message("Wi-Fi configuration was successful, but interface configuration failed.")
-#            elif interface_success:
-#                self.message.add_error_message("Interface configuration was successful, but Wi-Fi configuration failed.")
-#            else:
-#                self.message.add_error_message("Configuration failed completely.")
-#
-#        # Re-enable the UI elements
-#        self.enable_ui_elements()
 
 if __name__ == "__main__":
     app = WifiConfigApp()
