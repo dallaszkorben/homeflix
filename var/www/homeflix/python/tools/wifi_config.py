@@ -1018,6 +1018,30 @@ class WifiConfigApp:
     # --
     # OK
     # --
+    def check_server_health(self, ip_address):
+        """Check if the server is healthy by sending a GET request to the health check endpoint"""
+        try:
+            url = f"http://{ip_address}{self.health_check_endpoint}"
+            self.message.add_status_message(f"Checking server health at {url}...")
+
+            # Set a timeout for the request
+            response = requests.get(url, timeout=10)
+
+            # Check if the response is valid JSON
+            try:
+                data = response.json()
+                if response.status_code == 200 and data.get("result") == True:
+                    return True
+                else:
+                    return False
+            except json.JSONDecodeError:
+                self.message.add_error_message(f"Invalid JSON response from server: {response.text}")
+                return False
+
+        except requests.exceptions.RequestException as e:
+            self.message.add_error_message(f"Server health check failed: {str(e)}")
+            return False
+
     def on_ok_clicked(self, button):
         """Handle OK button click"""
 
@@ -1030,7 +1054,6 @@ class WifiConfigApp:
         # Restore the IP field state after save_config re-enables UI elements
 #        self.ip_entry.set_sensitive(ip_field_was_active)
 #        self.check_fields()
-
 
     def save_config(self):
         """Save the Wi-Fi configuration to the specified file"""
