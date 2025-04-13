@@ -514,6 +514,10 @@ class WifiConfigApp:
         # Start scanning with the selected interface
         self.collect_networks()
 
+#----
+
+        self.interface_combo.connect("changed", self.interface_changed)
+
     # -------------------
     # 2. Collect Networks
     # -------------------
@@ -601,12 +605,15 @@ class WifiConfigApp:
             error_msg = f"Scan error 1: {e.stderr if hasattr(e, 'stderr') else str(e)}"
             # Update error message on the main thread
             self.message.add_error_message(error_msg)
-            GLib.idle_add(lambda: self.enable_ui_elements())
+            #GLib.idle_add(lambda: self.enable_ui_elements())
+            self.enable_interface_and_wifi()
+
         except Exception as e:
             error_msg = f"Scan error 2: {str(e)}"
             # Update error message on the main thread
             self.message.add_error_message(error_msg)
-            GLib.idle_add(lambda: self.enable_ui_elements())
+            #GLib.idle_add(lambda: self.enable_ui_elements())
+            self.enable_interface_and_wifi()
 
     def _update_network_dropdown(self, wifi_list):
         """Update the dropdown with found networks"""
@@ -738,7 +745,6 @@ class WifiConfigApp:
         # Deactivate IP Address field when Scan is clicked
         self.ip_entry.set_text("")
         self.password_entry.set_text("")
-        self.ip_entry.set_text("")
 
         self.disable_all()
 
@@ -753,7 +759,7 @@ class WifiConfigApp:
         self.scan_button.set_sensitive(True)
         self.password_entry.set_sensitive(True)
 
-        self.ip_entry.set_sensiteive(False)
+        self.ip_entry.set_sensitive(False)
         self.ok_button.set_sensitive(False)
         self.cancel_button.set_sensitive(True)
 
@@ -794,8 +800,6 @@ class WifiConfigApp:
     def wifi_changed(self, combo):
         """Handle WiFi selection change"""
 
-        #print('wifi changed')
-
         # Deactivate IP Address field when WiFi is changed
         self.ip_entry.set_text("")
         self.connection_successful = False
@@ -815,6 +819,19 @@ class WifiConfigApp:
             self.enable_all_without_ok()
         else:
             self.enable_all_with_ok()
+
+    def interface_changed(self, widget):
+        self.ip_entry.set_text("")
+        self.password_entry.set_text("")
+
+        self.disable_all()
+
+        self.collect_networks()
+
+        self.wifi_combo.get_model().clear()
+
+
+
     #-----------------
     # Control IP field
     #-----------------
