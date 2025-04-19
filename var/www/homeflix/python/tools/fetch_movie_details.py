@@ -6,6 +6,8 @@ import yaml
 # $ pip install cinemagoer
 from imdb import Cinemagoer
 
+# TODO: The dicts and methods out of Class should go somewhere to the main code
+
 country_language = {
     'eu': ['en'],        # European Union (default to English)
     'hu': ['hu'],
@@ -62,14 +64,14 @@ season_title_translate = {
     'ro': 'Sezonul {0}'       # Romanian
 }
 
-def get_country_code(country_name, dictionary):
-    """Get 2-letter country code from country name using dictionary mapping"""
+#def get_country_code_by_country_name(country_name, dictionary):
+#    """Get 2-letter country code from country name using dictionary mapping"""
+#
+#    # Create reverse mapping from country names to codes
+#    country_map = {v.lower(): k for k, v in dictionary['country']['long'].items()}
+#    return country_map.get(country_name.lower())
 
-    # Create reverse mapping from country names to codes
-    country_map = {v.lower(): k for k, v in dictionary['country']['long'].items()}
-    return country_map.get(country_name.lower())
-
-def get_language_code(language_name, dictionary):
+def get_language_code_by_language_name(language_name, dictionary):
     """Get 2-letter language code from language name using dictionary mapping"""
 
     # Create reverse mapping from language names to codes
@@ -78,7 +80,7 @@ def get_language_code(language_name, dictionary):
     # Return the language code if found, None otherwise
     return language_map.get(language_name.lower())
 
-#def convert_countries_to_languages(country_code_list):
+#def get_language_code_list_by_countrie_code_list(country_code_list):
 #    """Convert country codes to their primary language codes"""
 #    language_code_list = []
 #    for country in country_code_list:
@@ -90,8 +92,7 @@ def get_language_code(language_name, dictionary):
 #    # Remove duplicates by converting to set and back to list
 #    return list(set(language_code_list))
 
-
-def convert_language_code_to_country_code(language_code, origins):
+def get_country_code_by_language_code(language_code, origins):
     """
     Convert language code to country code if the country exists in origins list
 
@@ -106,11 +107,11 @@ def convert_language_code_to_country_code(language_code, origins):
 
     Example usage:
     origins = ['us', 'hu', 'ca']
-    result = convert_language_code_to_country_code('en', origins, country_language)
+    result = get_country_code_by_language_code('en', origins, country_language)
     print(result)  # Output: 'us' (or 'ca', depending on which comes first in origins)
-    result = convert_language_code_to_country_code('fr', origins, country_language)
+    result = get_country_code_by_language_code('fr', origins, country_language)
     print(result)  # Output: 'ca'
-    result = convert_language_code_to_country_code('de', origins, country_language)
+    result = get_country_code_by_language_code('de', origins, country_language)
     print(result)  # Output: None
     """
     for country in origins:
@@ -121,7 +122,7 @@ def convert_language_code_to_country_code(language_code, origins):
     return None
 
 
-def convert_country_codes_to_iso_country_code(country_code_list):
+def get_iso_country_code_list_by_country_code_list(country_code_list):
 
     iso_country_code_list = []
     for country_code in country_code_list:
@@ -152,7 +153,7 @@ def convert_country_codes_to_iso_country_code(country_code_list):
 #            else:
 #                # Remove any additional info in parentheses
 #                country_name = country_name.split(',')[0]
-#                country_code = get_country_code(country_name, dictionary)
+#                country_code = get_country_code_by_country_name(country_name, dictionary)
 #
 #            if country_code:
 #                # Get the first language for this country
@@ -409,12 +410,12 @@ class GenerateMediaFileSystem:
 
         # Localization
         origin_language_name = search_results.guessLanguage()
-        origin_language_code = get_language_code(origin_language_name, self.dictionary   )
+        origin_language_code = get_language_code_by_language_name(origin_language_name, self.dictionary   )
         origin_language_code = 'en' if origin_language_code == 'en' else origin_language_code
-        origin_country_code = convert_language_code_to_country_code(origin_language_code, origins)
+        origin_country_code = get_country_code_by_language_code(origin_language_code, origins)
         origin_lang = origin_language_code
         origin_iso_country_code = origin_language_code + "-" + origin_country_code.upper()
-        origin_iso_country_code_list = convert_country_codes_to_iso_country_code(origins)
+        origin_iso_country_code_list = get_iso_country_code_list_by_country_code_list(origins)
         iso_country_code_list = list(set(origin_iso_country_code_list + self.extra_iso_country_code_list + [origin_iso_country_code]))
 
         titles = {}
@@ -585,7 +586,7 @@ if __name__ == "__main__":
     IMDB_ID = "tt0137523"  # IMDB ID for individual movie - Fight club
     IMDB_ID = "tt0098936"  # IMDB ID for series - Twin Peaks
     IMDB_ID = "tt0108778"  # IMDB ID for series - Friends
-    IMDB_ID = "tt0106179"  # IMDB ID for series - X Files
+#    IMDB_ID = "tt0106179"  # IMDB ID for series - X Files
 
     cons_path = os.path.expanduser('~/tmp/homeflix/')
     dest_path = os.path.expanduser('/media/akoel/vegyes/MEDIA/01.Movie/01.Standalone')
