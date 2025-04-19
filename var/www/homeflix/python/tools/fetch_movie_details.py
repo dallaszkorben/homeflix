@@ -69,7 +69,6 @@ def get_country_code(country_name, dictionary):
     country_map = {v.lower(): k for k, v in dictionary['country']['long'].items()}
     return country_map.get(country_name.lower())
 
-
 def get_language_code(language_name, dictionary):
     """Get 2-letter language code from language name using dictionary mapping"""
 
@@ -79,17 +78,17 @@ def get_language_code(language_name, dictionary):
     # Return the language code if found, None otherwise
     return language_map.get(language_name.lower())
 
-def convert_countries_to_languages(country_code_list):
-    """Convert country codes to their primary language codes"""
-    language_code_list = []
-    for country in country_code_list:
-        # Get the first language for each country if it exists in country_language
-        if country in country_language:
-            lang = country_language[country][0]  # Take first language
-            language_code_list.append(lang)
-
-    # Remove duplicates by converting to set and back to list
-    return list(set(language_code_list))
+#def convert_countries_to_languages(country_code_list):
+#    """Convert country codes to their primary language codes"""
+#    language_code_list = []
+#    for country in country_code_list:
+#        # Get the first language for each country if it exists in country_language
+#        if country in country_language:
+#            lang = country_language[country][0]  # Take first language
+#            language_code_list.append(lang)
+#
+#    # Remove duplicates by converting to set and back to list
+#    return list(set(language_code_list))
 
 
 def convert_language_code_to_country_code(language_code, origins):
@@ -104,6 +103,15 @@ def convert_language_code_to_country_code(language_code, origins):
     Returns:
         str: country code if found
         None: if no matching country found
+
+    Example usage:
+    origins = ['us', 'hu', 'ca']
+    result = convert_language_code_to_country_code('en', origins, country_language)
+    print(result)  # Output: 'us' (or 'ca', depending on which comes first in origins)
+    result = convert_language_code_to_country_code('fr', origins, country_language)
+    print(result)  # Output: 'ca'
+    result = convert_language_code_to_country_code('de', origins, country_language)
+    print(result)  # Output: None
     """
     for country in origins:
         if country in country_language:
@@ -111,17 +119,6 @@ def convert_language_code_to_country_code(language_code, origins):
             if language_code in country_language[country]:
                 return country
     return None
-
-# Example usage:
-# origins = ['us', 'hu', 'ca']
-# result = convert_language_code_to_country_code('en', origins, country_language)
-# print(result)  # Output: 'us' (or 'ca', depending on which comes first in origins)
-#
-# result = convert_language_code_to_country_code('fr', origins, country_language)
-# print(result)  # Output: 'ca'
-#
-# result = convert_language_code_to_country_code('de', origins, country_language)
-# print(result)  # Output: None
 
 
 def convert_country_codes_to_iso_country_code(country_code_list):
@@ -138,36 +135,36 @@ def convert_country_codes_to_iso_country_code(country_code_list):
     return list(set(iso_country_code_list))
 
 
-def parse_aka_list(aka_list, dictionary):
-    aka_parsed = []
-
-    for item in aka_list:
-        # Extract title and country using regex
-        import re
-        match = re.match(r'(.*?)\s*\((.*?)\)', item)
-        if match:
-            title = match.group(1).strip()
-            country_name = match.group(2).strip()
-
-            # Handle special cases
-            if 'World-wide' in country_name:
-                country_code = 'us'  # Default to US for worldwide
-            else:
-                # Remove any additional info in parentheses
-                country_name = country_name.split(',')[0]
-                country_code = get_country_code(country_name, dictionary)
-
-            if country_code:
-                # Get the first language for this country
-                lang = country_language.get(country_code, ['en'])[0]
-
-                aka_parsed.append({
-                    'title': title,
-                    'country': country_code,
-                    'lang': lang
-                })
-
-    return aka_parsed
+#def parse_aka_list(aka_list, dictionary):
+#    aka_parsed = []
+#
+#    for item in aka_list:
+#        # Extract title and country using regex
+#        import re
+#        match = re.match(r'(.*?)\s*\((.*?)\)', item)
+#        if match:
+#            title = match.group(1).strip()
+#            country_name = match.group(2).strip()
+#
+#            # Handle special cases
+#            if 'World-wide' in country_name:
+#                country_code = 'us'  # Default to US for worldwide
+#            else:
+#                # Remove any additional info in parentheses
+#                country_name = country_name.split(',')[0]
+#                country_code = get_country_code(country_name, dictionary)
+#
+#            if country_code:
+#                # Get the first language for this country
+#                lang = country_language.get(country_code, ['en'])[0]
+#
+#                aka_parsed.append({
+#                    'title': title,
+#                    'country': country_code,
+#                    'lang': lang
+#                })
+#
+#    return aka_parsed
 
 
 class MyDumper(yaml.Dumper):
