@@ -18,6 +18,7 @@ language:
         zh: Chi
         nl: Dut
         fi: FIN
+        ro: ROM
 
     long:
         hu: Hungarian
@@ -38,6 +39,7 @@ language:
         zh: Chinese
         nl: Dutch
         fi: Finnish
+        ro: Romanian
 
     in_native:
         hu: Magyar
@@ -58,6 +60,7 @@ language:
         zh: 广州话
         nl: Nederlands
         fi: Suomi
+        ro: Român
 
 country:
     short:
@@ -91,11 +94,12 @@ country:
         cn: Chi
         nl: Nld
         fi: FIN
+        ro: ROU
 
     long:
         eu: Europian Union
         hu: Hungary
-        us: USA
+        us: United States
         se: Sweden
         gb: United Kingdom
         es: Spain
@@ -123,6 +127,7 @@ country:
         cn: China
         nl: Netherlands
         fi: Finland
+        ro: Romania
 
 category:
     movie: Movie
