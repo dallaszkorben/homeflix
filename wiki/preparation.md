@@ -146,6 +146,7 @@ python -m pip install distlib
 python -m pip install pyyaml
 python -m pip install ruamel.yaml
 
+python -m pip install cinemagoer
 ```
 
 ### Install extra packages
