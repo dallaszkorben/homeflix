@@ -488,6 +488,8 @@ title:
     movie_least_watched: Least Watched
     movie_most_watched: Most Watched
 
+    movie_search: Search Movie
+
     # Music
     music: Music
     music_level_band: Band level

@@ -135,7 +135,7 @@ class RestGenerator extends Generator{
                 }
 
                 // If meanwhile the history changed - user went back - the load of the thumbnails STOPPED
-                // If a media is played, it does not change the history, sot the load is countinued !
+                // If a media is played, it does not change the history, so the load is countinued !
                 if( startedHash !== this.getHistoryHash(objScrollSection)){
                     return;
                 }
@@ -444,23 +444,39 @@ class GeneralRestGenerator extends RestGenerator{
         this.parent_thumbnail_title = parent_thumbnail_title;
     }
 
+    /* Hack */
+    setMenuDict(menuDict){
+        this.menuDict = menuDict;
+    }
+
+    getMenuDict(){
+        return this.menuDict;
+    }
+
     produceContainers(objScrollSection){
         const refToThis = this;
         const containerConfigList = this.menuDict.container_list ?? [];
+        const containerType = this.menuDict.container_type ?? "normal"
         const containerList = [];
         let requestList = [];
 
-        let requestType = null;
+//        let requestType = null;
+        let watingForStopSpinner = false;
 
         Generator.startSpinner();
         setTimeout(function() {
+
+            if (containerType === "search"){
+                $("#control-container-add-section").show();
+            }
 
             // Go through all the containers
             for (let containerDict of containerConfigList) {
 
                 const descriptorStaticHardCodedDict = containerDict.static_hard_coded ?? null;
                 const descriptorDynamicHardCodedDict = containerDict.dynamic_hard_coded ?? null;
-                const descriptorDynamicQueried = containerDict.dynamic_queried ?? null;
+                const descriptorDynamicQueriedDict = containerDict.dynamic_queried ?? null;
+                const descriptorDynamicSearchDict = containerDict.dynamic_search ?? null;
                 const containerOrder = containerDict.order ?? 0
 
                 // Static - Hard Coded Container Definitions
@@ -508,7 +524,8 @@ class GeneralRestGenerator extends RestGenerator{
                             "continuous": []
                         });
                         containerInstance.addThumbnail(thumbnailOrder, thumbnailInstance);
-                        requestType = "static";
+                        //requestType = "static";
+                        //watingForStopSpinner = false;
 
                     }
                     containerList.push(containerInstance);
@@ -534,13 +551,43 @@ class GeneralRestGenerator extends RestGenerator{
                     const request = {title: container_title, rq_static: rq_static, rq_method: rq_method, rq_url: rq_protocol + "://" + host + port + rq_path, rq_data: rq_data};
                     requestList.push(request);
 
+                    watingForStopSpinner = true;
+                    //requestType = "dynamic";
 
-                    requestType = "dynamic";
+//                // Dynamic - Hard Search Definitions
+//                }else if(descriptorDynamicSearchDict !== null){
+//                    const container_title_list = descriptorDynamicSearchDict.title ?? [];
+//                    const container_title = eval(buildTitleFromTitleList(container_title_list));
+//
+//                    const data = descriptorDynamicSearchDict.data ?? {};
+//                    const requestDict = descriptorDynamicSearchDict.request ?? {static: true, method: "GET", protocol: "http", url: ""};
+//                    const rq_static = requestDict.static;
+//                    const rq_method = requestDict.method;
+//                    const rq_protocol = requestDict.protocol;
+//                    const rq_path = requestDict.path;
+//
+//                    let rq_data = {}
+//                    for( const[key, value] of Object.entries(data)){
+//                        rq_data[key] = value;
+//                    };
+//                    rq_data["lang"] = refToThis.language_code;
+//
+//                    const request = {title: container_title, rq_static: rq_static, rq_method: rq_method, rq_url: rq_protocol + "://" + host + port + rq_path, rq_data: rq_data};
+//                    requestList.push(request);
+//
+//
+//                    $("#control-container-add-section").show();
+//                    //let ccas = $("#control-container-add-section");
+//                    //ccas.html("➕");
+//
+//
+//                    requestType = "dynamic";
+////                    requestType = "static";
 
                 // Dynamic - Queried Container Definitions
-                }else if(descriptorDynamicQueried !== null){
+                }else if(descriptorDynamicQueriedDict !== null){
 
-                    let pre_query_dict = descriptorDynamicQueried.pre_query ?? {};
+                    let pre_query_dict = descriptorDynamicQueriedDict.pre_query ?? {};
                     let pre_query_data_dict = pre_query_dict.data ?? {};
                     let pre_query_request_dict = pre_query_dict.request ?? {};
                     let pre_rq_satic = pre_query_request_dict.static ?? true;
@@ -548,7 +595,7 @@ class GeneralRestGenerator extends RestGenerator{
                     let pre_rq_protocol = pre_query_request_dict.protocol ?? "http";
                     let pre_rq_path = pre_query_request_dict.path ?? "";
                     let pre_rq_assync = false;
-                    let query_loop_dict = descriptorDynamicQueried.query_loop ?? {};
+                    let query_loop_dict = descriptorDynamicQueriedDict.query_loop ?? {};
                     let query_data_dict = query_loop_dict.data ?? {};
 
                     let query_data_dict_map_dict = null;
@@ -596,7 +643,8 @@ class GeneralRestGenerator extends RestGenerator{
                                 requestList.push(request);
                             }
 
-                            requestType = "dynamic";
+                            watingForStopSpinner = true;
+                            //requestType = "dynamic";
 
                         // In case of VALUE list response from the pre-request
                         }else if(query_data_list_map_value !== null){
@@ -609,7 +657,8 @@ class GeneralRestGenerator extends RestGenerator{
                                 requestList.push(request);
                             }
 
-                            requestType = "dynamic";
+                            watingForStopSpinner = true;
+                            //requestType = "dynamic";
                         }
                     }
                 }
@@ -619,7 +668,8 @@ class GeneralRestGenerator extends RestGenerator{
                 refToThis.showAllThumbnails(requestList, objScrollSection);
             }
 
-            if(requestType === "static"){
+            //if(requestType === "static"){
+            if(!watingForStopSpinner){
                 containerList.forEach(oContainer => {
                     objScrollSection.addThumbnailContainerObject(oContainer);
                 });

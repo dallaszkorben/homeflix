@@ -545,9 +545,29 @@ body {
     text-decoration: underline;
 }
 
-/* --- */
+#control-container-add-section{
+    cursor: pointer;
+    display: inline-block;
+    float: right;  /* This will align it to the right */
+    /* Alternative positioning method:*/
+    /*position: absolute;
+    right: 0;*/
 
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
 
+    /* hue-rotate: 0deg or 360deg = red
+                   ~215deg = blue
+                   ~120deg = green
+                   ~280deg = purple
+                   ~45deg = orange
+                   ~160deg = cyan */
+    /* Red
+    filter: invert(0%) sepia(100%) saturate(3000%) hue-rotate(360deg) brightness(100%) contrast(100%); */
+    /* Blue */
+    filter: invert(0%) sepia(100%) saturate(3000%) hue-rotate(215deg) brightness(100%) contrast(100%);
+}
 
 #scroll-section {
     box-sizing: border-box;                                     /* element and padding and border are included in the width and height */
@@ -560,8 +580,6 @@ body {
     border: var(--scroll-section-border-width) var(--scroll-section-border-color) solid;
     background-color: var(--scroll-section-background);
 }
-
-
 
 .thumbnail-container-block {
     box-sizing:border-box;                                      /* element and padding and border are included in the width and height */

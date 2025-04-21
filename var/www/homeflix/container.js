@@ -43,7 +43,6 @@ class ObjScrollSection {
         this.oDescriptionContainer.setThumbnailController(objThumbnailController);
 
         this.resetDom();
-
         this.oContainerGenerator.produceContainers(this);
     }
 
@@ -52,11 +51,20 @@ class ObjScrollSection {
         this.domScrollSection = $("#scroll-section");
         this.domScrollSection.empty();
 
+        // ! Not only the dom should be reset but
+//        this.thumbnailContainerList=[]
+//        this.numberOfContainers=0
+//        this.focusedThumbnailList=[]
+//        this.currentContainerIndex = -1;
+
+
         let tsht = $("#history-section-text");
         tsht.html(this.historyLevels["text"]);
 
         let tshl = $("#history-section-link");
         tshl.html(this.historyLevels["link"]);
+
+        $("#control-container-add-section").hide();
     }
 
     /**
@@ -1767,11 +1775,65 @@ class ThumbnailController {
 
         this.objScrollSection = new ObjScrollSection({ oContainerGenerator: mainMenuGenerator, objThumbnailController: this });
 
+        // Listener for History back
         let tshl = $("#history-section-link");
         tshl.click(function () {
             let esc = $.Event("keydown", { keyCode: 27 });
             $(document).trigger(esc);
         });
+
+        let refToThis = this;
+
+        // Listener for Control Container Add link
+        let ccas = $("#control-container-add-section");
+        ccas.click(function () {
+            refToThis.addNewThumbnailContainer();
+        });
+    }
+
+    addNewThumbnailContainer(){
+        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
+
+        let origMenuDict = oContainerGenerator.getMenuDict();
+        let container_list = origMenuDict.container_list ?? []
+
+        // TODO: Not good. If I remove an element, then I should re-order the whole list !
+        let order = container_list.length
+        console.log(origMenuDict);
+
+        let thumbnailContainerElement =
+        {
+          "order": order,
+          "dynamic_hard_coded":{
+              "title": [
+                  {
+                      "text": "Saját keresés"
+                  }
+              ],
+              "data": {
+                "category": "movie",
+                "ggenres": "scifi",
+                "ddirectors": "Stanley Kubrick",
+                "aactors": "Jack Nicholson",
+                "aactors": "Kevin Spacey",
+                "wwriters": "Stephen King",
+                "rrate_value": 3,
+                "origins": "de"
+              },
+              "request": {
+                  "method": "GET",
+                  "protocol": "http",
+                  "path": "/collect/highest/mixed"
+              }
+          }
+        }
+
+        container_list.push(thumbnailContainerElement)
+        origMenuDict.container_list = container_list;
+
+        oContainerGenerator.setMenuDict(origMenuDict);
+
+        this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
     }
 
     /*

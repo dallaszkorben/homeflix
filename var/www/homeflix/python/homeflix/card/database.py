@@ -2285,6 +2285,7 @@ class SqlDatabase:
         filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
         filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
 
+        # because of the role in the actors
         if field_name == "actors":
             filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["';' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%;" + filter.removeprefix("_NOT_") + ":%'" for filter in filter_list]) + ')'
         else:
@@ -2808,7 +2809,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_highest_level_cards(self, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_highest_level_cards(self, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for highest level list                ---
         Returns mixed standalone media and level cards   ---
@@ -2828,6 +2829,7 @@ class SqlDatabase:
           - genres
           - themes
           - actors
+          - writers
           - directors
           - lecturers
           - origins
@@ -2846,7 +2848,7 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
 
                 query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
@@ -2863,8 +2865,8 @@ class SqlDatabase:
                 my_records = [{key: record[key] for key in record.keys()} for record in records]
 
                 for record in my_records:
-                    logging.error(record)
-                logging.error("\n\n\n")
+                    logging.debug(f'Response: {record}')
+                logging.debug("\n\n\n")
 
 
 
@@ -2873,7 +2875,7 @@ class SqlDatabase:
 
             except sqlite3.Error as e:
                 error_message = "Fetching the highest level card failed: {0}".format(e)
-                logging.error(error_message)
+                logging.error(f'Error in the request process: {error_message}')
 
             finally:
                 cur.close()
@@ -3050,11 +3052,12 @@ class SqlDatabase:
 
 # RAW Queries
 
-    def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+    def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None):
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
         actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+        writers_where = self.get_sql_where_condition_from_text_filter(writers, 'writers')
         directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
         lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
         performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
@@ -3577,6 +3580,10 @@ class SqlDatabase:
                             AND ''' + directors_where if directors_where else '') + '''
 
                             ''' + ('''
+                            --- WHERE WRITERS - conditional ---
+                            AND ''' + writers_where if writers_where else '') + '''
+
+                            ''' + ('''
                             --- WHERE ACTORS - conditional ---
                             AND ''' + actors_where if actors_where else '') + '''
 
@@ -3987,7 +3994,8 @@ class SqlDatabase:
                 ON tggng.id_card=core.id
 
             WHERE
-                mixed_id_list.id=core.id
+                mixed_id_list.id=core.id''' + ( ('''
+                AND rtng.rate >= ''' + str(rate_value) ) if rate_value else '') + '''
 
             ORDER BY CASE
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req

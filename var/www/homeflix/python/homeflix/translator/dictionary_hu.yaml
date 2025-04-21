@@ -488,6 +488,8 @@ title:
     movie_least_watched: Legritkábban nézett
     movie_most_watched: Leggyakrabban nézett
 
+    movie_search: Keresés
+
     # Music
     music: Zene
     music_level_band: Együttes szint
