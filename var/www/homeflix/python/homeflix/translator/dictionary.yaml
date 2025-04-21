@@ -624,7 +624,6 @@ interaction_labels:
                 rebuild_personal_db: Rebuild Personal DB
                 update_software: Update Software
 
-
     dialog:
         login:
             title: Login
@@ -632,6 +631,21 @@ interaction_labels:
             labels:
                 username: Name
                 password: Password
+            buttons:
+                submit: Submit
+                cancel: Cancel
+
+        search:
+            title: Search Media
+            message: blabla
+            labels:
+                title: Search title
+                writer: Writer
+                director: Director
+                actor: Actor
+                genre: Genre
+                origin: Country
+                rate: Rate
             buttons:
                 submit: Submit
                 cancel: Cancel

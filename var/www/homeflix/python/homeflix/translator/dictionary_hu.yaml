@@ -624,7 +624,6 @@ interaction_labels:
                 rebuild_personal_db: Személyes adatbázis törlése
                 update_software: Szoftver frissítés
 
-
     dialog:
         login:
             title: Bejelentkezés
@@ -634,6 +633,21 @@ interaction_labels:
                 password: Jelszó
             buttons:
                 submit: Jóváhagyás
+                cancel: Elvet
+
+        search:
+            title: Média keresés
+            message: blabla
+            labels:
+                title: Keresési cím
+                writer: Író
+                director: Rendező
+                actor: Szereplő
+                genre: Műfaj
+                origin: Ország
+                rate: Értékelés
+            buttons:
+                submit: Keresés
                 cancel: Elvet
 
         continue_interrupted_playback:

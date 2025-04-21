@@ -1787,19 +1787,130 @@ class ThumbnailController {
         // Listener for Control Container Add link
         let ccas = $("#control-container-add-section");
         ccas.click(function () {
-            refToThis.addNewThumbnailContainer();
+            refToThis.addNewThumbnailContainerForm();
         });
     }
 
-    addNewThumbnailContainer(){
-        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
+    addNewThumbnailContainerForm(){
+        let refToThis = this;
 
+        // Disable keys behind the Dialog() - prevent the ESC button to go back in history
+        refToThis.originalTask = refToThis.focusTask;
+        refToThis.focusTask = FocusTask.Modal_Continue_Play;
+
+        let submit_button = translated_interaction_labels['dialog']['search']['buttons']['submit'];
+        let cancel_button = translated_interaction_labels['dialog']['search']['buttons']['cancel'];
+
+        /* Search dialog form */
+        $("#dialog-form-search label[for='title']").html(translated_interaction_labels['dialog']['search']['labels']['title']);
+        $("#dialog-form-search label[for='genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre']);
+        $("#dialog-form-search label[for='director']").html(translated_interaction_labels['dialog']['search']['labels']['director']);
+        $("#dialog-form-search label[for='writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer']);
+        $("#dialog-form-search label[for='actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor']);
+        $("#dialog-form-search label[for='origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin']);
+        $("#dialog-form-search label[for='rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
+
+        // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
+        setTimeout(() => {
+            $("#dialog-form-search").dialog({
+                resizable: false,
+                height: "auto",
+                width: 400,
+                modal: true,
+                title: translated_interaction_labels['dialog']['search']['title'],
+                buttons: {
+                    [submit_button]: function() {
+                        $( this ).dialog( "close" );
+                        var title = $("#title").val();
+                        var genre = $("#genre").val();
+                        var director = $("#director").val();
+                        var writer = $("#writer").val();
+                        var actor = $("#actor").val();
+                        var origin = $("#origin").val();
+                        var rate = $("#rate").val();
+
+                        refToThis.addNewThumbnailContainerExecution(title, genre, director, writer, actor, origin, rate);
+                    },
+                    [cancel_button]: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+
+                // Right/Left button to focus buttons
+                open: function() {
+                    const buttons = $(this).parent().find(".ui-dialog-buttonset button");
+                    let focusedButtonIndex = 0;
+
+                    $(document).on("keydown.arrowKeys", function(event) {
+                      if (event.key === "ArrowRight") {
+                        focusedButtonIndex = (focusedButtonIndex + 1) % buttons.length;
+                        buttons.eq(focusedButtonIndex).focus();
+                        event.preventDefault();
+                      } else if (event.key === "ArrowLeft") {
+                        focusedButtonIndex = (focusedButtonIndex - 1 + buttons.length) % buttons.length;
+                        buttons.eq(focusedButtonIndex).focus();
+                        event.preventDefault();
+                      }
+                    });
+
+                    $(this).parent().find(".ui-dialog-buttonpane button:first").focus();
+                },
+
+                // Prevent the ESC button to go back in history
+                beforeClose: function(event){
+
+                    if (event.originalEvent && event.originalEvent.key === "Escape") {
+
+                        // Delay needed to not propagate ESC
+                        setTimeout(function () {
+                            refToThis.focusTask = refToThis.originalTask;
+                        }, 200);
+                    }else{
+                        refToThis.focusTask = refToThis.originalTask;
+                    }
+                },
+
+                // It executed anyway
+                close: function() {
+                    $(this).dialog("destroy");
+                }
+            });
+        }, 200);
+    }
+
+    addNewThumbnailContainerExecution(title, genre, director, writer, actor, origin, rate){
+
+        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
         let origMenuDict = oContainerGenerator.getMenuDict();
         let container_list = origMenuDict.container_list ?? []
 
         // TODO: Not good. If I remove an element, then I should re-order the whole list !
         let order = container_list.length
-        console.log(origMenuDict);
+
+        if(title == ""){
+            title = "My search"
+        }
+
+        let data = {};
+        data["category"] = "movie"
+        if(genre !== ""){
+            data["genres"] = genre;
+        }
+        if(director !== ""){
+            data["directors"] = director;
+        }
+        if(writer !== ""){
+            data["writers"] = writer;
+        }
+        if(actor !== ""){
+            data["actors"] = actor;
+        }
+        if(origin !== ""){
+            data["origins"] = origin;
+        }
+        if(rate !== ""){
+            data["rate_value"] = rate;
+        }
 
         let thumbnailContainerElement =
         {
@@ -1807,26 +1918,45 @@ class ThumbnailController {
           "dynamic_hard_coded":{
               "title": [
                   {
-                      "text": "Saját keresés"
+                      "text": title
                   }
               ],
-              "data": {
-                "category": "movie",
-                "ggenres": "scifi",
-                "ddirectors": "Stanley Kubrick",
-                "aactors": "Jack Nicholson",
-                "aactors": "Kevin Spacey",
-                "wwriters": "Stephen King",
-                "rrate_value": 3,
-                "origins": "de"
-              },
+              "data": data,
               "request": {
                   "method": "GET",
                   "protocol": "http",
-                  "path": "/collect/highest/mixed"
+                  "path": "/collect/highest/mixed",
+                  "static": true
               }
           }
         }
+
+//        let thumbnailContainerElement2 =
+//        {
+//          "order": order,
+//          "dynamic_hard_coded":{
+//              "title": [
+//                  {
+//                      "text": "Saját keresés"
+//                  }
+//              ],
+//              "data": {
+//                "category": "movie",
+//                "genres": "scifi",
+//                "ddirectors": "Stanley Kubrick",
+//                "aactors": "Jack Nicholson",
+//                "aactors": "Kevin Spacey",
+//                "wwriters": "Stephen King",
+//                "rrate_value": 3,
+//                "origins": "de"
+//              },
+//              "request": {
+//                  "method": "GET",
+//                  "protocol": "http",
+//                  "path": "/collect/highest/mixed"
+//              }
+//          }
+//        }
 
         container_list.push(thumbnailContainerElement)
         origMenuDict.container_list = container_list;
@@ -2021,7 +2151,6 @@ class ThumbnailController {
                         zIndex: 1100,
                         title: translated_interaction_labels['dialog']['continue_interrupted_playback']['title'],
 
-                        // },
                         buttons: {
                             [continue_button]: function() {
                                 $( this ).dialog( "close" );
