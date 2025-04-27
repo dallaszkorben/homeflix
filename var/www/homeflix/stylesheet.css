@@ -1079,7 +1079,7 @@ body {
   width: 100%;
 }
 
-.dialog-form-search-separator {
+.dialog-search-separator {
   border-bottom: 2px solid #ccc;
   height: 1px;
   margin: 0 -15px;
@@ -1087,6 +1087,14 @@ body {
   margin-top: 0px;
   width: 100%;
 }
+
+/**************
+ *
+ * Combobox
+ *
+***************/
+
+
 
 
 

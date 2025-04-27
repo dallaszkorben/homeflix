@@ -1802,18 +1802,27 @@ class ThumbnailController {
         let cancel_button = translated_interaction_labels['dialog']['search']['buttons']['cancel'];
 
         /* Search dialog form */
-        $("#dialog-form-search label[for='container-title']").html(translated_interaction_labels['dialog']['search']['labels']['container_title'] + ': ');
-        $("#dialog-form-search label[for='genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre'] + ': ');
-        $("#dialog-form-search label[for='theme']").html(translated_interaction_labels['dialog']['search']['labels']['theme'] + ': ');
-        $("#dialog-form-search label[for='director']").html(translated_interaction_labels['dialog']['search']['labels']['director'] + ': ');
-        $("#dialog-form-search label[for='writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer'] + ': ');
-        $("#dialog-form-search label[for='actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor'] + ': ');
-        $("#dialog-form-search label[for='origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin'] + ': ');
-        $("#dialog-form-search label[for='tag']").html(translated_interaction_labels['dialog']['search']['labels']['tag'] + ': ');
-        $("#dialog-form-search label[for='show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');
-        $("#dialog-form-search label[for='view-state']").html(translated_interaction_labels['dialog']['search']['labels']['view_state'] + ': ');
-        $("#dialog-form-search label[for='rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-container-title']").html(translated_interaction_labels['dialog']['search']['labels']['container_title'] + ': ');
 
+        // Genre
+        $("#dialog-form-search label[for='dialog-search-genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre'] + ': ');
+        createCombobox('dialog-search-genre', translated_genre_movie);
+
+        // Theme
+        $("#dialog-form-search label[for='dialog-search-theme']").html(translated_interaction_labels['dialog']['search']['labels']['theme'] + ': ');
+        createCombobox('dialog-search-theme', translated_themes);
+
+        // Director
+        $("#dialog-form-search label[for='dialog-search-director']").html(translated_interaction_labels['dialog']['search']['labels']['director'] + ': ');
+        createCombobox('dialog-search-director', all_movie_director_list);
+
+        $("#dialog-form-search label[for='dialog-search-writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-tag']").html(translated_interaction_labels['dialog']['search']['labels']['tag'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-view-state']").html(translated_interaction_labels['dialog']['search']['labels']['view_state'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate'] + ': ');
 
         // Shown level
         $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_titles['movie_show_level_highest']);
@@ -1825,7 +1834,7 @@ class ThumbnailController {
         $("#dialog-form-search select option[value='most_watched']").html(translated_titles['movie_most_watched']);
 
         // Show rate
-        $("#dialog-form-search label[for='rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
+        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
 
         // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
         setTimeout(() => {
@@ -1840,17 +1849,20 @@ class ThumbnailController {
                 buttons: {
                     [submit_button]: function() {
                         $( this ).dialog( "close" );
-                        var container_title = $("#container-title").val();
-                        var genre = $("#genre").val();
-                        var theme = $("#theme").val();
-                        var director = $("#director").val();
-                        var writer = $("#writer").val();
-                        var actor = $("#actor").val();
-                        var origin = $("#origin").val();
-                        var tag = $("#tag").val();
-                        var show_level = $("#show-level").val();
-                        var view_state = $("#view-state").val();
-                        var rate = $("#rate").val();
+                        var container_title = $("#dialog-search-container-title").val();
+                        // var genre = $("#dialog-search-genre").val();
+                        // var theme = $("#dialog-search-theme").val();
+                        var genre = getComboboxValue('#dialog-search-genre');
+                        var theme = getComboboxValue('#dialog-search-theme');
+
+                        var director = $("#dialog-search-director").val();
+                        var writer = $("#dialog-search-writer").val();
+                        var actor = $("#dialog-search-actor").val();
+                        var origin = $("#dialog-search-origin").val();
+                        var tag = $("#dialog-search-tag").val();
+                        var show_level = $("#dialog-search-show-level").val();
+                        var view_state = $("#dialog-search-view-state").val();
+                        var rate = $("#dialog-search-rate").val();
 
                         var data_dict = {
                             "container_title": container_title,
@@ -1894,10 +1906,10 @@ class ThumbnailController {
 
                     // Calculate and set the horizontal divider
                     let dialogWidth = $('#dialog-form-search').width();
-//                    $('.dialog-form-search-separator').css('width', `calc(100% + ${dialogWidth - 325}px)`);
+//                    $('.dialog-search-separator').css('width', `calc(100% + ${dialogWidth - 325}px)`);
 
                     // If the css of the dialog changes, this calculation must be changed as well
-                    $('.dialog-form-search-separator').css('width', `calc(100% + 24px)`);
+                    $('.dialog-search-separator').css('width', `calc(100% + 24px)`);
                 },
 
                 // Prevent the ESC button to go back in history

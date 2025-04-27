@@ -63,6 +63,7 @@
         let translated_genre_movie;
         let translated_categories;
         let translated_themes;
+        let all_movie_director_list;
 
         // Load Version
         rq_method = "GET";
@@ -120,6 +121,19 @@
         rq_assync = false;
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         translated_levels = result.responseJSON;
+
+        // Load all Directors
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/collect/directors/by/movie/count";
+        rq_assync = false;
+        data = {
+            "category": "movie",
+            "minimum": 1,
+            "limit": 9999,
+        };
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
+        all_movie_director_list = result.responseJSON["data"];
+
 
         /*
         Substitute substrings, similar to "Hello {0}".format("world") mechanizm
@@ -398,6 +412,175 @@
                 return level;
             }
         }
+
+// ---
+
+function createCombobox(inputId, sourceData) {
+    // Generate unique container class for this instance
+    const containerClass = `custom-combobox-${inputId}`;
+
+    // First, clean up any existing combobox elements
+    $(`.combobox-toggle-${inputId}`).remove(); // Remove existing button
+    $(`.${containerClass}`).children().unwrap(); // Unwrap existing container
+
+    // Convert the select/input to input if it's not already
+    $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
+
+    // Create array of options from the source data
+    const options = Array.isArray(sourceData)
+        ? sourceData.map(item => ({
+            value: item,
+            label: item
+          }))
+        : Object.entries(sourceData).map(([dictKey, dictValue]) => ({
+            value: dictKey,
+            label: dictValue
+          }));
+
+    // Initialize autocomplete
+    $(`#${inputId}`).autocomplete({
+        source: function(request, response) {
+            if (request.term === '') {
+                response(options);
+                return;
+            }
+            const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+            response(options.filter(option =>
+                matcher.test(option.label) || matcher.test(option.value)
+            ));
+        },
+        minLength: 0,
+        select: function(event, ui) {
+            $(this).val(ui.item.label);
+            $(this).attr('data-value', ui.item.value);
+            return false;
+        }
+    }).on('blur', function() {
+        const currentValue = $(this).val();
+        if (currentValue) {
+            const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
+            const exactMatch = options.find(option =>
+                exactMatcher.test(option.label) || exactMatcher.test(option.value)
+            );
+
+            if (exactMatch) {
+                $(this).val(exactMatch.label);
+                $(this).attr('data-value', exactMatch.value);
+            } else {
+                const partialMatcher = new RegExp($.ui.autocomplete.escapeRegex(currentValue), "i");
+                const partialMatch = options.find(option =>
+                    partialMatcher.test(option.label) || partialMatcher.test(option.value)
+                );
+
+                if (partialMatch) {
+                    $(this).val(partialMatch.label);
+                    $(this).attr('data-value', partialMatch.value);
+                } else {
+                    $(this).val('');
+                    $(this).attr('data-value', '');
+                }
+            }
+        } else {
+            $(this).attr('data-value', '');
+        }
+    });
+
+    // Create and add the button
+    $(`#${inputId}`).after(
+        $('<button>', {
+            tabindex: -1,
+            type: 'button',
+            title: 'Show All Items',
+            class: `ui-button ui-widget ui-button-icon-only combobox-toggle-${inputId} noselect`,
+            html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
+        }).on('click', function(e) {
+            e.preventDefault();
+
+            // Get the button and input elements
+            const button = $(this);
+            const input = $(`#${inputId}`);
+
+            // Disable the button temporarily to prevent rapid clicks
+            button.prop('disabled', true);
+
+            // Reset autocomplete and show dropdown
+            input.autocomplete('instance').search('');
+            input.focus();
+
+            // Re-enable the button after a short delay
+            setTimeout(() => {
+                button.prop('disabled', false);
+            }, 1000);
+        })
+    );
+
+    // Add the CSS if it doesn't exist
+    if (!$(`#combobox-styles-${inputId}`).length) {
+        const css = `
+            .${containerClass} {
+                position: relative;
+                display: inline-block;
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            .combobox-toggle-${inputId} {
+                position: absolute;
+                top: 0;
+                right: 0;
+                height: 100%;
+                margin-right: 0;
+                cursor: pointer;
+            }
+            .ui-autocomplete {
+                max-height: 200px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                z-index: 9999;
+            }
+            #${inputId} {
+                width: calc(100% - 30px);
+                padding-right: 0;
+                box-sizing: border-box;
+            }
+            .noselect {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }`;
+
+        $('<style>', {
+            id: `combobox-styles-${inputId}`
+        }).text(css).appendTo('head');
+    }
+
+    // Wrap input and button in a container
+    $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
+}
+
+
+
+
+// Function to get the selected value (key)
+function getComboboxValue(inputId) {
+    return $(`${inputId}`).attr('data-value') || '';
+}
+
+// Function to get the displayed text
+function getComboboxText(inputId) {
+    return $(`${inputId}`).val() || '';
+}
+
+
+
+
+
+
+
+
+
 
 
 // TODO with the other translated_???? dictionaries
@@ -926,52 +1109,72 @@
         <fieldset>
             <table>
                 <tr>
-                    <td><label for="container-title">Title: </label></td>
-                    <td><input type="text" name="container-title" id="container-title" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-container-title">Title: </label></td>
+                    <td><input type="text" name="dialog-search-container-title" id="dialog-search-container-title" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
-<!--                <tr><td colspan="2"><hr></td></tr>  -->
-                    <tr><td colspan="2"><div class="dialog-form-search-separator"></div></td></tr>
-                <tr>
-                    <td><label for="genre">Genre: </label></td>
-                    <td><input type="text" name="genre" id="genre" class="text ui-widget-content ui-corner-all"></td>
+                    <tr><td colspan="2"><div class="dialog-search-separator"></div></td>
                 </tr>
+
+                <!-- Genre -->
                 <tr>
-                    <td><label for="theme">Theme: </label></td>
-                    <td><input type="text" name="theme" id="theme" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-genre">Genre: </label></td>
+                    <td><input type="text" name="dialog-search-genre" id="dialog-search-genre" class="text ui-widget-content ui-corner-all" /></td>
+                    <!-- <td><select name="dialog-search-genre" id="dialog-search-genre" class="ui-widget-content ui-corner-all" /></td> -->
                 </tr>
+
+                <!-- Theme -->
                 <tr>
-                    <td><label for="director">Directors: </label></td>
-                    <td><input type="text" name="director" id="director" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-theme">Theme: </label></td>
+                    <td><input type="text" name="dialog-search-theme" id="dialog-search-theme" class="text ui-widget-content ui-corner-all" /></td>
+                    <!-- <td><select name="dialog-search-theme" id="dialog-search-theme" class="ui-widget-content ui-corner-all"/></td> -->
                 </tr>
+
+                <!-- Director -->
                 <tr>
-                    <td><label for="writer">Writers: </label></td>
-                    <td><input type="text" name="writer" id="writer" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-director">Directors: </label></td>
+                    <td><input type="text" name="dialog-search-director" id="dialog-search-director" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
+
+                <!-- Writer -->
                 <tr>
-                    <td><label for="actor">Actors: </label></td>
-                    <td><input type="text" name="actor" id="actor" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-writer">Writers: </label></td>
+                    <td><input type="text" name="dialog-search-writer" id="dialog-search-writer" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
+
+                <!-- Actor -->
                 <tr>
-                    <td><label for="origin">Origins: </label></td>
-                    <td><input type="text" name="origin" id="origin" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-actor">Actors: </label></td>
+                    <td><input type="text" name="dialog-search-actor" id="dialog-search-actor" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
+
+                <!-- Origin -->
                 <tr>
-                    <td><label for="tag">Tag: </label></td>
-                    <td><input type="text" name="tag" id="tag" class="text ui-widget-content ui-corner-all"></td>
+                    <td><label for="dialog-search-origin">Origins: </label></td>
+                    <td><input type="text" name="dialog-search-origin" id="dialog-search-origin" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
+
+                <!-- Tag -->
                 <tr>
-                    <td><label for="show-level">View State: </label></td>
+                    <td><label for="dialog-search-tag">Tag: </label></td>
+                    <td><input type="text" name="dialog-search-tag" id="dialog-search-tag" class="text ui-widget-content ui-corner-all"></td>
+                </tr>
+
+                <!-- Show Level -->
+                <tr>
+                    <td><label for="dialog-search-show-level">View State: </label></td>
                     <td>
-                        <select name="show-level" id="show-level" class="ui-widget-content ui-corner-all">
+                        <select name="dialog-search-show-level" id="dialog-search-show-level" class="ui-widget-content ui-corner-all">
                             <option value="/collect/highest/mixed">Highest</option>
                             <option value="/collect/lowest">Lowest</option>
                         </select>
                     </td>
                 </tr>
+
+                <!-- View State -->
                 <tr>
-                    <td><label for="view-state">View State: </label></td>
+                    <td><label for="dialog-search-view-state">View State: </label></td>
                     <td>
-                        <select name="view-state" id="view-state" class="ui-widget-content ui-corner-all">
+                        <select name="dialog-search-view-state" id="dialog-search-view-state" class="ui-widget-content ui-corner-all">
                             <option value=""></option>
                             <option value="interrupted"></option>
                             <option value="last_watched"></option>
@@ -979,10 +1182,12 @@
                         </select>
                     </td>
                 </tr>
+
+                <!-- Rate -->
                 <tr>
-                    <td><label for="rate">Rate: </label></td>
+                    <td><label for="dialog-search-rate">Rate: </label></td>
                     <td>
-                        <select name="rate" id="rate" class="ui-widget-content ui-corner-all">
+                        <select name="dialog-search-rate" id="dialog-search-rate" class="ui-widget-content ui-corner-all">
                             <option value=""></option>
                             <option value="1">★</option>
                             <option value="2">★★</option>
