@@ -483,10 +483,14 @@ title:
     movie_by_title_abc: Film címek ABC-ben
 
     movie_playlists: Lejátszási listák
-    movie_interrupted: Folytasd
+    movie_continue_playing: Folytasd
+    movie_interrupted: Megszakítva
     movie_last_watched: Utoljára nézett
     movie_least_watched: Legritkábban nézett
     movie_most_watched: Leggyakrabban nézett
+
+    movie_show_level_highest: Legmagasabb
+    movie_show_level_lowest: Legalacsonyabb
 
     movie_search: Keresés
 
@@ -639,12 +643,16 @@ interaction_labels:
             title: Média keresés
             message: blabla
             labels:
-                title: Keresési cím
+                container_title: Találati konténer cím
                 writer: Író
                 director: Rendező
                 actor: Szereplő
                 genre: Műfaj
+                theme: Téma
                 origin: Ország
+                tag: Cimke
+                show_level: Mutatott szint
+                view_state: Megtekintés állapota
                 rate: Értékelés
             buttons:
                 submit: Keresés

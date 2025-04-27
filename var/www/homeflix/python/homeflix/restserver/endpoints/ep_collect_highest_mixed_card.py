@@ -12,12 +12,12 @@ class EPCollectHighestMixed(EP):
     URL = '/collect/highest/mixed'
 
     PATH_PAR_PAYLOAD = '/highest/mixed'
-    PATH_PAR_URL = '/highest/mixed/category/<category>/playlist/<playlist>/tags/<tags>/level/<level>/filter_on/<filter_on>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/writers/<writers>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/rate_value/<rate_value>/decade/<decade>/lang/<lang>'
+    PATH_PAR_URL = '/highest/mixed/category/<category>/view_state/<view_state>/tags/<tags>/level/<level>/filter_on/<filter_on>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/writers/<writers>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/rate_value/<rate_value>/decade/<decade>/lang/<lang>'
 
     METHOD = 'GET'
 
     ATTR_CATEGORY = 'category'
-    ATTR_PLAYLIST = 'playlist'
+    ATTR_VIEW_STATE = 'view_state'
     ATTR_TAG = 'tags'
     ATTR_LEVEL = 'level'
     ATTR_FILTER_ON = 'filter_on'
@@ -37,11 +37,11 @@ class EPCollectHighestMixed(EP):
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
-    def executeByParameters(self, category, playlist, tags, level, filter_on, title, genres, themes, directors, writers, actors, lecturers, performers, origins, rate_value, decade, lang) -> dict:
+    def executeByParameters(self, category, view_state, tags, level, filter_on, title, genres, themes, directors, writers, actors, lecturers, performers, origins, rate_value, decade, lang) -> dict:
         payload = {}
 
         payload[EPCollectHighestMixed.ATTR_CATEGORY] = category
-        payload[EPCollectHighestMixed.ATTR_PLAYLIST] = playlist
+        payload[EPCollectHighestMixed.ATTR_VIEW_STATE] = view_state
         payload[EPCollectHighestMixed.ATTR_TAG] = tags
         payload[EPCollectHighestMixed.ATTR_LEVEL] = level
         payload[EPCollectHighestMixed.ATTR_FILTER_ON] = filter_on
@@ -65,7 +65,7 @@ class EPCollectHighestMixed(EP):
         remoteAddress = request.remote_addr
 
         category   = payload[EPCollectHighestMixed.ATTR_CATEGORY]
-        playlist   = payload.get(EPCollectHighestMixed.ATTR_PLAYLIST, '*')
+        view_state   = payload.get(EPCollectHighestMixed.ATTR_VIEW_STATE, '*')
         tags       = payload.get(EPCollectHighestMixed.ATTR_TAG, '*')
         level      = payload.get(EPCollectHighestMixed.ATTR_LEVEL, '*')
         filter_on  = payload.get(EPCollectHighestMixed.ATTR_FILTER_ON, '*')
@@ -86,7 +86,7 @@ class EPCollectHighestMixed(EP):
                     remoteAddress, EPCollectHighestMixed.METHOD, EPCollectHighestMixed.URL,
                     EPCollectHighestMixed.ATTR_CATEGORY, category,
                     EPCollectHighestMixed.ATTR_TAG, tags,
-                    EPCollectHighestMixed.ATTR_PLAYLIST, playlist,
+                    EPCollectHighestMixed.ATTR_VIEW_STATE, view_state,
                     EPCollectHighestMixed.ATTR_LEVEL, level,
                     EPCollectHighestMixed.ATTR_FILTER_ON, filter_on,
                     EPCollectHighestMixed.ATTR_TITLE, title,
@@ -104,8 +104,8 @@ class EPCollectHighestMixed(EP):
                 )
         )
 
-        if playlist == '*':
-            playlist = None
+        if view_state == '*':
+            view_state = None
         if tags == '*':
             tags = None
         if level == '*':
@@ -135,6 +135,6 @@ class EPCollectHighestMixed(EP):
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_highest_level_cards(category=category, playlist=playlist, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate_value, lang=lang, limit=100)
+        output = self.web_gadget.db.get_highest_level_cards(category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate_value, lang=lang, limit=100)
 
         return output_json(output, EP.CODE_OK)

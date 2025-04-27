@@ -42,11 +42,11 @@ class EPPersonalTagGet(EP):
         payload[EPPersonalTagGet.ATTR_THEMES] = themes
         payload[EPPersonalTagGet.ATTR_DIRECTORS] = directors
         payload[EPPersonalTagGet.ATTR_ACTORS] = actors
-        payload[EPPersonalTagGet.ATTR_LECTURERS] = lecturers        
+        payload[EPPersonalTagGet.ATTR_LECTURERS] = lecturers
         payload[EPPersonalTagGet.ATTR_ORIGINS] = origins
         payload[EPPersonalTagGet.ATTR_DECADE] = decade
         payload[EPPersonalTagGet.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -77,7 +77,7 @@ class EPPersonalTagGet(EP):
                     EPPersonalTagGet.ATTR_LANG, lang
                 )
         )
-    
+
         if title == '*':
             title = None
         if genres == '*':
@@ -94,6 +94,6 @@ class EPPersonalTagGet(EP):
             origins = None
         if decade == '*':
             decade=None
-        output = self.web_gadget.db.get_tags(category=category, playlist=None, tags=None, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
+        output = self.web_gadget.db.get_tags(category=category, view_state=None, tags=None, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, origins=origins, decade=decade, lang=lang)
 
         return output_json(output, EP.CODE_OK)

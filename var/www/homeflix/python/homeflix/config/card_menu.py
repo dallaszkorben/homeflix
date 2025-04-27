@@ -504,11 +504,11 @@ class CardMenu( Property ):
                                             "dynamic_hard_coded": {
                                               "title": {
                                                 "dict_translator": "translated_titles",
-                                                "id": "movie_interrupted"
+                                                "id": "movie_continue_playing"
                                               },
                                               "data": {
                                                 "category": "movie",
-                                                "playlist": "interrupted"
+                                                "view_state": "interrupted"
                                               },
                                               "request": {
                                                 "static": true,
@@ -527,7 +527,7 @@ class CardMenu( Property ):
                                               },
                                               "data": {
                                                 "category": "movie",
-                                                "playlist": "last_watched"
+                                                "view_state": "last_watched"
                                               },
                                               "request": {
                                                 "static": true,
@@ -546,7 +546,7 @@ class CardMenu( Property ):
                                               },
                                               "data": {
                                                 "category": "movie",
-                                                "playlist": "most_watched"
+                                                "view_state": "most_watched"
                                               },
                                               "request": {
                                                 "static": true,

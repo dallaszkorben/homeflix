@@ -483,10 +483,14 @@ title:
     movie_by_title_abc: Movies in ABC
 
     movie_playlists: Playlists
-    movie_interrupted: Continue Playing
+    movie_continue_playing: Continue Playing
+    movie_interrupted: Interruped
     movie_last_watched: Last Watched
     movie_least_watched: Least Watched
     movie_most_watched: Most Watched
+
+    movie_show_level_highest: Highest Level
+    movie_show_level_lowest: Lowest Level
 
     movie_search: Search Movie
 
@@ -639,12 +643,16 @@ interaction_labels:
             title: Search Media
             message: blabla
             labels:
-                title: Search title
+                container_title: Hit container title
                 writer: Writer
                 director: Director
                 actor: Actor
                 genre: Genre
+                theme: Theme
                 origin: Country
+                show_level: Show Level
+                view_state: View State
+                tag: Tag
                 rate: Rate
             buttons:
                 submit: Submit

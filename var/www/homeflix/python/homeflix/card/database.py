@@ -2209,7 +2209,7 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
-    def get_tags(self, category="movie", playlist=None, tags=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_tags(self, category="movie", view_state=None, tags=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         result = False
         error_message = "Lock error"
 
@@ -2243,7 +2243,7 @@ class SqlDatabase:
                 cur.execute("begin")            #Otherwise "no transaction is active"
 
                 level = None
-                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
+                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'view_state': view_state, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -2809,7 +2809,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_highest_level_cards(self, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for highest level list                ---
         Returns mixed standalone media and level cards   ---
@@ -2890,7 +2890,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_next_level_cards(self, card_id, category, playlist=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
         Returns the next child cards which could be:
@@ -2956,14 +2956,14 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_lowest_level_cards(self, category, playlist=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
 
         """
         FULL QUERY for lowest (medium) level list
         Returns only medium level cards level cards
         With filters category/genre/theme/origin/director/actor
 
-        Parameters for playlist:
+        Parameters for view_state:
           - *
           - interrupted
           - last_watched
@@ -3010,23 +3010,23 @@ class SqlDatabase:
                 FROM ({0}) raw_query
                 WHERE
                     CASE
-                        WHEN :playlist = 'interrupted' THEN
+                        WHEN :view_state = 'interrupted' THEN
                             raw_query.start_epoch >= :history_back
                             AND raw_query.recent_position < raw_query.net_stop_time
                             AND raw_query.recent_position > raw_query.net_start_time
-                        WHEN :playlist = 'last_watched' THEN
+                        WHEN :view_state = 'last_watched' THEN
                             raw_query.start_epoch >= :history_back
-                        WHEN :playlist = 'most_watched' THEN
+                        WHEN :view_state = 'most_watched' THEN
                             raw_query.start_epoch >= :history_back
                         ELSE 1
                     END
-                '''.format(query) + ( 'ORDER BY raw_query.start_epoch DESC' if playlist == 'interrupted' or playlist == 'last_watched' else 'ORDER BY raw_query.play_count DESC' if playlist == 'most_watched' else 'ORDER BY raw_query.ord' ) + '''
+                '''.format(query) + ( 'ORDER BY raw_query.start_epoch DESC' if view_state == 'interrupted' or view_state == 'last_watched' else 'ORDER BY raw_query.play_count DESC' if view_state == 'most_watched' else 'ORDER BY raw_query.ord' ) + '''
                 LIMIT :limit;
                 '''
 
                 #logging.error("MY QUERY: {0}".format(query))
 
-                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'playlist': playlist, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
+                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'view_state': view_state, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 

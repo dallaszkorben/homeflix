@@ -12,20 +12,20 @@ class EPCollectNextMixed(EP):
     URL = '/collect/next/mixed'
 
     PATH_PAR_PAYLOAD = '/next/mixed'
-    PATH_PAR_URL = '/next/mixed/card_id/<card_id>/category/<category>/playlist/<playlist>/tags/<tags>/level/<level>/filter_on/<filter_on>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>'
+    PATH_PAR_URL = '/next/mixed/card_id/<card_id>/category/<category>/view_state/<view_state>/tags/<tags>/level/<level>/filter_on/<filter_on>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>'
 
     METHOD = 'GET'
 
     ATTR_CARD_ID = 'card_id'
     ATTR_CATEGORY = 'category'
-    ATTR_PLAYLIST = 'playlist'
+    ATTR_VIEW_STATE = 'view_state'
     ATTR_TAG = 'tags'
     ATTR_LEVEL = 'level'
     ATTR_FILTER_ON = 'filter_on'
     ATTR_TITLE = 'title'
     ATTR_GENRE = 'genres'
     ATTR_THEME = 'themes'
-    ATTR_DIRECTOR = 'directors'    
+    ATTR_DIRECTOR = 'directors'
     ATTR_ACTOR = 'actors'
     ATTR_LECTURER = 'lecturers'
     ATTR_PERFORMER = 'performers'
@@ -36,12 +36,12 @@ class EPCollectNextMixed(EP):
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
-    def executeByParameters(self, card_id, category, playlist, tags, level, filter_on, title, genres, themes, directors, actors, lecturers, performers, origins, decade, lang) -> dict:
+    def executeByParameters(self, card_id, category, view_state, tags, level, filter_on, title, genres, themes, directors, actors, lecturers, performers, origins, decade, lang) -> dict:
         payload = {}
 
         payload[EPCollectNextMixed.ATTR_CARD_ID] = card_id
         payload[EPCollectNextMixed.ATTR_CATEGORY] = category
-        payload[EPCollectNextMixed.ATTR_PLAYLIST] = playlist
+        payload[EPCollectNextMixed.ATTR_VIEW_STATE] = view_state
         payload[EPCollectNextMixed.ATTR_TAG] = tags
         payload[EPCollectNextMixed.ATTR_LEVEL] = level
         payload[EPCollectNextMixed.ATTR_FILTER_ON] = filter_on
@@ -50,12 +50,12 @@ class EPCollectNextMixed(EP):
         payload[EPCollectNextMixed.ATTR_THEME] = themes
         payload[EPCollectNextMixed.ATTR_DIRECTOR] = directors
         payload[EPCollectNextMixed.ATTR_ACTOR] = actors
-        payload[EPCollectNextMixed.ATTR_LECTURER] = lecturers        
+        payload[EPCollectNextMixed.ATTR_LECTURER] = lecturers
         payload[EPCollectNextMixed.ATTR_PERFORMER] = performers
         payload[EPCollectNextMixed.ATTR_ORIGIN] = origins
         payload[EPCollectNextMixed.ATTR_DECADE] = decade
         payload[EPCollectNextMixed.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -64,10 +64,10 @@ class EPCollectNextMixed(EP):
 
         card_id    = payload[EPCollectNextMixed.ATTR_CARD_ID]
         category   = payload[EPCollectNextMixed.ATTR_CATEGORY]
-        playlist   = payload.get(EPCollectNextMixed.ATTR_PLAYLIST, '*')
+        view_state = payload.get(EPCollectNextMixed.ATTR_VIEW_STATE, '*')
         tags       = payload.get(EPCollectNextMixed.ATTR_TAG, '*')
         level      = payload.get(EPCollectNextMixed.ATTR_LEVEL, '*')
-        filter_on  = payload.get(EPCollectNextMixed.ATTR_FILTER_ON, '*')      
+        filter_on  = payload.get(EPCollectNextMixed.ATTR_FILTER_ON, '*')
         title      = payload.get(EPCollectNextMixed.ATTR_TITLE, '*')
         genres     = payload.get(EPCollectNextMixed.ATTR_GENRE, '*')
         themes     = payload.get(EPCollectNextMixed.ATTR_THEME, '*')
@@ -84,7 +84,7 @@ class EPCollectNextMixed(EP):
                 EPCollectNextMixed.ATTR_CARD_ID, card_id,
                 EPCollectNextMixed.ATTR_CATEGORY, category,
                 EPCollectNextMixed.ATTR_TAG, tags,
-                EPCollectNextMixed.ATTR_PLAYLIST, playlist,
+                EPCollectNextMixed.ATTR_VIEW_STATE, view_state,
                 EPCollectNextMixed.ATTR_LEVEL, level,
                 EPCollectNextMixed.ATTR_FILTER_ON, filter_on,
                 EPCollectNextMixed.ATTR_TITLE, title,
@@ -96,14 +96,14 @@ class EPCollectNextMixed(EP):
                 EPCollectNextMixed.ATTR_PERFORMER, performers,
                 EPCollectNextMixed.ATTR_ORIGIN, origins,
                 EPCollectNextMixed.ATTR_DECADE, decade,
-                EPCollectNextMixed.ATTR_LANG, lang 
+                EPCollectNextMixed.ATTR_LANG, lang
             )
         )
 
-        if playlist == '*':
-            playlist = None  
+        if view_state == '*':
+            view_state = None
         if tags == '*':
-            tags = None        
+            tags = None
         if level == '*':
             level = None
         if filter_on == '*':
@@ -111,7 +111,7 @@ class EPCollectNextMixed(EP):
         if title == '*':
             title = None
         if genres == '*':
-            genres = None            
+            genres = None
         if themes == '*':
             themes = None
         if directors == '*':
@@ -127,6 +127,6 @@ class EPCollectNextMixed(EP):
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_next_level_cards(card_id=card_id, category=category, playlist=playlist, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang, limit=100)
+        output = self.web_gadget.db.get_next_level_cards(card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang, limit=100)
 
         return output_json(output, EP.CODE_OK)

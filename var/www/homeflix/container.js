@@ -1802,12 +1802,29 @@ class ThumbnailController {
         let cancel_button = translated_interaction_labels['dialog']['search']['buttons']['cancel'];
 
         /* Search dialog form */
-        $("#dialog-form-search label[for='title']").html(translated_interaction_labels['dialog']['search']['labels']['title']);
-        $("#dialog-form-search label[for='genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre']);
-        $("#dialog-form-search label[for='director']").html(translated_interaction_labels['dialog']['search']['labels']['director']);
-        $("#dialog-form-search label[for='writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer']);
-        $("#dialog-form-search label[for='actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor']);
-        $("#dialog-form-search label[for='origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin']);
+        $("#dialog-form-search label[for='container-title']").html(translated_interaction_labels['dialog']['search']['labels']['container_title'] + ': ');
+        $("#dialog-form-search label[for='genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre'] + ': ');
+        $("#dialog-form-search label[for='theme']").html(translated_interaction_labels['dialog']['search']['labels']['theme'] + ': ');
+        $("#dialog-form-search label[for='director']").html(translated_interaction_labels['dialog']['search']['labels']['director'] + ': ');
+        $("#dialog-form-search label[for='writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer'] + ': ');
+        $("#dialog-form-search label[for='actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor'] + ': ');
+        $("#dialog-form-search label[for='origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin'] + ': ');
+        $("#dialog-form-search label[for='tag']").html(translated_interaction_labels['dialog']['search']['labels']['tag'] + ': ');
+        $("#dialog-form-search label[for='show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');
+        $("#dialog-form-search label[for='view-state']").html(translated_interaction_labels['dialog']['search']['labels']['view_state'] + ': ');
+        $("#dialog-form-search label[for='rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate'] + ': ');
+
+
+        // Shown level
+        $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_titles['movie_show_level_highest']);
+        $("#dialog-form-search select option[value='/collect/lowest']").html(translated_titles['movie_show_level_lowest']);
+
+        // Viewed state
+        $("#dialog-form-search select option[value='interrupted']").html(translated_titles['movie_interrupted']);
+        $("#dialog-form-search select option[value='last_watched']").html(translated_titles['movie_last_watched']);
+        $("#dialog-form-search select option[value='most_watched']").html(translated_titles['movie_most_watched']);
+
+        // Show rate
         $("#dialog-form-search label[for='rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
 
         // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
@@ -1815,21 +1832,40 @@ class ThumbnailController {
             $("#dialog-form-search").dialog({
                 resizable: false,
                 height: "auto",
-                width: 400,
+
+                // Set the width of the Dialog()
+                width: 600,
                 modal: true,
                 title: translated_interaction_labels['dialog']['search']['title'],
                 buttons: {
                     [submit_button]: function() {
                         $( this ).dialog( "close" );
-                        var title = $("#title").val();
+                        var container_title = $("#container-title").val();
                         var genre = $("#genre").val();
+                        var theme = $("#theme").val();
                         var director = $("#director").val();
                         var writer = $("#writer").val();
                         var actor = $("#actor").val();
                         var origin = $("#origin").val();
+                        var tag = $("#tag").val();
+                        var show_level = $("#show-level").val();
+                        var view_state = $("#view-state").val();
                         var rate = $("#rate").val();
 
-                        refToThis.addNewThumbnailContainerExecution(title, genre, director, writer, actor, origin, rate);
+                        var data_dict = {
+                            "container_title": container_title,
+                            "genre": genre,
+                            "theme": theme,
+                            "director": director,
+                            "writer": writer,
+                            "actor": actor,
+                            "origin": origin,
+                            "tag": tag,
+                            "show_level": show_level,
+                            "view_state": view_state,
+                            "rate": rate
+                        }
+                        refToThis.addNewThumbnailContainerExecution(data_dict);
                     },
                     [cancel_button]: function() {
                         $( this ).dialog( "close" );
@@ -1853,7 +1889,15 @@ class ThumbnailController {
                       }
                     });
 
-                    $(this).parent().find(".ui-dialog-buttonpane button:first").focus();
+                    //Select the button as default - It is not neede here
+                    //$(this).parent().find(".ui-dialog-buttonpane button:first").focus();
+
+                    // Calculate and set the horizontal divider
+                    let dialogWidth = $('#dialog-form-search').width();
+//                    $('.dialog-form-search-separator').css('width', `calc(100% + ${dialogWidth - 325}px)`);
+
+                    // If the css of the dialog changes, this calculation must be changed as well
+                    $('.dialog-form-search-separator').css('width', `calc(100% + 24px)`);
                 },
 
                 // Prevent the ESC button to go back in history
@@ -1878,7 +1922,18 @@ class ThumbnailController {
         }, 200);
     }
 
-    addNewThumbnailContainerExecution(title, genre, director, writer, actor, origin, rate){
+    addNewThumbnailContainerExecution( data_dict ){
+        let container_title = data_dict["container_title"]
+        let genre = data_dict["genre"]
+        let theme = data_dict["theme"]
+        let director = data_dict["director"]
+        let writer = data_dict["writer"]
+        let actor = data_dict["actor"]
+        let origin = data_dict["origin"]
+        let tag = data_dict["tag"]
+        let show_level = data_dict["show_level"]
+        let view_state = data_dict["view_state"]
+        let rate = data_dict["rate"]
 
         let oContainerGenerator = this.objScrollSection.oContainerGenerator;
         let origMenuDict = oContainerGenerator.getMenuDict();
@@ -1887,14 +1942,17 @@ class ThumbnailController {
         // TODO: Not good. If I remove an element, then I should re-order the whole list !
         let order = container_list.length
 
-        if(title == ""){
-            title = "My search"
+        if(container_title == ""){
+            container_title = "My search"
         }
 
         let data = {};
         data["category"] = "movie"
         if(genre !== ""){
             data["genres"] = genre;
+        }
+        if(theme !== ""){
+            data["themes"] = theme;
         }
         if(director !== ""){
             data["directors"] = director;
@@ -1908,6 +1966,13 @@ class ThumbnailController {
         if(origin !== ""){
             data["origins"] = origin;
         }
+        if(tag !== ""){
+            data["tags"] = tag;
+        }
+
+        if(view_state !== ""){
+            data["view_state"] = view_state;
+        }
         if(rate !== ""){
             data["rate_value"] = rate;
         }
@@ -1918,18 +1983,21 @@ class ThumbnailController {
           "dynamic_hard_coded":{
               "title": [
                   {
-                      "text": title
+                      "text": container_title
                   }
               ],
               "data": data,
               "request": {
                   "method": "GET",
                   "protocol": "http",
-                  "path": "/collect/highest/mixed",
+                  "path": show_level,
                   "static": true
               }
           }
         }
+
+//        "path": "/collect/lowest",
+//        "path": "/collect/highest/mixed",
 
 //        let thumbnailContainerElement2 =
 //        {

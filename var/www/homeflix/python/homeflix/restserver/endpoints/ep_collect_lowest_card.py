@@ -12,18 +12,18 @@ class EPCollectLowest(EP):
     URL = '/collect/lowest'
 
     PATH_PAR_PAYLOAD = '/lowest'
-    PATH_PAR_URL = '/lowest/category/<category>/playlist/<playlist>/tags/<tags>/level/<level>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>'
+    PATH_PAR_URL = '/lowest/category/<category>/view_state/<view_state>/tags/<tags>/level/<level>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/decade/<decade>/lang/<lang>'
 
     METHOD = 'GET'
 
     ATTR_CATEGORY = 'category'
-    ATTR_PLAYLIST = 'playlist'
+    ATTR_VIEW_STATE = 'view_state'
     ATTR_TAG = 'tags'
     ATTR_LEVEL = 'level'
     ATTR_TITLE = 'title'
     ATTR_GENRE = 'genres'
     ATTR_THEME = 'themes'
-    ATTR_DIRECTOR = 'directors'    
+    ATTR_DIRECTOR = 'directors'
     ATTR_ACTOR = 'actors'
     ATTR_LECTURER = 'lecturers'
     ATTR_PERFORMER = 'performers'
@@ -34,11 +34,11 @@ class EPCollectLowest(EP):
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
-    def executeByParameters(self, category, playlist, tags, level, title, genres, themes, directors, actors, lecturers, performers, origins, decade, lang) -> dict:
+    def executeByParameters(self, category, view_state, tags, level, title, genres, themes, directors, actors, lecturers, performers, origins, decade, lang) -> dict:
         payload = {}
 
         payload[EPCollectLowest.ATTR_CATEGORY] = category
-        payload[EPCollectLowest.ATTR_PLAYLIST] = playlist
+        payload[EPCollectLowest.ATTR_VIEW_STATE] = view_state
         payload[EPCollectLowest.ATTR_TAG] = tags
         payload[EPCollectLowest.ATTR_LEVEL] = level
         payload[EPCollectLowest.ATTR_TITLE] = title
@@ -46,12 +46,12 @@ class EPCollectLowest(EP):
         payload[EPCollectLowest.ATTR_THEME] = themes
         payload[EPCollectLowest.ATTR_DIRECTOR] = directors
         payload[EPCollectLowest.ATTR_ACTOR] = actors
-        payload[EPCollectLowest.ATTR_LECTURER] = lecturers        
+        payload[EPCollectLowest.ATTR_LECTURER] = lecturers
         payload[EPCollectLowest.ATTR_PERFORMER] = performers
         payload[EPCollectLowest.ATTR_ORIGIN] = origins
         payload[EPCollectLowest.ATTR_DECADE] = decade
         payload[EPCollectLowest.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -59,7 +59,7 @@ class EPCollectLowest(EP):
         remoteAddress = request.remote_addr
 
         category = payload[EPCollectLowest.ATTR_CATEGORY]
-        playlist = payload.get(EPCollectLowest.ATTR_PLAYLIST, '*')
+        view_state = payload.get(EPCollectLowest.ATTR_VIEW_STATE, '*')
         tags = payload.get(EPCollectLowest.ATTR_TAG, '*')
         level = payload.get(EPCollectLowest.ATTR_LEVEL, '*')
         title = payload.get(EPCollectLowest.ATTR_TITLE, '*')
@@ -77,8 +77,8 @@ class EPCollectLowest(EP):
                     remoteAddress, EPCollectLowest.METHOD, EPCollectLowest.URL,
                     EPCollectLowest.ATTR_CATEGORY, category,
                     EPCollectLowest.ATTR_TAG, tags,
-                    EPCollectLowest.ATTR_PLAYLIST, playlist,
-                    EPCollectLowest.ATTR_LEVEL, level,                    
+                    EPCollectLowest.ATTR_VIEW_STATE, view_state,
+                    EPCollectLowest.ATTR_LEVEL, level,
                     EPCollectLowest.ATTR_TITLE, title,
                     EPCollectLowest.ATTR_GENRE, genres,
                     EPCollectLowest.ATTR_THEME, themes,
@@ -92,12 +92,12 @@ class EPCollectLowest(EP):
                 )
         )
 
-        if playlist == '*':
-            playlist = None  
+        if view_state == '*':
+            view_state = None
         if tags == '*':
-            tags = None        
+            tags = None
         if level == '*':
-            level = None        
+            level = None
         if title == '*':
             title = None
         if genres == '*':
@@ -117,6 +117,6 @@ class EPCollectLowest(EP):
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_lowest_level_cards(category=category, playlist=playlist, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang, limit=100)
+        output = self.web_gadget.db.get_lowest_level_cards(category=category, view_state=view_state, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins, decade=decade, lang=lang, limit=100)
 
         return output_json(output, EP.CODE_OK)
