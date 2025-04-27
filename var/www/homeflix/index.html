@@ -474,25 +474,32 @@ function createComboBoxWithDict(inputId, dataDict) {
         label: dictValue
     }));
 
-    // Initialize autocomplete
-    $(`#${inputId}`).autocomplete({
-        source: function(request, response) {
-            if (request.term === '') {
-                response(options);
-                return;
+    // Function to initialize autocomplete
+    function initAutocomplete($input) {
+        $input.autocomplete({
+            source: function(request, response) {
+                if (request.term === '') {
+                    response(options);
+                    return;
+                }
+                const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                response(options.filter(option =>
+                    matcher.test(option.label) || matcher.test(option.value)
+                ));
+            },
+            minLength: 0,
+            select: function(event, ui) {
+                $(this).val(ui.item.label);
+                $(this).attr('data-value', ui.item.value);
+                return false;
             }
-            const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-            response(options.filter(option =>
-                matcher.test(option.label) || matcher.test(option.value)
-            ));
-        },
-        minLength: 0,
-        select: function(event, ui) {
-            $(this).val(ui.item.label);
-            $(this).attr('data-value', ui.item.value);
-            return false;
-        }
-    }).on('blur', function() {
+        });
+    }
+
+    const $input = $(`#${inputId}`);
+    initAutocomplete($input);
+
+    $input.on('blur', function() {
         const currentValue = $(this).val();
         if (currentValue) {
             const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
@@ -523,71 +530,87 @@ function createComboBoxWithDict(inputId, dataDict) {
     });
 
     // Create and add the button
-    $(`#${inputId}`).after(
+    $input.after(
         $('<button>', {
             tabindex: -1,
             type: 'button',
             title: 'Show All Items',
             class: `ui-button ui-widget ui-button-icon-only combobox-toggle-${inputId} noselect`,
             html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
-        }).on('click', function(e) {
+        }).on('mousedown', function(e) {
             e.preventDefault();
-            const button = $(this);
-            const input = $(`#${inputId}`);
-            button.prop('disabled', true);
-            input.autocomplete('instance').search('');
-            input.focus();
-            setTimeout(() => {
-                button.prop('disabled', false);
-            }, 1000);
+            e.stopPropagation();
+
+            // Toggle dropdown visibility
+            if ($input.autocomplete("widget").is(":visible")) {
+                $input.autocomplete("close");
+            } else {
+                // Destroy and reinitialize autocomplete
+                if ($input.autocomplete("instance")) {
+                    $input.autocomplete("destroy");
+                }
+                initAutocomplete($input);
+
+                // Show all options
+                $input.focus();
+                $input.autocomplete("search", "");
+            }
+        }).on('mouseup', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
         })
     );
 
-    // Add the CSS if it doesn't exist
-    if (!$(`#combobox-styles-${inputId}`).length) {
-        const css = `
-            .${containerClass} {
-                position: relative;
-                display: inline-block;
-                width: 100%;
-                margin-bottom: 5px;
-            }
-            .combobox-toggle-${inputId} {
-                position: absolute;
-                top: 0;
-                right: 0;
-                height: 100%;
-                margin-right: 0;
-                cursor: pointer;
-            }
-            .ui-autocomplete {
-                max-height: 200px;
-                overflow-y: auto;
-                overflow-x: hidden;
-                z-index: 9999;
-            }
-            #${inputId} {
-                width: calc(100% - 30px);
-                padding-right: 0;
-                box-sizing: border-box;
-            }
-            .noselect {
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                -khtml-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-            }`;
+// Add the CSS if it doesn't exist
+if (!$(`#combobox-styles-${inputId}`).length) {
+    const css = `
+        .${containerClass} {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .combobox-toggle-${inputId} {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 2em;
+            margin: 0;
+            padding: 0;
+            cursor: pointer;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 9999;
+        }
+        #${inputId} {
+            width: calc(100% - 2em);
+            box-sizing: border-box;
+        }
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }`;
 
-        $('<style>', {
-            id: `combobox-styles-${inputId}`
-        }).text(css).appendTo('head');
-    }
+    $('<style>', {
+        id: `combobox-styles-${inputId}`
+    }).text(css).appendTo('head');
+}
+
 
     // Wrap input and button in a container
     $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
 }
+
 
 
 //function createComboBoxWithList(inputId, dataList, minChars = 2) {
