@@ -64,6 +64,9 @@
         let translated_categories;
         let translated_themes;
         let all_movie_director_list;
+        let all_movie_writer_list;
+        let all_movie_actor_list;
+        let all_movie_rate_list;
 
         // Load Version
         rq_method = "GET";
@@ -124,15 +127,54 @@
 
         // Load all Directors
         rq_method = "GET";
-        rq_url = "http://" + host + port + "/collect/directors/by/movie/count";
+        rq_url = "http://" + host + port + "/collect/directors";
         rq_assync = false;
         data = {
             "category": "movie",
-            "minimum": 1,
             "limit": 9999,
         };
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
         all_movie_director_list = result.responseJSON["data"];
+
+        // Load all Writers
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/collect/writers";
+        rq_assync = false;
+        data = {
+            "category": "movie",
+            "limit": 9999,
+        };
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
+        all_movie_writer_list = result.responseJSON["data"];
+
+        // Load all Actors
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/collect/actors";
+        rq_assync = false;
+        data = {
+            "category": "movie",
+            "limit": 9999,
+        };
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
+        all_movie_actor_list = result.responseJSON["data"];
+
+        // Load all Tags
+        rq_method = "GET";
+        rq_url = "http://" + host + port + "/collect/tags";
+        rq_assync = false;
+        data = {
+            "category": "movie",
+            "limit": 9999,
+        };
+        //result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
+        //all_movie_tag_list = result.responseJSON["data"];
+        all_movie_tag_list = [
+            "masterpiece"
+        ]
+
+
+
+
 
 
         /*
@@ -415,27 +457,22 @@
 
 // ---
 
-function createCombobox(inputId, sourceData) {
+function createComboBoxWithDict(inputId, dataDict) {
     // Generate unique container class for this instance
     const containerClass = `custom-combobox-${inputId}`;
 
     // First, clean up any existing combobox elements
-    $(`.combobox-toggle-${inputId}`).remove(); // Remove existing button
-    $(`.${containerClass}`).children().unwrap(); // Unwrap existing container
+    $(`.combobox-toggle-${inputId}`).remove();
+    $(`.${containerClass}`).children().unwrap();
 
     // Convert the select/input to input if it's not already
     $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
 
-    // Create array of options from the source data
-    const options = Array.isArray(sourceData)
-        ? sourceData.map(item => ({
-            value: item,
-            label: item
-          }))
-        : Object.entries(sourceData).map(([dictKey, dictValue]) => ({
-            value: dictKey,
-            label: dictValue
-          }));
+    // Create array of options from the dictionary
+    const options = Object.entries(dataDict).map(([dictKey, dictValue]) => ({
+        value: dictKey,
+        label: dictValue
+    }));
 
     // Initialize autocomplete
     $(`#${inputId}`).autocomplete({
@@ -495,19 +532,11 @@ function createCombobox(inputId, sourceData) {
             html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
         }).on('click', function(e) {
             e.preventDefault();
-
-            // Get the button and input elements
             const button = $(this);
             const input = $(`#${inputId}`);
-
-            // Disable the button temporarily to prevent rapid clicks
             button.prop('disabled', true);
-
-            // Reset autocomplete and show dropdown
             input.autocomplete('instance').search('');
             input.focus();
-
-            // Re-enable the button after a short delay
             setTimeout(() => {
                 button.prop('disabled', false);
             }, 1000);
@@ -560,6 +589,195 @@ function createCombobox(inputId, sourceData) {
     $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
 }
 
+
+//function createComboBoxWithList(inputId, dataList, minChars = 2) {
+//    // Generate unique container class for this instance
+//    const containerClass = `custom-combobox-${inputId}`;
+//
+//    // Clean up any existing combobox elements
+//    $(`.combobox-toggle-${inputId}`).remove();
+//    $(`.${containerClass}`).children().unwrap();
+//
+//    // Convert the select/input to input if it's not already
+//    $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
+//
+//    // Initialize autocomplete
+//    $(`#${inputId}`).autocomplete({
+//        source: function(request, response) {
+//            // Only search if the term length is >= minChars
+//            if (request.term.length >= minChars) {
+//                const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+//                response(dataList.filter(item => matcher.test(item)));
+//            } else {
+//                response([]);  // Return empty array if not enough characters
+//            }
+//        },
+//        minLength: minChars,  // Set minimum length before triggering autocomplete
+//        select: function(event, ui) {
+//            $(this).val(ui.item);
+//            return false;
+//        }
+//    }).on('blur', function() {
+//        const currentValue = $(this).val();
+//        if (currentValue) {
+//            const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
+//            const exactMatch = dataList.find(item => exactMatcher.test(item));
+//
+//            if (exactMatch) {
+//                $(this).val(exactMatch);
+//            } else {
+//                const partialMatcher = new RegExp($.ui.autocomplete.escapeRegex(currentValue), "i");
+//                const partialMatch = dataList.find(item => partialMatcher.test(item));
+//
+//                if (partialMatch) {
+//                    $(this).val(partialMatch);
+//                } else {
+//                    $(this).val('');
+//                }
+//            }
+//        }
+//    });
+//
+//    // Add the CSS if it doesn't exist
+//    if (!$(`#combobox-styles-${inputId}`).length) {
+//        const css = `
+//            .${containerClass} {
+//                position: relative;
+//                display: inline-block;
+//                width: 100%;
+//                margin-bottom: 5px;
+//            }
+//            .ui-autocomplete {
+//                max-height: 200px;
+//                overflow-y: auto;
+//                overflow-x: hidden;
+//                z-index: 9999;
+//            }
+//            #${inputId} {
+//                width: 100%;
+//                box-sizing: border-box;
+//            }`;
+//
+//        $('<style>', {
+//            id: `combobox-styles-${inputId}`
+//        }).text(css).appendTo('head');
+//    }
+//
+//    // Wrap input in a container
+//    $(`#${inputId}`).wrap(`<div class="${containerClass}">`);
+//}
+
+function createComboBoxWithList(inputId, dataList, minChars = 2) {
+    // Generate unique container class for this instance
+    const containerClass = `custom-combobox-${inputId}`;
+
+    // Clean up any existing combobox elements
+    $(`.combobox-toggle-${inputId}`).remove();
+    $(`.${containerClass}`).children().unwrap();
+
+    // Convert the select/input to input if it's not already
+    $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
+
+    // Initialize autocomplete
+    $(`#${inputId}`).autocomplete({
+        source: function(request, response) {
+            if (request.term.length >= minChars) {
+                const searchTerm = request.term;
+                const isUpperCase = /[A-Z]/.test(searchTerm);
+
+                const matches = dataList.filter(item => {
+                    if (isUpperCase) {
+                        return item.includes(searchTerm);
+                    }
+                    return item.toLowerCase().includes(searchTerm.toLowerCase());
+                }).sort((a, b) => {
+                    const startsWithTerm = (str, term) => {
+                        if (isUpperCase) {
+                            return str.startsWith(term);
+                        }
+                        return str.toLowerCase().startsWith(term.toLowerCase());
+                    };
+
+                    const aStartsWith = startsWithTerm(a, searchTerm);
+                    const bStartsWith = startsWithTerm(b, searchTerm);
+
+                    if (aStartsWith && !bStartsWith) return -1;
+                    if (!aStartsWith && bStartsWith) return 1;
+
+                    return a.localeCompare(b);
+                });
+
+                response(matches);
+            } else {
+                response([]);
+            }
+        },
+        minLength: minChars,
+        select: function(event, ui) {
+            $(this).val(ui.item.value || ui.item);  // Fix: use ui.item.value or ui.item directly
+            return false;
+        }
+    }).on('blur', function() {
+        const currentValue = $(this).val();
+        if (currentValue) {
+            const isUpperCase = /[A-Z]/.test(currentValue);
+            let exactMatch;
+
+            if (isUpperCase) {
+                exactMatch = dataList.find(item => item === currentValue);
+            } else {
+                exactMatch = dataList.find(item =>
+                    item.toLowerCase() === currentValue.toLowerCase()
+                );
+            }
+
+            if (exactMatch) {
+                $(this).val(exactMatch);
+            } else {
+                const partialMatches = dataList.filter(item => {
+                    if (isUpperCase) {
+                        return item.includes(currentValue);
+                    }
+                    return item.toLowerCase().includes(currentValue.toLowerCase());
+                });
+
+                if (partialMatches.length > 0) {
+                    $(this).val(partialMatches[0]);
+                } else {
+                    $(this).val('');
+                }
+            }
+        }
+    });
+
+    // Add the CSS if it doesn't exist
+    if (!$(`#combobox-styles-${inputId}`).length) {
+        const css = `
+            .${containerClass} {
+                position: relative;
+                display: inline-block;
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            .ui-autocomplete {
+                max-height: 200px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                z-index: 9999;
+            }
+            #${inputId} {
+                width: 100%;
+                box-sizing: border-box;
+            }`;
+
+        $('<style>', {
+            id: `combobox-styles-${inputId}`
+        }).text(css).appendTo('head');
+    }
+
+    // Wrap input in a container
+    $(`#${inputId}`).wrap(`<div class="${containerClass}">`);
+}
 
 
 

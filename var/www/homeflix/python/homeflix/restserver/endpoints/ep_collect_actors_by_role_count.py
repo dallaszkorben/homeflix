@@ -29,7 +29,7 @@ class EPCollectActorsByRoleCount(EP):
         payload[EPCollectActorsByRoleCount.ATTR_CATEGORY] = category
         payload[EPCollectActorsByRoleCount.ATTR_MINIMUM] = minimum
         payload[EPCollectActorsByRoleCount.ATTR_LIMIT] = limit
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -48,6 +48,6 @@ class EPCollectActorsByRoleCount(EP):
             )
         )
 
-        output = self.web_gadget.db.get_list_of_actors(category=category, minimum=minimum, limit=limit, json=True)
+        output = self.web_gadget.db.get_list_of_actors_by_role_count(category=category, minimum=minimum, limit=limit, json=True)
 
         return output_json(output, EP.CODE_OK)

@@ -1806,35 +1806,44 @@ class ThumbnailController {
 
         // Genre
         $("#dialog-form-search label[for='dialog-search-genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre'] + ': ');
-        createCombobox('dialog-search-genre', translated_genre_movie);
+        createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
 
         // Theme
         $("#dialog-form-search label[for='dialog-search-theme']").html(translated_interaction_labels['dialog']['search']['labels']['theme'] + ': ');
-        createCombobox('dialog-search-theme', translated_themes);
+        createComboBoxWithDict('dialog-search-theme', translated_themes);
 
         // Director
         $("#dialog-form-search label[for='dialog-search-director']").html(translated_interaction_labels['dialog']['search']['labels']['director'] + ': ');
-        createCombobox('dialog-search-director', all_movie_director_list);
+        createComboBoxWithList('dialog-search-director', all_movie_director_list);
 
+        // Writer
         $("#dialog-form-search label[for='dialog-search-writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer'] + ': ');
+        createComboBoxWithList('dialog-search-writer', all_movie_writer_list);
+
+        // Actor
         $("#dialog-form-search label[for='dialog-search-actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor'] + ': ');
+        createComboBoxWithList('dialog-search-actor', all_movie_actor_list);
+
         $("#dialog-form-search label[for='dialog-search-origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin'] + ': ');
+
+        // Tag
         $("#dialog-form-search label[for='dialog-search-tag']").html(translated_interaction_labels['dialog']['search']['labels']['tag'] + ': ');
-        $("#dialog-form-search label[for='dialog-search-show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');
-        $("#dialog-form-search label[for='dialog-search-view-state']").html(translated_interaction_labels['dialog']['search']['labels']['view_state'] + ': ');
-        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate'] + ': ');
+        createComboBoxWithList('dialog-search-tag', all_movie_tag_list);
 
         // Shown level
+        $("#dialog-form-search label[for='dialog-search-show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');
         $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_titles['movie_show_level_highest']);
         $("#dialog-form-search select option[value='/collect/lowest']").html(translated_titles['movie_show_level_lowest']);
 
         // Viewed state
+        $("#dialog-form-search label[for='dialog-search-view-state']").html(translated_interaction_labels['dialog']['search']['labels']['view_state'] + ': ');
         $("#dialog-form-search select option[value='interrupted']").html(translated_titles['movie_interrupted']);
         $("#dialog-form-search select option[value='last_watched']").html(translated_titles['movie_last_watched']);
         $("#dialog-form-search select option[value='most_watched']").html(translated_titles['movie_most_watched']);
 
         // Show rate
-        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
+        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate'] + ': ');
+//        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
 
         // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
         setTimeout(() => {

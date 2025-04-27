@@ -2588,7 +2588,63 @@ class SqlDatabase:
             cur.execute("commit")
             return record
 
-    def get_list_of_actors(self, category, minimum=3, limit=15, json=True):
+    def get_list_of_actors(self, category, limit=15, json=True):
+        """
+        Gives back actor name's list, ordered by the number of the movies they played in
+        limited by the given value
+        """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    SELECT DISTINCT
+                       person.name as actor_name
+                    FROM
+                       Card card,
+                       Card_Actor card_actor,
+                       Person person,
+                       Category category
+                    WHERE
+                       card.level IS NULL
+                       AND category.name = :category
+                       AND card.id_category = category.id
+                       AND card_actor.id_actor = person.id
+                       AND card_actor.id_card = card.id
+                    ORDER BY person.name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'limit': limit}
+
+                logging.debug("get_list_of_actors: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['actor_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the actor list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
+    def get_list_of_actors_by_role_count(self, category, minimum=3, limit=15, json=True):
         """
         Gives back actor name's list, ordered by the number of the movies they played in
         limited by the given value
@@ -2654,7 +2710,7 @@ class SqlDatabase:
 
                 query_parameters = {'category': category, 'minimum': minimum, 'limit': limit}
 
-                logging.debug("get_list_of_actors: '{0}' / {1}".format(query, query_parameters))
+                logging.debug("get_list_of_actors_by_role_count: '{0}' / {1}".format(query, query_parameters))
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
@@ -2675,8 +2731,62 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
+    def get_list_of_directors(self, category, limit=15, json=True):
+        """
+        Gives back director name's list, ordered by the name
+        """
 
-    def get_list_of_directors(self, category, minimum=3, limit=15, json=True):
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    SELECT DISTINCT
+                       person.name as director_name
+                    FROM
+                       Card card,
+                       Card_Director card_director,
+                       Person person,
+                       Category category
+                    WHERE
+                       card.level IS NULL
+                       AND category.name = :category
+                       AND card.id_category = category.id
+                       AND card_director.id_director = person.id
+                       AND card_director.id_card = card.id
+                    ORDER BY person.name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'limit': limit}
+
+                logging.debug("get_list_of_directors: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['director_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the director list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
+    def get_list_of_directors_by_movie_count(self, category, minimum=3, limit=15, json=True):
         """
         Returns a list of director names, ordered by the number of movies they have directed, limited to the specified maximum count
         """
@@ -2741,7 +2851,7 @@ class SqlDatabase:
 
                 query_parameters = {'category': category, 'minimum': minimum, 'limit': limit}
 
-                logging.debug("get_list_of_directors: '{0}' / {1}".format(query, query_parameters))
+                logging.debug("get_list_of_directors_by_movie_count: '{0}' / {1}".format(query, query_parameters))
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
@@ -2755,6 +2865,61 @@ class SqlDatabase:
 
             except sqlite3.Error as e:
                 error_message = "Fetching the director list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
+    def get_list_of_writers(self, category, limit=15, json=True):
+        """
+        Gives back drivers name's list, ordered by the name
+        """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    SELECT DISTINCT
+                       person.name as writer_name
+                    FROM
+                       Card card,
+                       Card_Writer card_writer,
+                       Person person,
+                       Category category
+                    WHERE
+                       card.level IS NULL
+                       AND category.name = :category
+                       AND card.id_category = category.id
+                       AND card_writer.id_writer = person.id
+                       AND card_writer.id_card = card.id
+                    ORDER BY person.name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'limit': limit}
+
+                logging.debug("get_list_of_writers: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['writer_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the writer list failed: {0}".format(e)
                 logging.error(error_message)
 
             finally:

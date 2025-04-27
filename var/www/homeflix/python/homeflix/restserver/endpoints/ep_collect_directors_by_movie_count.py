@@ -29,7 +29,7 @@ class EPCollectDirectorsByMovieCount(EP):
         payload[EPCollectDirectorsByMovieCount.ATTR_CATEGORY] = category
         payload[EPCollectDirectorsByMovieCount.ATTR_MINIMUM] = minimum
         payload[EPCollectDirectorsByMovieCount.ATTR_LIMIT] = limit
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -48,6 +48,6 @@ class EPCollectDirectorsByMovieCount(EP):
             )
         )
 
-        output = self.web_gadget.db.get_list_of_directors(category=category, minimum=minimum, limit=limit, json=True)
+        output = self.web_gadget.db.get_list_of_directors_by_movie_count(category=category, minimum=minimum, limit=limit, json=True)
 
         return output_json(output, EP.CODE_OK)

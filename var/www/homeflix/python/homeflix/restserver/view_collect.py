@@ -27,8 +27,11 @@ from homeflix.restserver.endpoints.ep_collect_general_standalone import EPCollec
 
 from homeflix.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCollectAllAppendixByCardId
 from homeflix.restserver.endpoints.ep_collect_actors_by_role_count import EPCollectActorsByRoleCount
+from homeflix.restserver.endpoints.ep_collect_actors import EPCollectActors
 from homeflix.restserver.endpoints.ep_collect_directors_by_movie_count import EPCollectDirectorsByMovieCount
+from homeflix.restserver.endpoints.ep_collect_directors import EPCollectDirectors
 from homeflix.restserver.endpoints.ep_collect_abc_by_movie_title_count import EPCollectAbcByMovieTitleCount
+from homeflix.restserver.endpoints.ep_collect_writers import EPCollectWriters
 
 
 
@@ -72,7 +75,10 @@ class CollectView(FlaskView):
         self.epCollectMediaByCardId = EPCollectMediaByCardId(web_gadget)
         self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
         self.epCollectActorsByRoleCount = EPCollectActorsByRoleCount(web_gadget)
+        self.epCollectActors = EPCollectActors(web_gadget)
         self.epCollectDirectorsByMovieCount = EPCollectDirectorsByMovieCount(web_gadget)
+        self.epCollectDirectors = EPCollectDirectors(web_gadget)
+        self.epCollectWriters = EPCollectWriters(web_gadget)
         self.epCollectAbcByMovieTitleCount = EPCollectAbcByMovieTitleCount(web_gadget)
 
 # ---
@@ -454,7 +460,7 @@ class CollectView(FlaskView):
     #
     #@route('/actors/by/role/count/category/<category>/minimum/<minimum>/limit/<limit>')
     @route(EPCollectActorsByRoleCount.PATH_PAR_URL, methods=[EPCollectActorsByRoleCount.METHOD])
-    def collectActorsWithParameter(self, category, minimum, limit):
+    def collectActorsByRoleCountWithParameter(self, category, minimum, limit):
         out = self.epCollectActorsByRoleCount.executeByParameters(category, minimum=minimum, limit=limit)
         return out
 
@@ -465,14 +471,14 @@ class CollectView(FlaskView):
     #
     # GET http://localhost:80/collect/actors/by/role/count
     #      body: {
-    #       "category": "movei",
+    #       "category": "movie",
     #       "minimum": 3,
     #       "limit": 15,
     #      }
     #
     #@route('/actors/by/role/count', methods=['GET'])
     @route(EPCollectActorsByRoleCount.PATH_PAR_PAYLOAD, methods=[EPCollectActorsByRoleCount.METHOD])
-    def collectActorsWithPayload(self):
+    def collectActorsByRoleCountWithPayload(self):
         # CURL
         if request.is_json:
             json_data = request.json
@@ -489,6 +495,51 @@ class CollectView(FlaskView):
         return out
 
 
+# === collect all actors ===
+
+    #
+    # Gives back list of the actors
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/actors/category/<category>/limit/<limit>
+    #
+    #@route('/actors/category/<category>/limit/<limit>')
+    @route(EPCollectActors.PATH_PAR_URL, methods=[EPCollectActors.METHOD])
+    def collectActorsWithParameter(self, category, minimum, limit):
+        out = self.epCollectActors.executeByParameters(category, limit=limit)
+        return out
+
+    #
+    # Gives back list of the actors
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "limit": 15}' http://localhost:80/collect/actors
+    #
+    # GET http://localhost:80/collect/actors
+    #      body: {
+    #       "category": "movie",
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/actors', methods=['GET'])
+    @route(EPCollectActors.PATH_PAR_PAYLOAD, methods=[EPCollectActors.METHOD])
+    def collectActorsWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectActors.executeByPayload(json_data)
+        return out
+
+
+
+
 # === collect directors by movie count descending ===
 
     #
@@ -498,7 +549,7 @@ class CollectView(FlaskView):
     #
     #@route('/directors/by/movie/count/category/<category>/minimum/<minimum>/limit/<limit>')
     @route(EPCollectDirectorsByMovieCount.PATH_PAR_URL, methods=[EPCollectDirectorsByMovieCount.METHOD])
-    def collectDirectorsWithParameter(self, category, minimum, limit):
+    def collectDirectorsByMovieCountWithParameter(self, category, minimum, limit):
         out = self.EPCollectDirectorsByMovieCount.executeByParameters(category, minimum=minimum, limit=limit)
         return out
 
@@ -516,7 +567,7 @@ class CollectView(FlaskView):
     #
     #@route('/directors/by/movie/count', methods=['GET'])
     @route(EPCollectDirectorsByMovieCount.PATH_PAR_PAYLOAD, methods=[EPCollectDirectorsByMovieCount.METHOD])
-    def collectDirectorsWithPayload(self):
+    def collectDirectorsByMovieCountWithPayload(self):
         # CURL
         if request.is_json:
             json_data = request.json
@@ -530,6 +581,92 @@ class CollectView(FlaskView):
             json_data = request.args
 
         out = self.epCollectDirectorsByMovieCount.executeByPayload(json_data)
+        return out
+
+
+# === collect all directors  ===
+
+    #
+    # Gives back list of the directors
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/directors/category/<category>/limit/<limit>
+    #
+    #@route('/directors/category/<category>/limit/<limit>')
+    @route(EPCollectDirectors.PATH_PAR_URL, methods=[EPCollectDirectors.METHOD])
+    def collectDirectorsWithParameter(self, category, imit):
+        out = self.EPCollectDirectors.executeByParameters(category, limit=limit)
+        return out
+
+    #
+    # Gives back list of the directors
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "limit": 15}' http://localhost:80/collect/directors
+    #
+    # GET http://localhost:80/collect/directors
+    #      body: {
+    #       "category": "movie",
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/directors/by/movie/count', methods=['GET'])
+    @route(EPCollectDirectors.PATH_PAR_PAYLOAD, methods=[EPCollectDirectors.METHOD])
+    def collectDirectorsWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectDirectors.executeByPayload(json_data)
+        return out
+
+
+# === collect all writers  ===
+
+    #
+    # Gives back list of the writers
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/writers/category/<category>/limit/<limit>
+    #
+    #@route('/writers/category/<category>/limit/<limit>')
+    @route(EPCollectWriters.PATH_PAR_URL, methods=[EPCollectWriters.METHOD])
+    def collectWritersWithParameter(self, category, imit):
+        out = self.EPCollectWriters.executeByParameters(category, limit=limit)
+        return out
+
+    #
+    # Gives back list of the writers
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "limit": 15}' http://localhost:80/collect/writers
+    #
+    # GET http://localhost:80/collect/writers
+    #      body: {
+    #       "category": "movie",
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/writers/by/movie/count', methods=['GET'])
+    @route(EPCollectWriters.PATH_PAR_PAYLOAD, methods=[EPCollectWriters.METHOD])
+    def collectWritersWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectWriters.executeByPayload(json_data)
         return out
 
 
