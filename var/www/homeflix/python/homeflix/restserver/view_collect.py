@@ -33,6 +33,9 @@ from homeflix.restserver.endpoints.ep_collect_directors import EPCollectDirector
 from homeflix.restserver.endpoints.ep_collect_abc_by_movie_title_count import EPCollectAbcByMovieTitleCount
 from homeflix.restserver.endpoints.ep_collect_writers import EPCollectWriters
 
+from homeflix.restserver.endpoints.ep_collect_tags import EPCollectTags
+
+
 
 
 # -----------------------------------
@@ -79,6 +82,7 @@ class CollectView(FlaskView):
         self.epCollectDirectorsByMovieCount = EPCollectDirectorsByMovieCount(web_gadget)
         self.epCollectDirectors = EPCollectDirectors(web_gadget)
         self.epCollectWriters = EPCollectWriters(web_gadget)
+        self.epCollectTags = EPCollectTags(web_gadget)
         self.epCollectAbcByMovieTitleCount = EPCollectAbcByMovieTitleCount(web_gadget)
 
 # ---
@@ -550,7 +554,7 @@ class CollectView(FlaskView):
     #@route('/directors/by/movie/count/category/<category>/minimum/<minimum>/limit/<limit>')
     @route(EPCollectDirectorsByMovieCount.PATH_PAR_URL, methods=[EPCollectDirectorsByMovieCount.METHOD])
     def collectDirectorsByMovieCountWithParameter(self, category, minimum, limit):
-        out = self.EPCollectDirectorsByMovieCount.executeByParameters(category, minimum=minimum, limit=limit)
+        out = self.epCollectDirectorsByMovieCount.executeByParameters(category, minimum=minimum, limit=limit)
         return out
 
     #
@@ -594,7 +598,7 @@ class CollectView(FlaskView):
     #@route('/directors/category/<category>/limit/<limit>')
     @route(EPCollectDirectors.PATH_PAR_URL, methods=[EPCollectDirectors.METHOD])
     def collectDirectorsWithParameter(self, category, imit):
-        out = self.EPCollectDirectors.executeByParameters(category, limit=limit)
+        out = self.epCollectDirectors.executeByParameters(category, limit=limit)
         return out
 
     #
@@ -637,7 +641,7 @@ class CollectView(FlaskView):
     #@route('/writers/category/<category>/limit/<limit>')
     @route(EPCollectWriters.PATH_PAR_URL, methods=[EPCollectWriters.METHOD])
     def collectWritersWithParameter(self, category, imit):
-        out = self.EPCollectWriters.executeByParameters(category, limit=limit)
+        out = self.epCollectWriters.executeByParameters(category, limit=limit)
         return out
 
     #
@@ -667,6 +671,49 @@ class CollectView(FlaskView):
             json_data = request.args
 
         out = self.epCollectWriters.executeByPayload(json_data)
+        return out
+
+
+# === collect all tags  ===
+
+    #
+    # Gives back list of the tags
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/tags/category/<category>/limit/<limit>
+    #
+    #@route('/tags/category/<category>/limit/<limit>')
+    @route(EPCollectTags.PATH_PAR_URL, methods=[EPCollectTags.METHOD])
+    def collectTagsWithParameter(self, category, imit):
+        out = self.epCollectTags.executeByParameters(category, limit=limit)
+        return out
+
+    #
+    # Gives back list of the tags
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "limit": 15}' http://localhost:80/collect/tags
+    #
+    # GET http://localhost:80/collect/tags
+    #      body: {
+    #       "category": "movie",
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/tags', methods=['GET'])
+    @route(EPCollectTags.PATH_PAR_PAYLOAD, methods=[EPCollectTags.METHOD])
+    def collectTagsWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectTags.executeByPayload(json_data)
         return out
 
 

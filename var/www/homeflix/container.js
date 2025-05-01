@@ -1828,7 +1828,8 @@ class ThumbnailController {
 
         // Tag
         $("#dialog-form-search label[for='dialog-search-tag']").html(translated_interaction_labels['dialog']['search']['labels']['tag'] + ': ');
-        createComboBoxWithList('dialog-search-tag', all_movie_tag_list);
+        //createComboBoxWithList('dialog-search-tag', all_movie_tag_list);
+        createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
 
         // Shown level
         $("#dialog-form-search label[for='dialog-search-show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');

@@ -166,16 +166,10 @@
             "category": "movie",
             "limit": 9999,
         };
-        //result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
-        //all_movie_tag_list = result.responseJSON["data"];
-        all_movie_tag_list = [
-            "masterpiece"
-        ]
-
-
-
-
-
+        result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
+        all_movie_tag_list = result.responseJSON["data"];
+        let all_movie_tag_dict = {};
+        all_movie_tag_list.forEach(tag => all_movie_tag_dict[tag] = tag);
 
         /*
         Substitute substrings, similar to "Hello {0}".format("world") mechanizm

@@ -12,7 +12,7 @@ $ python3
 import sqlite3
 from playem.card.database import SqlDatabase as DB
 db=DB(None)
-con = sqlite3.connect("/home/akoel/.playem/playem.db")
+con = sqlite3.connect("/home/pi/.homeflix/homeflix.db")
 
 #
 # DB requests:
@@ -37,7 +37,44 @@ for hist in res.fetchall():
 
 or
 
-con.execute('SELECT DISTINCT FROM Tag WHERE tag.id_user=:user_id;', {'user_id': '1234'}).fetchall()
+con.execute('SELECT DISTINCT name FROM Tag WHERE tag.id_user=:user_id;', {'user_id': '1234'}).fetchall()
+
+
+-- -------------------------------------------------
+--
+-- Collect all tags for a user in the given category
+-- -------------------------------------------------
+--
+con.execute('''
+SELECT DISTINCT tag.name as tag
+FROM Tag, Card, Category
+WHERE
+    tag.id_card=card.id
+    AND category.id=card.id_category
+    AND category.name=:category
+    AND tag.id_user=:user_id
+ORDER BY tag;
+''', {'user_id': '1234', 'category': 'movie'}).fetchall()
+
+-- -------------------------------------------------
+--
+-- Collect tags for a card
+-- -------------------------------------------------
+--
+con.execute('''
+SELECT group_concat(tag.name) ttags,  tag.id_card
+FROM
+    Tag tag
+--WHERE
+--    card_writer.id_writer = tag.id
+GROUP BY tag.id_card
+''', {'user_id': '1234', 'category': 'movie'}).fetchall()
+
+
+
+
+
+tt0114746 => masterpiece, szórakoztató
 
 
 
@@ -62,3 +99,44 @@ curl -b cookies_1.txt --header "Content-Type: application/json" --request POST -
 # fetch lowest level
 curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/view_state/*/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
 curl -b cookies_1.txt --header "Content-Type: application/json" --request GET  http://localhost:80/collect/lowest/category/movie/view_state/interrupted/level/*/genres/*/themes/*/directors/*/actors/*/lecturers/*/origins/*/decade/*/lang/en
+
+
+
+#
+# start python
+#
+# cd /var/www/playem/python
+$ source /var/www/playem/python/env/bin/activate
+$ python3
+
+
+#
+# intitialization
+#
+import sqlite3
+from playem.card.database import SqlDatabase as DB
+db=DB(None)
+con = sqlite3.connect("/home/pi/.homeflix/homeflix.db")
+
+#
+# Test
+#
+con.execute('SELECT * FROM Tag;').fetchall()
+
+
+
+'''
+                   SELECT DISTINCT
+                      group_concat(name) tag
+                      id_card
+                   FROM
+                      Tag tag
+                   WHERE
+                      id_user=:user_id
+                   GROUP BY id_card
+                   ORDER BY tag
+                   LIMIT :limit
+''',{'user_id': 1234, 'category': 'movie', 'limit': 100})
+
+
+con.execute('SELECT DISTINCT group_concat(name) tag, id_card FROM Tag tag WHERE id_user=1 GROUP BY id_card ORDER BY tag LIMIT 10;').fetchall()

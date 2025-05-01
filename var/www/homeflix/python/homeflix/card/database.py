@@ -2874,7 +2874,7 @@ class SqlDatabase:
 
     def get_list_of_writers(self, category, limit=15, json=True):
         """
-        Gives back drivers name's list, ordered by the name
+        Gives back writers name's list, ordered by the name
         """
 
         result = False
@@ -2926,6 +2926,63 @@ class SqlDatabase:
                 cur.close()
 
         return {"result": result, "data": records, "error": error_message}
+
+    def get_list_of_tags(self, category, limit=15, json=True):
+        """
+        Gives back tags for the given category for the user, ordered by the name
+        """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            user_id = -1
+
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    SELECT DISTINCT tag.name as tag
+                    FROM Tag, Card, Category
+                    WHERE
+                        tag.id_card=card.id
+                        AND category.id=card.id_category
+                        AND category.name=:category
+                        AND tag.id_user=:user_id
+                    ORDER BY tag;
+                '''
+
+                query_parameters = {'user_id': user_id, 'category': category, 'limit': limit}
+
+                logging.debug("get_list_of_tags: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['tag'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the tag list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
+
+
 
 
     def get_abc_of_movie_title(self, category, maximum, lang):
@@ -3015,7 +3072,8 @@ class SqlDatabase:
 
                 query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
 
-                query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
+##                query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'tags': tag, 'lang': lang, 'limit': limit}
+                query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'tags': tags, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
@@ -3218,7 +3276,7 @@ class SqlDatabase:
 # RAW Queries
 
     def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None):
-        tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
+        tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tggng.tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
         actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
@@ -4161,6 +4219,10 @@ class SqlDatabase:
             WHERE
                 mixed_id_list.id=core.id''' + ( ('''
                 AND rtng.rate >= ''' + str(rate_value) ) if rate_value else '') + '''
+
+                ''' + ('''
+                --- WHERE TAGS - conditional ---
+                AND ''' + tags_where if tags_where else '') + '''
 
             ORDER BY CASE
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
