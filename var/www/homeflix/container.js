@@ -1191,8 +1191,21 @@ class ObjDescriptionContainer {
                         descTagging.append(tagButton);
                     }
 
+
+
+
+
+
                     // 'Add TAG' listener
                     tagButtonText.on("click", function() {
+
+                        // First remove any existing tagging fields
+//                        $('#description-tagging-field').remove();
+
+//                        $('.custom-combobox-description-tagging-field').remove();
+//                        $('.custom-combobox-toggle-tagging-field').remove();
+
+
 
                         // Disable the global key event listener
                         let orig_focus_task = refToObjThumbnailController.focusTask
@@ -1200,13 +1213,23 @@ class ObjDescriptionContainer {
 
                         tagButton.hide(); // Hide the + button
 
+
+//    <td><input type="text" name="dialog-search-tag" id="dialog-search-tag" class="text ui-widget-content ui-corner-all"></td>
+
                         // Create text field
                         let textField = $('<input>', {
                             type: 'text',
                             class: 'description-tagging-field',
+                            id: 'description-tagging-field',
                         });
+
                         // put the text field in the first position
                         descTagging.prepend(textField); // Add text field
+
+
+                        createFreeComboBoxWithDict('description-tagging-field', all_movie_tag_dict);
+
+textField = $('#description-tagging-field')
 
                         // Focus on the text field
                         textField.focus();
@@ -1215,6 +1238,9 @@ class ObjDescriptionContainer {
                         textField.on('blur', function() {
                             textField.remove();     // Remove text field
                             tagButton.show();       // Show the + button again
+
+                            $('.custom-combobox-description-tagging-field').remove();
+
 
                             // Enable the global key event listener
                             refToObjThumbnailController.focusTask = orig_focus_task;
@@ -1278,9 +1304,7 @@ class ObjDescriptionContainer {
                                                     let other_card_id = single.medium_dict["card_id"];
 
                                                     if(other_card_id == card_id){
-
                                                         thumbnail.addExtraTag(tag_name);
-
                                                     }
                                                 }
                                             }
@@ -1300,9 +1324,12 @@ class ObjDescriptionContainer {
                         });
                     });
 
-                    // 'Remove TAG' listener
-                    $(".description-tagging-button-close").on("click", function() {
 
+
+
+
+                    // 'Remove TAG' listener
+                    $("#description-tagging").on("click", ".description-tagging-button-close", function() {
                         // Remove the tag from the DB
                         let tag_name = $(this).attr('tag_name')
                         let rq_method = "DELETE";
@@ -1318,12 +1345,8 @@ class ObjDescriptionContainer {
                             let hash = $(this).attr('hash')
                             $('#description-tagging-' + hash).remove()
 
-                            //
                             // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
-                            //
                             for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
-                                // console.log("container: " + containerIndex);
-
                                 let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
                                 let thumbnailList = objThumbnailContainer.thumbnailList
                                 for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
@@ -1334,7 +1357,6 @@ class ObjDescriptionContainer {
                                         let other_card_id = single.medium_dict["card_id"];
 
                                         if(other_card_id == card_id){
-
                                             thumbnail.removeExtrasTag(tag_name);
                                         }
                                     }
