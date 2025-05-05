@@ -10,10 +10,11 @@ from homeflix.restserver.representations import output_json
 
 from homeflix.restserver.endpoints.ep_translate_genre import EPTranslateGenre
 from homeflix.restserver.endpoints.ep_translate_genres import EPTranslateGenres
-from homeflix.restserver.endpoints.ep_translate_titles import EPTranslateTitles
+from homeflix.restserver.endpoints.ep_translate_labels import EPTranslateLabels
 from homeflix.restserver.endpoints.ep_translate_interaction_labels import EPTranslateInteractionLabels
 from homeflix.restserver.endpoints.ep_translate_categories import EPTranslateCategories
 from homeflix.restserver.endpoints.ep_translate_themes import EPTranslateThemes
+from homeflix.restserver.endpoints.ep_translate_countries import EPTranslateCountries
 from homeflix.restserver.endpoints.ep_translate_levels import EPTranslateLevels
 
 
@@ -32,10 +33,11 @@ class TranslateView(FlaskView):
 
         self.epTranslateGenre = EPTranslateGenre(web_gadget)
         self.epTranslateGenres = EPTranslateGenres(web_gadget)
-        self.epTranslateTitles = EPTranslateTitles(web_gadget)
+        self.epTranslateLabels = EPTranslateLabels(web_gadget)
         self.epTranslateInteractionLabels = EPTranslateInteractionLabels(web_gadget)
         self.epTranslateCategories = EPTranslateCategories(web_gadget)
         self.epTranslateThemes = EPTranslateThemes(web_gadget)
+        self.epTranslateCountries = EPTranslateCountries(web_gadget)
         self.epTranslateLevels = EPTranslateLevels(web_gadget)
 
     #
@@ -82,7 +84,7 @@ class TranslateView(FlaskView):
     #
     #@route('/genre/<genre>/category/<movie>/lang/<lang>')
     @route(EPTranslateGenre.PATH_PAR_URL, methods=[EPTranslateGenre.METHOD])
-    def translateGenreWithParameter(self, genre, category, lang):        
+    def translateGenreWithParameter(self, genre, category, lang):
         out = self.epTranslateGenre.executeByParameters(category=category, genre=genre, lang=lang)
         return out
 
@@ -95,7 +97,7 @@ class TranslateView(FlaskView):
     #
     #@route('/genres/category/<movie>/lang/<lang>')
     @route(EPTranslateGenres.PATH_PAR_URL, methods=[EPTranslateGenres.METHOD])
-    def translateGenresWithParameter(self, category, lang):        
+    def translateGenresWithParameter(self, category, lang):
         out = self.epTranslateGenres.executeByParameters(category=category, lang=lang)
         return out
 
@@ -105,26 +107,38 @@ class TranslateView(FlaskView):
     #
     # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/themes/lang/en
     #
-    # GET http://localhost:80/translate/themes/movie/lang/en
+    # GET http://localhost:80/translate/themes/lang/en
     #
     #@route('/themes/lang/<lang>')
     @route(EPTranslateThemes.PATH_PAR_URL, methods=[EPTranslateThemes.METHOD])
-    def translateThemesWithParameter(self, lang):        
+    def translateThemesWithParameter(self, lang):
         out = self.epTranslateThemes.executeByParameters(lang=lang)
         return out
-    
+
+    #
+    # Gives back translation of all countries
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/countries/lang/en
+    #
+    # GET http://localhost:80/translate/countries/lang/en
+    #
+    #@route('/countries/lang/<lang>')
+    @route(EPTranslateCountries.PATH_PAR_URL, methods=[EPTranslateCountries.METHOD])
+    def translateCountriesWithParameter(self, lang):
+        out = self.epTranslateCountries.executeByParameters(lang=lang)
+        return out
 
     #
     # Gives back translation of all titles with parameters
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/titles/lang/en
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/translate/labels/lang/en
     #
-    # GET http://localhost:80/translate/titles/lang/en
+    # GET http://localhost:80/translate/labels/lang/en
     #
     #@route('/titles/lang/<lang>')
-    @route(EPTranslateTitles.PATH_PAR_URL, methods=[EPTranslateTitles.METHOD])
-    def translateTitlesWithParameter(self, lang):        
-        out = self.epTranslateTitles.executeByParameters(lang=lang)
+    @route(EPTranslateLabels.PATH_PAR_URL, methods=[EPTranslateLabels.METHOD])
+    def translateLabelsWithParameter(self, lang):
+        out = self.epTranslateLabels.executeByParameters(lang=lang)
         return out
 
     #
@@ -136,7 +150,7 @@ class TranslateView(FlaskView):
     #
     #@route('/interaction_labels/lang/<lang>')
     @route(EPTranslateInteractionLabels.PATH_PAR_URL, methods=[EPTranslateInteractionLabels.METHOD])
-    def translateInteractionlabelsWithParameter(self, lang):        
+    def translateInteractionlabelsWithParameter(self, lang):
         out = self.epTranslateInteractionLabels.executeByParameters(lang=lang)
         return out
 
@@ -149,7 +163,7 @@ class TranslateView(FlaskView):
     #
     #@route('/categories/lang/<lang>')
     @route(EPTranslateCategories.PATH_PAR_URL, methods=[EPTranslateCategories.METHOD])
-    def translateCategoriesWithParameter(self, lang):        
+    def translateCategoriesWithParameter(self, lang):
         out = self.epTranslateCategories.executeByParameters(lang=lang)
         return out
 
@@ -162,7 +176,7 @@ class TranslateView(FlaskView):
     #
     #@route('/levels/lang/<lang>')
     @route(EPTranslateLevels.PATH_PAR_URL, methods=[EPTranslateLevels.METHOD])
-    def translateLevelsWithParameter(self, lang):        
+    def translateLevelsWithParameter(self, lang):
         out = self.epTranslateLevels.executeByParameters(lang=lang)
         return out
 

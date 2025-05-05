@@ -7,12 +7,12 @@ from homeflix.translator.translator import Translator
 
 from flask import request
 
-class EPTranslateTitles(EP):
+class EPTranslateCountries(EP):
 
-    URL = '/translate/titles'
+    URL = '/translate/countries'
 
-    PATH_PAR_PAYLOAD = '/titles'
-    PATH_PAR_URL = '/titles/lang/<lang>'
+    PATH_PAR_PAYLOAD = '/countries'
+    PATH_PAR_URL = '/countries/lang/<lang>'
 
     METHOD = 'GET'
 
@@ -24,23 +24,24 @@ class EPTranslateTitles(EP):
     def executeByParameters(self, lang) -> dict:
 
         payload = {}
-        payload[EPTranslateTitles.ATTR_LANG] = lang
-        
+        payload[EPTranslateCountries.ATTR_LANG] = lang
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
 
         remoteAddress = request.remote_addr
 
-        lang = payload[EPTranslateTitles.ATTR_LANG]
+        lang = payload[EPTranslateCountries.ATTR_LANG]
 
         logging.debug( "WEB request ({0}): {1} {2} ('{3}': {4})".format(
-                    remoteAddress, EPTranslateTitles.METHOD, EPTranslateTitles.URL,
-                    EPTranslateTitles.ATTR_LANG, lang
+                    remoteAddress, EPTranslateCountries.METHOD, EPTranslateCountries.URL,
+                    EPTranslateCountries.ATTR_LANG, lang
                 )
         )
 
         trans = Translator.getInstance(lang)
-        output=trans.translate_titles()
+        output=trans.translate_countries()
 
-        return output_json(output, EP.CODE_OK)
+        return output_json({"result": True, "data": output, "error": None}, EP.CODE_OK)
+#        return output_json(output, EP.CODE_OK)

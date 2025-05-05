@@ -25,7 +25,7 @@ class EPTranslateInteractionLabels(EP):
 
         payload = {}
         payload[EPTranslateInteractionLabels.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -43,4 +43,5 @@ class EPTranslateInteractionLabels(EP):
         trans = Translator.getInstance(lang)
         output=trans.translate_interaction_labels()
 
-        return output_json(output, EP.CODE_OK)
+        return output_json({"result": True, "data": output, "error": None}, EP.CODE_OK)
+#        return output_json(output, EP.CODE_OK)

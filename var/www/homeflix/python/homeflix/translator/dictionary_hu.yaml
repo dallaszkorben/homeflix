@@ -455,9 +455,9 @@ title:
     list: Lista
     media: Media
     films: Fiction movies
-    _documentaries: Documetary
+    _documentaries: Dokumentum film
     podcast: Podcast
-    category: Categoria
+    category: Kategoria
     categories: Kategoriák
     genre: Műfaj
     theme: Téma
@@ -567,12 +567,12 @@ title:
     date: Dátum
     year: Év
     rate: Rate
-    country: Country
+    country: Ország
 
-    storyline: Story
-    lyrics: Lyrics
+    storyline: Történet
+    lyrics: Zeneszöveg
     topic: Topic
-    ingredient: Ingredients
+    ingredient: Alapanyag
     method: Method
 
     best: Best

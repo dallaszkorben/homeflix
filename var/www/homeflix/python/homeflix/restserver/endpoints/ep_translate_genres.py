@@ -27,7 +27,7 @@ class EPTranslateGenres(EP):
         payload = {}
         payload[EPTranslateGenres.ATTR_CATEGORY] = category
         payload[EPTranslateGenres.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -47,4 +47,5 @@ class EPTranslateGenres(EP):
         trans = Translator.getInstance(lang)
         output=trans.translate_genres(category=category)
 
-        return output_json(output, EP.CODE_OK)
+        return output_json({"result": True, "data": output, "error": None}, EP.CODE_OK)
+#        return output_json(output, EP.CODE_OK)

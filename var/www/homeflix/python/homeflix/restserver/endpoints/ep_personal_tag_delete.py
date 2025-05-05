@@ -11,7 +11,7 @@ from flask import request
 
 class EPPersonalTagDelete(EP):
 
-    URL = '/personal/tag/insert'
+    URL = '/personal/tag/delete'
 
     PATH_PAR_PAYLOAD = '/tag/delete'
 
@@ -19,7 +19,7 @@ class EPPersonalTagDelete(EP):
 
     ATTR_CARD_ID = 'card_id'
     ATTR_NAME = 'name'
-    
+
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 

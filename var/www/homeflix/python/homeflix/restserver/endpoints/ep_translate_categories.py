@@ -25,7 +25,7 @@ class EPTranslateCategories(EP):
 
         payload = {}
         payload[EPTranslateCategories.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -41,6 +41,7 @@ class EPTranslateCategories(EP):
         )
 
         trans = Translator.getInstance(lang)
-        output=trans.translate_titles()
+        output=trans.translate_categories()
 
-        return output_json(output, EP.CODE_OK)
+        return output_json({"result": True, "data": output, "error": None}, EP.CODE_OK)
+#        return output_json(output, EP.CODE_OK)

@@ -77,13 +77,18 @@ class Translator( Property ):
 #            output[title] = self.translate_title(title)
         return interaction_label_list
 
-
+    def translate_category(self, category):
+        try:
+            tr = self.actual_dictionary['category'][category]
+        except KeyError:
+            tr = category
+        return tr
 
     def translate_categories(self):
         output = {}
         category_list = self.actual_dictionary['category']
         for category in category_list:
-            output[title] = self.translate_category(category)
+            output[category] = self.translate_category(category)
         return output
 
     def translate_genre(self, category, genre):
@@ -115,6 +120,20 @@ class Translator( Property ):
         theme_list = self.actual_dictionary['theme']
         for theme in theme_list:
             output[theme] = self.translate_theme(theme)
+        return output
+
+    def translate_country(self, country):
+        try:
+            tr = self.actual_dictionary['country']['long'][country]
+        except KeyError:
+            tr = country
+        return tr
+
+    def translate_countries(self):
+        output = {}
+        country_list = self.actual_dictionary['country']['long']
+        for country in country_list:
+            output[country] = self.translate_country(country)
         return output
 
     def translate_level(self, level):

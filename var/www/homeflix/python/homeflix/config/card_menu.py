@@ -503,7 +503,7 @@ class CardMenu( Property ):
                                             "order": 0,
                                             "dynamic_hard_coded": {
                                               "title": {
-                                                "dict_translator": "translated_titles",
+                                                "dict_translator": "translated_labels",
                                                 "id": "movie_continue_playing"
                                               },
                                               "data": {
@@ -522,7 +522,7 @@ class CardMenu( Property ):
                                             "order": 1,
                                             "dynamic_hard_coded": {
                                               "title": {
-                                                "dict_translator": "translated_titles",
+                                                "dict_translator": "translated_labels",
                                                 "id": "movie_last_watched"
                                               },
                                               "data": {
@@ -541,7 +541,7 @@ class CardMenu( Property ):
                                             "order": 2,
                                             "dynamic_hard_coded": {
                                               "title": {
-                                                "dict_translator": "translated_titles",
+                                                "dict_translator": "translated_labels",
                                                 "id": "movie_most_watched"
                                               },
                                               "data": {

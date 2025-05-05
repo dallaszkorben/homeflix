@@ -965,6 +965,59 @@ class ObjDescriptionContainer {
         return this.objThumbnailController;
     }
 
+
+
+
+    handleTagDelete(event, card_id, tag_name, hash, mainObject) {
+        event.stopPropagation(); // Prevent event bubbling
+
+//        const $clickedElement = $(this);
+//        const tag_name = $clickedElement.attr('tag_name');
+//        const hash = $clickedElement.attr('hash');
+
+        // Remove the tag from the DB
+        const rq_method = "DELETE";
+        const rq_url = "http://" + host + port + "/personal/tag/delete";
+        const rq_data = {"card_id": card_id, "name": tag_name};
+
+        const response = $.getJSON({
+            method: rq_method,
+            url: rq_url,
+            async: false,
+            dataType: "json",
+            data: rq_data
+        });
+
+        // If the removal was successful
+        if(response.status == 200){
+            // Remove the tag from the screen
+            $('#description-tagging-' + hash).remove();
+
+            // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+            mainObject.objScrollSection.thumbnailContainerList.forEach(objThumbnailContainer => {
+                objThumbnailContainer.thumbnailList.forEach(thumbnail => {
+                    const single = thumbnail.function_for_selection.single;
+                    if("medium_dict" in single){
+                        const other_card_id = single.medium_dict["card_id"];
+                        if(other_card_id == card_id){
+                            thumbnail.removeExtrasTag(tag_name);
+                        }
+                    }
+                });
+            });
+
+            // Get the new list of tags
+            const data = {
+                "category": "movie",
+                "limit": 9999,
+            };
+            all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags");
+        }
+    }
+
+
+
+
     /**
     * Refreshes the Description
     * It configures an onload listener on the new image.
@@ -1148,8 +1201,8 @@ class ObjDescriptionContainer {
                 //
                 // --- extra - tagging ---
                 //
-                let descTagging = $("#description-tagging");
-                descTagging.empty();
+                let descTaggingDiv = $("#description-tagging");
+                descTaggingDiv.empty();
 
                 if(extra["medium_path"]){
 
@@ -1158,13 +1211,17 @@ class ObjDescriptionContainer {
                         id: 'description-tagging-add',
                         class: "description-tagging-button"
                     });
-                    let tagButtonText = $('<span>', {
+                    let tagButtonAdd = $('<span>', {
                         class: "description-tagging-button-add",
                         //➕
                         text: "  \u{2795}  "
                     });
-                    tagButton.append(tagButtonText);
-                    descTagging.append(tagButton);
+                    tagButton.append(tagButtonAdd);
+                    descTaggingDiv.append(tagButton);
+
+                    $("#description-tagging")
+
+
 
                     // Construct TAG buttons
                     for (let i = 0; i < extra["tags"].length; i++ ){
@@ -1187,8 +1244,9 @@ class ObjDescriptionContainer {
                         });
                         tagButton.append(tagButtonText);
                         tagButton.append(tagButtonClose);
+                        descTaggingDiv.append(tagButton);
 
-                        descTagging.append(tagButton);
+                        tagButtonClose.on("click", (event) => {mainObject.handleTagDelete(event, card_id, tag_name, hash, mainObject);});
                     }
 
 
@@ -1197,24 +1255,13 @@ class ObjDescriptionContainer {
 
 
                     // 'Add TAG' listener
-                    tagButtonText.on("click", function() {
-
-                        // First remove any existing tagging fields
-//                        $('#description-tagging-field').remove();
-
-//                        $('.custom-combobox-description-tagging-field').remove();
-//                        $('.custom-combobox-toggle-tagging-field').remove();
-
-
+                    tagButtonAdd.on("click", function() {
 
                         // Disable the global key event listener
                         let orig_focus_task = refToObjThumbnailController.focusTask
                         refToObjThumbnailController.focusTask = FocusTask.Text;
 
                         tagButton.hide(); // Hide the + button
-
-
-//    <td><input type="text" name="dialog-search-tag" id="dialog-search-tag" class="text ui-widget-content ui-corner-all"></td>
 
                         // Create text field
                         let textField = $('<input>', {
@@ -1224,12 +1271,9 @@ class ObjDescriptionContainer {
                         });
 
                         // put the text field in the first position
-                        descTagging.prepend(textField); // Add text field
-
-
+                        descTaggingDiv.prepend(textField); // Add text field
                         createFreeComboBoxWithDict('description-tagging-field', all_movie_tag_dict);
-
-textField = $('#description-tagging-field')
+                        textField = $('#description-tagging-field')
 
                         // Focus on the text field
                         textField.focus();
@@ -1240,7 +1284,6 @@ textField = $('#description-tagging-field')
                             tagButton.show();       // Show the + button again
 
                             $('.custom-combobox-description-tagging-field').remove();
-
 
                             // Enable the global key event listener
                             refToObjThumbnailController.focusTask = orig_focus_task;
@@ -1285,10 +1328,66 @@ textField = $('#description-tagging-field')
                                             tag_name: tag_name,
                                             hash: hash
                                         });
+
                                         tagButton.append(tagButtonText);
                                         tagButton.append(tagButtonClose);
-                                        descTagging.append(tagButton);
+                                        descTaggingDiv.append(tagButton);
 
+                                        tagButtonClose.on("click", (event) => {mainObject.handleTagDelete(event, card_id, tag_name, hash, mainObject);});
+//
+// this listener should be added to the new and the existing buttons as well !!!!!
+//
+
+//tagButtonClose.on("click", function() {
+//
+//    e.stopPropagation(); // Prevent event bubbling
+//
+//    // Remove the tag from the DB
+//    let tag_name = $(this).attr('tag_name')
+//    let rq_method = "DELETE";
+//    let rq_url = "http://" + host + port + "/personal/tag/delete";
+//    let rq_assync = false;
+//    let rq_data = {"card_id": card_id, "name": tag_name}
+//    let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
+//
+//    // If the removal was successful
+//    if(response.status == 200){
+//
+//        // Remove the tag from the screen
+//        let hash = $(this).attr('hash')
+//        $('#description-tagging-' + hash).remove()
+//
+//        // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+//        for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
+//            let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
+//            let thumbnailList = objThumbnailContainer.thumbnailList
+//            for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+//                let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
+//
+//                let single = thumbnail.function_for_selection.single;
+//                if("medium_dict" in single){
+//                    let other_card_id = single.medium_dict["card_id"];
+//
+//                    if(other_card_id == card_id){
+//                        thumbnail.removeExtrasTag(tag_name);
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Get the new list of tags
+//        data = {
+//            "category": "movie",
+//            "limit": 9999,
+//        };
+//        all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags");
+//
+//    }
+//});
+
+
+
+///
                                         //
                                         // Add the tag to the hierarchy for ALL Thumbnails in all ThumbnailContainer
                                         //
@@ -1309,6 +1408,13 @@ textField = $('#description-tagging-field')
                                                 }
                                             }
                                         }
+
+                                        // Get the new list of tags
+                                        data = {
+                                            "category": "movie",
+                                            "limit": 9999,
+                                        };
+                                        all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags");
                                     }
                                 }
 
@@ -1324,50 +1430,53 @@ textField = $('#description-tagging-field')
                         });
                     });
 
-
-
-
-
                     // 'Remove TAG' listener
-                    $("#description-tagging").on("click", ".description-tagging-button-close", function() {
-                        // Remove the tag from the DB
-                        let tag_name = $(this).attr('tag_name')
-                        let rq_method = "DELETE";
-                        let rq_url = "http://" + host + port + "/personal/tag/delete";
-                        let rq_assync = false;
-                        let rq_data = {"card_id": card_id, "name": tag_name}
-                        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
-
-                        // If the removal was successful
-                        if(response.status == 200){
-
-                            // Remove the tag from the screen
-                            let hash = $(this).attr('hash')
-                            $('#description-tagging-' + hash).remove()
-
-                            // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
-                            for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
-                                let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
-                                let thumbnailList = objThumbnailContainer.thumbnailList
-                                for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
-                                    let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
-
-                                    let single = thumbnail.function_for_selection.single;
-                                    if("medium_dict" in single){
-                                        let other_card_id = single.medium_dict["card_id"];
-
-                                        if(other_card_id == card_id){
-                                            thumbnail.removeExtrasTag(tag_name);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
+////                    $("#description-tagging").on("click", ".description-tagging-button-close", function() {
+//                    tagButtonClose.on("click", function() {
+//
+//                        // Remove the tag from the DB
+//                        let tag_name = $(this).attr('tag_name')
+//                        let rq_method = "DELETE";
+//                        let rq_url = "http://" + host + port + "/personal/tag/delete";
+//                        let rq_assync = false;
+//                        let rq_data = {"card_id": card_id, "name": tag_name}
+//                        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
+//
+//                        // If the removal was successful
+//                        if(response.status == 200){
+//
+//                            // Remove the tag from the screen
+//                            let hash = $(this).attr('hash')
+//                            $('#description-tagging-' + hash).remove()
+//
+//                            // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
+//                            for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
+//                                let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
+//                                let thumbnailList = objThumbnailContainer.thumbnailList
+//                                for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
+//                                    let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
+//
+//                                    let single = thumbnail.function_for_selection.single;
+//                                    if("medium_dict" in single){
+//                                        let other_card_id = single.medium_dict["card_id"];
+//
+//                                        if(other_card_id == card_id){
+//                                            thumbnail.removeExtrasTag(tag_name);
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//                            // Get the new list of tags
+//                            data = {
+//                                "category": "movie",
+//                                "limit": 9999,
+//                            };
+//                            all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags");
+//
+//                        }
+//                    });
                 }
-
-
-
 
                 //
                 // --- extra - rating ---
@@ -1514,19 +1623,19 @@ textField = $('#description-tagging-field')
                 });
                 descTextCredentials.append(credTable);
 
-                mainObject.printCredentals(credTable, credentials, "performers", translated_titles['performer'] + ":");
-                mainObject.printCredentals(credTable, credentials, "directors", translated_titles['director'] + ":");
-                mainObject.printCredentals(credTable, credentials, "writers", translated_titles['writer'] + ":");
-                mainObject.printCredentals(credTable, credentials, "stars", translated_titles['star'] + ":");
-                mainObject.printCredentals(credTable, credentials, "actors", translated_titles['actor'] + ":");
-                mainObject.printCredentals(credTable, credentials, "voices", translated_titles['voice'] + ":");
-                mainObject.printCredentals(credTable, credentials, "hosts", translated_titles['host'] + ":");
-                mainObject.printCredentals(credTable, credentials, "guests", translated_titles['guest'] + ":");
-                mainObject.printCredentals(credTable, credentials, "interviewers", translated_titles['interviewer'] + ":");
-                mainObject.printCredentals(credTable, credentials, "interviewees", translated_titles['interviewee'] + ":");
-                mainObject.printCredentals(credTable, credentials, "presenters", translated_titles['presenter'] + ":");
-                mainObject.printCredentals(credTable, credentials, "lecturers", translated_titles['lecturer'] + ":");
-                mainObject.printCredentals(credTable, credentials, "reporters", translated_titles['reporter'] + ":");
+                mainObject.printCredentals(credTable, credentials, "performers", translated_labels.get('performer') + ":");
+                mainObject.printCredentals(credTable, credentials, "directors", translated_labels.get('director') + ":");
+                mainObject.printCredentals(credTable, credentials, "writers", translated_labels.get('writer') + ":");
+                mainObject.printCredentals(credTable, credentials, "stars", translated_labels.get('star') + ":");
+                mainObject.printCredentals(credTable, credentials, "actors", translated_labels.get('actor') + ":");
+                mainObject.printCredentals(credTable, credentials, "voices", translated_labels.get('voice') + ":");
+                mainObject.printCredentals(credTable, credentials, "hosts", translated_labels.get('host') + ":");
+                mainObject.printCredentals(credTable, credentials, "guests", translated_labels.get('guest') + ":");
+                mainObject.printCredentals(credTable, credentials, "interviewers", translated_labels.get('interviewer') + ":");
+                mainObject.printCredentals(credTable, credentials, "interviewees", translated_labels.get('interviewee') + ":");
+                mainObject.printCredentals(credTable, credentials, "presenters", translated_labels.get('presenter') + ":");
+                mainObject.printCredentals(credTable, credentials, "lecturers", translated_labels.get('lecturer') + ":");
+                mainObject.printCredentals(credTable, credentials, "reporters", translated_labels.get('reporter') + ":");
 
                 let descAppendixDownload = $("#description-appendix-download");
                 let descAppendixPlay = $("#description-appendix-play");
@@ -1820,52 +1929,56 @@ class ThumbnailController {
         refToThis.originalTask = refToThis.focusTask;
         refToThis.focusTask = FocusTask.Modal_Continue_Play;
 
-        let submit_button = translated_interaction_labels['dialog']['search']['buttons']['submit'];
-        let cancel_button = translated_interaction_labels['dialog']['search']['buttons']['cancel'];
+        let dialog_dict = translated_interaction_labels.get('dialog');
+
+        let submit_button = dialog_dict['search']['buttons']['submit'];
+        let cancel_button = dialog_dict['search']['buttons']['cancel'];
+
 
         /* Search dialog form */
-        $("#dialog-form-search label[for='dialog-search-container-title']").html(translated_interaction_labels['dialog']['search']['labels']['container_title'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
 
         // Genre
-        $("#dialog-form-search label[for='dialog-search-genre']").html(translated_interaction_labels['dialog']['search']['labels']['genre'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
         createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
 
         // Theme
-        $("#dialog-form-search label[for='dialog-search-theme']").html(translated_interaction_labels['dialog']['search']['labels']['theme'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
         createComboBoxWithDict('dialog-search-theme', translated_themes);
 
         // Director
-        $("#dialog-form-search label[for='dialog-search-director']").html(translated_interaction_labels['dialog']['search']['labels']['director'] + ': ');
-        createComboBoxWithList('dialog-search-director', all_movie_director_list);
+        $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
+        createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
 
         // Writer
-        $("#dialog-form-search label[for='dialog-search-writer']").html(translated_interaction_labels['dialog']['search']['labels']['writer'] + ': ');
-        createComboBoxWithList('dialog-search-writer', all_movie_writer_list);
+        $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
+        createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
 
         // Actor
-        $("#dialog-form-search label[for='dialog-search-actor']").html(translated_interaction_labels['dialog']['search']['labels']['actor'] + ': ');
-        createComboBoxWithList('dialog-search-actor', all_movie_actor_list);
+        $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
+        createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
 
-        $("#dialog-form-search label[for='dialog-search-origin']").html(translated_interaction_labels['dialog']['search']['labels']['origin'] + ': ');
+        // Origin
+        $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
+        createComboBoxWithDict('dialog-search-origin', translated_countries);
 
         // Tag
-        $("#dialog-form-search label[for='dialog-search-tag']").html(translated_interaction_labels['dialog']['search']['labels']['tag'] + ': ');
-        //createComboBoxWithList('dialog-search-tag', all_movie_tag_list);
+        $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
         createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
 
         // Shown level
-        $("#dialog-form-search label[for='dialog-search-show-level']").html(translated_interaction_labels['dialog']['search']['labels']['show_level'] + ': ');
-        $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_titles['movie_show_level_highest']);
-        $("#dialog-form-search select option[value='/collect/lowest']").html(translated_titles['movie_show_level_lowest']);
+        $("#dialog-form-search label[for='dialog-search-show-level']").html(dialog_dict['search']['labels']['show_level'] + ': ');
+        $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_labels.get('movie_show_level_highest'));
+        $("#dialog-form-search select option[value='/collect/lowest']").html(translated_labels.get('movie_show_level_lowest'));
 
         // Viewed state
-        $("#dialog-form-search label[for='dialog-search-view-state']").html(translated_interaction_labels['dialog']['search']['labels']['view_state'] + ': ');
-        $("#dialog-form-search select option[value='interrupted']").html(translated_titles['movie_interrupted']);
-        $("#dialog-form-search select option[value='last_watched']").html(translated_titles['movie_last_watched']);
-        $("#dialog-form-search select option[value='most_watched']").html(translated_titles['movie_most_watched']);
+        $("#dialog-form-search label[for='dialog-search-view-state']").html(dialog_dict['search']['labels']['view_state'] + ': ');
+        $("#dialog-form-search select option[value='interrupted']").html(translated_labels.get('movie_interrupted'));
+        $("#dialog-form-search select option[value='last_watched']").html(translated_labels.get('movie_last_watched'));
+        $("#dialog-form-search select option[value='most_watched']").html(translated_labels.get('movie_most_watched'));
 
         // Show rate
-        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate'] + ': ');
+        $("#dialog-form-search label[for='dialog-search-rate']").html(dialog_dict['search']['labels']['rate'] + ': ');
 //        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
 
         // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
@@ -1877,7 +1990,7 @@ class ThumbnailController {
                 // Set the width of the Dialog()
                 width: 600,
                 modal: true,
-                title: translated_interaction_labels['dialog']['search']['title'],
+                title: dialog_dict['search']['title'],
                 buttons: {
                     [submit_button]: function() {
                         $( this ).dialog( "close" );
@@ -1890,7 +2003,7 @@ class ThumbnailController {
                         var director = $("#dialog-search-director").val();
                         var writer = $("#dialog-search-writer").val();
                         var actor = $("#dialog-search-actor").val();
-                        var origin = $("#dialog-search-origin").val();
+                        var origin = getComboboxValue("#dialog-search-origin");
                         var tag = $("#dialog-search-tag").val();
                         var show_level = $("#dialog-search-show-level").val();
                         var view_state = $("#dialog-search-view-state").val();

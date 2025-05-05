@@ -25,7 +25,7 @@ class EPTranslateThemes(EP):
 
         payload = {}
         payload[EPTranslateThemes.ATTR_LANG] = lang
-        
+
         return self.executeByPayload(payload)
 
     def executeByPayload(self, payload) -> dict:
@@ -43,4 +43,5 @@ class EPTranslateThemes(EP):
         trans = Translator.getInstance(lang)
         output=trans.translate_themes()
 
-        return output_json(output, EP.CODE_OK)
+        return output_json({"result": True, "data": output, "error": None}, EP.CODE_OK)
+#        return output_json(output, EP.CODE_OK)

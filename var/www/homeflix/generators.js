@@ -232,7 +232,7 @@ class RestGenerator extends Generator{
         let result_title = title;
         let show_sequence = hit['title_show_sequence'];
         if(show_sequence != "" && hit['sequence'] && hit['sequence'] > 0){
-            let part = translated_titles['sequence'][show_sequence].format("0", hit['sequence']);
+            let part = translated_labels.get('sequence')[show_sequence].format("0", hit['sequence']);
 
             if(result_title){
                 result_title = result_title + separator + part;
@@ -731,7 +731,7 @@ function buildTitleFromTitleList(inputList) {
             const key = trans.key;
 
             if (trans.translator && trans.translator !== null) {
-                return trans.translator + `["${key}"]`;
+                return trans.translator + `.get("${key}")`;
             } else {
                 return ``;
             }
