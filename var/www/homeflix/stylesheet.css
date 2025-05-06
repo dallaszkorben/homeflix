@@ -475,34 +475,6 @@ body {
     text-shadow: 0 0 #ff0000;
 }
 
-/* #description-tagging-field{ */
-    /* font-family: inherit; */
-    /* display: inline-block; */
-    /* margin: 4px; */
-    /* font-weight: bold; */
-    /* text-align: left; */
-    /* white-space: nowrap; */
-    /* vertical-align: middle; */
-    /* -ms-touch-action: manipulation; */
-    /* touch-action: manipulation; */
-    /* background-image: none; */
-    /* border: 1px solid transparent; */
-    /* padding: 0px 0px; */
-    /* font-size: 14px; */
-    /* line-height: 1.42857143; */
-    /* border-radius: 4px; */
-    /* -webkit-user-select: none; */
-    /* -moz-user-select: none; */
-    /* -ms-user-select: none; */
-    /* user-select: none; */
-    /* color: #000000; */
-    /* background-color: #ffffff; */
-    /* border-color: #000000; */
-    /* text-decoration: none; */
-    /* width: 17ch !important; */
-    /* min-width: 17ch; */
-/* } */
-
 /* --- */
 
 
@@ -511,64 +483,96 @@ body {
  * History section
  *
  **************** */
-#history-section{
-    box-sizing:border-box;                                      /* element and padding and border are included in the width and height */
-/*    width: 100%;                                              /* it occupies the whole .scroll-section horizontally */
-    display: block;                                             /* new line */
-
+ /* #history-section {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: var(--history-section-font-size);
     color: var(--history-section-font-color);
     min-height: var(--history-section-height);
-
     border: var(--history-section-border-width) var(--history-section-border-color) solid;
     background-color: var(--history-section-background);
 }
 
-#history-section-text{
-    display: inline-block;
-
+#history-section-text, #history-section-link {
     font-family: inherit;
     font-weight: inherit;
     font-size: inherit;
-    color: inherit;
 }
 
-#history-section-link{
-    display: inline-block;
-
-    font-family: inherit;
-    font-weight: inherit;
-    font-size: inherit;
+#history-section-link {
     color: blue;
     cursor: pointer;
     text-decoration: underline;
 }
 
-#control-container-add-section{
+#control-container-add-section {
     cursor: pointer;
-    display: inline-block;
-    float: right;  /* This will align it to the right */
-    /* Alternative positioning method:*/
-    /*position: absolute;
-    right: 0;*/
-
+    margin-left: auto;
     font-family: inherit;
     font-weight: inherit;
     font-size: inherit;
-
-    /* hue-rotate: 0deg or 360deg = red
-                   ~215deg = blue
-                   ~120deg = green
-                   ~280deg = purple
-                   ~45deg = orange
-                   ~160deg = cyan */
-    /* Red
-    filter: invert(0%) sepia(100%) saturate(3000%) hue-rotate(360deg) brightness(100%) contrast(100%); */
-    /* Blue */
     filter: invert(0%) sepia(100%) saturate(3000%) hue-rotate(215deg) brightness(100%) contrast(100%);
+    margin-right: 10px;
+} */
+
+#container-control-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+
+    box-sizing: border-box;
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+    font-weight: bold;
+    font-size: var(--history-section-font-size);
+    color: var(--history-section-font-color);
+    min-height: var(--history-section-height);
+    border: var(--history-section-border-width) var(--history-section-border-color) solid;
+    background-color: var(--history-section-background);
 }
+
+#history-section {
+    display: flex;
+    align-items: center;
+}
+
+#history-section-text, #history-section-link {
+    display: inline-block;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+}
+
+#history-section-link {
+    color: blue;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 0; /* Remove any space */
+}
+
+#container-controllers {
+    display: flex;
+    align-items: center;
+}
+
+#container-controllers-add {
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    filter: invert(0%) sepia(100%) saturate(3000%) hue-rotate(215deg) brightness(100%) contrast(100%);
+    margin-right: 10px;
+}
+
+
+
+
+
+
 
 #scroll-section {
     box-sizing: border-box;                                     /* element and padding and border are included in the width and height */
@@ -593,12 +597,56 @@ body {
     background-color: var(--thumbnail-container-block-background);
 }
 
+.thumbnail-container-title-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
 .thumbnail-container-title{
     color: white;
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
     font-size: 30px;
 }
+
+.thumbnail-container-control-section {
+    cursor: pointer;
+    display: flex;
+    gap: 10px; /* Adds 10px spacing between child elements */
+    margin-right: 10px; /* Adds 10px spacing after the entire control section */
+    align-items: center; /* Vertically centers the items */
+}
+
+.thumbnail-container-control-section-delete {
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+    font-weight: bold;
+    font-size: 30px;
+    color: red; /* Makes the trash icon red */
+    filter: invert(11%) sepia(100%) saturate(5699%) hue-rotate(0deg) brightness(100%) contrast(113%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumbnail-container-control-section-edit {
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+    font-weight: bold;
+    font-size: 30px;
+    /*color: green; /* Makes the edit icon green */
+    /*filter: invert(22%) sepia(99%) saturate(1747%) hue-rotate(120deg) brightness(95%) contrast(106%);*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ------------ */
+
+
+
+/* ------------- */
+
 
 .thumbnail-container {
     box-sizing:border-box;                                      /* element and padding and border are included in the width and height */

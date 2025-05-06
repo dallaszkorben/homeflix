@@ -11,7 +11,10 @@ class ObjScrollSection {
      *
      * <div id="scroll-section">
      *   <div class="thumbnail-container-block" id="container-block-1">
-     *       <div class="thumbnail-container-title">Comedy</div>
+     *       <div class="thumbnail-container-title">
+     *         <div class="thumbnail-container-title">Kategoriák</div>
+     *         <div class="thumbnail-container-control-section">  ➕  </div>
+     *       </div>
      *       <div class="thumbnail-container" id="container-1">
      *       </div>
      *       <div class="thumbnail-container-space" id="container-space-1"></div>
@@ -57,14 +60,13 @@ class ObjScrollSection {
 //        this.focusedThumbnailList=[]
 //        this.currentContainerIndex = -1;
 
-
         let tsht = $("#history-section-text");
         tsht.html(this.historyLevels["text"]);
 
         let tshl = $("#history-section-link");
         tshl.html(this.historyLevels["link"]);
 
-        $("#control-container-add-section").hide();
+        $("#container-controllers-add").hide();
     }
 
     /**
@@ -98,18 +100,46 @@ class ObjScrollSection {
                 id: "container-block-" + containerIndex
             });
 
+
+
+
+            let domThumbnailContainerTitleSection = $("<div>", {
+                class: "thumbnail-container-title-section",
+            });
+
             // Creates the Title JQuery element of the Thumbnail Container
             let domThumbnailContainerTitle = $("<div>", {
                 class: "thumbnail-container-title",
                 text: objThumbnailContainer.getTitle()
             });
 
+let domThumbnailContainerControlSection = $("<div>", {
+    class: "thumbnail-container-control-section",
+});
+
+let domThumbnailContainerControlSectionDelete = $("<div>", {
+    class: "thumbnail-container-control-section-delete",
+    text: "  \u{1F5D1}  "
+}); // 🗑
+
+let domThumbnailContainerControlSectionEdit = $("<div>", {
+    class: "thumbnail-container-control-section-edit",
+    text: "  \u{270F}  "
+}); // ✏
+
             let domThumbnailContainerSpace = $("<div>", {
                 class: "thumbnail-container-space",
                 id: "container-space-" + containerIndex
             });
 
-            domThumbnailContainerBlock.append(domThumbnailContainerTitle);
+domThumbnailContainerTitleSection.append(domThumbnailContainerTitle);
+
+domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
+domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
+domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
+
+domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
+
             domThumbnailContainerBlock.append(domThumbnailContainer);
             domThumbnailContainerBlock.append(domThumbnailContainerSpace);
             this.domScrollSection.append(domThumbnailContainerBlock);
@@ -138,11 +168,29 @@ class ObjScrollSection {
             id: "container-block-" + containerIndex
         });
 
+        let domThumbnailContainerTitleSection = $("<div>", {
+            class: "thumbnail-container-title-section",
+        });
+
         // Creates the Title JQuery element of the Thumbnail Container
         let domThumbnailContainerTitle = $("<div>", {
             class: "thumbnail-container-title",
             text: thumbnailContainer.getTitle()
         });
+
+let domThumbnailContainerControlSection = $("<div>", {
+    class: "thumbnail-container-control-section",
+});
+
+let domThumbnailContainerControlSectionDelete = $("<div>", {
+    class: "thumbnail-container-control-section-delete",
+    text: "  \u{1F5D1}  "
+}); // 🗑
+
+let domThumbnailContainerControlSectionEdit = $("<div>", {
+    class: "thumbnail-container-control-section-edit",
+    text: "  \u{270F}  "
+}); // ✏
 
         // Gets the Thumbnail Container JQuery Element
         let domThumbnailContainer = thumbnailContainer.getDom();
@@ -172,7 +220,16 @@ class ObjScrollSection {
             id: "container-space-" + containerIndex
         });
 
-        domThumbnailContainerBlock.append(domThumbnailContainerTitle);
+//        domThumbnailContainerBlock.append(domThumbnailContainerTitle);
+
+domThumbnailContainerTitleSection.append(domThumbnailContainerTitle);
+
+domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
+domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
+domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
+
+domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
+
         domThumbnailContainerBlock.append(domThumbnailContainer);
         domThumbnailContainerBlock.append(domThumbnailContainerSpace);
         this.domScrollSection.append(domThumbnailContainerBlock);
@@ -595,47 +652,6 @@ class ObjThumbnailContainer {
         domThumbnailTextWrapper.append(domThumbnailText);
         domThumbnail.append(domThumbnailTextWrapper);
 
-
-//---
-//
-//
-//let domThumbnailContainerBlock = $('<div>', {
-//    class: "thumbnail-container-block",
-//    id: "container-block-" + containerIndex
-//});
-//
-//// Creates the Title JQuery element of the Thumbnail Container
-//let domThumbnailContainerTitle = $("<div>", {
-//    class: "thumbnail-container-title",
-//    text: thumbnailContainer.getTitle()
-//});
-//
-//// Gets the Thumbnail Container JQuery Element
-//let domThumbnailContainer = thumbnailContainer.getDom();
-//
-//// The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjScrollSection)
-//let currentThumbnailIndex = thumbnailContainer.getDefaultThumbnailIndex();
-//this.focusedThumbnailList.push(currentThumbnailIndex);
-//this.thumbnailContainerList.push(thumbnailContainer);
-//this.numberOfContainers++;
-//
-//let id = domThumbnailContainer.attr("id");
-//domThumbnailContainer.attr("id", id.format("???", containerIndex));
-//domThumbnailContainer.children('.thumbnail').each(function () {
-//    let thumbnailElement = $(this);
-//    let id = thumbnailElement.attr("id");
-//    thumbnailElement.attr("id", id.format("???", containerIndex));
-//
-//    // Add click listener on thumbnail
-//    thumbnailElement.click(function () {
-//        refToThis.clickedOnThumbnail($(this).attr('id'));
-//    });
-//});
-//
-//
-//
-//
-//---
 
 
         // Add LEVEL RIBBON if necessary
@@ -1334,60 +1350,7 @@ class ObjDescriptionContainer {
                                         descTaggingDiv.append(tagButton);
 
                                         tagButtonClose.on("click", (event) => {mainObject.handleTagDelete(event, card_id, tag_name, hash, mainObject);});
-//
-// this listener should be added to the new and the existing buttons as well !!!!!
-//
 
-//tagButtonClose.on("click", function() {
-//
-//    e.stopPropagation(); // Prevent event bubbling
-//
-//    // Remove the tag from the DB
-//    let tag_name = $(this).attr('tag_name')
-//    let rq_method = "DELETE";
-//    let rq_url = "http://" + host + port + "/personal/tag/delete";
-//    let rq_assync = false;
-//    let rq_data = {"card_id": card_id, "name": tag_name}
-//    let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
-//
-//    // If the removal was successful
-//    if(response.status == 200){
-//
-//        // Remove the tag from the screen
-//        let hash = $(this).attr('hash')
-//        $('#description-tagging-' + hash).remove()
-//
-//        // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
-//        for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
-//            let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
-//            let thumbnailList = objThumbnailContainer.thumbnailList
-//            for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
-//                let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
-//
-//                let single = thumbnail.function_for_selection.single;
-//                if("medium_dict" in single){
-//                    let other_card_id = single.medium_dict["card_id"];
-//
-//                    if(other_card_id == card_id){
-//                        thumbnail.removeExtrasTag(tag_name);
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Get the new list of tags
-//        data = {
-//            "category": "movie",
-//            "limit": 9999,
-//        };
-//        all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags");
-//
-//    }
-//});
-
-
-
-///
                                         //
                                         // Add the tag to the hierarchy for ALL Thumbnails in all ThumbnailContainer
                                         //
@@ -1429,53 +1392,6 @@ class ObjDescriptionContainer {
                             }
                         });
                     });
-
-                    // 'Remove TAG' listener
-////                    $("#description-tagging").on("click", ".description-tagging-button-close", function() {
-//                    tagButtonClose.on("click", function() {
-//
-//                        // Remove the tag from the DB
-//                        let tag_name = $(this).attr('tag_name')
-//                        let rq_method = "DELETE";
-//                        let rq_url = "http://" + host + port + "/personal/tag/delete";
-//                        let rq_assync = false;
-//                        let rq_data = {"card_id": card_id, "name": tag_name}
-//                        let response = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: rq_data });
-//
-//                        // If the removal was successful
-//                        if(response.status == 200){
-//
-//                            // Remove the tag from the screen
-//                            let hash = $(this).attr('hash')
-//                            $('#description-tagging-' + hash).remove()
-//
-//                            // Remove the tag from the hierarchy for ALL Thumbnails in all ThumbnailContainer
-//                            for (let containerIndex = 0; containerIndex < mainObject.objScrollSection.thumbnailContainerList.length; containerIndex++) {
-//                                let objThumbnailContainer = mainObject.objScrollSection.thumbnailContainerList[containerIndex];
-//                                let thumbnailList = objThumbnailContainer.thumbnailList
-//                                for (let thumbnailIndex = 0; thumbnailIndex < thumbnailList.length; thumbnailIndex++){
-//                                    let thumbnail = objThumbnailContainer.getThumbnail(thumbnailIndex);
-//
-//                                    let single = thumbnail.function_for_selection.single;
-//                                    if("medium_dict" in single){
-//                                        let other_card_id = single.medium_dict["card_id"];
-//
-//                                        if(other_card_id == card_id){
-//                                            thumbnail.removeExtrasTag(tag_name);
-//                                        }
-//                                    }
-//                                }
-//                            }
-//
-//                            // Get the new list of tags
-//                            data = {
-//                                "category": "movie",
-//                                "limit": 9999,
-//                            };
-//                            all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags");
-//
-//                        }
-//                    });
                 }
 
                 //
@@ -1863,7 +1779,7 @@ class History {
             text += this.levelList[i]["text"] + " >&nbsp;";
         }
 
-        link = this.levelList.length ? " " + this.levelList[this.levelList.length - 1]["text"] : "";
+        link = this.levelList.length ? "" + this.levelList[this.levelList.length - 1]["text"] : "";
         return { "text": text, "link": link };
 
     }
@@ -1916,7 +1832,7 @@ class ThumbnailController {
         let refToThis = this;
 
         // Listener for Control Container Add link
-        let ccas = $("#control-container-add-section");
+        let ccas = $("#container-controllers-add");
         ccas.click(function () {
             refToThis.addNewThumbnailContainerForm();
         });

@@ -57,11 +57,11 @@ class RestGenerator extends Generator{
 
     async showAllThumbnails(requestList, objScrollSection){
         let refToThis = this;
-        let containerList = [];  // Array to store the containers
+        let containerList = [];       // Array to store the containers
         let thumbnailListCache = [];  // Array to store the thumbnail_list results
 
         // Phase 1: Show only the minimal number of thumbnails - which can be seen in the window
-        const INITIAL_VISIBLE_LINES = 3;    // Maximum number of lines to process initially
+        const INITIAL_VISIBLE_LINES = 3;        // Maximum number of lines to process initially
         const INITIAL_THUMBNAILS = 11;          // Maximum number of thumbnails per line initially
 
         let startedHash = this.getHistoryHash(objScrollSection);
@@ -467,7 +467,7 @@ class GeneralRestGenerator extends RestGenerator{
         setTimeout(function() {
 
             if (containerType === "search"){
-                $("#control-container-add-section").show();
+                $("#container-controllers-add").show();
             }
 
             // Go through all the containers
