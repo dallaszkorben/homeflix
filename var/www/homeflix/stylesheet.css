@@ -1065,6 +1065,24 @@ body {
     text-align: center;
   }
 
+  .ui-icon-alert {
+    font-size: 24px !important; /* Makes the icon bigger */
+    color: #FFD700 !important; /* Gold/yellow color */
+    background-image: none !important; /* Remove default background image */
+    text-indent: 0 !important; /* Reset text indent */
+    overflow: visible !important; /* Allow content to be visible */
+    width: auto !important; /* Auto width */
+    height: auto !important; /* Auto height */
+  }
+
+  /* Replace with a Unicode alert symbol */
+  .ui-icon-alert:before {
+    content: "⚠️"; /* Unicode warning symbol */
+    font-size: 24px; /* Size of the icon */
+    color: #FFD700; /* Gold/yellow color */
+  }
+
+
  /* *******************
  *
  * Search Dialog window

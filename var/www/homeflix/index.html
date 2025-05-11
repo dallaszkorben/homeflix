@@ -437,6 +437,21 @@
             }
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         function createComboBoxWithDict(inputId, dataDict) {
             // Generate unique container class for this instance
             const containerClass = `custom-combobox-${inputId}`;
@@ -477,6 +492,11 @@
             }
 
             const $input = $(`#${inputId}`);
+
+            // Assign the dataDict to the input element to be able to fill up the field with values for modifying.
+            // I could not figure out how to reach the existiong 'options' for that
+            $input.data('dataDict', dataDict);
+
             initAutocomplete($input);
 
             $input.on('blur', function() {
@@ -884,10 +904,17 @@
             return $(`${inputId}`).attr('data-value') || '';
         }
 
-        // Function to get the displayed text
-        function getComboboxText(inputId) {
-            return $(`${inputId}`).val() || '';
+        function setComboboxValue(selector, value) {
+            let label = $(selector).data('dataDict').get(value)
+            $(selector).val(label);
+            $(selector).attr('data-value', value);
         }
+
+
+
+
+
+
 
 
 
@@ -1594,6 +1621,7 @@
                 </div>
                 <div id="container-controllers">
                     <div id="container-controllers-add">&#10133;</div>
+                    <!-- ➕ -->
                 </div>
             </div>
         </div>

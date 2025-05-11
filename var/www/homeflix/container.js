@@ -77,81 +77,17 @@ class ObjScrollSection {
         let refToThis = this;
 
         for (let containerIndex = 0; containerIndex < this.thumbnailContainerList.length; containerIndex++) {
-            let objThumbnailContainer = this.thumbnailContainerList[containerIndex];
+            let thumbnailContainer = this.thumbnailContainerList[containerIndex];
 
-            objThumbnailContainer.buildUpDom();
-            let domThumbnailContainer = objThumbnailContainer.getDom();
+            thumbnailContainer.buildUpDom();
 
-            let id = domThumbnailContainer.attr("id");
-            domThumbnailContainer.attr("id", id.format("???", containerIndex));
-            domThumbnailContainer.children('.thumbnail').each(function () {
-                let element = $(this);
-                let id = element.attr("id");
-                element.attr("id", id.format("???", containerIndex));
+            this.addCoreThumbnailContainerObject(thumbnailContainer, containerIndex);
 
-                // Add click listener on thumbnail. It must be set on the buildUpDome again
-                element.click(function () {
-                    refToThis.clickedOnThumbnail($(this).attr('id'));
-                });
-            });
-
-            let domThumbnailContainerBlock = $('<div>', {
-                class: "thumbnail-container-block",
-                id: "container-block-" + containerIndex
-            });
-
-
-
-
-            let domThumbnailContainerTitleSection = $("<div>", {
-                class: "thumbnail-container-title-section",
-            });
-
-            // Creates the Title JQuery element of the Thumbnail Container
-            let domThumbnailContainerTitle = $("<div>", {
-                class: "thumbnail-container-title",
-                text: objThumbnailContainer.getTitle()
-            });
-
-let domThumbnailContainerControlSection = $("<div>", {
-    class: "thumbnail-container-control-section",
-});
-
-let domThumbnailContainerControlSectionDelete = $("<div>", {
-    class: "thumbnail-container-control-section-delete",
-    text: "  \u{1F5D1}  "
-}); // 🗑
-
-let domThumbnailContainerControlSectionEdit = $("<div>", {
-    class: "thumbnail-container-control-section-edit",
-    text: "  \u{270F}  "
-}); // ✏
-
-            let domThumbnailContainerSpace = $("<div>", {
-                class: "thumbnail-container-space",
-                id: "container-space-" + containerIndex
-            });
-
-domThumbnailContainerTitleSection.append(domThumbnailContainerTitle);
-
-domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
-domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
-domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
-
-domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
-
-            domThumbnailContainerBlock.append(domThumbnailContainer);
-            domThumbnailContainerBlock.append(domThumbnailContainerSpace);
-            this.domScrollSection.append(domThumbnailContainerBlock);
         }
 
         this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
 
         this.focus();
-    }
-
-    getDescriptionContainer() {
-        return this.oDescriptionContainer;
     }
 
     /**
@@ -160,8 +96,31 @@ domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
      * Plus even the Thumbnail's '<div> id=container-{???}' will not be substituted
      */
     addThumbnailContainerObject(thumbnailContainer) {
-        let refToThis = this;
+
         let containerIndex = this.focusedThumbnailList.length;
+
+        this.addCoreThumbnailContainerObject(thumbnailContainer, containerIndex);
+
+        // The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjScrollSection)
+        let currentThumbnailIndex = thumbnailContainer.getDefaultThumbnailIndex();
+        this.focusedThumbnailList.push(currentThumbnailIndex);
+        this.thumbnailContainerList.push(thumbnailContainer);
+        this.numberOfContainers++;
+
+        // this variable should be refreshed every time when a new thumbnail is added
+        this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
+
+        // Inform the ThumbnailContainer that it was added to the ObjScrollSection
+        thumbnailContainer.setParent(this, containerIndex);
+
+        return containerIndex
+    }
+
+    addCoreThumbnailContainerObject(thumbnailContainer, containerIndex){
+        let refToThis = this;
+
+        // Gets the Thumbnail Container JQuery Element
+        let domThumbnailContainer = thumbnailContainer.getDom();
 
         let domThumbnailContainerBlock = $('<div>', {
             class: "thumbnail-container-block",
@@ -178,31 +137,31 @@ domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
             text: thumbnailContainer.getTitle()
         });
 
-let domThumbnailContainerControlSection = $("<div>", {
-    class: "thumbnail-container-control-section",
-});
+        let domThumbnailContainerControlSection = $("<div>", {
+            class: "thumbnail-container-control-section",
+        });
 
-let domThumbnailContainerControlSectionDelete = $("<div>", {
-    class: "thumbnail-container-control-section-delete",
-    text: "  \u{1F5D1}  "
-}); // 🗑
+        let domThumbnailContainerControlSectionDelete = $("<div>", {
+            class: "thumbnail-container-control-section-delete",
+            text: "  \u{1F5D1}  "
+        }); // 🗑
+        // Add click listener on the delete icon
+        domThumbnailContainerControlSectionDelete.click(function () {
+            refToThis.clickedOnDeleteThumbnailContainer(domThumbnailContainerBlock);
 
-let domThumbnailContainerControlSectionEdit = $("<div>", {
-    class: "thumbnail-container-control-section-edit",
-    text: "  \u{270F}  "
-}); // ✏
+        });
 
-        // Gets the Thumbnail Container JQuery Element
-        let domThumbnailContainer = thumbnailContainer.getDom();
-
-        // The ids must be changed as the ObjThumbnailContainer class has no idea about the id here (in the ObjScrollSection)
-        let currentThumbnailIndex = thumbnailContainer.getDefaultThumbnailIndex();
-        this.focusedThumbnailList.push(currentThumbnailIndex);
-        this.thumbnailContainerList.push(thumbnailContainer);
-        this.numberOfContainers++;
+        let domThumbnailContainerControlSectionEdit = $("<div>", {
+            class: "thumbnail-container-control-section-edit",
+            text: "  \u{1F58A}  "
+        }); // 🖊️ "  \u{1F58A}  "
+        domThumbnailContainerControlSectionEdit.click(function () {
+            refToThis.clickedOnEditThumbnailContainer(domThumbnailContainerBlock);
+        });
 
         let id = domThumbnailContainer.attr("id");
         domThumbnailContainer.attr("id", id.format("???", containerIndex));
+
         domThumbnailContainer.children('.thumbnail').each(function () {
             let thumbnailElement = $(this);
             let id = thumbnailElement.attr("id");
@@ -220,28 +179,23 @@ let domThumbnailContainerControlSectionEdit = $("<div>", {
             id: "container-space-" + containerIndex
         });
 
-//        domThumbnailContainerBlock.append(domThumbnailContainerTitle);
+        domThumbnailContainerTitleSection.append(domThumbnailContainerTitle);
 
-domThumbnailContainerTitleSection.append(domThumbnailContainerTitle);
+        domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
+        domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
+        domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
 
-domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
-domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
-domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
-
-domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
+        domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
 
         domThumbnailContainerBlock.append(domThumbnailContainer);
         domThumbnailContainerBlock.append(domThumbnailContainerSpace);
         this.domScrollSection.append(domThumbnailContainerBlock);
-
-        // this variable should be refreshed every time when a new thumbnail is added
-        this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
-
-        // Inform the ThumbnailContainer that it was added to the ObjScrollSection
-        thumbnailContainer.setParent(this, containerIndex);
-
-        return containerIndex
     }
+
+    getDescriptionContainer() {
+        return this.oDescriptionContainer;
+    }
+
 
     focusDefault() {
         this.currentContainerIndex = 0;
@@ -343,6 +297,125 @@ domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
         this.oDescriptionContainer.refreshDescription(thumbnail, card_id, image, title, storyline, lyrics, credentials, extra, appendix);
 
     }
+
+    /**
+     * Remove the given container block from the DOM and from the menuDict as well
+     *
+     * AmazonQ generated this code - the deletion from the DOM
+     *
+     * @param {*} domThumbnailContainerBlock
+     */
+    clickedOnDeleteThumbnailContainer(domThumbnailContainerBlock) {
+        let containerId = domThumbnailContainerBlock.attr('id');
+        let containerIndex = parseInt(containerId.replace('container-block-', ''));
+
+        //
+        // Remove from the menuDict
+        //
+        let oContainerGenerator = this.oContainerGenerator;
+        let origMenuDict = oContainerGenerator.getMenuDict();
+        let container_list = origMenuDict.container_list ?? [];
+
+        // Remove the container at containerIndex from the container_list
+        if (container_list && container_list.length > containerIndex) {
+            container_list.splice(containerIndex, 1);
+
+            // Update the menuDict with the modified container_list
+            origMenuDict.container_list = container_list;
+
+            // If you need to save or update the menuDict elsewhere, do it here
+            // For example: oContainerGenerator.setMenuDict(origMenuDict);
+        }
+
+        //
+        // Remove from DOM
+        //
+        domThumbnailContainerBlock.remove();
+
+        // Remove from internal data structures
+        this.thumbnailContainerList.splice(containerIndex, 1);
+        this.focusedThumbnailList.splice(containerIndex, 1);
+        this.numberOfContainers--;
+
+        // Update the IDs of all subsequent container blocks to maintain sequential numbering
+        for (let i = containerIndex; i < this.numberOfContainers; i++) {
+            let nextBlock = $('#container-block-' + (i + 1));
+            nextBlock.attr('id', 'container-block-' + i);
+
+            // Update the container space ID as well
+            let nextSpace = $('#container-space-' + (i + 1));
+            nextSpace.attr('id', 'container-space-' + i);
+
+            // Update the container ID
+            let nextContainer = $('#container-' + (i + 1));
+            nextContainer.attr('id', 'container-' + i);
+
+            // Update the thumbnails within this container
+            nextContainer.children('.thumbnail').each(function() {
+                let thumbnailElement = $(this);
+                let id = thumbnailElement.attr('id');
+                // Replace the container index part of the ID
+                thumbnailElement.attr('id', id.replace(/-(\d+)-/, '-' + i + '-'));
+            });
+
+            // Update the container's reference to its index
+            if (this.thumbnailContainerList[i]) {
+                this.thumbnailContainerList[i].setParent(this, i);
+            }
+        }
+
+        // Refresh the DOM reference
+        this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
+
+        // If we removed the currently focused container, adjust the focus
+        if (this.currentContainerIndex >= this.numberOfContainers) {
+            this.currentContainerIndex = Math.max(0, this.numberOfContainers - 1);
+        }
+
+        // Update the focus if there are still containers
+        if (this.numberOfContainers > 0) {
+            this.focus();
+        } else {
+            // Clear the description section if all containers are removed
+            // this.oDescriptionContainer.clearDescription();
+        }
+    }
+
+    /**
+     * Edit the given container block in the DOM and in the menuDict as well
+     *
+     * AmazonQ generated this code - the deletion from the DOM
+     *
+     * @param {*} domThumbnailContainerBlock
+     */
+    clickedOnEditThumbnailContainer(domThumbnailContainerBlock) {
+        let containerId = domThumbnailContainerBlock.attr('id');
+        let containerIndex = parseInt(containerId.replace('container-block-', ''));
+
+        //
+        // Fetch the container_list what we modify
+        //
+        let oContainerGenerator = this.oContainerGenerator;
+        let origMenuDict = oContainerGenerator.getMenuDict();
+        let container_list = origMenuDict.container_list ?? [];
+
+        let data_dict = container_list[containerIndex]['dynamic_hard_coded']['data'];
+        let show_level = container_list[containerIndex]['dynamic_hard_coded']['request']['path'];
+
+        // TODO:
+        let container_title = container_list[containerIndex]['dynamic_hard_coded']['title'][0]['text'];
+
+        data_dict['show_level'] = show_level;
+        data_dict['container_title'] = container_title;
+
+        this.objThumbnailController.editThumbnailContainerForm(data_dict, containerIndex);
+    }
+
+
+
+
+
+
 
     clickedOnThumbnail(id) {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
@@ -602,8 +675,9 @@ class ObjThumbnailContainer {
      *   <img src="images/categories/movie.jpg" alt="Image">
      * </div>
      */
-    addThumbnail(recordId, objThumbnail) {
-        let refToThis = this;
+//    addThumbnail(recordId, objThumbnail) {
+    addThumbnail(objThumbnail) {
+            let refToThis = this;
         let thumbnailIndex = this.thumbnailList.length;
         this.thumbnailList.push(objThumbnail);
 
@@ -986,10 +1060,6 @@ class ObjDescriptionContainer {
 
     handleTagDelete(event, card_id, tag_name, hash, mainObject) {
         event.stopPropagation(); // Prevent event bubbling
-
-//        const $clickedElement = $(this);
-//        const tag_name = $clickedElement.attr('tag_name');
-//        const hash = $clickedElement.attr('hash');
 
         // Remove the tag from the DB
         const rq_method = "DELETE";
@@ -1811,6 +1881,218 @@ class FocusTask {
 }
 
 
+
+
+
+/**
+ * Global function to handle search filter form data for both adding and modifying containers
+ *
+ * @param {Object|null} data_dict - Dictionary with filter values (null for new container, populated for modification)
+ * @param {Object} callbacks - Object containing callback functions
+ * @returns {Object} - Dialog configuration object
+ */
+function searchFilterForm(data_dict = null, callbacks = {}) {
+    // Initialize empty data if not provided (for adding new container)
+    if (data_dict === null) {
+        data_dict = {
+            "container_title": "",
+            "genres": "",
+            "themes": "",
+            "directors": "",
+            "writers": "",
+            "actors": "",
+            "origins": "",
+            "tags": "",
+            "show_level": "/collect/highest/mixed",
+            "view_state": "",
+            "rate": ""
+        };
+    }
+
+    let dialog_dict = translated_interaction_labels.get('dialog');
+    let submit_button = dialog_dict['search']['buttons']['submit'];
+    let cancel_button = dialog_dict['search']['buttons']['cancel'];
+
+    /* Search dialog form */
+    $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
+    $("#dialog-search-container-title").val(data_dict["container_title"] || "");
+
+    // Genre
+    $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
+    createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
+    if (data_dict["genres"]) {
+        setComboboxValue('#dialog-search-genre', data_dict["genres"]);
+    }
+
+    // Theme
+    $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
+    createComboBoxWithDict('dialog-search-theme', translated_themes);
+    if (data_dict["themes"]) {
+        setComboboxValue('#dialog-search-theme', data_dict["themes"]);
+    }
+
+    // Director
+    $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
+    createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
+    if (data_dict["directors"]) {
+        $("#dialog-search-director").val(data_dict["directors"]);
+    }
+
+    // Writer
+    $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
+    createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
+    if (data_dict["writers"]) {
+        $("#dialog-search-writer").val(data_dict["writers"]);
+    }
+
+    // Actor
+    $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
+    createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
+    if (data_dict["actors"]) {
+        $("#dialog-search-actor").val(data_dict["actors"]);
+    }
+
+    // Origin
+    $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
+    createComboBoxWithDict('dialog-search-origin', translated_countries);
+    if (data_dict["origins"]) {
+        setComboboxValue('#dialog-search-origin', data_dict["origins"]);
+    }
+
+    // Tag
+    $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
+    createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
+    if (data_dict["tags"]) {
+        setComboboxValue('#dialog-search-tag', data_dict["tags"]);
+    }
+
+    // Shown level
+    $("#dialog-form-search label[for='dialog-search-show-level']").html(dialog_dict['search']['labels']['show_level'] + ': ');
+    $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_labels.get('movie_show_level_highest'));
+    $("#dialog-form-search select option[value='/collect/lowest']").html(translated_labels.get('movie_show_level_lowest'));
+    if (data_dict["show_level"]) {
+        $("#dialog-search-show-level").val(data_dict["show_level"]);
+    }
+
+    // Viewed state
+    $("#dialog-form-search label[for='dialog-search-view-state']").html(dialog_dict['search']['labels']['view_state'] + ': ');
+    $("#dialog-form-search select option[value='interrupted']").html(translated_labels.get('movie_interrupted'));
+    $("#dialog-form-search select option[value='last_watched']").html(translated_labels.get('movie_last_watched'));
+    $("#dialog-form-search select option[value='most_watched']").html(translated_labels.get('movie_most_watched'));
+    if (data_dict["view_state"]) {
+        $("#dialog-search-view-state").val(data_dict["view_state"]);
+    }
+
+    // Show rate
+    $("#dialog-form-search label[for='dialog-search-rate']").html(dialog_dict['search']['labels']['rate'] + ': ');
+    if (data_dict["rate"]) {
+        $("#dialog-search-rate").val(data_dict["rate"]);
+    }
+
+    // Default submit callback if not provided
+    const submitCallback = callbacks.onSubmit || function(formData) {
+        console.log("Form submitted with data:", formData);
+    };
+
+    // Default cancel callback if not provided
+    const cancelCallback = callbacks.onCancel || function() {
+        console.log("Form cancelled");
+    };
+
+    // Default beforeClose callback if not provided
+    const beforeCloseCallback = callbacks.beforeClose || function(event, refToThis) {
+        if (event.originalEvent && event.originalEvent.key === "Escape") {
+            // Delay needed to not propagate ESC
+            setTimeout(function () {
+                refToThis.focusTask = refToThis.originalTask;
+            }, 200);
+        } else {
+            refToThis.focusTask = refToThis.originalTask;
+        }
+    };
+
+    // Return the dialog configuration
+    return {
+        title: dialog_dict['search']['title'],
+        submit_button: submit_button,
+        cancel_button: cancel_button,
+
+        // Dialog configuration
+        dialogOptions: function(refToThis) {
+            return {
+                resizable: false,
+                height: "auto",
+                width: 600,
+                modal: true,
+                title: dialog_dict['search']['title'],
+                buttons: {
+                    [submit_button]: function() {
+                        $(this).dialog("close");
+                        var formData = {
+                            "container_title": $("#dialog-search-container-title").val(),
+                            "genres": getComboboxValue('#dialog-search-genre'),
+                            "themes": getComboboxValue('#dialog-search-theme'),
+                            "directors": $("#dialog-search-director").val(),
+                            "writers": $("#dialog-search-writer").val(),
+                            "actors": $("#dialog-search-actor").val(),
+                            "origins": getComboboxValue("#dialog-search-origin"),
+                            "tags": getComboboxValue("#dialog-search-tag"),
+                            "show_level": $("#dialog-search-show-level").val(),
+                            "view_state": $("#dialog-search-view-state").val(),
+                            "rate": $("#dialog-search-rate").val()
+                        };
+                        submitCallback(formData);
+                    },
+                    [cancel_button]: function() {
+                        $(this).dialog("close");
+                        cancelCallback();
+                    }
+                },
+
+                // Right/Left button to focus buttons
+                open: function() {
+                    const buttons = $(this).parent().find(".ui-dialog-buttonset button");
+                    let focusedButtonIndex = 0;
+
+                    $(document).on("keydown.arrowKeys", function(event) {
+                        if (event.key === "ArrowRight") {
+                            focusedButtonIndex = (focusedButtonIndex + 1) % buttons.length;
+                            buttons.eq(focusedButtonIndex).focus();
+                            event.preventDefault();
+                        } else if (event.key === "ArrowLeft") {
+                            focusedButtonIndex = (focusedButtonIndex - 1 + buttons.length) % buttons.length;
+                            buttons.eq(focusedButtonIndex).focus();
+                            event.preventDefault();
+                        }
+                    });
+
+                    // Calculate and set the horizontal divider
+                    $('.dialog-search-separator').css('width', `calc(100% + 24px)`);
+                },
+
+                // Prevent the ESC button to go back in history
+                beforeClose: function(event) {
+                    beforeCloseCallback(event, refToThis);
+                },
+
+                // It executed anyway
+                close: function() {
+                    $(document).off("keydown.arrowKeys");
+                    $(this).dialog("destroy");
+                }
+            };
+        }
+    };
+}
+
+
+
+
+
+
+
+
+
 class ThumbnailController {
 
     constructor(mainMenuGenerator) {
@@ -1838,6 +2120,49 @@ class ThumbnailController {
         });
     }
 
+
+
+
+
+
+    editThumbnailContainerForm(data_dict, containerIndex) {
+        let refToThis = this;
+
+        // Disable keys behind the Dialog() - prevent the ESC button to go back in history
+        refToThis.originalTask = refToThis.focusTask;
+        refToThis.focusTask = FocusTask.Modal_Continue_Play;
+
+        // Define callbacks for the form
+        const callbacks = {
+            onSubmit: function(formData) {
+                refToThis.updateThumbnailContainerExecution(formData, containerIndex);
+            },
+            onCancel: function() {
+                // Nothing special needed on cancel
+            },
+            beforeClose: function(event, refToThis) {
+                if (event.originalEvent && event.originalEvent.key === "Escape") {
+                    // Delay needed to not propagate ESC
+                    setTimeout(function () {
+                        refToThis.focusTask = refToThis.originalTask;
+                    }, 200);
+                } else {
+                    refToThis.focusTask = refToThis.originalTask;
+                }
+            }
+        };
+
+        // Use the global searchFilterForm function to set up the form and get dialog options
+        const dialogConfig = searchFilterForm(data_dict, callbacks);
+
+        // Wait 200ms before showing the Dialog
+        setTimeout(() => {
+            $("#dialog-form-search").dialog(dialogConfig.dialogOptions(refToThis));
+        }, 200);
+    }
+
+
+
     addNewThumbnailContainerForm(){
         let refToThis = this;
 
@@ -1845,202 +2170,222 @@ class ThumbnailController {
         refToThis.originalTask = refToThis.focusTask;
         refToThis.focusTask = FocusTask.Modal_Continue_Play;
 
-        let dialog_dict = translated_interaction_labels.get('dialog');
+//        let dialog_dict = translated_interaction_labels.get('dialog');
+//
+//        let submit_button = dialog_dict['search']['buttons']['submit'];
+//        let cancel_button = dialog_dict['search']['buttons']['cancel'];
 
-        let submit_button = dialog_dict['search']['buttons']['submit'];
-        let cancel_button = dialog_dict['search']['buttons']['cancel'];
-
-
-        /* Search dialog form */
-        $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
-
-        // Genre
-        $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
-        createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
-
-        // Theme
-        $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
-        createComboBoxWithDict('dialog-search-theme', translated_themes);
-
-        // Director
-        $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
-        createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
-
-        // Writer
-        $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
-        createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
-
-        // Actor
-        $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
-        createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
-
-        // Origin
-        $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
-        createComboBoxWithDict('dialog-search-origin', translated_countries);
-
-        // Tag
-        $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
-        createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
-
-        // Shown level
-        $("#dialog-form-search label[for='dialog-search-show-level']").html(dialog_dict['search']['labels']['show_level'] + ': ');
-        $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_labels.get('movie_show_level_highest'));
-        $("#dialog-form-search select option[value='/collect/lowest']").html(translated_labels.get('movie_show_level_lowest'));
-
-        // Viewed state
-        $("#dialog-form-search label[for='dialog-search-view-state']").html(dialog_dict['search']['labels']['view_state'] + ': ');
-        $("#dialog-form-search select option[value='interrupted']").html(translated_labels.get('movie_interrupted'));
-        $("#dialog-form-search select option[value='last_watched']").html(translated_labels.get('movie_last_watched'));
-        $("#dialog-form-search select option[value='most_watched']").html(translated_labels.get('movie_most_watched'));
-
-        // Show rate
-        $("#dialog-form-search label[for='dialog-search-rate']").html(dialog_dict['search']['labels']['rate'] + ': ');
-//        $("#dialog-form-search label[for='dialog-search-rate']").html(translated_interaction_labels['dialog']['search']['labels']['rate']);
-
-        // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
-        setTimeout(() => {
-            $("#dialog-form-search").dialog({
-                resizable: false,
-                height: "auto",
-
-                // Set the width of the Dialog()
-                width: 600,
-                modal: true,
-                title: dialog_dict['search']['title'],
-                buttons: {
-                    [submit_button]: function() {
-                        $( this ).dialog( "close" );
-                        var container_title = $("#dialog-search-container-title").val();
-                        // var genre = $("#dialog-search-genre").val();
-                        // var theme = $("#dialog-search-theme").val();
-                        var genre = getComboboxValue('#dialog-search-genre');
-                        var theme = getComboboxValue('#dialog-search-theme');
-
-                        var director = $("#dialog-search-director").val();
-                        var writer = $("#dialog-search-writer").val();
-                        var actor = $("#dialog-search-actor").val();
-                        var origin = getComboboxValue("#dialog-search-origin");
-                        var tag = $("#dialog-search-tag").val();
-                        var show_level = $("#dialog-search-show-level").val();
-                        var view_state = $("#dialog-search-view-state").val();
-                        var rate = $("#dialog-search-rate").val();
-
-                        var data_dict = {
-                            "container_title": container_title,
-                            "genre": genre,
-                            "theme": theme,
-                            "director": director,
-                            "writer": writer,
-                            "actor": actor,
-                            "origin": origin,
-                            "tag": tag,
-                            "show_level": show_level,
-                            "view_state": view_state,
-                            "rate": rate
-                        }
-                        refToThis.addNewThumbnailContainerExecution(data_dict);
-                    },
-                    [cancel_button]: function() {
-                        $( this ).dialog( "close" );
-                    }
-                },
-
-                // Right/Left button to focus buttons
-                open: function() {
-                    const buttons = $(this).parent().find(".ui-dialog-buttonset button");
-                    let focusedButtonIndex = 0;
-
-                    $(document).on("keydown.arrowKeys", function(event) {
-                      if (event.key === "ArrowRight") {
-                        focusedButtonIndex = (focusedButtonIndex + 1) % buttons.length;
-                        buttons.eq(focusedButtonIndex).focus();
-                        event.preventDefault();
-                      } else if (event.key === "ArrowLeft") {
-                        focusedButtonIndex = (focusedButtonIndex - 1 + buttons.length) % buttons.length;
-                        buttons.eq(focusedButtonIndex).focus();
-                        event.preventDefault();
-                      }
-                    });
-
-                    //Select the button as default - It is not neede here
-                    //$(this).parent().find(".ui-dialog-buttonpane button:first").focus();
-
-                    // Calculate and set the horizontal divider
-                    let dialogWidth = $('#dialog-form-search').width();
-//                    $('.dialog-search-separator').css('width', `calc(100% + ${dialogWidth - 325}px)`);
-
-                    // If the css of the dialog changes, this calculation must be changed as well
-                    $('.dialog-search-separator').css('width', `calc(100% + 24px)`);
-                },
-
-                // Prevent the ESC button to go back in history
-                beforeClose: function(event){
-
-                    if (event.originalEvent && event.originalEvent.key === "Escape") {
-
-                        // Delay needed to not propagate ESC
-                        setTimeout(function () {
-                            refToThis.focusTask = refToThis.originalTask;
-                        }, 200);
-                    }else{
+        // Define callbacks for the form
+        const callbacks = {
+            onSubmit: function(formData) {
+                refToThis.addNewThumbnailContainerExecution(formData);
+            },
+            onCancel: function() {
+                // Nothing special needed on cancel
+            },
+            beforeClose: function(event, refToThis) {
+                if (event.originalEvent && event.originalEvent.key === "Escape") {
+                    // Delay needed to not propagate ESC
+                    setTimeout(function () {
                         refToThis.focusTask = refToThis.originalTask;
-                    }
-                },
-
-                // It executed anyway
-                close: function() {
-                    $(this).dialog("destroy");
+                    }, 200);
+                } else {
+                    refToThis.focusTask = refToThis.originalTask;
                 }
-            });
+            }
+        };
+
+        // Use the global searchFilterForm function to set up the form and get dialog options
+        const dialogConfig = searchFilterForm(null, callbacks);
+
+        // Wait 200ms before showing the Dialog
+        setTimeout(() => {
+            $("#dialog-form-search").dialog(dialogConfig.dialogOptions(refToThis));
         }, 200);
+
+//        /* Search dialog form */
+//        $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
+//
+//        // Genre
+//        $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
+//        createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
+//
+//        // Theme
+//        $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
+//        createComboBoxWithDict('dialog-search-theme', translated_themes);
+//
+//        // Director
+//        $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
+//        createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
+//
+//        // Writer
+//        $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
+//        createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
+//
+//        // Actor
+//        $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
+//        createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
+//
+//        // Origin
+//        $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
+//        createComboBoxWithDict('dialog-search-origin', translated_countries);
+//
+//        // Tag
+//        $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
+//        createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
+//
+//        // Shown level
+//        $("#dialog-form-search label[for='dialog-search-show-level']").html(dialog_dict['search']['labels']['show_level'] + ': ');
+//        $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_labels.get('movie_show_level_highest'));
+//        $("#dialog-form-search select option[value='/collect/lowest']").html(translated_labels.get('movie_show_level_lowest'));
+//
+//        // Viewed state
+//        $("#dialog-form-search label[for='dialog-search-view-state']").html(dialog_dict['search']['labels']['view_state'] + ': ');
+//        $("#dialog-form-search select option[value='interrupted']").html(translated_labels.get('movie_interrupted'));
+//        $("#dialog-form-search select option[value='last_watched']").html(translated_labels.get('movie_last_watched'));
+//        $("#dialog-form-search select option[value='most_watched']").html(translated_labels.get('movie_most_watched'));
+//
+//        // Show rate
+//        $("#dialog-form-search label[for='dialog-search-rate']").html(dialog_dict['search']['labels']['rate'] + ': ');
+//
+//        // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
+//        setTimeout(() => {
+//            $("#dialog-form-search").dialog({
+//                resizable: false,
+//                height: "auto",
+//
+//                // Set the width of the Dialog()
+//                width: 600,
+//                modal: true,
+//                title: dialog_dict['search']['title'],
+//                buttons: {
+//                    [submit_button]: function() {
+//                        $( this ).dialog( "close" );
+//                        var container_title = $("#dialog-search-container-title").val();
+//                        // var genre = $("#dialog-search-genre").val();
+//                        // var theme = $("#dialog-search-theme").val();
+//                        var genre = getComboboxValue('#dialog-search-genre');
+//                        var theme = getComboboxValue('#dialog-search-theme');
+//
+//                        var director = $("#dialog-search-director").val();
+//                        var writer = $("#dialog-search-writer").val();
+//                        var actor = $("#dialog-search-actor").val();
+//                        var origin = getComboboxValue("#dialog-search-origin");
+//                        var tag = $("#dialog-search-tag").val();
+//                        var show_level = $("#dialog-search-show-level").val();
+//                        var view_state = $("#dialog-search-view-state").val();
+//                        var rate = $("#dialog-search-rate").val();
+//
+//                        var data_dict = {
+//                            "container_title": container_title,
+//                            "genre": genre,
+//                            "theme": theme,
+//                            "director": director,
+//                            "writer": writer,
+//                            "actor": actor,
+//                            "origin": origin,
+//                            "tag": tag,
+//                            "show_level": show_level,
+//                            "view_state": view_state,
+//                            "rate": rate
+//                        }
+//                        refToThis.addNewThumbnailContainerExecution(data_dict);
+//                    },
+//                    [cancel_button]: function() {
+//                        $( this ).dialog( "close" );
+//                    }
+//                },
+//
+//                // Right/Left button to focus buttons
+//                open: function() {
+//                    const buttons = $(this).parent().find(".ui-dialog-buttonset button");
+//                    let focusedButtonIndex = 0;
+//
+//                    $(document).on("keydown.arrowKeys", function(event) {
+//                      if (event.key === "ArrowRight") {
+//                        focusedButtonIndex = (focusedButtonIndex + 1) % buttons.length;
+//                        buttons.eq(focusedButtonIndex).focus();
+//                        event.preventDefault();
+//                      } else if (event.key === "ArrowLeft") {
+//                        focusedButtonIndex = (focusedButtonIndex - 1 + buttons.length) % buttons.length;
+//                        buttons.eq(focusedButtonIndex).focus();
+//                        event.preventDefault();
+//                      }
+//                    });
+//
+//                    //Select the button as default - It is not neede here
+//                    //$(this).parent().find(".ui-dialog-buttonpane button:first").focus();
+//
+//                    // Calculate and set the horizontal divider
+//                    let dialogWidth = $('#dialog-form-search').width();
+////                    $('.dialog-search-separator').css('width', `calc(100% + ${dialogWidth - 325}px)`);
+//
+//                    // If the css of the dialog changes, this calculation must be changed as well
+//                    $('.dialog-search-separator').css('width', `calc(100% + 24px)`);
+//                },
+//
+//                // Prevent the ESC button to go back in history
+//                beforeClose: function(event){
+//
+//                    if (event.originalEvent && event.originalEvent.key === "Escape") {
+//
+//                        // Delay needed to not propagate ESC
+//                        setTimeout(function () {
+//                            refToThis.focusTask = refToThis.originalTask;
+//                        }, 200);
+//                    }else{
+//                        refToThis.focusTask = refToThis.originalTask;
+//                    }
+//                },
+//
+//                // It executed anyway
+//                close: function() {
+//                    $(this).dialog("destroy");
+//                }
+//            });
+//        }, 200);
     }
 
     addNewThumbnailContainerExecution( data_dict ){
         let container_title = data_dict["container_title"]
-        let genre = data_dict["genre"]
-        let theme = data_dict["theme"]
-        let director = data_dict["director"]
-        let writer = data_dict["writer"]
-        let actor = data_dict["actor"]
-        let origin = data_dict["origin"]
-        let tag = data_dict["tag"]
+        let genres = data_dict["genres"]
+        let themes = data_dict["themes"]
+        let directors = data_dict["directors"]
+        let writers = data_dict["writers"]
+        let actors = data_dict["actors"]
+        let origins = data_dict["origins"]
+        let tags = data_dict["tags"]
         let show_level = data_dict["show_level"]
         let view_state = data_dict["view_state"]
         let rate = data_dict["rate"]
 
-        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
-        let origMenuDict = oContainerGenerator.getMenuDict();
-        let container_list = origMenuDict.container_list ?? []
-
-        // TODO: Not good. If I remove an element, then I should re-order the whole list !
-        let order = container_list.length
-
         if(container_title == ""){
+            // TODO: must translate
             container_title = "My search"
         }
 
         let data = {};
         data["category"] = "movie"
-        if(genre !== ""){
-            data["genres"] = genre;
+        if(genres !== ""){
+            data["genres"] = genres;
         }
-        if(theme !== ""){
-            data["themes"] = theme;
+        if(themes !== ""){
+            data["themes"] = themes;
         }
-        if(director !== ""){
-            data["directors"] = director;
+        if(directors !== ""){
+            data["directors"] = directors;
         }
-        if(writer !== ""){
-            data["writers"] = writer;
+        if(writers !== ""){
+            data["writers"] = writers;
         }
-        if(actor !== ""){
-            data["actors"] = actor;
+        if(actors !== ""){
+            data["actors"] = actors;
         }
-        if(origin !== ""){
-            data["origins"] = origin;
+        if(origins !== ""){
+            data["origins"] = origins;
         }
-        if(tag !== ""){
-            data["tags"] = tag;
+        if(tags !== ""){
+            data["tags"] = tags;
         }
 
         if(view_state !== ""){
@@ -2052,7 +2397,6 @@ class ThumbnailController {
 
         let thumbnailContainerElement =
         {
-          "order": order,
           "dynamic_hard_coded":{
               "title": [
                   {
@@ -2069,43 +2413,102 @@ class ThumbnailController {
           }
         }
 
-//        "path": "/collect/lowest",
-//        "path": "/collect/highest/mixed",
+        // fetch the container_list where we insert the new thumbnail container
+        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
+        let origMenuDict = oContainerGenerator.getMenuDict();
+        let container_list = origMenuDict.container_list ?? []
 
-//        let thumbnailContainerElement2 =
-//        {
-//          "order": order,
-//          "dynamic_hard_coded":{
-//              "title": [
-//                  {
-//                      "text": "Saját keresés"
-//                  }
-//              ],
-//              "data": {
-//                "category": "movie",
-//                "genres": "scifi",
-//                "ddirectors": "Stanley Kubrick",
-//                "aactors": "Jack Nicholson",
-//                "aactors": "Kevin Spacey",
-//                "wwriters": "Stephen King",
-//                "rrate_value": 3,
-//                "origins": "de"
-//              },
-//              "request": {
-//                  "method": "GET",
-//                  "protocol": "http",
-//                  "path": "/collect/highest/mixed"
-//              }
-//          }
-//        }
-
+        // menuDict modification
         container_list.push(thumbnailContainerElement)
         origMenuDict.container_list = container_list;
-
         oContainerGenerator.setMenuDict(origMenuDict);
 
+        // Scroll Section added
         this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
     }
+
+
+    updateThumbnailContainerExecution(data_dict, containerIndex){
+        let container_title = data_dict["container_title"]
+        let genres = data_dict["genres"]
+        let themes = data_dict["themes"]
+        let directors = data_dict["directors"]
+        let writers = data_dict["writers"]
+        let actors = data_dict["actors"]
+        let origins = data_dict["origins"]
+        let tags = data_dict["tags"]
+        let show_level = data_dict["show_level"]
+        let view_state = data_dict["view_state"]
+        let rate = data_dict["rate"]
+
+        if(container_title == ""){
+            // TODO: must translate
+            container_title = "My search"
+        }
+
+        let data = {};
+        data["category"] = "movie"
+        if(genres !== ""){
+            data["genres"] = genres;
+        }
+        if(themes !== ""){
+            data["themes"] = themes;
+        }
+        if(directors !== ""){
+            data["directors"] = directors;
+        }
+        if(writers !== ""){
+            data["writers"] = writers;
+        }
+        if(actors !== ""){
+            data["actors"] = actors;
+        }
+        if(origins !== ""){
+            data["origins"] = origins;
+        }
+        if(tags !== ""){
+            data["tags"] = tags;
+        }
+
+        if(view_state !== ""){
+            data["view_state"] = view_state;
+        }
+        if(rate !== ""){
+            data["rate_value"] = rate;
+        }
+
+        let thumbnailContainerElement =
+        {
+          "dynamic_hard_coded":{
+              "title": [
+                  {
+                      "text": container_title
+                  }
+              ],
+              "data": data,
+              "request": {
+                  "method": "GET",
+                  "protocol": "http",
+                  "path": show_level,
+                  "static": true
+              }
+          }
+        }
+
+
+        // fetch the container_list where we insert the new thumbnail container
+        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
+        let origMenuDict = oContainerGenerator.getMenuDict();
+        let container_list = origMenuDict.container_list ?? []
+
+        container_list[containerIndex] = thumbnailContainerElement
+        origMenuDict.container_list = container_list;
+        oContainerGenerator.setMenuDict(origMenuDict);
+
+        // Scroll Section added
+        this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
+    }
+
 
     /*
     After the size of the description-section changed, the description-image size recalculation is needed.
@@ -2277,12 +2680,12 @@ class ThumbnailController {
                 refToThis.originalTask = refToThis.focusTask;
                 refToThis.focusTask = FocusTask.Modal_Continue_Play;
 
-                let continue_button = translated_interaction_labels['dialog']['continue_interrupted_playback']['buttons']['continue'];
-                let from_beginning_button = translated_interaction_labels['dialog']['continue_interrupted_playback']['buttons']['from_beginning']
+                let continue_button = translated_interaction_labels.get('dialog')['continue_interrupted_playback']['buttons']['continue'];
+                let from_beginning_button = translated_interaction_labels.get('dialog')['continue_interrupted_playback']['buttons']['from_beginning']
 
                 // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
                 setTimeout(() => {
-                    $("#dialog-confirm-continue-interrupted-play p").html(translated_interaction_labels['dialog']['continue_interrupted_playback']['message']);
+                    $("#dialog-confirm-continue-interrupted-play p").html(translated_interaction_labels.get('dialog')['continue_interrupted_playback']['message']);
                     $("#dialog-confirm-continue-interrupted-play").dialog({
                         //closeOnEscape: false,
                         resizable: false,
@@ -2290,7 +2693,7 @@ class ThumbnailController {
                         width: 400,
                         modal: true,
                         zIndex: 1100,
-                        title: translated_interaction_labels['dialog']['continue_interrupted_playback']['title'],
+                        title: translated_interaction_labels.get('dialog')['continue_interrupted_playback']['title'],
 
                         buttons: {
                             [continue_button]: function() {

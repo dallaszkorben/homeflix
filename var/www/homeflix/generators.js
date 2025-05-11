@@ -32,9 +32,10 @@ class Generator{
 //
 class RestGenerator extends Generator{
 
-    static sendRestRequest(rq_method, rq_url, rq_data){
+    static sendRestRequest(rq_method, rq_protocol, rq_path, rq_data){
         let rq_assync = false;
         let result;
+        let rq_url = rq_protocol + "://" + host + port + rq_path;
 
         if( rq_data !== null && rq_data !== undefined){
             result = $.getJSON({method: rq_method, url: rq_url, data: rq_data, async: rq_assync, dataType: "json"});
@@ -72,27 +73,27 @@ class RestGenerator extends Generator{
         for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
             const request = requestList[lineIndex];
 
-            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
+            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
             thumbnailListCache[lineIndex] = thumbnail_list;  // Cache the result
 
-            if(thumbnail_list.length > 0){
+//            // skip to show the empty containers - bad idea, it will still be in the list, so the result ends with bad indexing in case of modification
+//            if(thumbnail_list.length > 0){
                 let oContainer = new ObjThumbnailContainer(request["title"]);
                 containerList.push(oContainer);
 
                 const actualThumbnails = Math.min(thumbnail_list.length, INITIAL_THUMBNAILS);
                 for(let thumbnail_index = 0; thumbnail_index < actualThumbnails; thumbnail_index++){
-                    let thumbnail_dict = thumbnail_list[thumbnail_index];
                     let play_list = [];
                     for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
                         play_list.push(thumbnail_list[sub_index]);
                     }
                     let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
+                    oContainer.addThumbnail(thumbnail);
                 }
                 objScrollSection.addThumbnailContainerObject(oContainer);
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-        }
+//        }
 
         Generator.stopSpinner();
         objScrollSection.focusDefault();
@@ -106,13 +107,12 @@ class RestGenerator extends Generator{
                 await new Promise(resolve => setTimeout(resolve, 100));
 
                 for(let thumbnail_index = INITIAL_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-                    let thumbnail_dict = thumbnail_list[thumbnail_index];
                     let play_list = [];
                     for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
                         play_list.push(thumbnail_list[sub_index]);
                     }
                     let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
+                    oContainer.addThumbnail(thumbnail);
                 }
             }
         }
@@ -120,18 +120,17 @@ class RestGenerator extends Generator{
         // Phase 3: Process all remaining lines
         for (let lineIndex = initial_lines; lineIndex < requestList.length; lineIndex++) {
             const request = requestList[lineIndex];
-            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_url"], request["rq_data"]);
+            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
             if(thumbnail_list.length > 0){
                 let oContainer = new ObjThumbnailContainer(request["title"]);
 
                 for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-                    let thumbnail_dict = thumbnail_list[thumbnail_index];
                     let play_list = [];
                     for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
                         play_list.push(thumbnail_list[sub_index]);
                     }
                     let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail_dict["id"], thumbnail);
+                    oContainer.addThumbnail(thumbnail);
                 }
 
                 // If meanwhile the history changed - user went back - the load of the thumbnails STOPPED
@@ -456,6 +455,8 @@ class GeneralRestGenerator extends RestGenerator{
     produceContainers(objScrollSection){
         const refToThis = this;
         const containerConfigList = this.menuDict.container_list ?? [];
+
+        // normal/search
         const containerType = this.menuDict.container_type ?? "normal"
         const containerList = [];
         let requestList = [];
@@ -476,8 +477,6 @@ class GeneralRestGenerator extends RestGenerator{
                 const descriptorStaticHardCodedDict = containerDict.static_hard_coded ?? null;
                 const descriptorDynamicHardCodedDict = containerDict.dynamic_hard_coded ?? null;
                 const descriptorDynamicQueriedDict = containerDict.dynamic_queried ?? null;
-                const descriptorDynamicSearchDict = containerDict.dynamic_search ?? null;
-                const containerOrder = containerDict.order ?? 0
 
                 // Static - Hard Coded Container Definitions
                 if(descriptorStaticHardCodedDict !== null){
@@ -492,7 +491,6 @@ class GeneralRestGenerator extends RestGenerator{
                     // Go through the thumbnails
                     for (let thumbnailDict of thumbnailList){
 
-                        const thumbnailOrder = thumbnailDict.order ?? "";
                         const thumbnailImage = thumbnailDict.thumbnail.image ?? "";
 
                         const thumbnail_title_list = thumbnailDict.thumbnail.title ?? [];
@@ -523,10 +521,7 @@ class GeneralRestGenerator extends RestGenerator{
                                 },
                             "continuous": []
                         });
-                        containerInstance.addThumbnail(thumbnailOrder, thumbnailInstance);
-                        //requestType = "static";
-                        //watingForStopSpinner = false;
-
+                        containerInstance.addThumbnail(thumbnailInstance);
                     }
                     containerList.push(containerInstance);
 
@@ -536,8 +531,7 @@ class GeneralRestGenerator extends RestGenerator{
                     const container_title = eval(buildTitleFromTitleList(container_title_list));
 
                     const data = descriptorDynamicHardCodedDict.data ?? {};
-                    const requestDict = descriptorDynamicHardCodedDict.request ?? {static: true, method: "GET", protocol: "http", url: ""};
-                    const rq_static = requestDict.static;
+                    const requestDict = descriptorDynamicHardCodedDict.request ?? {method: "GET", protocol: "http", path: ""};
                     const rq_method = requestDict.method;
                     const rq_protocol = requestDict.protocol;
                     const rq_path = requestDict.path;
@@ -548,41 +542,11 @@ class GeneralRestGenerator extends RestGenerator{
                     };
                     rq_data["lang"] = refToThis.language_code;
 
-                    const request = {title: container_title, rq_static: rq_static, rq_method: rq_method, rq_url: rq_protocol + "://" + host + port + rq_path, rq_data: rq_data};
+                    const request = {title: container_title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: rq_data};
                     requestList.push(request);
 
                     watingForStopSpinner = true;
                     //requestType = "dynamic";
-
-//                // Dynamic - Hard Search Definitions
-//                }else if(descriptorDynamicSearchDict !== null){
-//                    const container_title_list = descriptorDynamicSearchDict.title ?? [];
-//                    const container_title = eval(buildTitleFromTitleList(container_title_list));
-//
-//                    const data = descriptorDynamicSearchDict.data ?? {};
-//                    const requestDict = descriptorDynamicSearchDict.request ?? {static: true, method: "GET", protocol: "http", url: ""};
-//                    const rq_static = requestDict.static;
-//                    const rq_method = requestDict.method;
-//                    const rq_protocol = requestDict.protocol;
-//                    const rq_path = requestDict.path;
-//
-//                    let rq_data = {}
-//                    for( const[key, value] of Object.entries(data)){
-//                        rq_data[key] = value;
-//                    };
-//                    rq_data["lang"] = refToThis.language_code;
-//
-//                    const request = {title: container_title, rq_static: rq_static, rq_method: rq_method, rq_url: rq_protocol + "://" + host + port + rq_path, rq_data: rq_data};
-//                    requestList.push(request);
-//
-//
-//                    $("#control-container-add-section").show();
-//                    //let ccas = $("#control-container-add-section");
-//                    //ccas.html("➕");
-//
-//
-//                    requestType = "dynamic";
-////                    requestType = "static";
 
                 // Dynamic - Queried Container Definitions
                 }else if(descriptorDynamicQueriedDict !== null){
@@ -609,7 +573,6 @@ class GeneralRestGenerator extends RestGenerator{
                     }
 
                     let query_request_dict = query_loop_dict.request ?? {};
-                    let rq_static = query_request_dict.static ?? false;
                     let rq_method = query_request_dict.method ?? "GET";
                     let rq_protocol = query_request_dict.protocol ?? "http";
                     let rq_path = query_request_dict.path ?? "";
@@ -639,7 +602,7 @@ class GeneralRestGenerator extends RestGenerator{
                                     local_rq_data[key] = data_dict[value];
                                 }
                                 const title = eval(buildTitleFromTitleList(container_title_list));
-                                let request = {title: title, rq_static: rq_static, rq_method: rq_method, rq_url: rq_protocol + "://" + host + port + rq_path, rq_data: local_rq_data};
+                                let request = {title: title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: local_rq_data};
                                 requestList.push(request);
                             }
 
@@ -653,7 +616,7 @@ class GeneralRestGenerator extends RestGenerator{
                                 let local_rq_data = {...rq_data};
                                 local_rq_data[query_data_list_map_value] = data_value;
                                 const title = eval(buildTitleFromTitleList(container_title_list));
-                                const request = {title: title, rq_static: rq_static, rq_method: rq_method, rq_url: rq_protocol + "://" + host + port + rq_path, rq_data: local_rq_data};
+                                const request = {title: title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: local_rq_data};
                                 requestList.push(request);
                             }
 
@@ -699,7 +662,7 @@ class SubLevelRestGenerator extends  RestGenerator{
 
         this.data_dict['card_id'] = this.hierarchy_id;
         let requestList = [
-            {title: this.container_title,  rq_method: "GET", rq_url: "http://" + host + port + "/collect/next/mixed", rq_data: this.data_dict},
+            {title: this.container_title,  rq_method: "GET", rq_protocol: "http", rq_path: "/collect/next/mixed", rq_data: this.data_dict},
         ];
 
         this.showAllThumbnails(requestList, objScrollSection)

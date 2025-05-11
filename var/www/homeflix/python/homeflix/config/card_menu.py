@@ -42,12 +42,10 @@ class CardMenu( Property ):
                 "name": "main_menu",
                 "container_list": [
                   {
-                    "order": 0,
                     "static_hard_coded": {
                       "container_title_key": "categories",
                       "thumbnails": [
                         {
-                          "order": 0,
                           "thumbnail": {
                             "image": "images/categories/movie.jpg",
                             "title_key": "movies"
@@ -65,12 +63,10 @@ class CardMenu( Property ):
                             "name": "movie",
                             "container_list": [
                               {
-                                "order": 0,
                                 "static_hard_coded": {
                                   "container_title_key": "movies",
                                   "thumbnails": [
                                     {
-                                      "order": 0,
                                       "thumbnail": {
                                         "image": "images/categories/movie_mixed.jpg",
                                         "title_key": "movie_mixed"
@@ -88,12 +84,10 @@ class CardMenu( Property ):
                                         "name": "movie_filter",
                                         "container_list": [
                                           {
-                                            "order": 0,
                                             "static_hard_coded": {
                                               "container_title_key": "movie_filter",
                                               "thumbnails": [
                                                 {
-                                                  "order": 0,
                                                   "thumbnail": {
                                                     "image": "images/categories/movie_by_genre.jpg",
                                                     "title_key": "movie_by_genre"
@@ -111,7 +105,6 @@ class CardMenu( Property ):
                                                     "name": "movie_genre",
                                                     "container_list": [
                                                       {
-                                                        "order": 0,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -130,7 +123,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 1,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -149,7 +141,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 2,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -168,7 +159,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 3,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -187,7 +177,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 4,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -206,7 +195,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 5,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -225,7 +213,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 6,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -244,7 +231,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 7,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -263,7 +249,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 8,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -282,7 +267,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 9,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -301,7 +285,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 10,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -320,7 +303,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 11,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -339,7 +321,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 12,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -358,7 +339,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 13,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -377,7 +357,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 14,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -396,7 +375,6 @@ class CardMenu( Property ):
                                                         }
                                                       },
                                                       {
-                                                        "order": 15,
                                                         "dynamic_hard_coded": {
                                                           "title": {
                                                             "dict_translator": "translated_genre_movie",
@@ -418,7 +396,6 @@ class CardMenu( Property ):
                                                   }
                                                 },
                                                 {
-                                                  "order": 2,
                                                   "thumbnail": {
                                                     "image": "images/categories/movie_by_director.jpg",
                                                     "title_key": "movie_by_director"
@@ -436,7 +413,6 @@ class CardMenu( Property ):
                                                     "name": "movie_genre",
                                                     "container_list": [
                                                       {
-                                                        "order": 0,
                                                         "dynamic_queried": {
                                                           "pre_query": {
                                                             "data": {
@@ -482,7 +458,6 @@ class CardMenu( Property ):
                                       }
                                     },
                                     {
-                                      "order": 4,
                                       "thumbnail": {
                                         "image": "images/categories/movie_playlists.jpg",
                                         "title_key": "movie_playlists"
@@ -500,7 +475,6 @@ class CardMenu( Property ):
                                         "name": "movie_playlist",
                                         "container_list": [
                                           {
-                                            "order": 0,
                                             "dynamic_hard_coded": {
                                               "title": {
                                                 "dict_translator": "translated_labels",
@@ -519,7 +493,6 @@ class CardMenu( Property ):
                                             }
                                           },
                                           {
-                                            "order": 1,
                                             "dynamic_hard_coded": {
                                               "title": {
                                                 "dict_translator": "translated_labels",
@@ -538,7 +511,6 @@ class CardMenu( Property ):
                                             }
                                           },
                                           {
-                                            "order": 2,
                                             "dynamic_hard_coded": {
                                               "title": {
                                                 "dict_translator": "translated_labels",
@@ -557,7 +529,6 @@ class CardMenu( Property ):
                                             }
                                           },
                                           {
-                                            "order": 3,
                                             "dynamic_queried": {
                                               "pre_query": {
                                                 "data": {
