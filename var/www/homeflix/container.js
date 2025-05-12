@@ -141,23 +141,44 @@ class ObjScrollSection {
             class: "thumbnail-container-control-section",
         });
 
-        let domThumbnailContainerControlSectionDelete = $("<div>", {
-            class: "thumbnail-container-control-section-delete",
-            text: "  \u{1F5D1}  "
-        }); // 🗑
-        // Add click listener on the delete icon
-        domThumbnailContainerControlSectionDelete.click(function () {
-            refToThis.clickedOnDeleteThumbnailContainer(domThumbnailContainerBlock);
+        // Thumbnail Container modifier/delete icons
+        //let scroll_section = this.oContainerGenerator['menu_dict']['container_list'][containerIndex];
+        //let dynamic_queried = this.oContainerGenerator.menu_dict.container_list[containerIndex].dynamic_queried ?? null;
+        //let static_hard_coded = this.oContainerGenerator.menu_dict.container_list[containerIndex].static_hard_coded ?? null;
+        //let dynamic_hard_coded = this.oContainerGenerator.menu_dict.container_list[containerIndex].dynamic_hard_coded ?? null;
 
-        });
+        let container_list = []
+        if('menu_dict' in this.oContainerGenerator){
+            container_list = this.oContainerGenerator.menu_dict.container_list;
+        }
+        if (container_list && ((container_list.length == 1 && 'dynamic_hard_coded' in container_list[0]) || (container_list.length > 1 && 'dynamic_hard_coded' in container_list[containerIndex]))){
 
-        let domThumbnailContainerControlSectionEdit = $("<div>", {
-            class: "thumbnail-container-control-section-edit",
-            text: "  \u{1F58A}  "
-        }); // 🖊️ "  \u{1F58A}  "
-        domThumbnailContainerControlSectionEdit.click(function () {
-            refToThis.clickedOnEditThumbnailContainer(domThumbnailContainerBlock);
-        });
+
+            let domThumbnailContainerControlSectionDelete = $("<div>", {
+                class: "thumbnail-container-control-section-delete",
+                text: "  \u{1F5D1}  "
+            }); // 🗑
+            // Add click listener on the delete icon
+            domThumbnailContainerControlSectionDelete.click(function () {
+                refToThis.clickedOnDeleteThumbnailContainer(thumbnailContainer, domThumbnailContainerBlock);
+
+            });
+
+            let domThumbnailContainerControlSectionEdit = $("<div>", {
+                class: "thumbnail-container-control-section-edit",
+                text: "  \u{1F58A}  "
+            }); // 🖊️ "  \u{1F58A}  "
+            domThumbnailContainerControlSectionEdit.click(function () {
+                refToThis.clickedOnEditThumbnailContainer(thumbnailContainer, domThumbnailContainerBlock);
+            });
+
+            domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
+            domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
+            //domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
+
+        }
+
+
 
         let id = domThumbnailContainer.attr("id");
         domThumbnailContainer.attr("id", id.format("???", containerIndex));
@@ -181,8 +202,8 @@ class ObjScrollSection {
 
         domThumbnailContainerTitleSection.append(domThumbnailContainerTitle);
 
-        domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
-        domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
+//        domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionDelete);
+//        domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionEdit);
         domThumbnailContainerTitleSection.append(domThumbnailContainerControlSection);
 
         domThumbnailContainerBlock.append(domThumbnailContainerTitleSection);
@@ -305,7 +326,8 @@ class ObjScrollSection {
      *
      * @param {*} domThumbnailContainerBlock
      */
-    clickedOnDeleteThumbnailContainer(domThumbnailContainerBlock) {
+    clickedOnDeleteThumbnailContainer(thumbnailContainer, domThumbnailContainerBlock) {
+        let request = thumbnailContainer.request;
         let containerId = domThumbnailContainerBlock.attr('id');
         let containerIndex = parseInt(containerId.replace('container-block-', ''));
 
@@ -388,22 +410,29 @@ class ObjScrollSection {
      *
      * @param {*} domThumbnailContainerBlock
      */
-    clickedOnEditThumbnailContainer(domThumbnailContainerBlock) {
+    clickedOnEditThumbnailContainer(thumbnailContainer, domThumbnailContainerBlock) {
+        let request = thumbnailContainer.request;
         let containerId = domThumbnailContainerBlock.attr('id');
         let containerIndex = parseInt(containerId.replace('container-block-', ''));
 
         //
         // Fetch the container_list what we modify
         //
-        let oContainerGenerator = this.oContainerGenerator;
-        let origMenuDict = oContainerGenerator.getMenuDict();
-        let container_list = origMenuDict.container_list ?? [];
 
-        let data_dict = container_list[containerIndex]['dynamic_hard_coded']['data'];
-        let show_level = container_list[containerIndex]['dynamic_hard_coded']['request']['path'];
+        let data_dict = request.rq_data;
+        let show_level = request.rq_path;
+        let container_title = request.title;
 
-        // TODO:
-        let container_title = container_list[containerIndex]['dynamic_hard_coded']['title'][0]['text'];
+//        let oContainerGenerator = this.oContainerGenerator;
+//        let origMenuDict = oContainerGenerator.getMenuDict();
+//        let container_list = origMenuDict.container_list ?? [];
+//
+//        let data_dict = container_list[containerIndex]['dynamic_hard_coded']['data'];
+//        let show_level = container_list[containerIndex]['dynamic_hard_coded']['request']['path'];
+
+
+//        // TODO:
+//        let container_title = container_list[containerIndex]['dynamic_hard_coded']['title'][0]['text'];
 
         data_dict['show_level'] = show_level;
         data_dict['container_title'] = container_title;
@@ -575,8 +604,10 @@ class ObjThumbnailContainer {
      *   <div class="thumbnail-container-space" id="container-space-1"></div>
      * </div>
      */
-    constructor(title, defaultThumbnailIndex = 0) {
-        this.title = title
+//    constructor(title, defaultThumbnailIndex = 0) {
+    constructor(request, title, defaultThumbnailIndex = 0) {
+        this.request = request;
+        this.title = title;
         this.numberOfThumbnails = undefined;
         this.defaultThumbnailIndex = defaultThumbnailIndex;
         this.currentThumbnailIndex = undefined;

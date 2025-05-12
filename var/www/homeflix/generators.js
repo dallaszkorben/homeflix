@@ -78,7 +78,8 @@ class RestGenerator extends Generator{
 
 //            // skip to show the empty containers - bad idea, it will still be in the list, so the result ends with bad indexing in case of modification
 //            if(thumbnail_list.length > 0){
-                let oContainer = new ObjThumbnailContainer(request["title"]);
+//                let oContainer = new ObjThumbnailContainer(request["title"]);
+                let oContainer = new ObjThumbnailContainer(request, request["title"]);
                 containerList.push(oContainer);
 
                 const actualThumbnails = Math.min(thumbnail_list.length, INITIAL_THUMBNAILS);
@@ -122,7 +123,8 @@ class RestGenerator extends Generator{
             const request = requestList[lineIndex];
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
             if(thumbnail_list.length > 0){
-                let oContainer = new ObjThumbnailContainer(request["title"]);
+//                let oContainer = new ObjThumbnailContainer(request["title"]);
+                let oContainer = new ObjThumbnailContainer(request, request["title"]);
 
                 for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
                     let play_list = [];
@@ -329,7 +331,7 @@ class RestGenerator extends Generator{
                         "menu":
                             (function(history_title, hierarchy_id, data_dict, thumbnail_title) {
                                 return function() {
-                                    return new SubLevelRestGenerator(refToThis.language_code, history_title, hierarchy_id, data_dict, thumbnail_title);
+                                    return new SubLevelRestGenerator(data_dict, refToThis.language_code, history_title, hierarchy_id, thumbnail_title);
                                 };
                             })(history_title, hit["id"], data_dict, thumbnail_title )
                     },
@@ -437,27 +439,27 @@ class RestGenerator extends Generator{
 // ----------------------
 //
 class GeneralRestGenerator extends RestGenerator{
-    constructor(menuDict, language_code, parent_thumbnail_title){
+    constructor(menu_dict, language_code, parent_thumbnail_title){
         super(language_code);
-        this.menuDict = menuDict;
+        this.menu_dict = menu_dict;
         this.parent_thumbnail_title = parent_thumbnail_title;
     }
 
     /* Hack */
-    setMenuDict(menuDict){
-        this.menuDict = menuDict;
+    setMenuDict(menu_dict){
+        this.menu_dict = menu_dict;
     }
 
     getMenuDict(){
-        return this.menuDict;
+        return this.menu_dict;
     }
 
     produceContainers(objScrollSection){
         const refToThis = this;
-        const containerConfigList = this.menuDict.container_list ?? [];
+        const containerConfigList = this.menu_dict.container_list ?? [];
 
         // normal/search
-        const containerType = this.menuDict.container_type ?? "normal"
+        const containerType = this.menu_dict.container_type ?? "normal"
         const containerList = [];
         let requestList = [];
 
@@ -484,7 +486,8 @@ class GeneralRestGenerator extends RestGenerator{
                     const container_title_list = descriptorStaticHardCodedDict.title ?? [];
                     const container_title = eval(buildTitleFromTitleList(container_title_list));
 
-                    const containerInstance = new ObjThumbnailContainer(container_title);
+                    //const containerInstance = new ObjThumbnailContainer(container_title);
+                    const containerInstance = new ObjThumbnailContainer(null, container_title);
 
                     const thumbnailList = descriptorStaticHardCodedDict.thumbnails ?? [];
 
@@ -650,7 +653,7 @@ class GeneralRestGenerator extends RestGenerator{
 // -----------------------
 //
 class SubLevelRestGenerator extends  RestGenerator{
-    constructor(language_code, container_title, hierarchy_id, data_dict, parent_thumbnail_title){
+    constructor(data_dict, language_code, container_title, hierarchy_id, parent_thumbnail_title){
         super(language_code);
         this.container_title = container_title;
         this.hierarchy_id = hierarchy_id;
