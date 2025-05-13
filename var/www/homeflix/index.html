@@ -451,341 +451,334 @@
 
 
 
-/**
- * Core function to create an autocomplete input field
- * @param {string} inputId - ID of the input element
- * @param {Object} options - Configuration options
- * @returns {jQuery} - The input element
- */
- function createAutocompleteField(inputId, options) {
-    const {
-        containerClass = `custom-combobox-${inputId}`,
-        withButton = false,
-        autocompleteOptions = {},
-        blurHandler = null
-    } = options;
+        /**
+         * Core function to create an autocomplete input field
+         * @param {string} inputId - ID of the input element
+         * @param {Object} options - Configuration options
+         * @returns {jQuery} - The input element
+         */
+         function createAutocompleteField(inputId, options) {
+            const {
+                containerClass = `custom-combobox-${inputId}`,
+                withButton = false,
+                autocompleteOptions = {},
+                blurHandler = null
+            } = options;
 
-    // Clean up any existing elements
-    $(`.combobox-toggle-${inputId}`).remove();
-    $(`.${containerClass}`).children().unwrap();
+            // Clean up any existing elements
+            $(`.combobox-toggle-${inputId}`).remove();
+            $(`.${containerClass}`).children().unwrap();
 
-    // Replace input element
-    $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
-    const $input = $(`#${inputId}`);
+            // Replace input element
+            $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
+            const $input = $(`#${inputId}`);
 
-    // Initialize autocomplete
-    $input.autocomplete(autocompleteOptions);
+            // Initialize autocomplete
+            $input.autocomplete(autocompleteOptions);
 
-    // Add blur handler if provided
-    if (blurHandler) {
-        $input.on('blur', blurHandler);
-    }
-
-    // Add dropdown button if requested
-    if (withButton) {
-        $input.after(
-            $('<button>', {
-                tabindex: -1,
-                type: 'button',
-                title: 'Show All Items',
-                class: `ui-button ui-widget ui-button-icon-only combobox-toggle-${inputId} noselect`,
-                html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
-            }).on('mousedown', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Toggle dropdown visibility
-                if ($input.autocomplete("widget").is(":visible")) {
-                    $input.autocomplete("close");
-                } else {
-                    // Destroy and reinitialize autocomplete
-                    if ($input.autocomplete("instance")) {
-                        $input.autocomplete("destroy");
-                    }
-                    $input.autocomplete(autocompleteOptions);
-
-                    // Show all options
-                    $input.focus();
-                    $input.autocomplete("search", "");
-                }
-            }).on('mouseup', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            })
-        );
-    }
-
-    // Add the CSS if it doesn't exist
-    if (!$(`#combobox-styles-${inputId}`).length) {
-        const css = `
-            .${containerClass} {
-                position: relative;
-                display: inline-block;
-                width: 100%;
-                margin-bottom: 5px;
+            // Add blur handler if provided
+            if (blurHandler) {
+                $input.on('blur', blurHandler);
             }
-            ${withButton ? `
-            .combobox-toggle-${inputId} {
-                position: absolute;
-                top: 0;
-                right: 0;
-                height: 100%;
-                width: 2em;
-                margin: 0;
-                padding: 0;
-                cursor: pointer;
-                border-top-left-radius: 0;
-                border-bottom-left-radius: 0;
-            }` : ''}
-            .ui-autocomplete {
-                max-height: 200px;
-                overflow-y: auto;
-                overflow-x: hidden;
-                z-index: 9999;
-            }
-            #${inputId} {
-                width: ${withButton ? 'calc(100% - 2em)' : '100%'};
-                box-sizing: border-box;
-            }
-            .noselect {
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                -khtml-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-            }`;
 
-        $('<style>', {
-            id: `combobox-styles-${inputId}`
-        }).text(css).appendTo('head');
-    }
+            // Add dropdown button if requested
+            if (withButton) {
+                $input.after(
+                    $('<button>', {
+                        tabindex: -1,
+                        type: 'button',
+                        title: 'Show All Items',
+                        class: `ui-button ui-widget ui-button-icon-only combobox-toggle-${inputId} noselect`,
+                        html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
+                    }).on('mousedown', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
 
-    // Wrap elements if button exists
-    if (withButton) {
-        $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
-    } else {
-        $(`#${inputId}`).wrap(`<div class="${containerClass}">`);
-    }
+                        // Toggle dropdown visibility
+                        if ($input.autocomplete("widget").is(":visible")) {
+                            $input.autocomplete("close");
+                        } else {
+                            // Destroy and reinitialize autocomplete
+                            if ($input.autocomplete("instance")) {
+                                $input.autocomplete("destroy");
+                            }
+                            $input.autocomplete(autocompleteOptions);
 
-    return $input;
-}
-
-/**
- * Creates a combobox with dictionary data
- * @param {string} inputId - ID of the input element
- * @param {Map|Object} dataDict - Dictionary of values and labels
- */
-function createComboBoxWithDict(inputId, dataDict) {
-    // Create array of options from the dictionary
-    const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
-        value: dictKey,
-        label: dictValue
-    }));
-
-    // Create autocomplete options
-    const autocompleteOptions = {
-        source: function(request, response) {
-            if (request.term === '') {
-                response(options);
-                return;
-            }
-            const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-            response(options.filter(option =>
-                matcher.test(option.label) || matcher.test(option.value)
-            ));
-        },
-        minLength: 0,
-        select: function(event, ui) {
-            $(this).val(ui.item.label);
-            $(this).attr('data-value', ui.item.value);
-            return false;
-        }
-    };
-
-    // Create blur handler
-    const blurHandler = function() {
-        const currentValue = $(this).val();
-        if (currentValue) {
-            const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
-            const exactMatch = options.find(option =>
-                exactMatcher.test(option.label) || exactMatcher.test(option.value)
-            );
-
-            if (exactMatch) {
-                $(this).val(exactMatch.label);
-                $(this).attr('data-value', exactMatch.value);
-            } else {
-                const partialMatcher = new RegExp($.ui.autocomplete.escapeRegex(currentValue), "i");
-                const partialMatch = options.find(option =>
-                    partialMatcher.test(option.label) || partialMatcher.test(option.value)
+                            // Show all options
+                            $input.focus();
+                            $input.autocomplete("search", "");
+                        }
+                    }).on('mouseup', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    })
                 );
+            }
 
-                if (partialMatch) {
-                    $(this).val(partialMatch.label);
-                    $(this).attr('data-value', partialMatch.value);
+            // Add the CSS if it doesn't exist
+            if (!$(`#combobox-styles-${inputId}`).length) {
+                const css = `
+                    .${containerClass} {
+                        position: relative;
+                        display: inline-block;
+                        width: 100%;
+                        margin-bottom: 5px;
+                    }
+                    ${withButton ? `
+                    .combobox-toggle-${inputId} {
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                        height: 100%;
+                        width: 2em;
+                        margin: 0;
+                        padding: 0;
+                        cursor: pointer;
+                        border-top-left-radius: 0;
+                        border-bottom-left-radius: 0;
+                    }` : ''}
+                    .ui-autocomplete {
+                        max-height: 200px;
+                        overflow-y: auto;
+                        overflow-x: hidden;
+                        z-index: 9999;
+                    }
+                    #${inputId} {
+                        width: ${withButton ? 'calc(100% - 2em)' : '100%'};
+                        box-sizing: border-box;
+                    }
+                    .noselect {
+                        -webkit-touch-callout: none;
+                        -webkit-user-select: none;
+                        -khtml-user-select: none;
+                        -moz-user-select: none;
+                        -ms-user-select: none;
+                        user-select: none;
+                    }`;
+
+                $('<style>', {
+                    id: `combobox-styles-${inputId}`
+                }).text(css).appendTo('head');
+            }
+
+            // Wrap elements if button exists
+            if (withButton) {
+                $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
+            } else {
+                $(`#${inputId}`).wrap(`<div class="${containerClass}">`);
+            }
+
+            return $input;
+        }
+
+        /**
+         * Creates a combobox with dictionary data
+         * @param {string} inputId - ID of the input element
+         * @param {Map|Object} dataDict - Dictionary of values and labels
+         */
+        function createComboBoxWithDict(inputId, dataDict) {
+            // Create array of options from the dictionary
+            const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
+                value: dictKey,
+                label: dictValue
+            }));
+
+            // Create autocomplete options
+            const autocompleteOptions = {
+                source: function(request, response) {
+                    if (request.term === '') {
+                        response(options);
+                        return;
+                    }
+                    const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                    response(options.filter(option =>
+                        matcher.test(option.label) || matcher.test(option.value)
+                    ));
+                },
+                minLength: 0,
+                select: function(event, ui) {
+                    $(this).val(ui.item.label);
+                    $(this).attr('data-value', ui.item.value);
+                    return false;
+                }
+            };
+
+            // Create blur handler
+            const blurHandler = function() {
+                const currentValue = $(this).val();
+                if (currentValue) {
+                    const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
+                    const exactMatch = options.find(option =>
+                        exactMatcher.test(option.label) || exactMatcher.test(option.value)
+                    );
+
+                    if (exactMatch) {
+                        $(this).val(exactMatch.label);
+                        $(this).attr('data-value', exactMatch.value);
+                    } else {
+                        const partialMatcher = new RegExp($.ui.autocomplete.escapeRegex(currentValue), "i");
+                        const partialMatch = options.find(option =>
+                            partialMatcher.test(option.label) || partialMatcher.test(option.value)
+                        );
+
+                        if (partialMatch) {
+                            $(this).val(partialMatch.label);
+                            $(this).attr('data-value', partialMatch.value);
+                        } else {
+                            $(this).val('');
+                            $(this).attr('data-value', '');
+                        }
+                    }
                 } else {
-                    $(this).val('');
                     $(this).attr('data-value', '');
                 }
-            }
-        } else {
-            $(this).attr('data-value', '');
+            };
+
+            // Store the dictionary as data attribute
+            const $input = createAutocompleteField(inputId, {
+                withButton: true,
+                autocompleteOptions: autocompleteOptions,
+                blurHandler: blurHandler
+            });
+
+            $input.data('dataDict', dataDict);
+
+            return $input;
         }
-    };
 
-    // Store the dictionary as data attribute
-    const $input = createAutocompleteField(inputId, {
-        withButton: true,
-        autocompleteOptions: autocompleteOptions,
-        blurHandler: blurHandler
-    });
+        /**
+         * Creates a field with autocomplete from a list
+         * @param {string} inputId - ID of the input element
+         * @param {Array} dataList - List of autocomplete options
+         * @param {number} minChars - Minimum characters to trigger autocomplete
+         */
+        function createFieldWithAutocompleteFromList(inputId, dataList, minChars = 2) {
+            // Create autocomplete options
+            const autocompleteOptions = {
+                source: function(request, response) {
+                    if (request.term.length >= minChars) {
+                        const searchTerm = request.term;
+                        const isUpperCase = /[A-Z]/.test(searchTerm);
+                        const matches = dataList.filter(item => {
+                            if (isUpperCase) {
+                                return item.includes(searchTerm);
+                            }
+                            return item.toLowerCase().includes(searchTerm.toLowerCase());
+                        }).sort((a, b) => {
+                            const startsWithTerm = (str, term) => {
+                                if (isUpperCase) {
+                                    return str.startsWith(term);
+                                }
+                                return str.toLowerCase().startsWith(term.toLowerCase());
+                            };
 
-    $input.data('dataDict', dataDict);
+                            const aStartsWith = startsWithTerm(a, searchTerm);
+                            const bStartsWith = startsWithTerm(b, searchTerm);
 
-    return $input;
-}
+                            if (aStartsWith && !bStartsWith) return -1;
+                            if (!aStartsWith && bStartsWith) return 1;
 
-/**
- * Creates a field with autocomplete from a list
- * @param {string} inputId - ID of the input element
- * @param {Array} dataList - List of autocomplete options
- * @param {number} minChars - Minimum characters to trigger autocomplete
- */
-function createFieldWithAutocompleteFromList(inputId, dataList, minChars = 2) {
-    // Create autocomplete options
-    const autocompleteOptions = {
-        source: function(request, response) {
-            if (request.term.length >= minChars) {
-                const searchTerm = request.term;
-                const isUpperCase = /[A-Z]/.test(searchTerm);
-                const matches = dataList.filter(item => {
-                    if (isUpperCase) {
-                        return item.includes(searchTerm);
+                            return a.localeCompare(b);
+                        });
+
+                        response(matches);
+                    } else {
+                        response([]);
                     }
-                    return item.toLowerCase().includes(searchTerm.toLowerCase());
-                }).sort((a, b) => {
-                    const startsWithTerm = (str, term) => {
-                        if (isUpperCase) {
-                            return str.startsWith(term);
-                        }
-                        return str.toLowerCase().startsWith(term.toLowerCase());
-                    };
-
-                    const aStartsWith = startsWithTerm(a, searchTerm);
-                    const bStartsWith = startsWithTerm(b, searchTerm);
-
-                    if (aStartsWith && !bStartsWith) return -1;
-                    if (!aStartsWith && bStartsWith) return 1;
-
-                    return a.localeCompare(b);
-                });
-
-                response(matches);
-            } else {
-                response([]);
-            }
-        },
-        minLength: minChars,
-        select: function(event, ui) {
-            $(this).val(ui.item.value || ui.item);
-            return false;
-        }
-    };
-
-    // Create blur handler
-    const blurHandler = function() {
-        const currentValue = $(this).val();
-        if (currentValue) {
-            const isUpperCase = /[A-Z]/.test(currentValue);
-            let exactMatch;
-
-            if (isUpperCase) {
-                exactMatch = dataList.find(item => item === currentValue);
-            } else {
-                exactMatch = dataList.find(item =>
-                    item.toLowerCase() === currentValue.toLowerCase()
-                );
-            }
-
-            if (exactMatch) {
-                $(this).val(exactMatch);
-            } else {
-                const partialMatches = dataList.filter(item => {
-                    if (isUpperCase) {
-                        return item.includes(currentValue);
-                    }
-                    return item.toLowerCase().includes(currentValue.toLowerCase());
-                });
-
-                if (partialMatches.length > 0) {
-                    $(this).val(partialMatches[0]);
-                } else {
-                    $(this).val('');
+                },
+                minLength: minChars,
+                select: function(event, ui) {
+                    $(this).val(ui.item.value || ui.item);
+                    return false;
                 }
-            }
+            };
+
+            // Create blur handler
+            const blurHandler = function() {
+                const currentValue = $(this).val();
+                if (currentValue) {
+                    const isUpperCase = /[A-Z]/.test(currentValue);
+                    let exactMatch;
+
+                    if (isUpperCase) {
+                        exactMatch = dataList.find(item => item === currentValue);
+                    } else {
+                        exactMatch = dataList.find(item =>
+                            item.toLowerCase() === currentValue.toLowerCase()
+                        );
+                    }
+
+                    if (exactMatch) {
+                        $(this).val(exactMatch);
+                    } else {
+                        const partialMatches = dataList.filter(item => {
+                            if (isUpperCase) {
+                                return item.includes(currentValue);
+                            }
+                            return item.toLowerCase().includes(currentValue.toLowerCase());
+                        });
+
+                        if (partialMatches.length > 0) {
+                            $(this).val(partialMatches[0]);
+                        } else {
+                            $(this).val('');
+                        }
+                    }
+                }
+            };
+
+            // Create the field
+            const $input = createAutocompleteField(inputId, {
+                withButton: false,
+                autocompleteOptions: autocompleteOptions,
+                blurHandler: blurHandler
+            });
+
+            return $input;
         }
-    };
 
-    // Create the field
-    const $input = createAutocompleteField(inputId, {
-        withButton: false,
-        autocompleteOptions: autocompleteOptions,
-        blurHandler: blurHandler
-    });
+        /**
+         * Creates a free combobox with dictionary data
+         * @param {string} inputId - ID of the input element
+         * @param {Map|Object} dataDict - Dictionary of values and labels
+         */
+        function createFreeComboBoxWithDict(inputId, dataDict) {
+            // Create array of options from the dictionary
+            const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
+                value: dictKey,
+                label: dictValue
+            }));
 
-    return $input;
-}
+            // Create autocomplete options
+            const autocompleteOptions = {
+                source: function(request, response) {
+                    if (request.term === '') {
+                        response(options);
+                        return;
+                    }
+                    const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                    response(options.filter(option =>
+                        matcher.test(option.label) || matcher.test(option.value)
+                    ));
+                },
+                minLength: 0,
+                select: function(event, ui) {
+                    $(this).val(ui.item.label);
+                    $(this).attr('data-value', ui.item.value);
+                    return false;
+                }
+            };
 
-/**
- * Creates a free combobox with dictionary data
- * @param {string} inputId - ID of the input element
- * @param {Map|Object} dataDict - Dictionary of values and labels
- */
-function createFreeComboBoxWithDict(inputId, dataDict) {
-    // Create array of options from the dictionary
-    const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
-        value: dictKey,
-        label: dictValue
-    }));
+            // Create the field
+            const $input = createAutocompleteField(inputId, {
+                withButton: true,
+                autocompleteOptions: autocompleteOptions
+            });
 
-    // Create autocomplete options
-    const autocompleteOptions = {
-        source: function(request, response) {
-            if (request.term === '') {
-                response(options);
-                return;
-            }
-            const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-            response(options.filter(option =>
-                matcher.test(option.label) || matcher.test(option.value)
-            ));
-        },
-        minLength: 0,
-        select: function(event, ui) {
-            $(this).val(ui.item.label);
-            $(this).attr('data-value', ui.item.value);
-            return false;
+            $input.data('dataDict', dataDict);
+
+            return $input;
         }
-    };
-
-    // Create the field
-    const $input = createAutocompleteField(inputId, {
-        withButton: true,
-        autocompleteOptions: autocompleteOptions
-    });
-
-    $input.data('dataDict', dataDict);
-
-    return $input;
-}
-
-
-
-
-
-
-
 
 
         // Function to get the selected value (key)
@@ -798,6 +791,269 @@ function createFreeComboBoxWithDict(inputId, dataDict) {
             $(selector).val(label);
             $(selector).attr('data-value', value);
         }
+
+
+
+
+// ------------------------------------------------------------------------
+
+/**
+ * Creates a complex element for data manipulation with a combobox and merge area
+ * @param {string} inputId - ID of the input element
+ * @param {Map|Object} dataDict - Dictionary of values and labels
+ * @returns {Object} - Object with methods to interact with the component
+ */
+ function createComboBoxMergeWithDict(inputId, dataDict) {
+    // Create container
+    const containerClass = `merge-container-${inputId}`;
+
+    // Replace the original input with a container div
+    $(`#${inputId}`).replaceWith(`<div id="${inputId}" class="${containerClass}"></div>`);
+
+    // Get the container
+    const $container = $(`#${inputId}`);
+
+    // Set container style
+    $container.css({
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%'
+    });
+
+    // Create the merge area
+    const $mergeArea = $('<div>', {
+        class: 'merge-area',
+        css: {
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            flex: '1',
+            marginRight: '5px',
+            minHeight: '30px',
+            border: '1px solid #ddd',
+            borderRadius: '3px',
+            padding: '2px'
+        }
+    });
+
+    // Create combobox container
+    const comboBoxId = `${inputId}-combo`;
+    const $comboBoxContainer = $('<div>', {
+        css: {
+            width: '150px',
+            marginRight: '5px'
+        }
+    });
+
+    // Create combobox input
+    const $comboBox = $('<input>', {
+        id: comboBoxId,
+        type: 'text',
+        class: 'ui-widget-content ui-corner-all'
+    });
+
+    $comboBoxContainer.append($comboBox);
+
+    // Create add button
+    const $addButton = $('<button>', {
+        class: 'merge-add-button',
+        html: '➕',
+        css: {
+            marginRight: '5px',
+            color: '#4CAF50',
+            cursor: 'pointer',
+            opacity: 0.5,
+            border: 'none',
+            background: 'none',
+            fontSize: '16px',
+            padding: '5px'
+        },
+        disabled: true
+    });
+
+    // Create remove button
+    const $removeButton = $('<button>', {
+        class: 'merge-remove-button',
+        html: '➖',
+        css: {
+            color: '#f44336',
+            cursor: 'pointer',
+            opacity: 0.5,
+            border: 'none',
+            background: 'none',
+            fontSize: '16px',
+            padding: '5px'
+        },
+        disabled: true
+    });
+
+    // Append elements to container
+    $container.append($mergeArea, $comboBoxContainer, $addButton, $removeButton);
+
+    // Initialize combobox
+    createComboBoxWithDict(comboBoxId, dataDict);
+
+    // Store selected items
+    const selectedItems = [];
+
+    // Update buttons state
+    function updateButtonsState() {
+        const value = $(`#${comboBoxId}`).attr('data-value');
+        const hasValue = value && value.trim() !== '';
+
+        $addButton.prop('disabled', !hasValue);
+        $removeButton.prop('disabled', !hasValue);
+
+        // Update visual state
+        if (hasValue) {
+            $addButton.css('opacity', 1);
+            $removeButton.css('opacity', 1);
+        } else {
+            $addButton.css('opacity', 0.5);
+            $removeButton.css('opacity', 0.5);
+        }
+    }
+
+
+
+
+    // Add item to merge area
+    function addItemToMergeArea(value, label, not_flag = '') {
+        const itemId = `merge-item-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        const $mergeElement = $('<div>', {
+            id: itemId,
+            class: 'merge-element',
+            'data-value': value,
+            css: {
+                border: '1px solid #ccc',
+                padding: '3px 8px',
+                margin: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: '3px',
+                background: not_flag ? '#ffeeee' : '#f9f9f9' // Different background for NOT items
+            }
+        });
+
+        const $label = $('<span>', {
+/*            text: (not_flag ? 'NOT ' : '') + label, // Add "NOT" prefix to label if not_flag is set */
+            text: label,
+            css: {
+                marginRight: '4px'
+            }
+        });
+
+        const $closeButton = $('<span>', {
+            html: '❌',
+            css: {
+                cursor: 'pointer',
+                color: '#f44336',
+                marginLeft: '4px'
+            }
+        });
+
+        $closeButton.on('click', function() {
+            // Remove from DOM
+            $mergeElement.remove();
+
+            // Remove from array
+            const index = selectedItems.findIndex(item => item.id === itemId);
+            if (index !== -1) {
+                selectedItems.splice(index, 1);
+            }
+        });
+
+        $mergeElement.append($label, $closeButton);
+        $mergeArea.append($mergeElement);
+
+        // Add to selected items with not_flag
+        selectedItems.push({
+            id: itemId,
+            value: value,
+            label: label,
+            not_flag: not_flag
+        });
+    }
+
+
+
+
+
+    // Event handlers
+    $(`#${comboBoxId}`).on('change keyup autocompleteselect', updateButtonsState);
+
+    // Also bind to the autocomplete's select event
+    $(`#${comboBoxId}`).on('autocompleteselect', function(event, ui) {
+        setTimeout(updateButtonsState, 0); // Run after the autocomplete has updated the value
+    });
+
+    // Update the click handlers for add and remove buttons
+    $addButton.on('click', function() {
+        const $input = $(`#${comboBoxId}`);
+        const value = $input.attr('data-value');
+        const label = $input.val();
+
+        if (value && label) {
+            addItemToMergeArea(value, label, ''); // Empty not_flag for add button
+            $input.val('').attr('data-value', '');
+            updateButtonsState();
+        }
+    });
+
+    $removeButton.on('click', function() {
+        const $input = $(`#${comboBoxId}`);
+        const value = $input.attr('data-value');
+        const label = $input.val();
+
+        if (value && label) {
+            addItemToMergeArea(value, label, '_NOT_'); // Set not_flag for remove button
+            $input.val('').attr('data-value', '');
+            updateButtonsState();
+        }
+    });
+
+    // Initial state
+    updateButtonsState();
+
+    // Return an object with methods to interact with the component
+    return {
+        getSelectedItems: function() {
+            return [...selectedItems];
+        },
+        getMergedValues: function() {
+            if (selectedItems.length === 0) {
+                return '';
+            }
+            // Map each item to its not_flag + value
+            const mergedItems = selectedItems.map(item => {
+                return item.not_flag + item.value;
+            });
+            // Join all items with '_AND_'
+            return mergedItems.join('_AND_');
+        },
+        addItem: function(value, label) {
+            addItemToMergeArea(value, label);
+        },
+        clearItems: function() {
+            $mergeArea.empty();
+            selectedItems.length = 0;
+        },
+        setItems: function(items) {
+            this.clearItems();
+            items.forEach(item => {
+                addItemToMergeArea(item.value, item.label, item.not_flag || '');
+            });
+        }
+    };
+}
+
+
+
+
+// ^^^^^^^^^^^^
+// ------------------------------------------------------------------------
+
 
 
 
@@ -1331,6 +1587,15 @@ function createFreeComboBoxWithDict(inputId, dataDict) {
                 </tr>
                     <tr><td colspan="2"><div class="dialog-search-separator"></div></td>
                 </tr>
+
+<!-- Something -->
+<tr>
+    <td><label for="dialog-search-merge-something">Genre: </label></td>
+    <td><input type="text" name="dialog-search-merge-something" id="dialog-search-merge-something" class="text ui-widget-content ui-corner-all" /></td>
+</tr>
+
+
+
 
                 <!-- Genre -->
                 <tr>

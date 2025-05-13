@@ -1940,6 +1940,7 @@ class FocusTask {
 
 
 
+var search_merge_something;
 
 /**
  * Global function to handle search filter form data for both adding and modifying containers
@@ -1973,6 +1974,16 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
     /* Search dialog form */
     $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
     $("#dialog-search-container-title").val(data_dict["container_title"] || "");
+
+
+
+// Merge element
+$("#dialog-form-search label[for='dialog-search-merge-something']").html("Something" + ': ');
+let search_merge_something = createComboBoxMergeWithDict('dialog-search-merge-something', translated_genre_movie);
+
+
+
+
 
     // Genre
     $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
@@ -2079,12 +2090,15 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
             return {
                 resizable: false,
                 height: "auto",
-                width: 600,
+                width: 1000,
                 modal: true,
                 title: dialog_dict['search']['title'],
                 buttons: {
                     [submit_button]: function() {
                         $(this).dialog("close");
+
+console.log(search_merge_something.getMergedValues());
+
                         var formData = {
                             "container_title": $("#dialog-search-container-title").val(),
                             "genres": getComboboxValue('#dialog-search-genre'),
@@ -2259,148 +2273,6 @@ class ThumbnailController {
         setTimeout(() => {
             $("#dialog-form-search").dialog(dialogConfig.dialogOptions(refToThis));
         }, 200);
-
-//        /* Search dialog form */
-//        $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
-//
-//        // Genre
-//        $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
-//        createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
-//
-//        // Theme
-//        $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
-//        createComboBoxWithDict('dialog-search-theme', translated_themes);
-//
-//        // Director
-//        $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
-//        createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
-//
-//        // Writer
-//        $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
-//        createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
-//
-//        // Actor
-//        $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
-//        createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
-//
-//        // Origin
-//        $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
-//        createComboBoxWithDict('dialog-search-origin', translated_countries);
-//
-//        // Tag
-//        $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
-//        createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
-//
-//        // Shown level
-//        $("#dialog-form-search label[for='dialog-search-show-level']").html(dialog_dict['search']['labels']['show_level'] + ': ');
-//        $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_labels.get('movie_show_level_highest'));
-//        $("#dialog-form-search select option[value='/collect/lowest']").html(translated_labels.get('movie_show_level_lowest'));
-//
-//        // Viewed state
-//        $("#dialog-form-search label[for='dialog-search-view-state']").html(dialog_dict['search']['labels']['view_state'] + ': ');
-//        $("#dialog-form-search select option[value='interrupted']").html(translated_labels.get('movie_interrupted'));
-//        $("#dialog-form-search select option[value='last_watched']").html(translated_labels.get('movie_last_watched'));
-//        $("#dialog-form-search select option[value='most_watched']").html(translated_labels.get('movie_most_watched'));
-//
-//        // Show rate
-//        $("#dialog-form-search label[for='dialog-search-rate']").html(dialog_dict['search']['labels']['rate'] + ': ');
-//
-//        // Wait 200ms before I show the Dialog(), otherwise, the Enter, which triggered this method, would click on the first button on the Dialog(), close the Dialog and start the play
-//        setTimeout(() => {
-//            $("#dialog-form-search").dialog({
-//                resizable: false,
-//                height: "auto",
-//
-//                // Set the width of the Dialog()
-//                width: 600,
-//                modal: true,
-//                title: dialog_dict['search']['title'],
-//                buttons: {
-//                    [submit_button]: function() {
-//                        $( this ).dialog( "close" );
-//                        var container_title = $("#dialog-search-container-title").val();
-//                        // var genre = $("#dialog-search-genre").val();
-//                        // var theme = $("#dialog-search-theme").val();
-//                        var genre = getComboboxValue('#dialog-search-genre');
-//                        var theme = getComboboxValue('#dialog-search-theme');
-//
-//                        var director = $("#dialog-search-director").val();
-//                        var writer = $("#dialog-search-writer").val();
-//                        var actor = $("#dialog-search-actor").val();
-//                        var origin = getComboboxValue("#dialog-search-origin");
-//                        var tag = $("#dialog-search-tag").val();
-//                        var show_level = $("#dialog-search-show-level").val();
-//                        var view_state = $("#dialog-search-view-state").val();
-//                        var rate = $("#dialog-search-rate").val();
-//
-//                        var data_dict = {
-//                            "container_title": container_title,
-//                            "genre": genre,
-//                            "theme": theme,
-//                            "director": director,
-//                            "writer": writer,
-//                            "actor": actor,
-//                            "origin": origin,
-//                            "tag": tag,
-//                            "show_level": show_level,
-//                            "view_state": view_state,
-//                            "rate": rate
-//                        }
-//                        refToThis.addNewThumbnailContainerExecution(data_dict);
-//                    },
-//                    [cancel_button]: function() {
-//                        $( this ).dialog( "close" );
-//                    }
-//                },
-//
-//                // Right/Left button to focus buttons
-//                open: function() {
-//                    const buttons = $(this).parent().find(".ui-dialog-buttonset button");
-//                    let focusedButtonIndex = 0;
-//
-//                    $(document).on("keydown.arrowKeys", function(event) {
-//                      if (event.key === "ArrowRight") {
-//                        focusedButtonIndex = (focusedButtonIndex + 1) % buttons.length;
-//                        buttons.eq(focusedButtonIndex).focus();
-//                        event.preventDefault();
-//                      } else if (event.key === "ArrowLeft") {
-//                        focusedButtonIndex = (focusedButtonIndex - 1 + buttons.length) % buttons.length;
-//                        buttons.eq(focusedButtonIndex).focus();
-//                        event.preventDefault();
-//                      }
-//                    });
-//
-//                    //Select the button as default - It is not neede here
-//                    //$(this).parent().find(".ui-dialog-buttonpane button:first").focus();
-//
-//                    // Calculate and set the horizontal divider
-//                    let dialogWidth = $('#dialog-form-search').width();
-////                    $('.dialog-search-separator').css('width', `calc(100% + ${dialogWidth - 325}px)`);
-//
-//                    // If the css of the dialog changes, this calculation must be changed as well
-//                    $('.dialog-search-separator').css('width', `calc(100% + 24px)`);
-//                },
-//
-//                // Prevent the ESC button to go back in history
-//                beforeClose: function(event){
-//
-//                    if (event.originalEvent && event.originalEvent.key === "Escape") {
-//
-//                        // Delay needed to not propagate ESC
-//                        setTimeout(function () {
-//                            refToThis.focusTask = refToThis.originalTask;
-//                        }, 200);
-//                    }else{
-//                        refToThis.focusTask = refToThis.originalTask;
-//                    }
-//                },
-//
-//                // It executed anyway
-//                close: function() {
-//                    $(this).dialog("destroy");
-//                }
-//            });
-//        }, 200);
     }
 
     addNewThumbnailContainerExecution( data_dict ){
