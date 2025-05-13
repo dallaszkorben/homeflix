@@ -1338,8 +1338,6 @@ class ObjDescriptionContainer {
 
                     $("#description-tagging")
 
-
-
                     // Construct TAG buttons
                     for (let i = 0; i < extra["tags"].length; i++ ){
                         let tag_name = extra["tags"][i];
@@ -1366,11 +1364,6 @@ class ObjDescriptionContainer {
                         tagButtonClose.on("click", (event) => {mainObject.handleTagDelete(event, card_id, tag_name, hash, mainObject);});
                     }
 
-
-
-
-
-
                     // 'Add TAG' listener
                     tagButtonAdd.on("click", function() {
 
@@ -1389,7 +1382,40 @@ class ObjDescriptionContainer {
 
                         // put the text field in the first position
                         descTaggingDiv.prepend(textField); // Add text field
-                        createFreeComboBoxWithDict('description-tagging-field', all_movie_tag_dict);
+                        //createFreeComboBoxWithDict('description-tagging-field', all_movie_tag_dict);
+
+                        createFreeComboBoxWithDict('description-tagging-field', all_movie_tag_dict)
+
+                        $('#description-tagging').css({
+                            'display': 'flex',
+                            'align-items': 'center'
+                        });
+                        $('.custom-combobox-description-tagging-field').css({
+                            'font-family': 'inherit',
+                            'font-size': '16px',
+                            'margin': '0 0 0 0',
+                          });
+                        // Now manually style the elements
+                        $('#description-tagging-field').css({
+                            'font-family': 'inherit',
+                            'font-size': '16px',
+                            'font-weight': 'bold',
+                            'outline': 'none',
+                            'border-color': '#4CAF50',
+                            'border-width': '3px',
+                            'margin': '0 0 0 0',
+                          });
+                        $('.combobox-toggle-description-tagging-field').css({
+                            'height': '30px',
+                            'margin': '0 0 0 0',
+                            'padding': '0 4px',
+                            'border-top-left-radius': '0',
+                            'border-bottom-left-radius': '0',
+                            'border-top-right-radius': '5px',     /* Added right side rounding */
+                            'border-bottom-right-radius': '5px',  /* Added right side rounding */
+                            'border-left': 'none'
+                          });
+
                         textField = $('#description-tagging-field')
 
                         // Focus on the text field

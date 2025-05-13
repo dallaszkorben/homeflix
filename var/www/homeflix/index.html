@@ -448,350 +448,345 @@
 
 
 
-        /**
-         * Core function to create an autocomplete input field
-         * @param {string} inputId - ID of the input element
-         * @param {Object} options - Configuration options
-         * @returns {jQuery} - The input element
-         */
-         function createAutocompleteField(inputId, options) {
-            const {
-                containerClass = `custom-combobox-${inputId}`,
-                withButton = false,
-                autocompleteOptions = {},
-                cssStyles = {},
-                blurHandler = null
-            } = options;
 
-            // Clean up any existing elements
-            $(`.combobox-toggle-${inputId}`).remove();
-            $(`.${containerClass}`).children().unwrap();
 
-            // Replace input element
-            $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
-            const $input = $(`#${inputId}`);
 
-            // Initialize autocomplete
-            $input.autocomplete(autocompleteOptions);
+/**
+ * Core function to create an autocomplete input field
+ * @param {string} inputId - ID of the input element
+ * @param {Object} options - Configuration options
+ * @returns {jQuery} - The input element
+ */
+ function createAutocompleteField(inputId, options) {
+    const {
+        containerClass = `custom-combobox-${inputId}`,
+        withButton = false,
+        autocompleteOptions = {},
+        blurHandler = null
+    } = options;
 
-            // Add blur handler if provided
-            if (blurHandler) {
-                $input.on('blur', blurHandler);
+    // Clean up any existing elements
+    $(`.combobox-toggle-${inputId}`).remove();
+    $(`.${containerClass}`).children().unwrap();
+
+    // Replace input element
+    $(`#${inputId}`).replaceWith(`<input type="text" id="${inputId}" class="ui-widget-content ui-corner-all">`);
+    const $input = $(`#${inputId}`);
+
+    // Initialize autocomplete
+    $input.autocomplete(autocompleteOptions);
+
+    // Add blur handler if provided
+    if (blurHandler) {
+        $input.on('blur', blurHandler);
+    }
+
+    // Add dropdown button if requested
+    if (withButton) {
+        $input.after(
+            $('<button>', {
+                tabindex: -1,
+                type: 'button',
+                title: 'Show All Items',
+                class: `ui-button ui-widget ui-button-icon-only combobox-toggle-${inputId} noselect`,
+                html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
+            }).on('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Toggle dropdown visibility
+                if ($input.autocomplete("widget").is(":visible")) {
+                    $input.autocomplete("close");
+                } else {
+                    // Destroy and reinitialize autocomplete
+                    if ($input.autocomplete("instance")) {
+                        $input.autocomplete("destroy");
+                    }
+                    $input.autocomplete(autocompleteOptions);
+
+                    // Show all options
+                    $input.focus();
+                    $input.autocomplete("search", "");
+                }
+            }).on('mouseup', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            })
+        );
+    }
+
+    // Add the CSS if it doesn't exist
+    if (!$(`#combobox-styles-${inputId}`).length) {
+        const css = `
+            .${containerClass} {
+                position: relative;
+                display: inline-block;
+                width: 100%;
+                margin-bottom: 5px;
             }
+            ${withButton ? `
+            .combobox-toggle-${inputId} {
+                position: absolute;
+                top: 0;
+                right: 0;
+                height: 100%;
+                width: 2em;
+                margin: 0;
+                padding: 0;
+                cursor: pointer;
+                border-top-left-radius: 0;
+                border-bottom-left-radius: 0;
+            }` : ''}
+            .ui-autocomplete {
+                max-height: 200px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                z-index: 9999;
+            }
+            #${inputId} {
+                width: ${withButton ? 'calc(100% - 2em)' : '100%'};
+                box-sizing: border-box;
+            }
+            .noselect {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }`;
 
-            // Add dropdown button if requested
-            if (withButton) {
-                $input.after(
-                    $('<button>', {
-                        tabindex: -1,
-                        type: 'button',
-                        title: 'Show All Items',
-                        class: `ui-button ui-widget ui-button-icon-only combobox-toggle-${inputId} noselect`,
-                        html: '<span class="ui-icon ui-icon-triangle-1-s"></span>'
-                    }).on('mousedown', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
+        $('<style>', {
+            id: `combobox-styles-${inputId}`
+        }).text(css).appendTo('head');
+    }
 
-                        // Toggle dropdown visibility
-                        if ($input.autocomplete("widget").is(":visible")) {
-                            $input.autocomplete("close");
-                        } else {
-                            // Destroy and reinitialize autocomplete
-                            if ($input.autocomplete("instance")) {
-                                $input.autocomplete("destroy");
-                            }
-                            $input.autocomplete(autocompleteOptions);
+    // Wrap elements if button exists
+    if (withButton) {
+        $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
+    } else {
+        $(`#${inputId}`).wrap(`<div class="${containerClass}">`);
+    }
 
-                            // Show all options
-                            $input.focus();
-                            $input.autocomplete("search", "");
+    return $input;
+}
+
+/**
+ * Creates a combobox with dictionary data
+ * @param {string} inputId - ID of the input element
+ * @param {Map|Object} dataDict - Dictionary of values and labels
+ */
+function createComboBoxWithDict(inputId, dataDict) {
+    // Create array of options from the dictionary
+    const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
+        value: dictKey,
+        label: dictValue
+    }));
+
+    // Create autocomplete options
+    const autocompleteOptions = {
+        source: function(request, response) {
+            if (request.term === '') {
+                response(options);
+                return;
+            }
+            const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+            response(options.filter(option =>
+                matcher.test(option.label) || matcher.test(option.value)
+            ));
+        },
+        minLength: 0,
+        select: function(event, ui) {
+            $(this).val(ui.item.label);
+            $(this).attr('data-value', ui.item.value);
+            return false;
+        }
+    };
+
+    // Create blur handler
+    const blurHandler = function() {
+        const currentValue = $(this).val();
+        if (currentValue) {
+            const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
+            const exactMatch = options.find(option =>
+                exactMatcher.test(option.label) || exactMatcher.test(option.value)
+            );
+
+            if (exactMatch) {
+                $(this).val(exactMatch.label);
+                $(this).attr('data-value', exactMatch.value);
+            } else {
+                const partialMatcher = new RegExp($.ui.autocomplete.escapeRegex(currentValue), "i");
+                const partialMatch = options.find(option =>
+                    partialMatcher.test(option.label) || partialMatcher.test(option.value)
+                );
+
+                if (partialMatch) {
+                    $(this).val(partialMatch.label);
+                    $(this).attr('data-value', partialMatch.value);
+                } else {
+                    $(this).val('');
+                    $(this).attr('data-value', '');
+                }
+            }
+        } else {
+            $(this).attr('data-value', '');
+        }
+    };
+
+    // Store the dictionary as data attribute
+    const $input = createAutocompleteField(inputId, {
+        withButton: true,
+        autocompleteOptions: autocompleteOptions,
+        blurHandler: blurHandler
+    });
+
+    $input.data('dataDict', dataDict);
+
+    return $input;
+}
+
+/**
+ * Creates a field with autocomplete from a list
+ * @param {string} inputId - ID of the input element
+ * @param {Array} dataList - List of autocomplete options
+ * @param {number} minChars - Minimum characters to trigger autocomplete
+ */
+function createFieldWithAutocompleteFromList(inputId, dataList, minChars = 2) {
+    // Create autocomplete options
+    const autocompleteOptions = {
+        source: function(request, response) {
+            if (request.term.length >= minChars) {
+                const searchTerm = request.term;
+                const isUpperCase = /[A-Z]/.test(searchTerm);
+                const matches = dataList.filter(item => {
+                    if (isUpperCase) {
+                        return item.includes(searchTerm);
+                    }
+                    return item.toLowerCase().includes(searchTerm.toLowerCase());
+                }).sort((a, b) => {
+                    const startsWithTerm = (str, term) => {
+                        if (isUpperCase) {
+                            return str.startsWith(term);
                         }
-                    }).on('mouseup', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    })
+                        return str.toLowerCase().startsWith(term.toLowerCase());
+                    };
+
+                    const aStartsWith = startsWithTerm(a, searchTerm);
+                    const bStartsWith = startsWithTerm(b, searchTerm);
+
+                    if (aStartsWith && !bStartsWith) return -1;
+                    if (!aStartsWith && bStartsWith) return 1;
+
+                    return a.localeCompare(b);
+                });
+
+                response(matches);
+            } else {
+                response([]);
+            }
+        },
+        minLength: minChars,
+        select: function(event, ui) {
+            $(this).val(ui.item.value || ui.item);
+            return false;
+        }
+    };
+
+    // Create blur handler
+    const blurHandler = function() {
+        const currentValue = $(this).val();
+        if (currentValue) {
+            const isUpperCase = /[A-Z]/.test(currentValue);
+            let exactMatch;
+
+            if (isUpperCase) {
+                exactMatch = dataList.find(item => item === currentValue);
+            } else {
+                exactMatch = dataList.find(item =>
+                    item.toLowerCase() === currentValue.toLowerCase()
                 );
             }
 
-            // Add CSS styles
-            const defaultStyles = {
-                container: `
-                    .${containerClass} {
-                        position: relative;
-                        display: inline-block;
-                        width: 100%;
-                        margin-bottom: 5px;
-                    }`,
-                button: withButton ? `
-                    .combobox-toggle-${inputId} {
-                        position: absolute;
-                        top: 0;
-                        right: 0;
-                        height: 100%;
-                        width: 2em;
-                        margin: 0;
-                        padding: 0;
-                        cursor: pointer;
-                        border-top-left-radius: 0;
-                        border-bottom-left-radius: 0;
-                    }` : '',
-                autocomplete: `
-                    .ui-autocomplete {
-                        max-height: 200px;
-                        overflow-y: auto;
-                        overflow-x: hidden;
-                        z-index: 9999;
-                    }`,
-                input: `
-                    #${inputId} {
-                        width: ${withButton ? 'calc(100% - 2em)' : '100%'};
-                        box-sizing: border-box;
-                    }`,
-                noselect: `
-                    .noselect {
-                        -webkit-touch-callout: none;
-                        -webkit-user-select: none;
-                        -khtml-user-select: none;
-                        -moz-user-select: none;
-                        -ms-user-select: none;
-                        user-select: none;
-                    }`
-            };
-
-            // Merge default styles with custom styles
-            const mergedStyles = { ...defaultStyles, ...cssStyles };
-
-            // Create CSS string
-            const cssString = Object.values(mergedStyles).join('\n');
-
-            // Add the CSS if it doesn't exist
-            if (!$(`#combobox-styles-${inputId}`).length) {
-                $('<style>', {
-                    id: `combobox-styles-${inputId}`
-                }).text(cssString).appendTo('head');
-            }
-
-            // Wrap elements if button exists
-            if (withButton) {
-                $(`#${inputId}, .combobox-toggle-${inputId}`).wrapAll(`<div class="${containerClass}">`);
+            if (exactMatch) {
+                $(this).val(exactMatch);
             } else {
-                $(`#${inputId}`).wrap(`<div class="${containerClass}">`);
-            }
-
-            return $input;
-        }
-
-        /**
-         * Creates a combobox with dictionary data
-         * @param {string} inputId - ID of the input element
-         * @param {Map|Object} dataDict - Dictionary of values and labels
-         */
-        function createComboBoxWithDict(inputId, dataDict) {
-            // Create array of options from the dictionary
-            const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
-                value: dictKey,
-                label: dictValue
-            }));
-
-            // Create autocomplete options
-            const autocompleteOptions = {
-                source: function(request, response) {
-                    if (request.term === '') {
-                        response(options);
-                        return;
-                    }
-                    const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-                    response(options.filter(option =>
-                        matcher.test(option.label) || matcher.test(option.value)
-                    ));
-                },
-                minLength: 0,
-                select: function(event, ui) {
-                    $(this).val(ui.item.label);
-                    $(this).attr('data-value', ui.item.value);
-                    return false;
-                }
-            };
-
-            // Create blur handler
-            const blurHandler = function() {
-                const currentValue = $(this).val();
-                if (currentValue) {
-                    const exactMatcher = new RegExp('^' + $.ui.autocomplete.escapeRegex(currentValue) + '$', "i");
-                    const exactMatch = options.find(option =>
-                        exactMatcher.test(option.label) || exactMatcher.test(option.value)
-                    );
-
-                    if (exactMatch) {
-                        $(this).val(exactMatch.label);
-                        $(this).attr('data-value', exactMatch.value);
-                    } else {
-                        const partialMatcher = new RegExp($.ui.autocomplete.escapeRegex(currentValue), "i");
-                        const partialMatch = options.find(option =>
-                            partialMatcher.test(option.label) || partialMatcher.test(option.value)
-                        );
-
-                        if (partialMatch) {
-                            $(this).val(partialMatch.label);
-                            $(this).attr('data-value', partialMatch.value);
-                        } else {
-                            $(this).val('');
-                            $(this).attr('data-value', '');
-                        }
-                    }
-                } else {
-                    $(this).attr('data-value', '');
-                }
-            };
-
-            // Store the dictionary as data attribute
-            const $input = createAutocompleteField(inputId, {
-                withButton: true,
-                autocompleteOptions: autocompleteOptions,
-                blurHandler: blurHandler
-            });
-
-            $input.data('dataDict', dataDict);
-
-            return $input;
-        }
-
-        /**
-         * Creates a field with autocomplete from a list
-         * @param {string} inputId - ID of the input element
-         * @param {Array} dataList - List of autocomplete options
-         * @param {number} minChars - Minimum characters to trigger autocomplete
-         */
-        function createFieldWithAutocompleteFromList(inputId, dataList, minChars = 2) {
-            // Create autocomplete options
-            const autocompleteOptions = {
-                source: function(request, response) {
-                    if (request.term.length >= minChars) {
-                        const searchTerm = request.term;
-                        const isUpperCase = /[A-Z]/.test(searchTerm);
-                        const matches = dataList.filter(item => {
-                            if (isUpperCase) {
-                                return item.includes(searchTerm);
-                            }
-                            return item.toLowerCase().includes(searchTerm.toLowerCase());
-                        }).sort((a, b) => {
-                            const startsWithTerm = (str, term) => {
-                                if (isUpperCase) {
-                                    return str.startsWith(term);
-                                }
-                                return str.toLowerCase().startsWith(term.toLowerCase());
-                            };
-
-                            const aStartsWith = startsWithTerm(a, searchTerm);
-                            const bStartsWith = startsWithTerm(b, searchTerm);
-
-                            if (aStartsWith && !bStartsWith) return -1;
-                            if (!aStartsWith && bStartsWith) return 1;
-
-                            return a.localeCompare(b);
-                        });
-
-                        response(matches);
-                    } else {
-                        response([]);
-                    }
-                },
-                minLength: minChars,
-                select: function(event, ui) {
-                    $(this).val(ui.item.value || ui.item);
-                    return false;
-                }
-            };
-
-            // Create blur handler
-            const blurHandler = function() {
-                const currentValue = $(this).val();
-                if (currentValue) {
-                    const isUpperCase = /[A-Z]/.test(currentValue);
-                    let exactMatch;
-
+                const partialMatches = dataList.filter(item => {
                     if (isUpperCase) {
-                        exactMatch = dataList.find(item => item === currentValue);
-                    } else {
-                        exactMatch = dataList.find(item =>
-                            item.toLowerCase() === currentValue.toLowerCase()
-                        );
+                        return item.includes(currentValue);
                     }
+                    return item.toLowerCase().includes(currentValue.toLowerCase());
+                });
 
-                    if (exactMatch) {
-                        $(this).val(exactMatch);
-                    } else {
-                        const partialMatches = dataList.filter(item => {
-                            if (isUpperCase) {
-                                return item.includes(currentValue);
-                            }
-                            return item.toLowerCase().includes(currentValue.toLowerCase());
-                        });
-
-                        if (partialMatches.length > 0) {
-                            $(this).val(partialMatches[0]);
-                        } else {
-                            $(this).val('');
-                        }
-                    }
+                if (partialMatches.length > 0) {
+                    $(this).val(partialMatches[0]);
+                } else {
+                    $(this).val('');
                 }
-            };
-
-            // Create the field
-            const $input = createAutocompleteField(inputId, {
-                withButton: false,
-                autocompleteOptions: autocompleteOptions,
-                blurHandler: blurHandler
-            });
-
-            return $input;
+            }
         }
+    };
 
-        /**
-         * Creates a free combobox with dictionary data
-         * @param {string} inputId - ID of the input element
-         * @param {Map|Object} dataDict - Dictionary of values and labels
-         */
-        function createFreeComboBoxWithDict(inputId, dataDict) {
-            // Similar to createComboBoxWithDict but with different behavior
-            // Implement based on your specific requirements for this function
+    // Create the field
+    const $input = createAutocompleteField(inputId, {
+        withButton: false,
+        autocompleteOptions: autocompleteOptions,
+        blurHandler: blurHandler
+    });
 
-            // Create array of options from the dictionary
-            const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
-                value: dictKey,
-                label: dictValue
-            }));
+    return $input;
+}
 
-            // Create autocomplete options - modified for free combobox behavior
-            const autocompleteOptions = {
-                source: function(request, response) {
-                    if (request.term === '') {
-                        response(options);
-                        return;
-                    }
-                    const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
-                    response(options.filter(option =>
-                        matcher.test(option.label) || matcher.test(option.value)
-                    ));
-                },
-                minLength: 0,
-                select: function(event, ui) {
-                    $(this).val(ui.item.label);
-                    $(this).attr('data-value', ui.item.value);
-                    return false;
-                }
-            };
+/**
+ * Creates a free combobox with dictionary data
+ * @param {string} inputId - ID of the input element
+ * @param {Map|Object} dataDict - Dictionary of values and labels
+ */
+function createFreeComboBoxWithDict(inputId, dataDict) {
+    // Create array of options from the dictionary
+    const options = Array.from(dataDict).map(([dictKey, dictValue]) => ({
+        value: dictKey,
+        label: dictValue
+    }));
 
-            // Create the field - with specific styling for free combobox
-            const $input = createAutocompleteField(inputId, {
-                withButton: true,
-                autocompleteOptions: autocompleteOptions
-            });
-
-            $input.data('dataDict', dataDict);
-
-            return $input;
+    // Create autocomplete options
+    const autocompleteOptions = {
+        source: function(request, response) {
+            if (request.term === '') {
+                response(options);
+                return;
+            }
+            const matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+            response(options.filter(option =>
+                matcher.test(option.label) || matcher.test(option.value)
+            ));
+        },
+        minLength: 0,
+        select: function(event, ui) {
+            $(this).val(ui.item.label);
+            $(this).attr('data-value', ui.item.value);
+            return false;
         }
+    };
+
+    // Create the field
+    const $input = createAutocompleteField(inputId, {
+        withButton: true,
+        autocompleteOptions: autocompleteOptions
+    });
+
+    $input.data('dataDict', dataDict);
+
+    return $input;
+}
+
+
+
+
+
+
+
+
 
         // Function to get the selected value (key)
         function getComboboxValue(inputId) {
