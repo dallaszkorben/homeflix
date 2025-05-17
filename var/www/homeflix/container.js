@@ -1977,61 +1977,98 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
 
 
 
-// Merge element
-$("#dialog-form-search label[for='dialog-search-merge-something']").html("Something" + ': ');
-let search_merge_something = createComboBoxMergeWithDict('dialog-search-merge-something', translated_genre_movie);
-
+//// Merge element
+//$("#dialog-form-search label[for='dialog-search-merge-something']").html("Something" + ': ');
+////let search_merge_something = createComboBoxMergeWithDict('dialog-search-merge-something', translated_genre_movie);
+//let search_merge_something = createFieldWithAutocompleteMergeFromList('dialog-search-merge-something', all_movie_director_list);
+//search_merge_something.setItems([
+//    { value: 'Frank Marino', label: 'Frank Marino', not_flag: '' },
+//    { value: 'James Bridges', label: 'James Bridges', not_flag: '_NOT_' }
+//]);
+////search_merge_something.setItems() 'Frank Marino', 'James Bridges'
+////let search_merge_something = createFreeComboBoxMergeWithDict('dialog-search-merge-something', translated_genre_movie);
+//console.log(search_merge_something.getMergedValues());
 
 
 
 
     // Genre
     $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
-    createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
+//    createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
+//    if (data_dict["genres"]) {
+//        setComboboxValue('#dialog-search-genre', data_dict["genres"]);
+//    }
+    let search_by_genre = createComboBoxMergeWithDict("dialog-search-genre", translated_genre_movie);
     if (data_dict["genres"]) {
-        setComboboxValue('#dialog-search-genre', data_dict["genres"]);
+        search_by_genre.setItems(parseMergedDictElements(data_dict["genres"], translated_genre_movie));
     }
+
 
     // Theme
     $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
-    createComboBoxWithDict('dialog-search-theme', translated_themes);
+//    createComboBoxWithDict('dialog-search-theme', translated_themes);
+//    if (data_dict["themes"]) {
+//        setComboboxValue('#dialog-search-theme', data_dict["themes"]);
+//    }
+    let search_by_theme = createComboBoxMergeWithDict("dialog-search-theme", translated_themes);
     if (data_dict["themes"]) {
-        setComboboxValue('#dialog-search-theme', data_dict["themes"]);
+        search_by_theme.setItems(parseMergedDictElements(data_dict["themes"], translated_themes));
     }
 
     // Director
     $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
-    createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
+//    createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
+//    if (data_dict["directors"]) {
+//        $("#dialog-search-director").val(data_dict["directors"]);
+//    }
+    let search_by_director = createFieldWithAutocompleteMergeFromList("dialog-search-director", all_movie_director_list);
     if (data_dict["directors"]) {
-        $("#dialog-search-director").val(data_dict["directors"]);
+        search_by_director.setItems(parseMergedListElements(data_dict["directors"]));
     }
+
 
     // Writer
     $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
-    createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
+//    createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
+//    if (data_dict["writers"]) {
+//        $("#dialog-search-writer").val(data_dict["writers"]);
+//    }
+    let search_by_writer = createFieldWithAutocompleteMergeFromList("dialog-search-writer", all_movie_writer_list);
     if (data_dict["writers"]) {
-        $("#dialog-search-writer").val(data_dict["writers"]);
+        search_by_writer.setItems(parseMergedListElements(data_dict["writers"]));
     }
 
     // Actor
     $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
-    createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
-    if (data_dict["actors"]) {
-        $("#dialog-search-actor").val(data_dict["actors"]);
+//    createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
+//    if (data_dict["actors"]) {
+//        $("#dialog-search-actor").val(data_dict["actors"]);
+//    }
+    let search_by_actor = createFieldWithAutocompleteMergeFromList("dialog-search-actor", all_movie_actor_list);
+    if (data_dict["writers"]) {
+        search_by_actor.setItems(parseMergedListElements(data_dict["writers"]));
     }
 
     // Origin
     $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
-    createComboBoxWithDict('dialog-search-origin', translated_countries);
+//    createComboBoxWithDict('dialog-search-origin', translated_countries);
+//    if (data_dict["origins"]) {
+//        setComboboxValue('#dialog-search-origin', data_dict["origins"]);
+//    }
+    let search_by_origin = createComboBoxMergeWithDict("dialog-search-origin", translated_countries);
     if (data_dict["origins"]) {
-        setComboboxValue('#dialog-search-origin', data_dict["origins"]);
+        search_by_origin.setItems(parseMergedDictElements(data_dict["origins"], translated_countries));
     }
 
     // Tag
     $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
-    createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
+//    createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
+//    if (data_dict["tags"]) {
+//        setComboboxValue('#dialog-search-tag', data_dict["tags"]);
+//    }
+    let search_by_tag = createComboBoxMergeWithDict("dialog-search-tag", all_movie_tag_dict);
     if (data_dict["tags"]) {
-        setComboboxValue('#dialog-search-tag', data_dict["tags"]);
+        search_by_tag.setItems(parseMergedListElements(data_dict["tags"]));
     }
 
     // Shown level
@@ -2097,17 +2134,16 @@ let search_merge_something = createComboBoxMergeWithDict('dialog-search-merge-so
                     [submit_button]: function() {
                         $(this).dialog("close");
 
-console.log(search_merge_something.getMergedValues());
-
                         var formData = {
                             "container_title": $("#dialog-search-container-title").val(),
-                            "genres": getComboboxValue('#dialog-search-genre'),
-                            "themes": getComboboxValue('#dialog-search-theme'),
-                            "directors": $("#dialog-search-director").val(),
-                            "writers": $("#dialog-search-writer").val(),
-                            "actors": $("#dialog-search-actor").val(),
-                            "origins": getComboboxValue("#dialog-search-origin"),
-                            "tags": getComboboxValue("#dialog-search-tag"),
+                            "genres": search_by_genre.getMergedValues(),
+                            "themes": search_by_theme.getMergedValues(),
+                            "directors": search_by_director.getMergedValues(),
+                            "writers": search_by_writer.getMergedValues(),
+                            "actors": search_by_actor.getMergedValues(),
+                            "origins": search_by_origin.getMergedValues(),
+                            "tags": search_by_tag.getMergedValues(),
+                            //"tags": getComboboxValue("#dialog-search-tag"),
                             "show_level": $("#dialog-search-show-level").val(),
                             "view_state": $("#dialog-search-view-state").val(),
                             "rate": $("#dialog-search-rate").val()
