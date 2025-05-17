@@ -647,6 +647,7 @@ interaction_labels:
                 writer: Writer
                 director: Director
                 actor: Actor
+                voice: Voice
                 genre: Genre
                 theme: Theme
                 origin: Country

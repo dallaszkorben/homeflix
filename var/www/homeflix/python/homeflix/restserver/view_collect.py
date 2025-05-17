@@ -26,8 +26,13 @@ from homeflix.restserver.endpoints.ep_collect_general_level import EPCollectGene
 from homeflix.restserver.endpoints.ep_collect_general_standalone import EPCollectGeneralStandalone
 
 from homeflix.restserver.endpoints.ep_collect_all_appendix_by_card_id import EPCollectAllAppendixByCardId
+
 from homeflix.restserver.endpoints.ep_collect_actors_by_role_count import EPCollectActorsByRoleCount
 from homeflix.restserver.endpoints.ep_collect_actors import EPCollectActors
+
+from homeflix.restserver.endpoints.ep_collect_voices_by_role_count import EPCollectVoicesByRoleCount
+from homeflix.restserver.endpoints.ep_collect_voices import EPCollectVoices
+
 from homeflix.restserver.endpoints.ep_collect_directors_by_movie_count import EPCollectDirectorsByMovieCount
 from homeflix.restserver.endpoints.ep_collect_directors import EPCollectDirectors
 from homeflix.restserver.endpoints.ep_collect_abc_by_movie_title_count import EPCollectAbcByMovieTitleCount
@@ -79,6 +84,8 @@ class CollectView(FlaskView):
         self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
         self.epCollectActorsByRoleCount = EPCollectActorsByRoleCount(web_gadget)
         self.epCollectActors = EPCollectActors(web_gadget)
+        self.epCollectVoicesByRoleCount = EPCollectVoicesByRoleCount(web_gadget)
+        self.epCollectVoices = EPCollectVoices(web_gadget)
         self.epCollectDirectorsByMovieCount = EPCollectDirectorsByMovieCount(web_gadget)
         self.epCollectDirectors = EPCollectDirectors(web_gadget)
         self.epCollectWriters = EPCollectWriters(web_gadget)
@@ -541,6 +548,92 @@ class CollectView(FlaskView):
         out = self.epCollectActors.executeByPayload(json_data)
         return out
 
+
+# === collect voices by role count descending ===
+
+    #
+    # Gives back list of the highest role count of voices
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/voices/by/role/count/category/<category>/minimum/<minimum>/limit/<limit>
+    #
+    #@route('/voices/by/role/count/category/<category>/minimum/<minimum>/limit/<limit>')
+    @route(EPCollectVoicesByRoleCount.PATH_PAR_URL, methods=[EPCollectVoicesByRoleCount.METHOD])
+    def collectVoicesByRoleCountWithParameter(self, category, minimum, limit):
+        out = self.epCollectVoicesByRoleCount.executeByParameters(category, minimum=minimum, limit=limit)
+        return out
+
+    #
+    # Gives back list of the highest role count of voices
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "minimum": 3, "limit": 15}' http://localhost:80/collect/voices/by/role/count
+    #
+    # GET http://localhost:80/collect/voices/by/role/count
+    #      body: {
+    #       "category": "movie",
+    #       "minimum": 3,
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/voices/by/role/count', methods=['GET'])
+    @route(EPCollectVoicesByRoleCount.PATH_PAR_PAYLOAD, methods=[EPCollectVoicesByRoleCount.METHOD])
+    def collectVoicesByRoleCountWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectVoicesByRoleCount.executeByPayload(json_data)
+        return out
+
+
+# === collect all voices ===
+
+    #
+    # Gives back list of the voices
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/voices/category/<category>/limit/<limit>
+    #
+    #@route('/voices/category/<category>/limit/<limit>')
+    @route(EPCollectVoices.PATH_PAR_URL, methods=[EPCollectVoices.METHOD])
+    def collectVoicesWithParameter(self, category, minimum, limit):
+        out = self.epCollectVoices.executeByParameters(category, limit=limit)
+        return out
+
+    #
+    # Gives back list of the voices
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "limit": 15}' http://localhost:80/collect/voices
+    #
+    # GET http://localhost:80/collect/voices
+    #      body: {
+    #       "category": "movie",
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/voices', methods=['GET'])
+    @route(EPCollectVoices.PATH_PAR_PAYLOAD, methods=[EPCollectVoices.METHOD])
+    def collectVoicesWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectVoices.executeByPayload(json_data)
+        return out
 
 
 

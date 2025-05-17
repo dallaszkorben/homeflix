@@ -68,6 +68,7 @@
         let all_movie_director_list;
         let all_movie_writer_list;
         let all_movie_actor_list;
+        let all_movie_voice_list;
         let all_movie_rate_list;
 
         // Load Version
@@ -106,6 +107,7 @@
         // Load Translated Themes
         translated_themes = getAllElements("dict", data, "/translate/themes/lang/" + user_data['language_code'])
 
+
         // --- value
 
         // Load all Directors *
@@ -120,6 +122,9 @@
 
         // Load all Actors *
         all_movie_actor_list = getAllElements("list", data, "/collect/actors")
+
+        // Load all Voices *
+        all_movie_voice_list = getAllElements("list", data, "/collect/voices")
 
 
         // --- value/value
@@ -1002,6 +1007,12 @@
                 <tr>
                     <td><label for="dialog-search-actor">Actors: </label></td>
                     <td><input type="text" name="dialog-search-actor" id="dialog-search-actor" class="text ui-widget-content ui-corner-all"></td>
+                </tr>
+
+                <!-- Voice -->
+                <tr>
+                    <td><label for="dialog-search-voice">Voices: </label></td>
+                    <td><input type="text" name="dialog-search-voice" id="dialog-search-voice" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Origin -->

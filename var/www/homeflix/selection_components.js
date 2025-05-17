@@ -556,13 +556,18 @@ function createMergeComponent(inputId, createInputFn, createInputArgs) {
     // Initialize input field with the provided function
     createInputFn(inputId2, ...createInputArgs);
 
+    // Add blur event to update button state when field loses focus
+    $(`#${inputId2}`).on('blur', function() {
+        // Small delay to ensure any autocomplete or blur handlers have finished
+        setTimeout(updateButtonsState, 50);
+    });
+
     // Apply font styling after initialization
     $(`#${inputId2}`).css({
         'font-family': 'inherit',
         'fontSize': 'inherit'
     });
 
-//--
     // Apply styling to the autocomplete menu when it's created
     $(`#${inputId2}`).on("autocompleteopen", function() {
         $(".ui-autocomplete").css({
@@ -575,7 +580,6 @@ function createMergeComponent(inputId, createInputFn, createInputArgs) {
             'font-size': 'inherit'
         });
     });
-//--
 
 
 
@@ -788,15 +792,6 @@ function createComboBoxMergeWithDict(inputId, dataDict) {
     return createMergeComponent(inputId, createComboBoxWithDict, [dataDict]);
 }
 
-/**
- * Creates a complex element for data manipulation with a free combobox and merge area
- * @param {string} inputId - ID of the input element
- * @param {Map|Object} dataDict - Dictionary of values and labels
- * @returns {Object} - Object with methods to interact with the component
- */
-function createFreeComboBoxMergeWithDict(inputId, dataDict) {
-    return createMergeComponent(inputId, createFreeComboBoxWithDict, [dataDict]);
-}
 
 /**
  * Creates a complex element for data manipulation with an autocomplete field and merge area
@@ -809,5 +804,13 @@ function createFieldWithAutocompleteMergeFromList(inputId, dataList, minChars = 
     return createMergeComponent(inputId, createFieldWithAutocompleteFromList, [dataList, minChars]);
 }
 
-
+/**
+ * Creates a complex element for data manipulation with a free combobox and merge area
+ * @param {string} inputId - ID of the input element
+ * @param {Map|Object} dataDict - Dictionary of values and labels
+ * @returns {Object} - Object with methods to interact with the component
+ */
+function createFreeComboBoxMergeWithDict(inputId, dataDict) {
+    return createMergeComponent(inputId, createFreeComboBoxWithDict, [dataDict]);
+}
 

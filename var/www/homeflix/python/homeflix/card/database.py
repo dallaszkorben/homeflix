@@ -2268,7 +2268,8 @@ class SqlDatabase:
 # ---
 
 
-    def get_sql_where_condition_from_text_filter(self, text_filter, field_name):
+    def get_sql_where_condition_from_text_filter(self, text_filter, field_name, start_separator=',', end_separator=','):
+        # the separator parameters needed because of some fields, like 'actors' and 'voices' have role, separated by :
         op = None
         if text_filter is None:
             filter_list = []
@@ -2286,10 +2287,13 @@ class SqlDatabase:
         filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
 
         # because of the role in the actors
-        if field_name == "actors":
-            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["';' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%;" + filter.removeprefix("_NOT_") + ":%'" for filter in filter_list]) + ')'
-        else:
-            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list]) + ')'
+#        if field_name == "actors":
+#            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["';' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%;" + filter.removeprefix("_NOT_") + ":%'" for filter in filter_list]) + ')'
+#        else:
+#            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list]) + ')'
+
+        filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join([f"'{start_separator}' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + f"LIKE '%{start_separator}" + filter.removeprefix("_NOT_") + f"{end_separator}%'" for filter in filter_list]) + ')'
+
 
         # logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
         # logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
@@ -2731,6 +2735,148 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
+    def get_list_of_voices(self, category, limit=15, json=True):
+        """
+        Gives back voice name's list, ordered by the number of the movies they played in
+        limited by the given value
+        """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    SELECT DISTINCT
+                       person.name as voice_name
+                    FROM
+                       Card card,
+                       Card_Voice card_voice,
+                       Person person,
+                       Category category
+                    WHERE
+                       card.level IS NULL
+                       AND category.name = :category
+                       AND card.id_category = category.id
+                       AND card_voice.id_voice = person.id
+                       AND card_voice.id_card = card.id
+                    ORDER BY person.name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'limit': limit}
+
+                logging.debug("get_list_of_voices: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['voice_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the voice list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
+    def get_list_of_voices_by_role_count(self, category, minimum=3, limit=15, json=True):
+        """
+        Gives back voice name's list, ordered by the number of the movies they played in
+        limited by the given value
+        """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    WITH RECURSIVE
+                        rec(voice_name, id, id_higher_card) AS (
+                            SELECT
+                                person.name AS voice_name,
+                                card.id,
+                                card.id_higher_card
+                            FROM
+                                Card card,
+                                Card_Voice card_voice,
+                                Person person,
+                                Category category
+                            WHERE
+                                card.level IS NULL
+                                AND category.name = :category
+                                AND card.id_category = category.id
+                                AND card_voice.id_voice = person.id
+                                AND card_voice.id_card = card.id
+
+                            UNION ALL
+
+                            SELECT
+                                rec.voice_name,
+                                card.id,
+                                card.id_higher_card
+                            FROM
+                                rec,
+                                Card card
+                            WHERE
+                                rec.id_higher_card = card.id
+                        )
+                    SELECT
+                        voice_name,
+                        COUNT(DISTINCT rec.id) AS movie_count
+                    FROM
+                        rec
+                    WHERE
+                        rec.id_higher_card IS NULL
+                    GROUP BY
+                        voice_name
+                    HAVING
+                        movie_count >= :minimum
+                    ORDER BY
+                        movie_count DESC,
+                        voice_name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'minimum': minimum, 'limit': limit}
+
+                logging.debug("get_list_of_voices_by_role_count: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['voice_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the voice list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
     def get_list_of_directors(self, category, limit=15, json=True):
         """
         Gives back director name's list, ordered by the name
@@ -2982,9 +3128,6 @@ class SqlDatabase:
         return {"result": result, "data": records, "error": error_message}
 
 
-
-
-
     def get_abc_of_movie_title(self, category, maximum, lang):
         """
         Returns the list of the ABC of the movie titles on the highest level. If the number of movies > maximum on a single letter (like A%), then it narrows the the filter (like An%) to make the list to fit to the maximum.
@@ -3031,7 +3174,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for highest level list                ---
         Returns mixed standalone media and level cards   ---
@@ -3051,6 +3194,7 @@ class SqlDatabase:
           - genres
           - themes
           - actors
+          - voices
           - writers
           - directors
           - lecturers
@@ -3070,20 +3214,14 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
+                query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
 
-##                query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'tags': tag, 'lang': lang, 'limit': limit}
                 query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'tags': tags, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
-
-
-#                logging.error("!!! HELLO !!!")
-#                logging.error("\n\n\n")
-
 
                 my_records = [{key: record[key] for key in record.keys()} for record in records]
 
@@ -3113,7 +3251,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
         Returns the next child cards which could be:
@@ -3129,6 +3267,7 @@ class SqlDatabase:
           - genres
           - themes
           - actors
+          - voices
           - directors
           - lecturers
           - origins
@@ -3151,7 +3290,7 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins)
 
                 query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'filter_on': filter_on, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
@@ -3179,7 +3318,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
 
         """
         FULL QUERY for lowest (medium) level list
@@ -3203,6 +3342,7 @@ class SqlDatabase:
           - genres
           - themes
           - actors
+          - voices
           - directors
           - lecturers
           - origins
@@ -3226,7 +3366,7 @@ class SqlDatabase:
                 history_days = 365
                 history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
 
-                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins)
 
                 query = '''
                 SELECT *
@@ -3275,11 +3415,12 @@ class SqlDatabase:
 
 # RAW Queries
 
-    def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, lecturers=None, performers=None, origins=None, rate_value=None):
+    def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tggng.tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
-        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors', start_separator=';', end_separator=':')
+        voices_where = self.get_sql_where_condition_from_text_filter(voices, 'voices', start_separator=';', end_separator=':')
         writers_where = self.get_sql_where_condition_from_text_filter(writers, 'writers')
         directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
         lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
@@ -3287,6 +3428,8 @@ class SqlDatabase:
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
         titles_req_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_req')
         titles_orig_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_orig')
+
+        logging.debug(f"voices_where: {voices_where}")
 
         query = '''
 
@@ -3507,8 +3650,7 @@ class SqlDatabase:
                                     card_voice.id_card id_card
                                 FROM
                                     Person person,
-                                    Card_Voice card_voice
-                                    LEFT JOIN
+                                    Card_Voice card_voice,
                                     (
                                         SELECT
                                             voice_role.id_voice,
@@ -3522,11 +3664,10 @@ class SqlDatabase:
                                         GROUP BY
                                             voice_role.id_voice, role.id_card
                                     ) roles
-                                    ON
-                                        roles.id_voice = person.id
-                                        AND roles.id_card = card_voice.id_card
                                 WHERE
                                     card_voice.id_voice = person.id
+                                    AND roles.id_voice = person.id
+                                    AND roles.id_card = card_voice.id_card
                                 GROUP BY
                                     card_voice.id_card
                             ) vc
@@ -3809,6 +3950,10 @@ class SqlDatabase:
                             ''' + ('''
                             --- WHERE ACTORS - conditional ---
                             AND ''' + actors_where if actors_where else '') + '''
+
+                            ''' + ('''
+                            --- WHERE VOICES - conditional ---
+                            AND ''' + voices_where if voices_where else '') + '''
 
                             ''' + ('''
                             --- WHERE ORIGINS - conditional ---
@@ -4234,16 +4379,19 @@ class SqlDatabase:
 
         return query
 
-    def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+    def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None):
 
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
-        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors', start_separator=';', end_separator=':')
+        voices_where = self.get_sql_where_condition_from_text_filter(voices, 'voices', start_separator=';', end_separator=':')
         directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
         lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
         performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+        logging.debug(f"voices_where: {voices_where}")
 
         lowest_level_where= '''
                            --- WHERE TITLE ---
@@ -4268,6 +4416,9 @@ class SqlDatabase:
                             ''' + ('''
                             --- WHERE ACTORS - conditional ---
                             AND ''' + actors_where if actors_where else '') + '''
+                            ''' + ('''
+                            --- WHERE VOICES - conditional ---
+                            AND ''' + voices_where if voices_where else '') + '''
                             ''' + ('''
                             --- WHERE ORIGINS - conditional ---
                             AND ''' + origins_where if origins_where else '') + '''
@@ -4497,8 +4648,7 @@ class SqlDatabase:
                                     card_voice.id_card id_card
                                 FROM
                                     Person person,
-                                    Card_Voice card_voice
-                                    LEFT JOIN
+                                    Card_Voice card_voice,
                                     (
                                         SELECT
                                             voice_role.id_voice,
@@ -4512,11 +4662,10 @@ class SqlDatabase:
                                         GROUP BY
                                             voice_role.id_voice, role.id_card
                                     ) roles
-                                    ON
-                                        roles.id_voice = person.id
-                                        AND roles.id_card = card_voice.id_card
                                 WHERE
                                     card_voice.id_voice = person.id
+                                    AND roles.id_voice = person.id
+                                    AND roles.id_card = card_voice.id_card
                                 GROUP BY
                                     card_voice.id_card
                             ) vc
@@ -5144,16 +5293,19 @@ class SqlDatabase:
 
         return query
 
-    def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None):
+    def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None):
 
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
-        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors')
+        actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors', start_separator=';', end_separator=':')
+        voices_where = self.get_sql_where_condition_from_text_filter(voices, 'voices', start_separator=';', end_separator=':')
         directors_where = self.get_sql_where_condition_from_text_filter(directors, 'directors')
         lecturers_where = self.get_sql_where_condition_from_text_filter(lecturers, 'lecturers')
         performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
+
+        logging.debug(f"voices_where: {voices_where}")
 
         query = '''
             SELECT
@@ -5542,8 +5694,7 @@ class SqlDatabase:
                         card_voice.id_card id_card
                     FROM
                         Person person,
-                        Card_Voice card_voice
-                        LEFT JOIN
+                        Card_Voice card_voice,
                         (
                             SELECT
                                 voice_role.id_voice,
@@ -5557,11 +5708,10 @@ class SqlDatabase:
                             GROUP BY
                                 voice_role.id_voice, role.id_card
                         ) roles
-                        ON
-                            roles.id_voice = person.id
-                            AND roles.id_card = card_voice.id_card
                     WHERE
                         card_voice.id_voice = person.id
+                        AND roles.id_voice = person.id
+                        AND roles.id_card = card_voice.id_card
                     GROUP BY
                         card_voice.id_card
                 ) vc
@@ -6051,6 +6201,9 @@ class SqlDatabase:
                 ''' + ('''
                 --- WHERE ACTORS - conditional ---
                 AND ''' + actors_where if actors_where else '') + '''
+                ''' + ('''
+                --- WHERE VOICES - conditional ---
+                AND ''' + voices_where if voices_where else '') + '''
                 ''' + ('''
                 --- WHERE ORIGINS - conditional ---
                 AND ''' + origins_where if origins_where else '') + '''

@@ -647,6 +647,7 @@ interaction_labels:
                 writer: Író
                 director: Rendező
                 actor: Szereplő
+                voice: Hang
                 genre: Műfaj
                 theme: Téma
                 origin: Ország

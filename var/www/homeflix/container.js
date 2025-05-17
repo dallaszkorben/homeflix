@@ -1959,6 +1959,7 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
             "directors": "",
             "writers": "",
             "actors": "",
+            "voices": "",
             "origins": "",
             "tags": "",
             "show_level": "/collect/highest/mixed",
@@ -2026,7 +2027,6 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
         search_by_director.setItems(parseMergedListElements(data_dict["directors"]));
     }
 
-
     // Writer
     $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
 //    createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
@@ -2045,8 +2045,15 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
 //        $("#dialog-search-actor").val(data_dict["actors"]);
 //    }
     let search_by_actor = createFieldWithAutocompleteMergeFromList("dialog-search-actor", all_movie_actor_list);
-    if (data_dict["writers"]) {
-        search_by_actor.setItems(parseMergedListElements(data_dict["writers"]));
+    if (data_dict["actors"]) {
+        search_by_actor.setItems(parseMergedListElements(data_dict["actors"]));
+    }
+
+    // Voice
+    $("#dialog-form-search label[for='dialog-search-voice']").html(dialog_dict['search']['labels']['voice'] + ': ');
+    let search_by_voice = createFieldWithAutocompleteMergeFromList("dialog-search-voice", all_movie_voice_list);
+    if (data_dict["voices"]) {
+        search_by_voice.setItems(parseMergedListElements(data_dict["voices"]));
     }
 
     // Origin
@@ -2141,6 +2148,7 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
                             "directors": search_by_director.getMergedValues(),
                             "writers": search_by_writer.getMergedValues(),
                             "actors": search_by_actor.getMergedValues(),
+                            "voices": search_by_voice.getMergedValues(),
                             "origins": search_by_origin.getMergedValues(),
                             "tags": search_by_tag.getMergedValues(),
                             //"tags": getComboboxValue("#dialog-search-tag"),
@@ -2318,6 +2326,7 @@ class ThumbnailController {
         let directors = data_dict["directors"]
         let writers = data_dict["writers"]
         let actors = data_dict["actors"]
+        let voices = data_dict["voices"]
         let origins = data_dict["origins"]
         let tags = data_dict["tags"]
         let show_level = data_dict["show_level"]
@@ -2345,6 +2354,9 @@ class ThumbnailController {
         }
         if(actors !== ""){
             data["actors"] = actors;
+        }
+        if(voices !== ""){
+            data["voices"] = voices;
         }
         if(origins !== ""){
             data["origins"] = origins;
@@ -2400,6 +2412,7 @@ class ThumbnailController {
         let directors = data_dict["directors"]
         let writers = data_dict["writers"]
         let actors = data_dict["actors"]
+        let voices = data_dict["voices"]
         let origins = data_dict["origins"]
         let tags = data_dict["tags"]
         let show_level = data_dict["show_level"]
@@ -2427,6 +2440,9 @@ class ThumbnailController {
         }
         if(actors !== ""){
             data["actors"] = actors;
+        }
+        if(voices !== ""){
+            data["voices"] = voices;
         }
         if(origins !== ""){
             data["origins"] = origins;
