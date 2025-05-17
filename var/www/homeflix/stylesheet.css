@@ -524,7 +524,6 @@ body {
     align-items: center;
     width: 100%;
 
-
     box-sizing: border-box;
     font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
     font-weight: bold;
@@ -996,6 +995,11 @@ body {
     border: none;
   }
 
+/*.ui-menu-item{
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+    font-size: 'inherit';
+}*/
+
   /* Style the dialog title */
   .ui-dialog-titlebar {
     /*background: #f0f0f5; /* Soft background color */
@@ -1087,6 +1091,10 @@ body {
  * Search Dialog window
  *
  **********************/
+
+.ui-menu-item {
+    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
+}
 
 #dialog-form-search,
 #dialog-form-search select {

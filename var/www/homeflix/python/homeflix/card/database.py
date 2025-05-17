@@ -3974,13 +3974,13 @@ class SqlDatabase:
                                 WHEN (:level IS NULL OR :level = '^') AND (:filter_on IS NULL OR :filter_on = 'v') THEN card.level IS NULL
 
                                 -- level: ^ (*, None), filter: ^ (-) => show the HIGHEST level and filter on the same (HIGHEST) level on any type => filter HIGHEST level
-                                -- Title: Standalon or Series
+                                -- Title: Standalone or Series
                                 WHEN (:level IS NULL OR :level = '^') AND :filter_on IS not NULL AND :filter_on = '-' THEN card.id_higher_card IS NULL
 
-                                -- level: <level>, filter: v (* None) => show the GIVENT level and filter on the LOWEST level on any type => filter LOWEST level
+                                -- level: <level>, filter: v (* None) => show the GIVEN level and filter on the LOWEST level on any type => filter LOWEST level
                                 WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND (:filter_on IS NULL OR :filter_on = 'v') THEN card.level IS NULL AND card.id_higher_card IS not NULL
 
-                                -- level: <level>, filter: - => show the GIVENT level and filter on the same (GIVEN) level on any type => filter GIVEN level
+                                -- level: <level>, filter: - => show the GIVEN level and filter on the same (GIVEN) level on any type => filter GIVEN level
                                 WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND :filter_on IS not NULL AND :filter_on = '-' THEN card.level = :level
 
                                 ELSE 0

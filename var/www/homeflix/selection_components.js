@@ -71,6 +71,13 @@ function createAutocompleteField(inputId, options) {
     const $input = $(`#${inputId}`);
 
     // Initialize autocomplete
+    // Not working option
+    //const finalOptions = {
+    //    ...autocompleteOptions,
+    //    appendTo: "#dropdowns"
+    //};
+    //$input.autocomplete(finalOptions);
+    // Working option
     $input.autocomplete(autocompleteOptions);
 
     // Override the _renderItem method to apply custom styling
@@ -85,10 +92,10 @@ function createAutocompleteField(inputId, options) {
     };
 
     // Apply styling to the input
-    $input.css({
-        'font-family': 'inherit',
-        'font-size': 'inherit'
-    });
+//    $input.css({
+//    'font-family': 'inherit',
+//    'font-size': 'inherit'
+//    });
 
     // Add blur handler if provided
     if (blurHandler) {
@@ -359,18 +366,18 @@ function createFieldWithAutocompleteFromList(inputId, dataList, minChars = 2) {
 
 //--
 
-    // Apply styling to the autocomplete menu when it's created
-    $input.on("autocompleteopen", function() {
-        $(".ui-autocomplete").css({
-            'font-family': 'inherit',
-            'font-size': 'inherit'
-        });
-
-        $(".ui-menu-item").css({
-            'font-family': 'inherit',
-            'font-size': 'inherit'
-        });
-    });
+//    // Apply styling to the autocomplete menu when it's created
+//    $input.on("autocompleteopen", function() {
+//        $(".ui-autocomplete").css({
+//            'font-family': 'inherit',
+//            'font-size': 'inherit'
+//        });
+//
+//        $(".ui-menu-item").css({
+//            'font-family': 'inherit',
+//            'font-size': 'inherit'
+//        });
+//    });
 
 
 //--
@@ -432,6 +439,11 @@ function setComboboxValue(selector, value) {
     $(selector).val(label);
     $(selector).attr('data-value', value);
 }
+
+
+
+
+
 
 
 // -----------------------------
@@ -569,17 +581,17 @@ function createMergeComponent(inputId, createInputFn, createInputArgs) {
     });
 
     // Apply styling to the autocomplete menu when it's created
-    $(`#${inputId2}`).on("autocompleteopen", function() {
-        $(".ui-autocomplete").css({
-            'font-family': 'inherit',
-            'font-size': 'inherit'
-        });
-
-        $(".ui-menu-item").css({
-            'font-family': 'inherit',
-            'font-size': 'inherit'
-        });
-    });
+//    $(`#${inputId2}`).on("autocompleteopen", function() {
+//        $(".ui-autocomplete").css({
+//            'font-family': 'inherit',
+//            'font-size': 'inherit'
+//        });
+//
+//        $(".ui-menu-item").css({
+//            'font-family': 'inherit',
+//            'font-size': 'inherit'
+//        });
+//    });
 
 
 
