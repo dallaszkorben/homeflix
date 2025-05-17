@@ -3416,7 +3416,7 @@ class SqlDatabase:
 # RAW Queries
 
     def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
-        tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tggng.tags')
+        tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
         actors_where = self.get_sql_where_condition_from_text_filter(actors, 'actors', start_separator=';', end_separator=':')
@@ -3429,7 +3429,7 @@ class SqlDatabase:
         titles_req_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_req')
         titles_orig_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_orig')
 
-        logging.debug(f"voices_where: {voices_where}")
+        logging.debug(f"tags_where: {tags_where}")
 
         query = '''
 
@@ -3466,6 +3466,8 @@ class SqlDatabase:
                 mixed_id_list.stars,
                 mixed_id_list.lecturers,
 
+                mixed_id_list.tags,
+
                 mixed_id_list.hosts,
                 mixed_id_list.guests,
                 mixed_id_list.interviewers,
@@ -3481,8 +3483,7 @@ class SqlDatabase:
 
                 hstr.recent_state,
                 rtng.rate,
-                rtng.skip_continuous_play,
-                tggng.tags
+                rtng.skip_continuous_play
             FROM
 
                 ---------------------------
@@ -3490,7 +3491,7 @@ class SqlDatabase:
                 ---------------------------
                 (
                 WITH RECURSIVE
-                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
 
                     (
                         SELECT
@@ -3518,6 +3519,8 @@ class SqlDatabase:
                             directors,
                             actors,
                             lecturers,
+
+                            tags,
 
                             sounds,
                             subs,
@@ -3689,6 +3692,22 @@ class SqlDatabase:
                             ON lctr.id_card=card.id
 
                             --- No Filter ---
+
+                            ---------------
+                            --- TAGGING ---
+                            ---------------
+                            LEFT JOIN
+                            (
+                               SELECT
+                                  group_concat(name) tags,
+                                  id_card
+                               FROM
+                                  Tag tag
+                               WHERE
+                                  id_user=:user_id
+                               GROUP BY id_card
+                            ) tggng
+                            ON tggng.id_card=card.id
 
                             --------------
                             --- SOUNDS ---
@@ -3967,6 +3986,10 @@ class SqlDatabase:
                             --- WHERE LECTURERS - conditional ---
                             AND ''' + lecturers_where if lecturers_where else '') + '''
 
+                            ''' + ('''
+                            --- WHERE TAGS - conditional ---
+                            AND ''' + tags_where if tags_where else '') + '''
+
                             AND CASE
 
                                 -- level: ^ (*, None), filter: v (*, None) => show the HIGHEST level and filter on the LOWEST level on any type => filter LOWEST level
@@ -4014,6 +4037,9 @@ class SqlDatabase:
                             NULL directors,
                             NULL actors,
                             NULL lecturers,
+
+                            NULL tags,
+
                             NULL sounds,
                             NULL subs,
                             NULL writers,
@@ -4040,7 +4066,7 @@ class SqlDatabase:
                             rec.id_higher_card=card.id
                             AND category.id=card.id_category
                     )
-                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
 
                 FROM
                     rec
@@ -4365,10 +4391,6 @@ class SqlDatabase:
                 mixed_id_list.id=core.id''' + ( ('''
                 AND rtng.rate >= ''' + str(rate_value) ) if rate_value else '') + '''
 
-                ''' + ('''
-                --- WHERE TAGS - conditional ---
-                AND ''' + tags_where if tags_where else '') + '''
-
             ORDER BY CASE
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
                 WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
@@ -4428,6 +4450,9 @@ class SqlDatabase:
                             ''' + ('''
                             --- WHERE PERFORMERS - conditional ---
                             AND ''' + performers_where if performers_where else '') + '''
+                            ''' + ('''
+                            --- WHERE TAGS - conditional ---
+                            AND ''' + tags_where if tags_where else '') + '''
         '''
 
         query = '''
@@ -4464,6 +4489,8 @@ class SqlDatabase:
                 mixed_id_list.stars,
                 mixed_id_list.lecturers,
 
+                mixed_id_list.tags,
+
                 mixed_id_list.hosts,
                 mixed_id_list.guests,
                 mixed_id_list.interviewers,
@@ -4479,8 +4506,7 @@ class SqlDatabase:
 
                 hstr.recent_state,
                 rtng.rate,
-                rtng.skip_continuous_play,
-                tggng.tags
+                rtng.skip_continuous_play
             FROM
 
                 ---------------------------
@@ -4488,7 +4514,7 @@ class SqlDatabase:
                 ---------------------------
                 (
                 WITH RECURSIVE
-                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
 
                     (
                         SELECT
@@ -4516,6 +4542,8 @@ class SqlDatabase:
                             directors,
                             actors,
                             lecturers,
+
+                            tags,
 
                             sounds,
                             subs,
@@ -4676,7 +4704,9 @@ class SqlDatabase:
                             ----------------
                             LEFT JOIN
                             (
-                                SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
+                                SELECT
+                                    group_concat(person.name) lecturers,
+                                    card_lecturer.id_card
                                 FROM
                                     Person person,
                                     Card_Lecturer card_lecturer
@@ -4687,6 +4717,22 @@ class SqlDatabase:
                             ON lctr.id_card=card.id
 
                             --- No Filter ---
+
+                            ---------------
+                            --- TAGGING ---
+                            ---------------
+                            LEFT JOIN
+                            (
+                               SELECT
+                                  group_concat(name) tags,
+                                  id_card
+                               FROM
+                                  Tag tag
+                               WHERE
+                                  id_user=:user_id
+                               GROUP BY id_card
+                            ) tggng
+                            ON tggng.id_card=card.id
 
                             --------------
                             --- SOUNDS ---
@@ -4946,6 +4992,9 @@ class SqlDatabase:
                             NULL directors,
                             NULL actors,
                             NULL lecturers,
+
+                            NULL tags,
+
                             NULL sounds,
                             NULL subs,
                             NULL writers,
@@ -4972,7 +5021,7 @@ class SqlDatabase:
                             rec.id_higher_card=card.id
                             AND category.id=card.id_category
                     )
-                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig
 
                 FROM
                     rec
@@ -5262,22 +5311,6 @@ class SqlDatabase:
                     WHERE id_user=:user_id
                 )rtng
                 ON rtng.id_card=core.id
-
-                ---------------
-                --- TAGGING ---
-                ---------------
-                LEFT JOIN
-                (
-                   SELECT
-                      group_concat(name) tags,
-                      id_card
-                   FROM
-                      Tag tag
-                   WHERE
-                      id_user=:user_id
-                   GROUP BY id_card
-                ) tggng
-                ON tggng.id_card=core.id
 
             WHERE
                 mixed_id_list.id=core.id
