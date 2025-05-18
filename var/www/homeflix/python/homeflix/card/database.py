@@ -2267,7 +2267,6 @@ class SqlDatabase:
 
 # ---
 
-
     def get_sql_where_condition_from_text_filter(self, text_filter, field_name, start_separator=',', end_separator=','):
         # the separator parameters needed because of some fields, like 'actors' and 'voices' have role, separated by :
         op = None
@@ -2286,14 +2285,7 @@ class SqlDatabase:
         filter_in_list =     [] if text_filter == None else [filter for filter in filter_list if not filter.startswith("_NOT_")]
         filter_not_in_list = [] if text_filter == None else [filter.removeprefix("_NOT_") for filter in filter_list if filter.startswith("_NOT_")]
 
-        # because of the role in the actors
-#        if field_name == "actors":
-#            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["';' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%;" + filter.removeprefix("_NOT_") + ":%'" for filter in filter_list]) + ')'
-#        else:
-#            filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join(["',' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + "LIKE '%," + filter.removeprefix("_NOT_") + ",%'" for filter in filter_list]) + ')'
-
         filter_where =  None if text_filter == None else '(' + (' OR ' if op == 'or' else ' AND ').join([f"'{start_separator}' || " + field_name + " || ',' " + ("NOT " if filter.startswith("_NOT_") else "") + f"LIKE '%{start_separator}" + filter.removeprefix("_NOT_") + f"{end_separator}%'" for filter in filter_list]) + ')'
-
 
         # logging.debug("{} IN LIST: {}".format(field_name, filter_in_list))
         # logging.debug("{} NOT IN LIST: {}".format(field_name, filter_not_in_list))
@@ -2325,6 +2317,9 @@ class SqlDatabase:
         logging.debug("{} WHERE: {}".format(field_name, filter_where if filter_where is not None else 'None'))
 
         return filter_where
+
+    def get_sql_rate_query(self, value):
+        return f"rate>={str(value)}" if value else ""
 
     def get_converted_query_to_json(self, sql_record_list, category, lang):
         """
@@ -3251,7 +3246,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
         """
         FULL QUERY for the children cards of the given card
         Returns the next child cards which could be:
@@ -3262,6 +3257,7 @@ class SqlDatabase:
           - category
           - decade
           - language
+          - rate
 
           logical operands (_AND_, _NOT_) in
           - genres
@@ -3271,6 +3267,7 @@ class SqlDatabase:
           - directors
           - lecturers
           - origins
+          - tags
         """
 
         user_data = session.get('logged_in_user', None)
@@ -3290,7 +3287,7 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
 
                 query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'filter_on': filter_on, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
@@ -3318,7 +3315,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
+    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
 
         """
         FULL QUERY for lowest (medium) level list
@@ -3337,6 +3334,7 @@ class SqlDatabase:
           - level
           - decade
           - language
+          - rate
 
           logical operands (_AND_, _NOT_) in
           - genres
@@ -3346,6 +3344,7 @@ class SqlDatabase:
           - directors
           - lecturers
           - origins
+          - tags
         """
 
         user_data = session.get('logged_in_user', None)
@@ -3366,7 +3365,7 @@ class SqlDatabase:
                 history_days = 365
                 history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
 
-                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins)
+                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
 
                 query = '''
                 SELECT *
@@ -3428,8 +3427,9 @@ class SqlDatabase:
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
         titles_req_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_req')
         titles_orig_where = self.get_sql_like_where_condition_from_text_filter(title, 'ttitle_orig')
+        rate_where = self.get_sql_rate_query(rate_value)
 
-        logging.debug(f"tags_where: {tags_where}")
+        logging.debug(f"rate_where: {rate_where}")
 
         query = '''
 
@@ -3467,6 +3467,9 @@ class SqlDatabase:
                 mixed_id_list.lecturers,
 
                 mixed_id_list.tags,
+                mixed_id_list.rate,
+                mixed_id_list.skip_continuous_play,
+
 
                 mixed_id_list.hosts,
                 mixed_id_list.guests,
@@ -3481,9 +3484,7 @@ class SqlDatabase:
                 medium,
                 appendix,
 
-                hstr.recent_state,
-                rtng.rate,
-                rtng.skip_continuous_play
+                hstr.recent_state
             FROM
 
                 ---------------------------
@@ -3491,7 +3492,7 @@ class SqlDatabase:
                 ---------------------------
                 (
                 WITH RECURSIVE
-                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, rate, skip_continuous_play,sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
 
                     (
                         SELECT
@@ -3521,6 +3522,8 @@ class SqlDatabase:
                             lecturers,
 
                             tags,
+                            rate,
+                            skip_continuous_play,
 
                             sounds,
                             subs,
@@ -3708,6 +3711,17 @@ class SqlDatabase:
                                GROUP BY id_card
                             ) tggng
                             ON tggng.id_card=card.id
+
+                            --------------
+                            --- RATING ---
+                            --------------
+                            LEFT JOIN
+                            (
+                                SELECT id_card, rate, skip_continuous_play
+                                FROM Rating
+                                WHERE id_user=:user_id
+                            )rtng
+                            ON rtng.id_card=card.id
 
                             --------------
                             --- SOUNDS ---
@@ -3990,6 +4004,10 @@ class SqlDatabase:
                             --- WHERE TAGS - conditional ---
                             AND ''' + tags_where if tags_where else '') + '''
 
+                            ''' + ('''
+                            --- WHERE RATE - conditional ---
+                            AND ''' + rate_where if rate_where else '') + '''
+
                             AND CASE
 
                                 -- level: ^ (*, None), filter: v (*, None) => show the HIGHEST level and filter on the LOWEST level on any type => filter LOWEST level
@@ -4039,6 +4057,8 @@ class SqlDatabase:
                             NULL lecturers,
 
                             NULL tags,
+                            NULL rate,
+                            NULL skip_continuous_play,
 
                             NULL sounds,
                             NULL subs,
@@ -4066,7 +4086,7 @@ class SqlDatabase:
                             rec.id_higher_card=card.id
                             AND category.id=card.id_category
                     )
-                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, rate, skip_continuous_play, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
 
                 FROM
                     rec
@@ -4360,36 +4380,9 @@ class SqlDatabase:
                 )hstr
                 ON hstr.id_card=core.id
 
-                --------------
-                --- RATING ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT id_card, rate, skip_continuous_play
-                    FROM Rating
-                    WHERE id_user=:user_id
-                )rtng
-                ON rtng.id_card=core.id
-
-                ---------------
-                --- TAGGING ---
-                ---------------
-                LEFT JOIN
-                (
-                   SELECT
-                      group_concat(name) tags,
-                      id_card
-                   FROM
-                      Tag tag
-                   WHERE
-                      id_user=:user_id
-                   GROUP BY id_card
-                ) tggng
-                ON tggng.id_card=core.id
-
             WHERE
-                mixed_id_list.id=core.id''' + ( ('''
-                AND rtng.rate >= ''' + str(rate_value) ) if rate_value else '') + '''
+
+                mixed_id_list.id=core.id
 
             ORDER BY CASE
                 WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
@@ -4401,7 +4394,7 @@ class SqlDatabase:
 
         return query
 
-    def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None):
+    def get_raw_query_of_next_level(self, category, tags=None, level=None, filter_on=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
 
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
@@ -4413,7 +4406,9 @@ class SqlDatabase:
         performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
 
-        logging.debug(f"voices_where: {voices_where}")
+        rate_where = self.get_sql_rate_query(rate_value)
+
+        logging.debug(f"rate_where: {rate_where}")
 
         lowest_level_where= '''
                            --- WHERE TITLE ---
@@ -4453,6 +4448,9 @@ class SqlDatabase:
                             ''' + ('''
                             --- WHERE TAGS - conditional ---
                             AND ''' + tags_where if tags_where else '') + '''
+                            ''' + ('''
+                            --- WHERE RATE - conditional ---
+                            AND ''' + rate_where if rate_where else '') + '''
         '''
 
         query = '''
@@ -4490,6 +4488,8 @@ class SqlDatabase:
                 mixed_id_list.lecturers,
 
                 mixed_id_list.tags,
+                mixed_id_list.rate,
+                mixed_id_list.skip_continuous_play,
 
                 mixed_id_list.hosts,
                 mixed_id_list.guests,
@@ -4504,9 +4504,9 @@ class SqlDatabase:
                 medium,
                 appendix,
 
-                hstr.recent_state,
-                rtng.rate,
-                rtng.skip_continuous_play
+                hstr.recent_state
+--                rtng.rate,
+--                rtng.skip_continuous_play
             FROM
 
                 ---------------------------
@@ -4514,7 +4514,7 @@ class SqlDatabase:
                 ---------------------------
                 (
                 WITH RECURSIVE
-                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
+                    rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, rate, skip_continuous_play, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig) AS
 
                     (
                         SELECT
@@ -4544,6 +4544,8 @@ class SqlDatabase:
                             lecturers,
 
                             tags,
+                            rate,
+                            skip_continuous_play,
 
                             sounds,
                             subs,
@@ -4733,6 +4735,17 @@ class SqlDatabase:
                                GROUP BY id_card
                             ) tggng
                             ON tggng.id_card=card.id
+
+                            --------------
+                            --- RATING ---
+                            --------------
+                            LEFT JOIN
+                            (
+                                SELECT id_card, rate, skip_continuous_play
+                                FROM Rating
+                                WHERE id_user=:user_id
+                            )rtng
+                            ON rtng.id_card=card.id
 
                             --------------
                             --- SOUNDS ---
@@ -4994,6 +5007,8 @@ class SqlDatabase:
                             NULL lecturers,
 
                             NULL tags,
+                            NULL rate,
+                            NULL skip_continuous_play,
 
                             NULL sounds,
                             NULL subs,
@@ -5021,7 +5036,7 @@ class SqlDatabase:
                             rec.id_higher_card=card.id
                             AND category.id=card.id_category
                     )
-                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig
+                SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, full_time, net_start_time, net_stop_time, themes, genres, origins, directors, actors, lecturers, tags, rate, skip_continuous_play, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers, ttitle_req, llang_req, ttitle_orig, llang_orig
 
                 FROM
                     rec
@@ -5301,16 +5316,16 @@ class SqlDatabase:
                 )hstr
                 ON hstr.id_card=core.id
 
-                --------------
-                --- RATING ---
-                --------------
-                LEFT JOIN
-                (
-                    SELECT id_card, rate, skip_continuous_play
-                    FROM Rating
-                    WHERE id_user=:user_id
-                )rtng
-                ON rtng.id_card=core.id
+--                --------------
+--                --- RATING ---
+--                --------------
+--                LEFT JOIN
+--                (
+--                    SELECT id_card, rate, skip_continuous_play
+--                    FROM Rating
+--                    WHERE id_user=:user_id
+--                )rtng
+--                ON rtng.id_card=core.id
 
             WHERE
                 mixed_id_list.id=core.id
@@ -5326,7 +5341,7 @@ class SqlDatabase:
 
         return query
 
-    def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None):
+    def get_raw_query_of_lowest_level(self, category, tags=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
 
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
@@ -5338,7 +5353,9 @@ class SqlDatabase:
         performers_where = self.get_sql_where_condition_from_text_filter(performers, 'performers')
         origins_where = self.get_sql_where_condition_from_text_filter(origins, 'origins')
 
-        logging.debug(f"voices_where: {voices_where}")
+        rate_where = self.get_sql_rate_query(rate_value)
+
+        logging.debug(f"rate_where: {rate_where}")
 
         query = '''
             SELECT
@@ -6249,6 +6266,9 @@ class SqlDatabase:
                 ''' + ('''
                 --- WHERE TAGS - conditional ---
                 AND ''' + tags_where if tags_where else '') + '''
+               ''' + ('''
+                --- WHERE RATE - conditional ---
+                AND ''' + rate_where if rate_where else '') + '''
         '''
 
         return query
