@@ -19,6 +19,7 @@ language:
         nl: Dut
         fi: FIN
         ro: ROM
+        pt: Por
 
     long:
         hu: Magyar
@@ -39,7 +40,8 @@ language:
         zh: Kínai
         nl: Holland
         fi: Finn
-        ro: Romanian
+        ro: Románian
+        pt: Portugália
 
     in_native:
         hu: Magyar
@@ -61,6 +63,7 @@ language:
         nl: Nederlands
         fi: Suomi
         ro: Român
+        pt: Português
 
 country:
     short:
@@ -95,6 +98,7 @@ country:
         nl: Nld
         fi: FIN
         ro: ROU
+        br: BR
 
     long:
         eu: Europai Unió
@@ -128,6 +132,7 @@ country:
         nl: Holland
         fi: Finn
         ro: Román
+        br: Brazília
 
 category:
     movie: Mozi

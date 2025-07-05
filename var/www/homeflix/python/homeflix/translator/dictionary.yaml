@@ -19,6 +19,7 @@ language:
         nl: Dut
         fi: FIN
         ro: ROM
+        pt: Por
 
     long:
         hu: Hungarian
@@ -40,6 +41,7 @@ language:
         nl: Dutch
         fi: Finnish
         ro: Romanian
+        pt: Portuguese
 
     in_native:
         hu: Magyar
@@ -61,6 +63,7 @@ language:
         nl: Nederlands
         fi: Suomi
         ro: Român
+        pt: Português
 
 country:
     short:
@@ -95,6 +98,7 @@ country:
         nl: Nld
         fi: FIN
         ro: ROU
+        br: BR
 
     long:
         eu: Europian Union
@@ -128,6 +132,7 @@ country:
         nl: Netherlands
         fi: Finland
         ro: Romania
+        br: Brazil
 
 category:
     movie: Movie
