@@ -21,7 +21,9 @@ class FetchImdb:
     AKA_TITLE_LOCATOR = 'span.ipc-metadata-list-item__list-content-item'
     TYPE_METADATA_LOCATOR = 'ul[data-testid="hero-title-block__metadata"] li'
     PAGE_TITLE_LOCATOR = 'title'
-    YEAR_LOCATOR = 'a[href*="releaseinfo"]'
+
+    YEAR_LOCATOR = 'li[data-testid="title-details-releasedate"] a[class="ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"][href*="/releaseinfo/"] '
+
     LENGTH_LOCATOR = 'li[data-testid="title-techspec_runtime"] div'
     GENRES_LOCATOR = 'div[data-testid="interests"] a'
 
@@ -72,19 +74,50 @@ class FetchImdb:
 
     def __init__(self, imdb_id):
         self.imdb_id = imdb_id
-        self.url = f"https://www.imdb.com/title/{imdb_id}/"
         self.soup = None
-        self._fetch_page()
-        self._load_dictionary()
-        self._collect_data()
+        self.movie = {}
+        self.movie['base'] = {}
+        self.movie['seasons'] = {}
 
-    def _fetch_page(self):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept-Language': 'en-US,en;q=0.9'
-        }
-        response = requests.get(self.url, headers=headers)
-        self.soup = BeautifulSoup(response.content, 'html.parser')
+        self._load_dictionary()
+
+        #self._fetch_main_page(imdb_id)
+        self._collect_data(imdb_id, self.movie['base'])
+
+        if self.movie['base']['type'] == 'series':
+            self.seasons_count = self._extract_seasons_count()
+
+            for season in range(1, self.seasons_count + 1):
+
+                # new season added
+                self.movie['seasons'][season] = []
+
+                # open the recent season's page
+                self._fetch_episodes_page(self.imdb_id, season)
+
+                episode_row = self.episodes_soup.select('h4[data-testid="slate-list-card-title"] a[class="ipc-title-link-wrapper"]')
+                episode_index = 1
+                for episode in episode_row:
+                    imdb_id = episode['href'].split('/')[2]
+
+                    recent_episode_dict = {}
+                    recent_episode_dict['sequence'] = episode_index
+                    self._collect_data(imdb_id, recent_episode_dict)
+                    self.movie['seasons'][season].append(recent_episode_dict)
+
+                    episode_index += 1
+                    #self.seasons.append(episode_id)
+                    print(imdb_id)
+
+    def _reset_pages(self):
+        if hasattr(self, 'releaseinfo_soup'):
+            del self.releaseinfo_soup
+
+        if hasattr(self, 'fullcredits_soup'):
+            del self.fullcredits_soup
+
+        if hasattr(self, 'episode_soup'):
+            del self.episode_soup
 
     def _load_dictionary(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -92,19 +125,25 @@ class FetchImdb:
         with open(dictionary_path, 'r') as file:
             self.dictionary = yaml.safe_load(file)
 
-    def _collect_data(self):
-        self.original_countries = self._extract_countries()
-        self.original_language = self._extract_language()
-        self.original_title = self._extract_title()
-        self.type = self._extract_type()
-        self.year = self._extract_year()
-        self.titles = self._extract_titles()
-        self.length = self._extract_length()
-        self.genres = self._extract_genres()
-        self.stars = self._extract_stars()
-        self.actors = self._extract_actors()
-        self.writers = self._extract_writers()
-        self.directors = self._extract_directors()
+    def _collect_data(self, imdb_id, source):
+        self._reset_pages()
+
+        self._fetch_main_page(imdb_id)
+
+        source['id'] = {'name': 'imdb', 'value': imdb_id}
+        source['category'] = 'movie'
+        source['type'] = self._extract_type()
+        source['original_countries'] = self._extract_countries()
+        source['original_language'] = self._extract_language()
+        source['original_title'] = self._extract_title(imdb_id)
+        source['year'] = self._extract_year()
+        source['titles'] = self._extract_titles(imdb_id)
+        source['length'] = self._extract_length()
+        source['genres'] = self._extract_genres()
+        source['stars'] = self._extract_stars()
+        source['actors'] = self._extract_actors(imdb_id)
+        source['writers'] = self._extract_writers(imdb_id)
+        source['directors'] = self._extract_directors(imdb_id)
 
     def _get_country_code_by_name(self, country_name):
         country_map = {v.lower(): k for k, v in self.dictionary['country']['long'].items()}
@@ -140,15 +179,11 @@ class FetchImdb:
             return self._get_language_code_by_name(language_name)
         return None
 
-    def _extract_title(self):
-        # Fetch releaseinfo page for full AKA list
-        releaseinfo_url = f"https://www.imdb.com/title/{self.imdb_id}/releaseinfo"
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept-Language': 'en-US,en;q=0.9'}
-        response = requests.get(releaseinfo_url, headers=headers)
-        releaseinfo_soup = BeautifulSoup(response.content, 'html.parser')
+    def _extract_title(self, imdb_id):
+        self._fetch_releaseinfo_page(imdb_id)
 
         # Look for (original title) in AKA section on releaseinfo page
-        aka_section = releaseinfo_soup.select_one(self.AKA_SECTION_LOCATOR)
+        aka_section = self.releaseinfo_soup.select_one(self.AKA_SECTION_LOCATOR)
         if aka_section:
 
             # Find the list item with (original title) label
@@ -165,7 +200,7 @@ class FetchImdb:
         title_elem = self.soup.select_one(self.TITLE_LOCATOR)
         return title_elem.get_text(strip=True) if title_elem else None
 
-    def _extract_titles(self):
+    def _extract_titles(self, imdb_id):
 
         # Fetch the values:
         # 1. Use Firefox (Chrome will encode the result what we need)
@@ -181,7 +216,7 @@ class FetchImdb:
         graphQL =  "48d4f7bfa73230fb550147bd4704d8050080e65fe2ad576da6276cac2330e446"
 
         variables = {
-            "const": self.imdb_id,
+            "const": imdb_id,
             "first": 100,
             "locale": "en-US",
             "originalTitleText": True
@@ -207,7 +242,7 @@ class FetchImdb:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Referer': f'https://www.imdb.com/title/{self.imdb_id}/releaseinfo'
+            'Referer': f'https://www.imdb.com/title/{imdb_id}/releaseinfo'
         }
 
         titles = {}
@@ -223,13 +258,14 @@ class FetchImdb:
                     continue
                 titles[lang_code] = title
             else:
-                country_code = title_json['node']['country']['id'].lower()
-                if country_code not in self.country_language:
-                    continue
-                if country_code and title:
-                    language_codes = self._get_language_code_list_by_country_code_list([country_code])
-                    for lang_code in language_codes:
-                        titles[lang_code] = title
+                if title_json['node']['country']:
+                    country_code = title_json['node']['country']['id'].lower()
+                    if country_code not in self.country_language:
+                        continue
+                    if country_code and title:
+                        language_codes = self._get_language_code_list_by_country_code_list([country_code])
+                        for lang_code in language_codes:
+                            titles[lang_code] = title
         return titles
 
     def _extract_type(self):
@@ -316,17 +352,8 @@ class FetchImdb:
 
         return []
 
-    def _fetch_fullcredits_page(self):
-        """Fetch fullcredits page once and store the soup"""
-        if not hasattr(self, 'fullcredits_soup'):
-            fullcredits_url = f"https://www.imdb.com/title/{self.imdb_id}/fullcredits"
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept-Language': 'en-US,en;q=0.9'}
-            response = requests.get(fullcredits_url, headers=headers)
-            self.fullcredits_soup = BeautifulSoup(response.content, 'html.parser')
-
-
-    def _extract_actors(self):
-        self._fetch_fullcredits_page()
+    def _extract_actors(self, imdb_id):
+        self._fetch_fullcredits_page(imdb_id)
 
         actors = {}
         cast_rows = self.fullcredits_soup.select(self.CAST_ROW_LOCATOR)
@@ -347,8 +374,8 @@ class FetchImdb:
 
         return actors
 
-    def _extract_writers(self):
-        self._fetch_fullcredits_page()
+    def _extract_writers(self, imdb_id):
+        self._fetch_fullcredits_page(imdb_id)
 
         writers = []
         writer_rows = self.fullcredits_soup.select(self.WRITERS_ROW_LOCATOR)
@@ -357,10 +384,12 @@ class FetchImdb:
             writer_name = row.get_text(strip=True)
             if writer_name:
                 writers.append(writer_name)
-        return writers
 
-    def _extract_directors(self):
-        self._fetch_fullcredits_page()
+        # remove duplications
+        return list(set(writers))
+
+    def _extract_directors(self, imdb_id):
+        self._fetch_fullcredits_page(imdb_id)
 
         directors = []
         director_rows = self.fullcredits_soup.select(self.DIRECTORS_ROW_LOCATOR)
@@ -371,40 +400,92 @@ class FetchImdb:
                 directors.append(director_name)
         return directors
 
+# --- open pages ---
+
+    def _fetch_main_page(self, imdb_id):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept-Language': 'en-US,en;q=0.9'
+        }
+        url = f"https://www.imdb.com/title/{imdb_id}/"
+        response = requests.get(url, headers=headers)
+        self.soup = BeautifulSoup(response.content, 'html.parser')
+
+
+    def _fetch_releaseinfo_page(self, imdb_id):
+        if not hasattr(self, 'releaseinfo_soup'):
+            releaseinfo_url = f"https://www.imdb.com/title/{imdb_id}/releaseinfo"
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept-Language': 'en-US,en;q=0.9'}
+            response = requests.get(releaseinfo_url, headers=headers)
+            self.releaseinfo_soup = BeautifulSoup(response.content, 'html.parser')
+
+    def _fetch_fullcredits_page(self, imdb_id):
+        """Fetch fullcredits page once and store the soup"""
+        if not hasattr(self, 'fullcredits_soup'):
+            fullcredits_url = f"https://www.imdb.com/title/{imdb_id}/fullcredits"
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept-Language': 'en-US,en;q=0.9'}
+            response = requests.get(fullcredits_url, headers=headers)
+            self.fullcredits_soup = BeautifulSoup(response.content, 'html.parser')
+
+    def _fetch_episodes_page(self, imdb_id, season):
+        if not hasattr(self, 'episode_soup'):
+            episodes_url = f"https://www.imdb.com/title/{imdb_id}/episodes/?season={season}"
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            response = requests.get(episodes_url, headers=headers)
+            self.episodes_soup = BeautifulSoup(response.content, 'html.parser')
+
+# --- season related methods ---
+
+    def _extract_seasons_count(self):
+        """
+        Exctract number of season from the main site (self.soup)
+        """
+
+        # Look for season selector dropdown
+        season_options = self.soup.select('select[id="browse-episodes-season"] option')
+        if season_options:
+            return len([opt for opt in season_options if opt.get('value') and opt.get('value').isdigit()])
+
+        return 0
+
+
+
+
     def getOriginalCountries(self):
-        return self.original_countries
+        return self.movie['base']['original_countries']
 
     def getOriginalLanguage(self):
-        return self.original_language
+        return self.movie['base']['original_language']
 
     def getOriginalTitle(self):
-        return self.original_title
+        return self.movie['base']['original_title']
 
     def getType(self):
-        return self.type
+        return self.movie['base']['type']
 
     def getYear(self):
-        return self.year
+        return self.movie['base']['year']
+
     def getTitles(self):
-        return self.titles
+        return self.movie['base']['titles']
 
     def getLength(self):
-        return self.length
+        return self.movie['base']['length']
 
     def getGenres(self):
-        return self.genres
+        return self.movie['base']['genres']
 
     def getStars(self):
-        return self.stars
+        return self.movie['base']['stars']
 
     def getActors(self):
-        return self.actors
+        return self.movie['base']['actors']
 
     def getWriters(self):
-        return self.writers
+        return self.movie['base']['writers']
 
     def getDirectors(self):
-        return self.directors
+        return self.movie['base']['directors']
 
 if __name__ == "__main__":
 
@@ -416,10 +497,10 @@ if __name__ == "__main__":
     THEMES = []
 
     IMDB_ID = "tt0163978"  # IMDB ID for individual movie - The beach
-#    IMDB_ID = "tt0308671"  # IMDB ID for individual movie - Tycoon A new russion
-#    IMDB_ID = "tt0137523"  # IMDB ID for individual movie - Fight club
+    IMDB_ID = "tt0308671"  # IMDB ID for individual movie - Tycoon A new russion
+    IMDB_ID = "tt0137523"  # IMDB ID for individual movie - Fight club
 
-#    IMDB_ID = "tt0098936"  # IMDB ID for series - Twin Peaks
+    IMDB_ID = "tt0098936"  # IMDB ID for series - Twin Peaks
 #    IMDB_ID = "tt0108778"  # IMDB ID for series - Friends
 #    IMDB_ID = "tt0106179"  # IMDB ID for series - X Files
 #    IMDB_ID = "tt0078350"  # IMDB ID for individual movie - The Swarm
@@ -431,6 +512,7 @@ if __name__ == "__main__":
     need_to_file = True
 
     imdb = FetchImdb(IMDB_ID)
+
     type = imdb.getType()
     original_title = imdb.getOriginalTitle()
     original_countries = imdb.getOriginalCountries()
@@ -444,18 +526,18 @@ if __name__ == "__main__":
     writers = imdb.getWriters()
     directors = imdb.getDirectors()
 
-    print(f"Type: {type}")
-    print(f"Year: {year}")
-    print(f"Original Title: {original_title}")
-    print(f"Original Countries: {original_countries}")
-    print(f"Original Language: {original_language}")
-    print(f"Titles: {titles}")
-    print(f"Length: {length}")
-    print(f"Genres: {genres}")
-    print(f"Stars: {stars}")
-    print(f"Actors: {actors}")
-    print(f"Writers: {writers}")
-    print(f"Directors: {directors}")
+#    print(f"Type: {type}")
+#    print(f"Year: {year}")
+#    print(f"Original Title: {original_title}")
+#    print(f"Original Countries: {original_countries}")
+#    print(f"Original Language: {original_language}")
+#    print(f"Titles: {titles}")
+#    print(f"Length: {length}")
+#    print(f"Genres: {genres}")
+#    print(f"Stars: {stars}")
+#    print(f"Actors: {actors}")
+#    print(f"Writers: {writers}")
+#    print(f"Directors: {directors}")
 
-
+    print(f"FULL: {imdb.movie}")
 
