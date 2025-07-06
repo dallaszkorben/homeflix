@@ -5,6 +5,7 @@ import os
 import yaml
 import json
 import urllib.parse
+import shutil
 
 class FetchImdb:
     # Class level locator variables
@@ -13,8 +14,9 @@ class FetchImdb:
     LANGUAGE_LOCATOR = 'li[data-testid="title-details-languages"] a'
     TITLE_LOCATOR = 'h1[data-testid="hero__pageTitle"] span'
     ORIGINAL_TITLE_LOCATOR = 'li[data-testid="title-details-originaltitle"]'
-    AKA_COUNTRY_LOCATOR = 'span.ipc-metadata-list-item__label'
+    STORYLINE_LOCATOR = 'div[class="ipc-html-content-inner-div"] div[class="ipc-html-content-inner-div"]'
 
+    AKA_COUNTRY_LOCATOR = 'span.ipc-metadata-list-item__label'
     AKA_SECTION_LOCATOR = 'div[data-testid="sub-section-akas"]'
     AKA_LABEL_LOCATOR = 'span.ipc-metadata-list-item__label'
     AKA_CONTENT_LOCATOR = 'div.ipc-metadata-list-item__content-container'
@@ -77,7 +79,7 @@ class FetchImdb:
         self.soup = None
         self.movie = {}
         self.movie['base'] = {}
-        self.movie['seasons'] = {}
+        self.movie['seasons'] = []
 
         self._load_dictionary()
 
@@ -87,27 +89,68 @@ class FetchImdb:
         if self.movie['base']['type'] == 'series':
             self.seasons_count = self._extract_seasons_count()
 
+            # calculate the length
+            full_episode_count_elem = self.soup.select_one('section[data-testid="episodes-widget"] span[class="ipc-title__subtext"]')
+            if full_episode_count_elem:
+                full_episode_count = int(full_episode_count_elem.get_text(strip=True))
+            else:
+                full_episode_count = 1
+            full_episode_index = 0
+
             for season in range(1, self.seasons_count + 1):
 
-                # new season added
-                self.movie['seasons'][season] = []
+                seasons_list = []
 
                 # open the recent season's page
                 self._fetch_episodes_page(self.imdb_id, season)
 
+                #spinner = ['\\', '|', '/', '-']
                 episode_row = self.episodes_soup.select('h4[data-testid="slate-list-card-title"] a[class="ipc-title-link-wrapper"]')
                 episode_index = 1
                 for episode in episode_row:
+
+
+                    full_episode_index = self._refresh_progress_bar(count=full_episode_count, index=full_episode_index, text='Season', value=season, progress_width=None)
+
+#                    terminal_width = shutil.get_terminal_size().columns
+#                    progress_width = terminal_width - 30  # Reserve space for text
+#                    #progress_width = 50
+#
+#                    full_episode_index += 1
+#                    progress = int((full_episode_index / full_episode_count) * progress_width)
+#                    bar = '\033[92m' + '▄' * progress + '\033[94m' + '▁' * (progress_width - progress) + '\033[0m'
+#
+#                    print(f'\rseason-{season}: [{bar}] {full_episode_index}/{full_episode_count}\033[K', end='', flush=True)
+
+
+
+
                     imdb_id = episode['href'].split('/')[2]
 
                     recent_episode_dict = {}
                     recent_episode_dict['sequence'] = episode_index
                     self._collect_data(imdb_id, recent_episode_dict)
-                    self.movie['seasons'][season].append(recent_episode_dict)
+
+                    seasons_list.append(recent_episode_dict)
 
                     episode_index += 1
-                    #self.seasons.append(episode_id)
-                    print(imdb_id)
+
+                    # print(f'\r{season}: {spinner[episode_index % 4]}', end='', flush=True)
+
+                self.movie['seasons'].append(seasons_list)
+
+    def _refresh_progress_bar(self, count, index, text=None, value=None, progress_width=None):
+
+        if progress_width is None:
+            terminal_width = shutil.get_terminal_size().columns
+            progress_width = terminal_width - 30  # Reserve space for text
+
+        progress = int((index / count) * progress_width)
+        bar = '\033[92m' + '▄' * progress + '\033[94m' + '▁' * (progress_width - progress) + '\033[0m'
+
+        print(f'\r{text}-{value}: [{bar}] {index}/{count}\033[K', end='', flush=True)
+
+        return index + 1
 
     def _reset_pages(self):
         if hasattr(self, 'releaseinfo_soup'):
@@ -119,11 +162,16 @@ class FetchImdb:
         if hasattr(self, 'episode_soup'):
             del self.episode_soup
 
+        if hasattr(self, 'plotsummary_soup'):
+            del self.plotsummary_soup
+
     def _load_dictionary(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        dictionary_path = os.path.join(current_dir, '..', 'homeflix', 'translator', 'dictionary.yaml')
+        dictionary_path = os.path.join(current_dir, '../..', 'homeflix', 'translator', 'dictionary.yaml')
         with open(dictionary_path, 'r') as file:
             self.dictionary = yaml.safe_load(file)
+
+        self.existing_genres = [k for k, v in self.dictionary['genre']['movie'].items()]
 
     def _collect_data(self, imdb_id, source):
         self._reset_pages()
@@ -136,9 +184,10 @@ class FetchImdb:
         source['original_countries'] = self._extract_countries()
         source['original_language'] = self._extract_language()
         source['original_title'] = self._extract_title(imdb_id)
+        source['storyline'] = self._extract_storyline(imdb_id)
         source['year'] = self._extract_year()
         source['titles'] = self._extract_titles(imdb_id)
-        source['length'] = self._extract_length()
+        source['length'], source['runtime_sec'] = self._extract_length()
         source['genres'] = self._extract_genres()
         source['stars'] = self._extract_stars()
         source['actors'] = self._extract_actors(imdb_id)
@@ -248,6 +297,9 @@ class FetchImdb:
         titles = {}
         response = requests.get(url, headers=headers)
         titles_json = response.json()
+
+        if not titles_json['data'] or not titles_json['data']['title'] or not titles_json['data']['title']['akas'] or not titles_json['data']['title']['akas']['edges']:
+            return titles
         titles_list = titles_json['data']['title']['akas']['edges']
         for title_json in titles_list:
             title = title_json['node']['displayableProperty']['value']['plainText']
@@ -308,8 +360,8 @@ class FetchImdb:
             # Convert to hh:mm:ss format
             hours = total_minutes // 60
             minutes = total_minutes % 60
-            return f"{hours:02d}:{minutes:02d}:00"
-        return None
+            return f"{hours:02d}:{minutes:02d}:00", total_minutes*60
+        return None, None
 
     def _extract_genres(self):
         genre_elems = self.soup.select(self.GENRES_LOCATOR)
@@ -317,7 +369,8 @@ class FetchImdb:
         for genre_elem in genre_elems:
             genre = genre_elem.get_text(strip=True).lower()
             translated_genre = self._translate_genre(genre)
-            genres.append(translated_genre)
+            if translated_genre:
+                genres.append(translated_genre)
         return genres
 
     def _translate_genre(self, genre):
@@ -326,11 +379,19 @@ class FetchImdb:
             "film-noir": "film_noir"
         }
 
-        # Convert input to lowercase to make the search case-insensitive
-        genre_lower = genre.lower()
+        converted_genre = genre.lower().replace("-", "_").replace(" ", "_")
+        converted_genre = genre_dict.get(converted_genre, converted_genre)
+        converted_genre = converted_genre if converted_genre in self.existing_genres else ""
 
-        # Return the translated genre if found, otherwise return the original genre
-        return genre_dict.get(genre_lower, genre_lower)
+        return converted_genre
+
+    def _extract_storyline(self, imdb_id):
+        self._fetch_plotsummary_page(imdb_id)
+
+        storyline_row = self.plotsummary_soup.select_one(self.STORYLINE_LOCATOR)
+        storyline = storyline_row.get_text(strip=True)
+
+        return storyline
 
     # Add extraction method
     def _extract_stars(self):
@@ -411,6 +472,12 @@ class FetchImdb:
         response = requests.get(url, headers=headers)
         self.soup = BeautifulSoup(response.content, 'html.parser')
 
+    def _fetch_plotsummary_page(self, imdb_id):
+        if not hasattr(self, 'plotsummary_soup'):
+            releaseinfo_url = f"https://www.imdb.com/title/{imdb_id}/plotsummary"
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept-Language': 'en-US,en;q=0.9'}
+            response = requests.get(releaseinfo_url, headers=headers)
+            self.plotsummary_soup = BeautifulSoup(response.content, 'html.parser')
 
     def _fetch_releaseinfo_page(self, imdb_id):
         if not hasattr(self, 'releaseinfo_soup'):
@@ -441,103 +508,160 @@ class FetchImdb:
         Exctract number of season from the main site (self.soup)
         """
 
+        season_option = self.soup.select_one('select[id="browse-episodes-season"]')
+        aria_label = season_option.get('aria-label')
+        return int(re.search(r'\d+', aria_label).group())
+
         # Look for season selector dropdown
-        season_options = self.soup.select('select[id="browse-episodes-season"] option')
-        if season_options:
-            return len([opt for opt in season_options if opt.get('value') and opt.get('value').isdigit()])
+#        season_options = self.soup.select('select[id="browse-episodes-season"] option')
+#        print(f"season_options: {season_options}")
+#        if season_options:
+#            return len([opt for opt in season_options if opt.get('value') and opt.get('value').isdigit()])
+#        return 0
 
-        return 0
+    def getSeasonCounts(self):
+        return self.seasons_count
 
+    def getEpisodeCounts(self, season):
+        """
+        Get the number of episodes for a given season
+        """
+        return len(self.movie['seasons'][season])
 
+    def getEpisodes(self, season):
+        """
+        Get the episodes for a given season
+        """
+        return self.movie['seasons'][season]
 
+    def getStoryline(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['storyline']
+        return self.movie['base']['storyline']
 
-    def getOriginalCountries(self):
+    def getOriginalCountries(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['original_countries']
         return self.movie['base']['original_countries']
 
-    def getOriginalLanguage(self):
+    def getOriginalLanguage(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['original_language']
         return self.movie['base']['original_language']
 
-    def getOriginalTitle(self):
+    def getOriginalTitle(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['original_title']
         return self.movie['base']['original_title']
 
     def getType(self):
         return self.movie['base']['type']
 
-    def getYear(self):
+    def getYear(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['year']
         return self.movie['base']['year']
 
     def getTitles(self):
         return self.movie['base']['titles']
 
-    def getLength(self):
+    def getLength(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['length']
         return self.movie['base']['length']
 
-    def getGenres(self):
+    def getRuntimeSec(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['runtime_sec']
+        return self.movie['base']['runtime_sec']
+
+    def getGenres(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['genres']
         return self.movie['base']['genres']
 
-    def getStars(self):
+    def getStars(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['stars']
         return self.movie['base']['stars']
 
-    def getActors(self):
+    def getActors(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['actors']
         return self.movie['base']['actors']
 
-    def getWriters(self):
+    def getWriters(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['writers']
         return self.movie['base']['writers']
 
-    def getDirectors(self):
+    def getDirectors(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['directors']
         return self.movie['base']['directors']
+
+    def getId(self, season_index=None, episode_index=None):
+        if season_index is not None and episode_index is not None:
+            return self.movie['seasons'][season_index][episode_index]['id']
+        return self.movie['base']['id']
+
+    def getSequence(self, season_index, episode_index):
+        return self.movie['seasons'][season_index][episode_index]['sequence']
 
 if __name__ == "__main__":
 
-    EXTRA_ISO_COUNTRY_CODE_LIST = ["hu-HU"]
-    CATEGORY = "movie"
-    PRIMARYMEDIATYPE = "video"
-    SOUNDS = ["hu", "en"]
-    SUBS = ["en"]
-    THEMES = []
+#    EXTRA_ISO_COUNTRY_CODE_LIST = ["hu-HU"]
+#    CATEGORY = "movie"
+#    PRIMARYMEDIATYPE = "video"
+#    SOUNDS = ["hu", "en"]
+#    SUBS = ["en"]
+#    THEMES = []
 
-    IMDB_ID = "tt0163978"  # IMDB ID for individual movie - The beach
-    IMDB_ID = "tt0308671"  # IMDB ID for individual movie - Tycoon A new russion
+#    IMDB_ID = "tt0163978"  # IMDB ID for individual movie - The beach
+#    IMDB_ID = "tt0308671"  # IMDB ID for individual movie - Tycoon A new russion
     IMDB_ID = "tt0137523"  # IMDB ID for individual movie - Fight club
-
-    IMDB_ID = "tt0098936"  # IMDB ID for series - Twin Peaks
-#    IMDB_ID = "tt0108778"  # IMDB ID for series - Friends
-#    IMDB_ID = "tt0106179"  # IMDB ID for series - X Files
 #    IMDB_ID = "tt0078350"  # IMDB ID for individual movie - The Swarm
 
-    cons_path = os.path.expanduser('~/tmp/homeflix/')
-    dest_path = os.path.expanduser('/media/akoel/vegyes/MEDIA/01.Movie/01.Standalone')
+#    IMDB_ID = "tt0098936"  # IMDB ID for series - Twin Peaks
+#    IMDB_ID = "tt0487831"  # IMDB ID for series - The IT Crowd
+#    IMDB_ID = "tt0108778"  # IMDB ID for series - Friends
+#    IMDB_ID = "tt0106179"  # IMDB ID for series - X Files
 
-    need_to_copy_to_destination_path = False
-    need_to_file = True
+#    cons_path = os.path.expanduser('~/tmp/homeflix/')
+#    need_to_copy_to_destination_path = False
+#    need_to_file = True
 
     imdb = FetchImdb(IMDB_ID)
-
     type = imdb.getType()
-    original_title = imdb.getOriginalTitle()
-    original_countries = imdb.getOriginalCountries()
-    original_language = imdb.getOriginalLanguage()
-    year = imdb.getYear()
-    titles = imdb.getTitles()
-    length = imdb.getLength()
-    genres = imdb.getGenres()
-    stars = imdb.getStars()
-    actors = imdb.getActors()
-    writers = imdb.getWriters()
-    directors = imdb.getDirectors()
 
-#    print(f"Type: {type}")
-#    print(f"Year: {year}")
-#    print(f"Original Title: {original_title}")
-#    print(f"Original Countries: {original_countries}")
-#    print(f"Original Language: {original_language}")
-#    print(f"Titles: {titles}")
-#    print(f"Length: {length}")
-#    print(f"Genres: {genres}")
-#    print(f"Stars: {stars}")
-#    print(f"Actors: {actors}")
-#    print(f"Writers: {writers}")
-#    print(f"Directors: {directors}")
+    if type == 'series':
+        season_counts = imdb.getSeasonCounts()
 
-    print(f"FULL: {imdb.movie}")
+        print(f"{imdb.getOriginalTitle()}")
+        for season_index in range(0, season_counts):
+
+            print(f"  Season {season_index+1}")
+            episode_counts = len(imdb.getEpisodes(season_index))
+            for episode_index in range(0, episode_counts):
+                imdb.getOriginalTitle(season_index, episode_index)
+                print(f"    episode:    {imdb.getSequence(season_index, episode_index)}")
+                print(f"      title:    {imdb.getOriginalTitle(season_index, episode_index)}")
+                print(f"      year:     {imdb.getYear(season_index, episode_index)}")
+                print(f"      origin:   {imdb.getOriginalCountries(season_index, episode_index)}")
+                print(f"      director: {imdb.getDirectors(season_index, episode_index)}")
+                print(f"      writer:   {imdb.getWriters(season_index, episode_index)}")
+                #print(f"      actors:   {imdb.getActors(season_index, episode_index)}")
+
+    else:
+        print(f"      title:     {imdb.getOriginalTitle()}")
+        print(f"      storyline: {imdb.getStoryline()}")
+        print(f"      year:      {imdb.getYear()}")
+        print(f"      origin:    {imdb.getOriginalCountries()}")
+        print(f"      director:  {imdb.getDirectors()}")
+        print(f"      writer:    {imdb.getWriters()}")
+        print(f"      actors:    {imdb.getActors()}")
+        print(f"      genres:    {imdb.getGenres()}")
+
+
+
 
