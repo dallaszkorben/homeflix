@@ -91,7 +91,7 @@ handle networking
     sudo systemctl enable networking
     sudo systemctl disable networking
 
-playem
+homeflix
 
     logs
 
@@ -118,5 +118,31 @@ playem
             sudo mount -o bind $ABSOLUTE_PATH /var/www/playem/$RELATIVE_PATH/
             sleep 20
             sudo systemctl restart apache2
+
+    REST
+        login and save the cookie
+            $ curl -c cookies_1.txt --header "Content-Type: application/json" --request POST --data '{ "username": "admin", "password": "admin"}' http://localhost:80/auth/login
+
+        get the logged in user data - using the same cookie
+            $ curl -b cookies_1.txt --header "Content-Type: application/json" --request GET http://localhost:80/personal/user_data/request
+
+        logout
+            $ curl -b cookies.txt --header "Content-Type: application/json" --request POST --data '{}' http://localhost:80/auth/logout
+
+
+    Reset dbs
+        cd /var/www/playem/python
+        source /var/www/playem/python/env/bin/activate
+        python3
+
+        import sqlite3
+        from playem.card.database import SqlDatabase as DB
+        db=DB(None)
+        con = sqlite3.connect("/home/akoel/.playem/playem.db")
+
+        con.execute('DROP TABLE History;').fetchall()
+        con.execute('DROP TABLE Rating;').fetchall()
+        db.recreate_personal_dbs()
+        db.recreate_static_dbs()
 
 
