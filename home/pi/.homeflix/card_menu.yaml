@@ -25,83 +25,78 @@ definitions:
         image: images/categories/movie.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: movies
       description:
         image: images/categories/movie.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: movies
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: movies
       execution:
         container_list:
           # Movie container
-          - order: 0
-            static_hard_coded:
+          - static_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: movies
               thumbnails:
                 # ---------------
                 # Films thumbnail
                 # ---------------
-                - order: 0
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/movie_mixed.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_mixed
                   description:
                     image: images/categories/movie_mixed.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_mixed
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_mixed
                   execution:
                     container_list:
                       # Movie Filte container
-                      - order: 0
-                        static_hard_coded:
+                      - static_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_filter
                           thumbnails:
                             # Movie filtered by Genre - Hard Coded
-                            - order: 0
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/movie_by_genre.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_genre
                               description:
                                 image: images/categories/movie_by_genre.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_genre
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_genre
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -110,8 +105,7 @@ definitions:
                                         category: movie
                                         genres: drama_AND__NOT_comedy_AND__NOT_war_AND__NOT_satire_AND__NOT_crime_AND__NOT_thriller_AND__NOT_fantasy_AND__NOT_music_AND__NOT_scifi_AND__NOT_horror
                                       request: *request_collect_highest_mixed
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -120,8 +114,7 @@ definitions:
                                         category: movie
                                         genres: scifi_AND__NOT_trash
                                       request: *request_collect_highest_mixed
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -130,8 +123,7 @@ definitions:
                                         category: movie
                                         genres: fantasy
                                       request: *request_collect_highest_mixed
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -140,8 +132,7 @@ definitions:
                                         category: movie
                                         genres: comedy_AND__NOT_teen
                                       request: *request_collect_highest_mixed
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -150,8 +141,7 @@ definitions:
                                         category: movie
                                         genres: teen
                                       request: *request_collect_highest_mixed
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -160,8 +150,7 @@ definitions:
                                         category: movie
                                         genres: satire
                                       request: *request_collect_highest_mixed
-                                  - order: 6
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -170,8 +159,7 @@ definitions:
                                         category: movie
                                         genres: crime_AND__NOT_trash
                                       request: *request_collect_highest_mixed
-                                  - order: 7
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -180,8 +168,7 @@ definitions:
                                         category: movie
                                         genres: action_AND__NOT_trash
                                       request: *request_collect_highest_mixed
-                                  - order: 8
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -190,8 +177,7 @@ definitions:
                                         category: movie
                                         genres: thriller
                                       request: *request_collect_highest_mixed
-                                  - order: 9
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -200,8 +186,7 @@ definitions:
                                         category: movie
                                         genres: horror
                                       request: *request_collect_highest_mixed
-                                  - order: 10
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -210,8 +195,7 @@ definitions:
                                         category: movie
                                         genres: western
                                       request: *request_collect_highest_mixed
-                                  - order: 11
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -220,8 +204,7 @@ definitions:
                                         category: movie
                                         genres: war
                                       request: *request_collect_highest_mixed
-                                  - order: 12
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -230,8 +213,7 @@ definitions:
                                         category: movie
                                         genres: music
                                       request: *request_collect_highest_mixed
-                                  - order: 13
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -240,8 +222,7 @@ definitions:
                                         category: movie
                                         genres: history
                                       request: *request_collect_highest_mixed
-                                  - order: 14
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -250,8 +231,7 @@ definitions:
                                         category: movie
                                         genres: documentary
                                       request: *request_collect_highest_mixed
-                                  - order: 15
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_movie
@@ -261,28 +241,26 @@ definitions:
                                         genres: trash
                                       request: *request_collect_highest_mixed
                             # Movie filtered by Theme - Hard Coded
-                            - order: 1
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/movie_by_theme.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_theme
                               description:
                                 image: images/categories/movie_by_theme.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_theme
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_theme
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -291,8 +269,7 @@ definitions:
                                         category: movie
                                         themes: apocalypse
                                       request: *request_collect_highest_mixed
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -301,8 +278,7 @@ definitions:
                                         category: movie
                                         themes: dystopia
                                       request: *request_collect_highest_mixed
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -311,8 +287,7 @@ definitions:
                                         category: movie
                                         themes: conspiracy
                                       request: *request_collect_highest_mixed
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -321,8 +296,7 @@ definitions:
                                         category: movie
                                         themes: drog
                                       request: *request_collect_highest_mixed
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -331,8 +305,7 @@ definitions:
                                         category: movie
                                         themes: maffia
                                       request: *request_collect_highest_mixed
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -341,8 +314,7 @@ definitions:
                                         category: movie
                                         themes: broker
                                       request: *request_collect_highest_mixed
-                                  - order: 6
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -351,8 +323,7 @@ definitions:
                                         category: movie
                                         themes: media
                                       request: *request_collect_highest_mixed
-                                  - order: 7
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -361,8 +332,7 @@ definitions:
                                         category: movie
                                         themes: psychopathy
                                       request: *request_collect_highest_mixed
-                                  - order: 8
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -371,8 +341,7 @@ definitions:
                                         category: movie
                                         themes: evil
                                       request: *request_collect_highest_mixed
-                                  - order: 9
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -381,8 +350,7 @@ definitions:
                                         category: movie
                                         themes: alien
                                       request: *request_collect_highest_mixed
-                                  - order: 10
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_themes
@@ -392,28 +360,26 @@ definitions:
                                         themes: revenge
                                       request: *request_collect_highest_mixed
                             # Movie Filtered by Director - Queried
-                            - order: 2
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/movie_by_director.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_director
                               description:
                                 image: images/categories/movie_by_director.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_director
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_director
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_queried:
+                                  - dynamic_queried:
                                       pre_query:
                                         data:
                                           category: movie
@@ -435,28 +401,26 @@ definitions:
                                         title:
                                           - variable: data_value
                             # Movie Filtered by Actor - Queried
-                            - order: 3
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/movie_by_actor.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_actor
                               description:
                                 image: images/categories/movie_by_actor.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_actor
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_actor
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_queried:
+                                  - dynamic_queried:
                                       pre_query:
                                         data:
                                           category: movie
@@ -477,27 +441,25 @@ definitions:
                                         title:
                                           - variable: data_value
                             # Movie Filtered by ABC - Queried
-                            - order: 4
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/movie_by_title_abc.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_title_abc
                               description:
                                 image: images/categories/movie_by_title_abc.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_title_abc
                               history:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: movie_by_title_abc
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_queried:
+                                  - dynamic_queried:
                                       pre_query:
                                         data:
                                           category: movie
@@ -521,29 +483,27 @@ definitions:
                 # ----------------
                 # Series thumbnail
                 # ----------------
-                - order: 1
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/movie_series.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_series
                   description:
                     image: images/categories/movie_series.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_series
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_series
                   execution:
                     container_list:
                       # Tale
-                      - order: 0
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -556,8 +516,7 @@ definitions:
                             genres: tale
                           request: *request_collect_highest_mixed
                       # Drama
-                      - order: 1
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -570,8 +529,7 @@ definitions:
                             genres: drama
                           request: *request_collect_highest_mixed
                       # Comedy
-                      - order: 2
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -584,8 +542,7 @@ definitions:
                             genres: comedy
                           request: *request_collect_highest_mixed
                       # Thriller
-                      - order: 3
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -598,8 +555,7 @@ definitions:
                             genres: thriller
                           request: *request_collect_highest_mixed
                       # Action
-                      - order: 4
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -612,8 +568,7 @@ definitions:
                             genres: action
                           request: *request_collect_highest_mixed
                       # Scifi
-                      - order: 5
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -626,8 +581,7 @@ definitions:
                             genres: scifi
                           request: *request_collect_highest_mixed
                       # Documentary
-                      - order: 6
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -642,29 +596,27 @@ definitions:
                 # ----------------
                 # Sequel thumbnail
                 # ----------------
-                - order: 2
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/movie_sequels.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_sequels
                   description:
                     image: images/categories/movie_sequels.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_sequels
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_sequels
                   execution:
                     container_list:
                       # Drama
-                      - order: 0
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -677,8 +629,7 @@ definitions:
                             genres: drama
                           request: *request_collect_highest_mixed
                       # Comedy
-                      - order: 1
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -691,8 +642,7 @@ definitions:
                             genres: comedy
                           request: *request_collect_highest_mixed
                       # Thriller
-                      - order: 2
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -705,8 +655,7 @@ definitions:
                             genres: thriller
                           request: *request_collect_highest_mixed
                       # Action
-                      - order: 3
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -719,8 +668,7 @@ definitions:
                             genres: action
                           request: *request_collect_highest_mixed
                       # Scifi
-                      - order: 4
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - variable: refToThis.parent_thumbnail_title
                             - text: "-"
@@ -735,29 +683,27 @@ definitions:
                 # ----------------
                 # Remake thumbnail
                 # ----------------
-                - order: 3
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/movie_remakes.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_remakes
                   description:
                     image: images/categories/movie_remakes.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_remakes
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_remakes
                   execution:
                     container_list:
                     #
-                      - order: 0
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
                                 translator: translated_genre_movie
@@ -769,62 +715,57 @@ definitions:
                 # ------------------
                 # Playlist thumbnail
                 # ------------------
-                - order: 4
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/movie_playlists.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_playlists
                   description:
                     image: images/categories/movie_playlists.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_playlists
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: movie_playlists
                   execution:
                     container_list:
                       # Interrupted movies
-                      - order: 0
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
-                                key: movie_interrupted
+                                translator: translated_labels
+                                key: movie_continue_playing
                           data:
                             category: movie
-                            playlist: interrupted
+                            view_state: interrupted
                           request: *request_collect_lowest
                       # Last watched movies
-                      - order: 1
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_last_watched
                           data:
                             category: movie
-                            playlist: last_watched
+                            view_state: last_watched
                           request: *request_collect_lowest
                       # Most watched movies
-                      - order: 2
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_most_watched
                           data:
                             category: movie
-                            playlist: most_watched
+                            view_state: most_watched
                           request: *request_collect_lowest
                       # Existing TAGs
-                      - order: 3
-                        dynamic_queried:
+                      - dynamic_queried:
                           pre_query:
                             data:
                               category: movie
@@ -844,6 +785,42 @@ definitions:
                             title:
                               - variable: data_dict["name"]
 
+                # ------------------
+                # Search thumbnail
+                # ------------------
+                - thumbnail:
+                    image: images/categories/movie_search.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: movie_search
+                  description:
+                    image: images/categories/movie_search.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: movie_search
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: movie_search
+                  execution:
+                    container_type: search
+                    container_list:
+#                      # ????
+#                      - dynamic_search:
+#                          title:
+#                            - trans:
+#                                translator: translated_labels
+#                                key: movie_continue_playing
+#                          data:
+#                            category: movie
+#                            playlist: interrupted
+#                          request: *request_collect_lowest
+
+
+
 # ====================================================================
 
     # ===============
@@ -854,89 +831,84 @@ definitions:
         image: images/categories/music.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: music
       description:
         image: images/categories/music.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: music
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: music
       execution:
         container_list:
           # -------------
           # Music - Video
           # -------------
-          - order: 0
-            static_hard_coded:
+          - static_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: music_video
               thumbnails:
                 # ------------------
                 # Music-Video-Decade
                 # ------------------
-                - order: 0
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_by_decade.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_decade
                   description:
                     image: images/categories/music_by_decade.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_decade
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_decade
                   execution:
                     container_list:
                       # ------------------
                       # Music-Video-Decade
                       # ------------------
-                      - order: 0
-                        static_hard_coded:
+                      - static_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: music_by_decade
                           thumbnails:
                             # -----------------------
                             # Music-Video-Decade-Band
                             # -----------------------
-                            - order: 0
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               description:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "60s"
                                       data:
@@ -944,8 +916,7 @@ definitions:
                                         level: band
                                         decade: 60s
                                       request: *request_collect_highest_mixed
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "70s"
                                       data:
@@ -953,8 +924,7 @@ definitions:
                                         level: band
                                         decade: 70s
                                       request: *request_collect_highest_mixed
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "80s"
                                       data:
@@ -962,8 +932,7 @@ definitions:
                                         level: band
                                         decade: 80s
                                       request: *request_collect_highest_mixed
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "90s"
                                       data:
@@ -971,8 +940,7 @@ definitions:
                                         level: band
                                         decade: 90s
                                       request: *request_collect_highest_mixed
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2000s"
                                       data:
@@ -980,8 +948,7 @@ definitions:
                                         level: band
                                         decade: 2000s
                                       request: *request_collect_highest_mixed
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2010s"
                                       data:
@@ -993,28 +960,26 @@ definitions:
                             # --------------------------
                             # Music-Video-Decade-Records
                             # --------------------------
-                            - order: 1
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               description:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "60s"
                                       data:
@@ -1022,8 +987,7 @@ definitions:
                                         level: band
                                         decade: 60s
                                       request: *request_collect_lowest
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "70s"
                                       data:
@@ -1031,8 +995,7 @@ definitions:
                                         level: band
                                         decade: 70s
                                       request: *request_collect_lowest
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "80s"
                                       data:
@@ -1040,8 +1003,7 @@ definitions:
                                         level: band
                                         decade: 80s
                                       request: *request_collect_lowest
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "90s"
                                       data:
@@ -1049,8 +1011,7 @@ definitions:
                                         level: band
                                         decade: 90s
                                       request: *request_collect_lowest
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2000s"
                                       data:
@@ -1058,8 +1019,7 @@ definitions:
                                         level: band
                                         decade: 2000s
                                       request: *request_collect_lowest
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2010s"
                                       data:
@@ -1071,62 +1031,58 @@ definitions:
                 # -----------------
                 # Music-Video-Genre
                 # -----------------
-                - order: 1
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_by_genre.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_genre
                   description:
                     image: images/categories/music_by_genre.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_genre
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_genre
                   execution:
                     container_list:
                       # ------------------
                       # Music-Video-Genre
                       # ------------------
-                      - order: 0
-                        static_hard_coded:
+                      - static_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: music_by_genre
                           thumbnails:
                             # -----------------------
                             # Music-Video-Genre-Band
                             # -----------------------
-                            - order: 0
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               description:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               execution:
                                 container_list:
                                   # New wave
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1137,8 +1093,7 @@ definitions:
                                         genres: new_wave
                                       request: *request_collect_highest_mixed
                                   # Electronic
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1149,8 +1104,7 @@ definitions:
                                         genres: electronic
                                       request: *request_collect_highest_mixed
                                   # Pop
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1161,8 +1115,7 @@ definitions:
                                         genres: pop
                                       request: *request_collect_highest_mixed
                                   # Synth
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1173,8 +1126,7 @@ definitions:
                                         genres: synth
                                       request: *request_collect_highest_mixed
                                   # Rock
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1185,8 +1137,7 @@ definitions:
                                         genres: rock
                                       request: *request_collect_highest_mixed
                                   # Rock
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1197,8 +1148,7 @@ definitions:
                                         genres: alternative
                                       request: *request_collect_highest_mixed
                                   # Punk
-                                  - order: 6
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1212,29 +1162,27 @@ definitions:
                             # -----------------------
                             # Music-Video-Genre-Record
                             # -----------------------
-                            - order: 1
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               description:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               execution:
                                 container_list:
                                   # New wave
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1245,8 +1193,7 @@ definitions:
                                         genres: new_wave
                                       request: *request_collect_lowest
                                   # Electronic
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1257,8 +1204,7 @@ definitions:
                                         genres: electronic
                                       request: *request_collect_lowest
                                   # Pop
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1269,8 +1215,7 @@ definitions:
                                         genres: pop
                                       request: *request_collect_lowest
                                   # Synth
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1281,8 +1226,7 @@ definitions:
                                         genres: synth
                                       request: *request_collect_lowest
                                   # Rock
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1293,8 +1237,7 @@ definitions:
                                         genres: rock
                                       request: *request_collect_lowest
                                   # Rock
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1305,8 +1248,7 @@ definitions:
                                         genres: alternative
                                       request: *request_collect_lowest
                                   # Punk
-                                  - order: 6
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1320,28 +1262,26 @@ definitions:
                 # ---------------
                 # Music-Video-ABC
                 # ---------------
-                - order: 2
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_by_band_abc.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_band_abc
                   description:
                     image: images/categories/music_by_band_abc.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_band_abc
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_band_abc
                   execution:
                     container_list:
-                      - order: 0
-                        dynamic_queried:
+                      - dynamic_queried:
                           pre_query:
                             data:
                               category: music_video
@@ -1366,51 +1306,47 @@ definitions:
                 # --------------------
                 # Music-Video-Playlist
                 # --------------------
-                - order: 3
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_video_playlists.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_video_playlists
                   description:
                     image: images/categories/music_video_playlists.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_video_playlists
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_video_playlists
                   execution:
                     container_list:
                       # Last watched movies
-                      - order: 0
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_last_watched
                           data:
                             category: music_video
-                            playlist: last_watched
+                            view_state: last_watched
                           request: *request_collect_lowest
                       # Most watched movies
-                      - order: 1
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_most_watched
                           data:
                             category: music_video
-                            playlist: most_watched
+                            view_state: most_watched
                           request: *request_collect_lowest
                       # Existing TAGs
-                      - order: 2
-                        dynamic_queried:
+                      - dynamic_queried:
                           pre_query:
                             data:
                               category: music_video
@@ -1433,71 +1369,66 @@ definitions:
           # -------------
           # Music - Audio
           # -------------
-          - order: 1
-            static_hard_coded:
+          - static_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: music_audio
               thumbnails:
                 # ------------------
                 # Music-Audio-Decade
                 # ------------------
-                - order: 0
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_by_decade.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_decade
                   description:
                     image: images/categories/music_by_decade.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_decade
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_decade
                   execution:
                     container_list:
                       # ------------------
                       # Music-Audio-Decade
                       # ------------------
-                      - order: 0
-                        static_hard_coded:
+                      - static_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: music_by_decade
                           thumbnails:
                             # -----------------------
                             # Music-Audio-Decade-Band
                             # -----------------------
-                            - order: 0
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               description:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "60s"
                                       data:
@@ -1505,8 +1436,7 @@ definitions:
                                         level: band
                                         decade: 60s
                                       request: *request_collect_highest_mixed
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "70s"
                                       data:
@@ -1514,8 +1444,7 @@ definitions:
                                         level: band
                                         decade: 70s
                                       request: *request_collect_highest_mixed
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "80s"
                                       data:
@@ -1523,8 +1452,7 @@ definitions:
                                         level: band
                                         decade: 80s
                                       request: *request_collect_highest_mixed
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "90s"
                                       data:
@@ -1532,8 +1460,7 @@ definitions:
                                         level: band
                                         decade: 90s
                                       request: *request_collect_highest_mixed
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2000s"
                                       data:
@@ -1541,8 +1468,7 @@ definitions:
                                         level: band
                                         decade: 2000s
                                       request: *request_collect_highest_mixed
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2010s"
                                       data:
@@ -1554,28 +1480,26 @@ definitions:
                             # --------------------------
                             # Music-Audio-Decade-Records
                             # --------------------------
-                            - order: 1
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               description:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               execution:
                                 container_list:
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "60s"
                                       data:
@@ -1583,8 +1507,7 @@ definitions:
                                         level: band
                                         decade: 60s
                                       request: *request_collect_lowest
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "70s"
                                       data:
@@ -1592,8 +1515,7 @@ definitions:
                                         level: band
                                         decade: 70s
                                       request: *request_collect_lowest
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "80s"
                                       data:
@@ -1601,8 +1523,7 @@ definitions:
                                         level: band
                                         decade: 80s
                                       request: *request_collect_lowest
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "90s"
                                       data:
@@ -1610,8 +1531,7 @@ definitions:
                                         level: band
                                         decade: 90s
                                       request: *request_collect_lowest
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2000s"
                                       data:
@@ -1619,8 +1539,7 @@ definitions:
                                         level: band
                                         decade: 2000s
                                       request: *request_collect_lowest
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - text: "2010s"
                                       data:
@@ -1632,62 +1551,58 @@ definitions:
                 # -----------------
                 # Music-Audio-Genre
                 # -----------------
-                - order: 1
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_by_genre.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_genre
                   description:
                     image: images/categories/music_by_genre.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_genre
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_genre
                   execution:
                     container_list:
                       # ------------------
                       # Music-Audio-Genre
                       # ------------------
-                      - order: 0
-                        static_hard_coded:
+                      - static_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: music_by_genre
                           thumbnails:
                             # -----------------------
                             # Music-Audio-Genre-Band
                             # -----------------------
-                            - order: 0
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               description:
                                 image: images/categories/music_band.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_band
                               execution:
                                 container_list:
                                   # New wave
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1698,8 +1613,7 @@ definitions:
                                         genres: new_wave
                                       request: *request_collect_highest_mixed
                                   # Electronic
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1710,8 +1624,7 @@ definitions:
                                         genres: electronic
                                       request: *request_collect_highest_mixed
                                   # Pop
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1722,8 +1635,7 @@ definitions:
                                         genres: pop
                                       request: *request_collect_highest_mixed
                                   # Synth
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1734,8 +1646,7 @@ definitions:
                                         genres: synth
                                       request: *request_collect_highest_mixed
                                   # Rock
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1746,8 +1657,7 @@ definitions:
                                         genres: rock
                                       request: *request_collect_highest_mixed
                                   # Rock
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1758,8 +1668,7 @@ definitions:
                                         genres: alternative
                                       request: *request_collect_highest_mixed
                                   # Punk
-                                  - order: 6
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1773,29 +1682,27 @@ definitions:
                             # -----------------------
                             # Music-Audio-Genre-Record
                             # -----------------------
-                            - order: 1
-                              thumbnail:
+                            - thumbnail:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               description:
                                 image: images/categories/music_record.jpg
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               history:
                                 title:
                                   - trans:
-                                      translator: translated_titles
+                                      translator: translated_labels
                                       key: music_level_record
                               execution:
                                 container_list:
                                   # New wave
-                                  - order: 0
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1806,8 +1713,7 @@ definitions:
                                         genres: new_wave
                                       request: *request_collect_lowest
                                   # Electronic
-                                  - order: 1
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1818,8 +1724,7 @@ definitions:
                                         genres: electronic
                                       request: *request_collect_lowest
                                   # Pop
-                                  - order: 2
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1830,8 +1735,7 @@ definitions:
                                         genres: pop
                                       request: *request_collect_lowest
                                   # Synth
-                                  - order: 3
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1842,8 +1746,7 @@ definitions:
                                         genres: synth
                                       request: *request_collect_lowest
                                   # Rock
-                                  - order: 4
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1854,8 +1757,7 @@ definitions:
                                         genres: rock
                                       request: *request_collect_lowest
                                   # Rock
-                                  - order: 5
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1866,8 +1768,7 @@ definitions:
                                         genres: alternative
                                       request: *request_collect_lowest
                                   # Punk
-                                  - order: 6
-                                    dynamic_hard_coded:
+                                  - dynamic_hard_coded:
                                       title:
                                         - trans:
                                             translator: translated_genre_music
@@ -1881,28 +1782,26 @@ definitions:
                 # ---------------
                 # Music-Audio-ABC
                 # ---------------
-                - order: 2
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_by_band_abc.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_band_abc
                   description:
                     image: images/categories/music_by_band_abc.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_band_abc
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_by_band_abc
                   execution:
                     container_list:
-                      - order: 0
-                        dynamic_queried:
+                      - dynamic_queried:
                           pre_query:
                             data:
                               category: music_audio
@@ -1927,51 +1826,47 @@ definitions:
                 # --------------------
                 # Music-Audio-Playlist
                 # --------------------
-                - order: 3
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_audio_playlists.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_audio_playlists
                   description:
                     image: images/categories/music_audio_playlists.jpg
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_audio_playlists
                   history:
                     title:
                       - trans:
-                          translator: translated_titles
+                          translator: translated_labels
                           key: music_audio_playlists
                   execution:
                     container_list:
                       # Last watched movies
-                      - order: 0
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_last_watched
                           data:
                             category: music_audio
-                            playlist: last_watched
+                            view_state: last_watched
                           request: *request_collect_lowest
                       # Most watched movies
-                      - order: 1
-                        dynamic_hard_coded:
+                      - dynamic_hard_coded:
                           title:
                             - trans:
-                                translator: translated_titles
+                                translator: translated_labels
                                 key: movie_most_watched
                           data:
                             category: music_audio
-                            playlist: most_watched
+                            view_state: most_watched
                           request: *request_collect_lowest
                       # Existing TAGs
-                      - order: 2
-                        dynamic_queried:
+                      - dynamic_queried:
                           pre_query:
                             data:
                               category: music_audio
@@ -2001,69 +1896,64 @@ definitions:
         image: images/categories/radioplay.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: radioplay
       description:
         image: images/categories/radioplay.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: radioplay
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: radioplay
       execution:
         container_list:
 
           # Radioplay list
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: radioplay
               data:
                 category: radio_play
               request: *request_collect_highest_mixed
 
           # Interrupted
-          - order: 1
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: radioplay_interrupted
               data:
                 category: radio_play
-                playlist: interrupted
+                view_state: interrupted
               request: *request_collect_lowest
           # Last watched movies
-          - order: 2
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: radioplay_last_watched
               data:
                 category: radio_play
-                playlist: last_watched
+                view_state: last_watched
               request: *request_collect_lowest
           # Most watched movies
-          - order: 3
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: radioplay_most_watched
               data:
                 category: radio_play
-                playlist: most_watched
+                view_state: most_watched
               request: *request_collect_lowest
           # Existing TAGs
-          - order: 4
-            dynamic_queried:
+          - dynamic_queried:
               pre_query:
                 data:
                   category: radio_play
@@ -2092,69 +1982,64 @@ definitions:
         image: images/categories/audiobook.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: audiobook
       description:
         image: images/categories/audiobook.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: audiobook
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: audiobook
       execution:
         container_list:
 
           # audiobook list
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: audiobook
               data:
                 category: audiobook
               request: *request_collect_highest_mixed
 
           # Interrupted
-          - order: 1
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: audiobook_interrupted
               data:
                 category: audiobook
-                playlist: interrupted
+                view_state: interrupted
               request: *request_collect_lowest
           # Last watched movies
-          - order: 2
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: audiobook_last_watched
               data:
                 category: audiobook
-                playlist: last_watched
+                view_state: last_watched
               request: *request_collect_lowest
           # Most watched movies
-          - order: 3
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: audiobook_most_watched
               data:
                 category: audiobook
-                playlist: most_watched
+                view_state: most_watched
               request: *request_collect_lowest
           # Existing TAGs
-          - order: 4
-            dynamic_queried:
+          - dynamic_queried:
               pre_query:
                 data:
                   category: audiobook
@@ -2189,26 +2074,25 @@ definitions:
         image: images/categories/ebook.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: ebook
       description:
         image: images/categories/ebook.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: ebook
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: ebook
       execution:
         container_list:
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: ebook
               data:
                 category: ebook
@@ -2224,26 +2108,25 @@ definitions:
         image: images/categories/dia.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: dia
       description:
         image: images/categories/dia.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: dia
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: dia
       execution:
         container_list:
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: dia
               data:
                 category: dia
@@ -2259,26 +2142,25 @@ definitions:
         image: images/categories/entertainment.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: entertainments
       description:
         image: images/categories/entertainment.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: entertainments
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: entertainments
       execution:
         container_list:
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: entertainment
               data:
                 category: entertainment
@@ -2294,26 +2176,25 @@ definitions:
         image: images/categories/knowledge.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: knowledge
       description:
         image: images/categories/knowledge.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: knowledge
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: knowledge
       execution:
         container_list:
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: knowledge
               data:
                 category: knowledge
@@ -2329,26 +2210,25 @@ definitions:
         image: images/categories/personal.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: personal
       description:
         image: images/categories/personal.jpg
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: personal
       history:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: personal
       execution:
         container_list:
-          - order: 0
-            dynamic_hard_coded:
+          - dynamic_hard_coded:
               title:
                 - trans:
-                    translator: translated_titles
+                    translator: translated_labels
                     key: personal
               data:
                 category: personal
@@ -2364,30 +2244,20 @@ default:
     # ==============
     # = CATEGORIES =
     # ==============
-    - order: 0
-      static_hard_coded:
+    - static_hard_coded:
         title:
           - trans:
-              translator: translated_titles
+              translator: translated_labels
               key: categories
         thumbnails:
 
           # Categories container
-          - order: 0
-            <<: *category_movie
-          - order: 1
-            <<: *category_music
-          - order: 2
-            <<: *category_radioplay
-          - order: 3
-            <<: *category_audiobook
-          - order: 4
-            <<: *category_ebook
-          - order: 5
-            <<: *category_dia
-          - order: 6
-            <<: *category_entertainments
-          - order: 7
-            <<: *category_knowledge
-          - order: 8
-            <<: *category_personal
+          - <<: *category_movie
+          - <<: *category_music
+          - <<: *category_radioplay
+          - <<: *category_audiobook
+          - <<: *category_ebook
+          - <<: *category_dia
+          - <<: *category_entertainments
+          - <<: *category_knowledge
+          - <<: *category_personal
