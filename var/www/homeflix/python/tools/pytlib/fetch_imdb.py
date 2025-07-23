@@ -83,19 +83,22 @@ class FetchImdb:
 
         self._load_dictionary()
 
-        #self._fetch_main_page(imdb_id)
+        self._refresh_progress_bar(count=1, index=0, text='Movie', value=None, progress_width=None)
         self._collect_data(imdb_id, self.movie['base'])
+        self._refresh_progress_bar(count=1, index=1, text='Movie', value=None, progress_width=None)
+        print()
 
         if self.movie['base']['type'] == 'series':
             self.seasons_count = self._extract_seasons_count()
 
             # calculate the length
             full_episode_count_elem = self.soup.select_one('section[data-testid="episodes-widget"] span[class="ipc-title__subtext"]')
+
             if full_episode_count_elem:
                 full_episode_count = int(full_episode_count_elem.get_text(strip=True))
             else:
                 full_episode_count = 1
-            full_episode_index = 0
+            full_episode_index = 1
 
             for season in range(1, self.seasons_count + 1):
 
@@ -104,26 +107,11 @@ class FetchImdb:
                 # open the recent season's page
                 self._fetch_episodes_page(self.imdb_id, season)
 
-                #spinner = ['\\', '|', '/', '-']
                 episode_row = self.episodes_soup.select('h4[data-testid="slate-list-card-title"] a[class="ipc-title-link-wrapper"]')
                 episode_index = 1
                 for episode in episode_row:
 
-
                     full_episode_index = self._refresh_progress_bar(count=full_episode_count, index=full_episode_index, text='Season', value=season, progress_width=None)
-
-#                    terminal_width = shutil.get_terminal_size().columns
-#                    progress_width = terminal_width - 30  # Reserve space for text
-#                    #progress_width = 50
-#
-#                    full_episode_index += 1
-#                    progress = int((full_episode_index / full_episode_count) * progress_width)
-#                    bar = '\033[92m' + '▄' * progress + '\033[94m' + '▁' * (progress_width - progress) + '\033[0m'
-#
-#                    print(f'\rseason-{season}: [{bar}] {full_episode_index}/{full_episode_count}\033[K', end='', flush=True)
-
-
-
 
                     imdb_id = episode['href'].split('/')[2]
 
@@ -135,9 +123,10 @@ class FetchImdb:
 
                     episode_index += 1
 
-                    # print(f'\r{season}: {spinner[episode_index % 4]}', end='', flush=True)
-
                 self.movie['seasons'].append(seasons_list)
+
+            # new line after the progress bar
+            print()
 
     def _refresh_progress_bar(self, count, index, text=None, value=None, progress_width=None):
 
@@ -148,7 +137,15 @@ class FetchImdb:
         progress = int((index / count) * progress_width)
         bar = '\033[92m' + '▄' * progress + '\033[94m' + '▁' * (progress_width - progress) + '\033[0m'
 
-        print(f'\r{text}-{value}: [{bar}] {index}/{count}\033[K', end='', flush=True)
+        pre_text = ''
+        if text:
+            pre_text += text
+        if value:
+            pre_text += f'-{value}'
+        if text or value:
+            pre_text += ': '
+
+        print(f'\r{pre_text}[{bar}] {index}/{count}\033[K', end='', flush=True)
 
         return index + 1
 
@@ -298,7 +295,7 @@ class FetchImdb:
         response = requests.get(url, headers=headers)
         titles_json = response.json()
 
-        if not titles_json['data'] or not titles_json['data']['title'] or not titles_json['data']['title']['akas'] or not titles_json['data']['title']['akas']['edges']:
+        if not titles_json or not titles_json.get('data') or not titles_json['data'].get('title') or not titles_json['data']['title'].get('akas') or not titles_json['data']['title']['akas'].get('edges'):
             return titles
         titles_list = titles_json['data']['title']['akas']['edges']
         for title_json in titles_list:
@@ -389,7 +386,10 @@ class FetchImdb:
         self._fetch_plotsummary_page(imdb_id)
 
         storyline_row = self.plotsummary_soup.select_one(self.STORYLINE_LOCATOR)
-        storyline = storyline_row.get_text(strip=True)
+        if storyline_row:
+            storyline = storyline_row.get_text(strip=True)
+        else:
+            storyline = ''
 
         return storyline
 
@@ -507,17 +507,9 @@ class FetchImdb:
         """
         Exctract number of season from the main site (self.soup)
         """
-
         season_option = self.soup.select_one('select[id="browse-episodes-season"]')
         aria_label = season_option.get('aria-label')
         return int(re.search(r'\d+', aria_label).group())
-
-        # Look for season selector dropdown
-#        season_options = self.soup.select('select[id="browse-episodes-season"] option')
-#        print(f"season_options: {season_options}")
-#        if season_options:
-#            return len([opt for opt in season_options if opt.get('value') and opt.get('value').isdigit()])
-#        return 0
 
     def getSeasonCounts(self):
         return self.seasons_count

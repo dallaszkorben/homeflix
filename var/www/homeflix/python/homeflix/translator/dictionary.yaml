@@ -235,6 +235,10 @@ genre:
 
     audiobook:
         <<: *common
+        novel: Novel
+        fiction: Fiction
+        nonfiction: Non Fiction
+        political_fiction: Political Fiction
 
     dia:
         <<: *common
@@ -246,6 +250,8 @@ genre:
 
     ebook:
         <<: *common
+        novel: Novel
+        fiction: Fiction
         nonfiction: Nonfiction
         political_fiction: Political Fiction
         document: Document
@@ -279,6 +285,9 @@ genre:
         chicken: Chicken
 
     entertainment:
+        <<: *music
+        music: Zene
+        performace: Előadás
         standup: Standup
         skit: Skit
         analysis: Analysis
@@ -288,6 +297,7 @@ genre:
         news: News
         talk: Talk
         footage: Footage
+        picture: Picture
         hearing: Hearing
         presentation: Presentation
         lecture: Lecture
@@ -298,6 +308,7 @@ genre:
         demonstration: Demonstration
         statement: Statement
         speech: Speech
+        document: Document
         documentary: Documentary
         science_nature_documentary: Science and Nature Documentary
 
@@ -387,6 +398,7 @@ theme:
     social_media: Social Media
     safe_space: Safe Space
     war: War
+    revolution: Revolution
     ukrain_war: Ukrain War
     disaster: Disaster
     a_bomb: A-bomb
@@ -454,6 +466,10 @@ theme:
     family: Family
     mad_scientist: Mad scientist
     transvestism: Transvestism
+    diversity: Diversity
+    bible: Bible
+    weird: Weird
+    time_travel: Time travel
 
 title:
     title: Title

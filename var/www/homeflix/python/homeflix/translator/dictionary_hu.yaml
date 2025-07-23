@@ -235,6 +235,10 @@ genre:
 
     audiobook:
         <<: *common
+        novel: Regény
+        fiction: Szépirodalom
+        nonfiction: Tényirodalom
+        political_fiction: Politikai fikció
 
     dia:
         <<: *common
@@ -246,6 +250,8 @@ genre:
 
     ebook:
         <<: *common
+        novel: Regény
+        fiction: Szépirodalom
         nonfiction: Tényirodalom
         political_fiction: Politikai fikció
         document: Dokumentum
@@ -279,6 +285,9 @@ genre:
         chicken: Csirke
 
     entertainment:
+        <<: *music
+        music: music
+        performace: Performace
         standup: Standup
         skit: Kabaré
         analysis: Elemzés
@@ -288,6 +297,7 @@ genre:
         news: Híradó
         talk: Beszélgetés
         footage: Filmfelvétel
+        picture: Fénykép
         hearing: Meghallgatás
         presentation: Bemutató
         lecture: Előadás
@@ -298,6 +308,7 @@ genre:
         demonstration: Tüntetés
         statement: Nyilatkozat
         speech: Beszéd
+        document: Dokumentum
         documentary: Dokumentumfilm
         science_nature_documentary: Természettudományos dokumentum film
 
@@ -387,6 +398,7 @@ theme:
     social_media: Social Media
     safe_space: Safe Space
     war: Háború
+    revolution: Forradalom
     ukrain_war: Ukrán háború
     disaster: Katasztrófa
     a_bomb: Atombomba
@@ -454,6 +466,11 @@ theme:
     family: Család
     mad_scientist: Őrült tudós
     transvestism: Transzvesztitizmus
+    diversity: Másság
+    bible: Biblia
+    weird: Furcsaság
+    time_travel: Időutazás
+
 
 title:
     title: Cím
@@ -523,6 +540,14 @@ title:
     music_audio_last_watched: Utoljára hallgatott
     music_audio_least_watched: Legritkábban hallgatott
     music_audio_most_watched: Leggyakrabban hallgatott
+
+    # Standup comedy
+    standup: Standup
+    standup_playlists: Lejátszási listák
+    standup_interrupted: Folytasd
+    standup_last_watched: Utoljára hallgatott
+    standup_least_watched: Legritkábban hallgatott
+    standup_most_watched: Leggyakrabban hallgatott
 
     # Radioplay
     radioplay: Rádiójáték
