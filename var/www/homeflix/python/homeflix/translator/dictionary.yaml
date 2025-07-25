@@ -311,6 +311,7 @@ genre:
         document: Document
         documentary: Documentary
         science_nature_documentary: Science and Nature Documentary
+        commercial: Commercial
 
     personal:
         photos: Photos

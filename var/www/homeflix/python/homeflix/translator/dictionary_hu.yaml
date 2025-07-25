@@ -311,6 +311,7 @@ genre:
         document: Dokumentum
         documentary: Dokumentumfilm
         science_nature_documentary: Természettudományos dokumentum film
+        commercial: Reklám
 
     personal:
         photos: Fotók
