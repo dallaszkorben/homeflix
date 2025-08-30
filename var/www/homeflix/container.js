@@ -2925,9 +2925,7 @@ class ThumbnailController {
     }
 
     playMediaText(medium_dict){
-        let medium_path = medium_dict["medium_path"];
-
-        this.playMediaCode(medium_path);
+        this.playMediaCode(medium_dict);
     }
 
     playMediaCode(medium_dict){
