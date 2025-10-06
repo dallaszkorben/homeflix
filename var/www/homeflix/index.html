@@ -11,7 +11,6 @@
     <link href="script/fancybox/jquery.fancybox.min.css" rel="stylesheet" />
     <script src="script/fancybox/jquery.fancybox.min.js"></script>
 
-<!--    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css"> -->
     <link rel="stylesheet" href="script/jquery-ui/jquery-ui.css">
     <script src="script/jquery-ui/jquery-ui.js"></script>
 
@@ -447,6 +446,33 @@
 
         $(document).ready(function () {
 
+            // Touch swipe configuration - define exact pixel ranges and arrow commands
+            const SWIPE_RANGES = [
+                { min: 50,  max: 79,  commands: 1 },  // Short swipe
+                { min: 80,  max: 159, commands: 1 },  // Medium swipe  
+                { min: 160, max: 239, commands: 2 },  // Long swipe
+                { min: 240, max: 319, commands: 3 },  // Very long swipe
+                { min: 320, max: 999, commands: 4 }   // Extra long swipe
+            ];
+            const MIN_SWIPE_DISTANCE = 50;
+
+            // Helper functions for container visibility
+            function getFirstVisibleContainerIndex() {
+                let scrollSection = oThumbnailController.getScrollSection();
+                let sectionScrollTop = scrollSection.domScrollSection.scrollTop();
+                let containerBlockHeight = scrollSection.domThumbnailContainerBlocks.eq(0).outerHeight(true);
+                return Math.floor(sectionScrollTop / containerBlockHeight);
+            }
+
+            function getLastVisibleContainerIndex() {
+                let scrollSection = oThumbnailController.getScrollSection();
+                let sectionHeight = scrollSection.domScrollSection.height();
+                let sectionScrollTop = scrollSection.domScrollSection.scrollTop();
+                let containerBlockHeight = scrollSection.domThumbnailContainerBlocks.eq(0).outerHeight(true);
+                let visibleContainers = Math.floor(sectionHeight / containerBlockHeight);
+                return Math.min(scrollSection.numberOfContainers - 1, Math.floor(sectionScrollTop / containerBlockHeight) + visibleContainers - 1);
+            }
+
             //
             // if not logged in -> different descriptor color
             //
@@ -550,41 +576,87 @@
                     var a = new act[e.keyCode];
             });
 
-            let touchXPos;
-            let touchYPos;
+            let touchStartX, touchStartY, touchInDescriptionSection;
 
-            // store the touching position at the start of each touch
             $(document).on('touchstart', function (e) {
-                touchXPos = e.changedTouches[0].clientX;
-                touchYPos = e.changedTouches[0].clientY;
+                touchStartX = e.changedTouches[0].clientX;
+                touchStartY = e.changedTouches[0].clientY;
+                touchInDescriptionSection = $(e.target).closest('#description-section').length > 0;
             });
 
-            $(document).on('touchmove', function (e) {
-                let newTouchYPos = e.changedTouches[0].clientY;
-                let newTouchXPos = e.changedTouches[0].clientX;
-
-                let minDiffX = 100;
-                let minDiffY = 100;
-                let diffX = Math.abs(newTouchXPos - touchXPos);
-                let diffY = Math.abs(newTouchYPos - touchYPos);
-
-                if (diffX > minDiffX) {
-                    if (newTouchXPos > touchXPos) {
-                        oThumbnailController.arrowRight();
-                    } else
-                        if (newTouchXPos < touchXPos) {
-                            oThumbnailController.arrowLeft();
+            $(document).on('touchend', function (e) {
+                if (touchInDescriptionSection) return;
+                
+                let touchEndX = e.changedTouches[0].clientX;
+                let touchEndY = e.changedTouches[0].clientY;
+                let deltaX = touchEndX - touchStartX;
+                let deltaY = touchEndY - touchStartY;
+                
+                function getCommandCount(distance) {
+                    for (let range of SWIPE_RANGES) {
+                        if (distance >= range.min && distance <= range.max) {
+                            return range.commands;
                         }
-                    touchXPos = newTouchXPos;
-
-                } else if (diffY > minDiffY) {
-                    if (newTouchYPos > touchYPos) {
-                        oThumbnailController.arrowDown();
-                    } else
-                        if (newTouchYPos < touchYPos) {
-                            oThumbnailController.arrowUp();
+                    }
+                    return 0;
+                }
+                
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= MIN_SWIPE_DISTANCE) {
+                    let steps = getCommandCount(Math.abs(deltaX));
+                    let scrollSection = oThumbnailController.getScrollSection();
+                    let containerIndex = scrollSection.currentContainerIndex;
+                    let currentFocused = scrollSection.focusedThumbnailList[containerIndex];
+                    let domThumbnails = $('#container-' + containerIndex + ' .thumbnail');
+                    let totalThumbnails = domThumbnails.length;
+                    
+                    if (deltaX > 0) {
+                        // Swipe right = left arrow - check if at first thumbnail
+                        if (currentFocused === 0) {
+                            return; // Prevent circular navigation - already at first
                         }
-                    touchYPos = newTouchYPos;
+                        for (let i = 0; i < steps; i++) {
+                            if (scrollSection.focusedThumbnailList[containerIndex] > 0) {
+                                oThumbnailController.arrowLeft();
+                            }
+                        }
+                    } else {
+                        // Swipe left = right arrow - check if at last thumbnail
+                        if (currentFocused === totalThumbnails - 1) {
+                            return; // Prevent circular navigation - already at last
+                        }
+                        for (let i = 0; i < steps; i++) {
+                            if (scrollSection.focusedThumbnailList[containerIndex] < totalThumbnails - 1) {
+                                oThumbnailController.arrowRight();
+                            }
+                        }
+                    }
+                } else if (Math.abs(deltaY) >= MIN_SWIPE_DISTANCE) {
+                    let steps = getCommandCount(Math.abs(deltaY));
+                    let scrollSection = oThumbnailController.getScrollSection();
+                    let currentContainer = scrollSection.currentContainerIndex;
+                    let totalContainers = scrollSection.numberOfContainers;
+                    
+                    if (deltaY > 0) {
+                        // Swipe down = up arrow - check if at first container
+                        if (currentContainer === 0) {
+                            return; // Prevent circular navigation - already at first
+                        }
+                        for (let i = 0; i < steps; i++) {
+                            if (scrollSection.currentContainerIndex > 0) {
+                                oThumbnailController.arrowUp();
+                            }
+                        }
+                    } else {
+                        // Swipe up = down arrow - check if at last container
+                        if (currentContainer === totalContainers - 1) {
+                            return; // Prevent circular navigation - already at last
+                        }
+                        for (let i = 0; i < steps; i++) {
+                            if (scrollSection.currentContainerIndex < totalContainers - 1) {
+                                oThumbnailController.arrowDown();
+                            }
+                        }
+                    }
                 }
             });
 

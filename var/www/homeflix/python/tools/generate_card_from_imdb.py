@@ -330,10 +330,16 @@ if __name__ == "__main__":
     SUBS = ["en"]
     THEMES = []
 
-    IMDB_ID = "tt0137523"   # Fight Club
-    IMDB_ID = "tt0078350"   # The Swarm
+    IMDB_ID = "tt0137523"   # IMDB ID for individual movie - Fight Club
+    IMDB_ID = "tt0078350"   # IMDB ID for individual movie - The Swarm
     IMDB_ID = "tt0308671"   # IMDB ID for individual movie - Tycoon A new russion
     IMDB_ID = "tt0074937"   # IMDB ID for individual movie - Murder by Death
+    IMDB_ID = "tt0074937"   # IMDB ID for individual movie - Murder by Death
+    IMDB_ID = "tt0069113"   # IMDB ID for individual movie - The Poseidon Adventure
+    IMDB_ID = "tt0093870"   # IMDB ID for individual movie - Robocop
+    IMDB_ID = "tt0121403"   # IMDB ID for individual movie - The Stationmaster Meets His Match
+
+
     IMDB_ID = "tt0098936"   # IMDB ID for series - Twin Peaks
     IMDB_ID = "tt0106179"   # IMDB ID for series - X Files
     IMDB_ID = "tt0407362"   # IMDB ID for series - Battlestar Galactica
@@ -344,10 +350,8 @@ if __name__ == "__main__":
     IMDB_ID = "tt1466074"   # IMDB ID for series - Columbo
 
 
-    IMDB_ID = "tt0074937"   # IMDB ID
-    IMDB_ID = "tt0069113"   # The Poseidon Adventure
 
-
+    IMDB_ID = "tt0121403"   #
 
     cons_path = os.path.expanduser('~/tmp/homeflix/')
     dest_path = os.path.expanduser('/media/akoel/vegyes/MEDIA/01.Movie/01.Standalone')

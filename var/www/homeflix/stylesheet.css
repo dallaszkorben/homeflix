@@ -67,6 +67,7 @@
 
 body {
     margin: 0px;
+    overscroll-behavior: none;
 }
 
 #static-section{
@@ -353,9 +354,9 @@ body {
     width: var(--description-image-width);
     background: var(--description-image);
     box-shadow: inset 50px 0px 40px 0 #FFF;
-    background-position: right top;
+    background-position: center top;
     background-repeat: no-repeat;
-    background-size: contain;
+    background-size: cover;
     /* border: 0px rgb(255, 14, 14) solid;                       /* for test purpose */
 }
 

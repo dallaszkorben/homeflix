@@ -24,13 +24,13 @@ class CardManipulator:
         # this keys must be in the dictionary.yaml file 'mediatype' section
         self.media_type_dict = {
             'video':   ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
-            'audio':   ['mp3', 'ogg', 'm4a'], 
-            'text':    ['txt'], 
-            'pdf':     ['pdf'], 
+            'audio':   ['mp3', 'ogg', 'm4a'],
+            'text':    ['txt'],
+            'pdf':     ['pdf'],
             'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba', 'pdf'],
-            'doc':     ['doc', 'odt', 'rtf'], 
-            'picture': ['jpg', 'jpeg', 'png', 'webp', 'avif'], 
-            'code':    ['c', 'java', 'py', 'ino', 'yaml'],
+            'doc':     ['doc', 'odt', 'rtf'],
+            'picture': ['jpg', 'jpeg', 'png', 'webp', 'avif'],
+            'code':    ['c', 'java', 'py', 'ino', 'yaml', 'json'],
             'archive': ['tar', 'gz', 'zip', 'deb'],
         }
 
@@ -49,7 +49,7 @@ class CardManipulator:
         file_list = [f for f in os.listdir(actualDir) if os.path.isfile(os.path.join(actualDir, f)) and self.getPatternCard().match( f )] if os.path.exists(actualDir) else []
         dir_list = [d for d in os.listdir(actualDir) if os.path.isdir(os.path.join(actualDir, d)) and d != CardManipulator.MEDIA_FOLDER and d != CardManipulator.SCREENSHOT_FOLDER and d != CardManipulator.THUMBNAIL_FOLDER] if os.path.exists(actualDir) else []
 
-        media_dir = os.path.join(actualDir, CardManipulator.MEDIA_FOLDER)        
+        media_dir = os.path.join(actualDir, CardManipulator.MEDIA_FOLDER)
         media_list = [f for f in os.listdir(media_dir) if os.path.isfile(os.path.join(media_dir, f))] if os.path.exists(media_dir) else []
 
         basename = os.path.basename(actualDir)

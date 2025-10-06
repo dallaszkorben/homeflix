@@ -99,6 +99,7 @@ country:
         fi: FIN
         ro: ROU
         br: BR
+        sn: SEN
 
     long:
         eu: Europian Union
@@ -133,6 +134,7 @@ country:
         fi: Finland
         ro: Romania
         br: Brazil
+        sn: Senegal
 
 category:
     movie: Movie
@@ -204,6 +206,7 @@ genre:
         dance: Dance
         noclassical_dark_wave: Neoclassical dark wave
         heavy_metal: Heavy Metal
+        R&B: Rhythm and Blues
 
     movie:
         <<: *common
@@ -312,6 +315,8 @@ genre:
         documentary: Documentary
         science_nature_documentary: Science and Nature Documentary
         commercial: Commercial
+        announcement: Announcement
+        parliament: Parliament
 
     personal:
         photos: Photos
@@ -471,6 +476,8 @@ theme:
     bible: Bible
     weird: Weird
     time_travel: Time travel
+    pedophilia: Pedophilia
+
 
 title:
     title: Title

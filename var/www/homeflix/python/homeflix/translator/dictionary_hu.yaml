@@ -99,6 +99,7 @@ country:
         fi: FIN
         ro: ROU
         br: BR
+        sn: SEN
 
     long:
         eu: Europai Unió
@@ -133,6 +134,7 @@ country:
         fi: Finn
         ro: Román
         br: Brazília
+        sn: Senegál
 
 category:
     movie: Mozi
@@ -204,6 +206,7 @@ genre:
         dance: Dance
         noclassical_dark_wave: Neoclassical dark wave
         heavy_metal: Heavy Metal
+        R&B: Rhythm and Blues
 
     movie:
         <<: *common
@@ -312,6 +315,8 @@ genre:
         documentary: Dokumentumfilm
         science_nature_documentary: Természettudományos dokumentum film
         commercial: Reklám
+        announcement: Bejelentés
+        parliament: Parlament
 
     personal:
         photos: Fotók
@@ -471,6 +476,7 @@ theme:
     bible: Biblia
     weird: Furcsaság
     time_travel: Időutazás
+    pedophilia: Pedofilia
 
 
 title:
