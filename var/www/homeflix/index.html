@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="script/highlight/styles/atom-one-dark.min.css">
     <script src="script/highlight/highlight.min.js"></script>
 
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
     <script src="container.js"></script>
     <script src="generators.js"></script>
     <script src="selection_components.js"></script>
@@ -26,167 +28,172 @@
 
     <script>
 
+        // ========================================
+        // GLOBAL CONFIGURATION AND INITIALIZATION
+        // ========================================
+
+        // LocalStorage prefix for all HomeFlix data
         let PREFIX_LOCAL_STORAGE = "homeflix"
 
-        //let host = "192.168.0.21"
-        //let host = "localhost"
-        let host = location.hostname;
-        let port = ":80";
+        // Server connection configuration
+        // Automatically detects current hostname for flexibility across environments
+        let host = location.hostname;  // Auto-detect: localhost, 192.168.x.x, etc.
+        let port = ":80";              // Standard HTTP port
 
+        // Available language options for the interface
         let language_dict = {"hu": "Magyar", "en": "English"};
 
-        //
-        // Try to restore the previous session calling the login without credentials
-        //
+        // ========================================
+        // SESSION RESTORATION
+        // ========================================
+        // Attempt to restore previous user session by calling login without credentials
+        // This allows users to stay logged in across browser sessions
         let rq_method = "POST";
         let rq_url = "http://" + host + port + "/auth/login";
-        let rq_data = {"username": null, "password": null};
-        let rq_assync = false;
+        let rq_data = {"username": null, "password": null};  // No credentials = session check
+        let rq_assync = false;  // Synchronous to ensure user data is available before UI loads
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, data: rq_data, dataType: "json" });
         let user_data = result.responseJSON['data'];
 
+        // If session restoration fails, use default guest user settings
         if(!result.responseJSON['result'] || Object.keys(user_data).length === 0){
             user_data = {
-                language_code: "en",
-                name: null,
-                is_admin: true,
-                descriptor_color: 'rgb(129, 60, 41)',
-                always_show_original_title: true,
-                show_lyrics_anyway: true,
-                show_storyline_anyway: true,
-                play_continuously: true
+                language_code: "en",                           // Default to English
+                name: null,                                    // No user name (guest)
+                is_admin: true,                                // Guest has admin privileges
+                descriptor_color: 'rgb(129, 60, 41)',          // Brown color for description section
+                always_show_original_title: true,              // Show original movie titles
+                show_lyrics_anyway: true,                      // Display lyrics when available
+                show_storyline_anyway: true,                   // Display plot summaries
+                play_continuously: true                        // Auto-play next episode/movie
             }
         }
 
-        let version;
-        let translated_labels;
-        let translated_genre_movie;
-        let translated_categories;
-        let translated_themes;
-        let translated_countries;
-        let all_movie_director_list;
-        let all_movie_writer_list;
-        let all_movie_actor_list;
-        let all_movie_voice_list;
-        let all_movie_rate_list;
+        // ========================================
+        // GLOBAL DATA VARIABLES
+        // ========================================
+        // These variables store application data loaded from the server
+        let version;                        // Application version string
+        let translated_labels;              // UI labels in user's language
+        let translated_genre_movie;         // Movie genre translations
+        let translated_categories;          // Content category translations
+        let translated_themes;              // Theme/topic translations
+        let translated_countries;           // Country name translations
+        let all_movie_director_list;        // Complete list of directors
+        let all_movie_writer_list;          // Complete list of writers
+        let all_movie_actor_list;           // Complete list of actors
+        let all_movie_voice_list;           // Complete list of voice actors
+        let all_movie_rate_list;            // Available rating values
 
-        // Load Version
+        // ========================================
+        // APPLICATION VERSION LOADING
+        // ========================================
         rq_method = "GET";
         rq_url = "http://" + host + port + "/info/version";
-        rq_assync = false;
+        rq_assync = false;  // Synchronous to ensure version is available
         result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json" });
         result = result.responseJSON;
         version = result['version'];
 
-        let data = {}
+        // ========================================
+        // TRANSLATION DATA LOADING
+        // ========================================
+        // Load all translation dictionaries based on user's language preference
+        // All requests are synchronous to ensure data is available before UI initialization
+        let data = {}  // Empty data object for requests without parameters
 
-        // --- key/value - dict
-
-        // Load Translated Interaction Labels
+        // DICTIONARY-TYPE TRANSLATIONS (key-value pairs)
+        // Load UI interaction labels (buttons, menus, dialogs)
         translated_interaction_labels = getAllElements("dict", data, "/translate/interaction_labels/lang/" + user_data['language_code'])
 
-        // Load Translated Categories
+        // Load content category names (movie, music, documentary, etc.)
         translated_categories = getAllElements("dict", data, "/translate/categories/lang/" + user_data['language_code'])
 
-        // Load Translated Genre: Music
+        // Load music genre translations
         translated_genre_music = getAllElements("dict", data, "/translate/genres/category/music/lang/" + user_data['language_code'])
 
-        // Load Translated Levels
+        // Load content rating/level translations (G, PG, R, etc.)
         translated_levels = getAllElements("dict", data, "/translate/levels/lang/" + user_data['language_code'])
 
-        // Load Translated Labels
+        // Load general UI labels
         translated_labels = getAllElements("dict", data, "/translate/labels/lang/" + user_data['language_code'])
 
-        // Load Translated Countries
+        // Load country name translations
         translated_countries = getAllElements("dict", data, "/translate/countries/lang/" + user_data['language_code'])
 
-        // Load Translated Genre: Movie
+        // Load movie genre translations (action, comedy, drama, etc.)
         translated_genre_movie = getAllElements("dict", data, "/translate/genres/category/movie/lang/" + user_data['language_code'])
 
-        // Load Translated Themes
+        // Load theme/topic translations (war, love, friendship, etc.)
         translated_themes = getAllElements("dict", data, "/translate/themes/lang/" + user_data['language_code'])
 
-
-        // --- value
-
-        // Load all Directors *
+        // ========================================
+        // METADATA COLLECTION LOADING
+        // ========================================
+        // Load complete lists of people and metadata for search/filter functionality
         data = {
-            "category": "movie",
-            "limit": 9999,
+            "category": "movie",    // Focus on movie content
+            "limit": 9999,         // Get all available entries
         };
+
+        // Load all movie directors for autocomplete/search
         all_movie_director_list = getAllElements("list", data, "/collect/directors")
 
-        // Load all Writers *
+        // Load all movie writers for autocomplete/search
         all_movie_writer_list = getAllElements("list", data, "/collect/writers")
 
-        // Load all Actors *
+        // Load all movie actors for autocomplete/search
         all_movie_actor_list = getAllElements("list", data, "/collect/actors")
 
-        // Load all Voices *
+        // Load all voice actors for autocomplete/search
         all_movie_voice_list = getAllElements("list", data, "/collect/voices")
 
-
-        // --- value/value
-
-        // Load all Tags *
+        // ========================================
+        // TAG DICTIONARY LOADING
+        // ========================================
+        // Load all available tags as a dictionary (value->value mapping)
+        // Used for tag-based filtering and search functionality
         all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags")
 
-        /*
-        Substitute substrings, similar to "Hello {0}".format("world") mechanizm
-        Usage: "hello {123}".format("123", world")
-        */
-        String.prototype.format = function () {
-            var i = 0, args = arguments;
-            return this.replace("{" + args[0] + "}", function () {
-                return typeof args[1] != 'undefined' ? args[1] : '';
-            });
-        };
 
-        // String.prototype.format = function () {
-        //     var i = 0, args = arguments;
-        //     return this.replace(/{}/g, function () {
-        //         console.log("args[0]: "+ args[0]);
-        //         console.log("args[1]: "+ args[1]);
-        //         return typeof args[i] != 'undefined' ? args[i++] : '';
-        //     });
-        // };
 
-        /*
-        Generate HASH code
-        */
-        String.prototype.hashCode = function() {
-            var hash = 0, i, chr;
-            if (this.length === 0) return hash;
-            for (i = 0; i < this.length; i++) {
-                chr = this.charCodeAt(i);
-                hash = ((hash << 5) - hash) + chr;
-                hash |= 0; // Convert to 32bit integer
-            }
-            return hash;
-        }
-
-        // Delay in any async function: await delay(100);
+        // ========================================
+        // ASYNC UTILITIES
+        // ========================================
+        // Utility for adding delays in async functions: await delay(100);
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
+        /**
+         * Generic function to fetch and process data from API endpoints
+         * @param {string} type - Data processing type: 'dict', 'list', or 'list_to_dict'
+         * @param {Object} data - Request parameters to send with the API call
+         * @param {string} path - API endpoint path
+         * @returns {Map|Array} Processed data structure
+         */
         function getAllElements(type, data, path){
-            //type: dict
-            //      list
-            //      list_to_dict
+            // Supported types:
+            // - 'dict': Returns sorted Map from key-value pairs
+            // - 'list': Returns array as-is
+            // - 'list_to_dict': Converts array to Map where each value becomes both key and value
 
-            // Load all Tags *
+            // Make synchronous API request
             rq_method = "GET";
             rq_url = "http://" + host + port + path;
             rq_assync = false;
 
+            // Send request with or without data parameters
             if(Object.keys(data).length === 0){
                 result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json"});
             }else{
                 result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, dataType: "json", data: data });
             }
 
+            // Process response based on requested type
             if(type == "list"){
+                // Return array directly
                 output = result.responseJSON["data"];
             }else if (type == "dict"){
+                // Convert object to sorted Map
                 output = new Map(
                     Object.entries(result.responseJSON["data"])
                         .sort((a, b) => {
@@ -194,9 +201,10 @@
                         })
                 );
             }else if (type == "list_to_dict"){
+                // Convert array to Map where each value is both key and value (for tags)
                 output = new Map(
                     Object.entries(result.responseJSON["data"])
-                        .map(([key, value]) => [value, value])  // This transforms each entry to use value as both key and value
+                        .map(([key, value]) => [value, value])  // Transform to [value, value] pairs
                         .sort((a, b) => {
                             return a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0);
                         })
@@ -206,38 +214,58 @@
             return output;
         }
 
+        /**
+         * Debug utility to print values to console
+         * Handles both objects and primitive values
+         * @param {*} value - Value to print (any type)
+         */
         function print(value){
             let stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
             console.log(stringValue);
         }
 
-        function pathJoin(parts, sep) {
-            var separator = sep || '/';
-            var replace = new RegExp(separator + '{1,}', 'g');
-            return parts.join(separator).replace(replace, separator);
-        }
 
+
+        // ========================================
+        // LOCAL STORAGE UTILITIES
+        // ========================================
         /**
-         * LocalStorage
+         * Retrieve value from localStorage
+         * @param {string} key - Storage key
+         * @param {*} defaultValue - Default value if key not found (currently unused)
+         * @returns {string|null} Stored value or null
          */
         function getLocalStorage(key, defaultValue){
-
             let value = localStorage.getItem(key);
             return value;
         }
 
+        /**
+         * Store value in localStorage
+         * @param {string} key - Storage key
+         * @param {string} value - Value to store
+         */
         function setLocalStorage(key, value){
             localStorage.setItem(key,value);
         }
 
+        /**
+         * Remove single item from localStorage
+         * @param {string} key - Storage key to remove
+         */
         function deleteLocalStorage(key) {
             localStorage.removeItem(key);
         }
 
+        /**
+         * Remove all localStorage items with keys starting with given prefix
+         * Used for clearing cached data when rebuilding databases
+         * @param {string} prefix - Key prefix to match
+         */
         function deleteLocalStorageStartingWith(prefix) {
             const keysToDelete = [];
 
-            // First collect all matching keys
+            // First collect all matching keys (avoid modifying during iteration)
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith(prefix)) {
@@ -245,147 +273,131 @@
                 }
             }
 
-            // Then remove them
+            // Then remove them safely
             keysToDelete.forEach(key => {
                 localStorage.removeItem(key);
             });
         }
 
-        /**
-         *  Cookies
-         */
-        function getExistingCookie(key){
-            let name = key + "=";
-            let decodedCookie = decodeURIComponent(document.cookie);
-            let ca = decodedCookie.split(';');
-            for(let i = 0; i <ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') {
-                    c = c.substring(1);
-                }
-                if (c.indexOf(name) == 0) {
-                    return value = c.substring(name.length, c.length);
-                }
-            }
 
-            return null;
-        }
 
-        function getCookie(key, defaultValue){
+        // ========================================
+        // UI LAYOUT AND STYLING CONSTANTS
+        // ========================================
+        // These constants define the visual appearance and dimensions of UI components
+        // Values are later applied to CSS custom properties for dynamic styling
 
-            let value = getExistingCookie(key);
-            if( value == null ){
-                value = defaultValue;
-                document.cookie = name + "=" + value;
-            }
-            return value;
-        }
+        // THUMBNAIL STYLING
+        const thumbnail_border_width = 7;                    // Red border around focused thumbnail
+        const thumbnail_border_color = 'rgb(200, 0, 0)';     // Red focus indicator
+        const thumbnail_image_width = 160;                   // Standard thumbnail width
+        const thumbnail_image_height = 208;                  // Standard thumbnail height (movie poster ratio)
+        const thumbnail_background = 'rgb(100, 100, 100)';   // Gray background for missing images
 
-        function setCookie(key, value){
-            document.cookie = key + "=" + value;
-        }
+        const thumbnail_text_font_size = 30;                 // Font size for thumbnail titles
+        const thumbnail_text_font_color = 'rgb(7, 24, 101)'  // Dark blue text color
+        const thumbnail_text_font_shadow_color = 'rgb(255,255,255)' // White text shadow for readability
 
-        function formatSecondsToTimeCode(seconds) {
-            // Calculate hours, minutes, and seconds
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = Math.floor(seconds % 60);
-
-            // Format hours, minutes, and seconds into the desired string
-            const formattedTime = `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-
-            return formattedTime;
-        }
-
-        function formatTimeCodeToSeconds(timeCode){
-            const [hours, minutes, seconds] = timeCode.split(':').map(Number);
-
-            // Convert to seconds
-            const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
-
-            return totalSeconds;
-        }
-
-        //
-        // Calculate the containers sizes
-        //
-
-        // Thumbnail
-        const thumbnail_border_width = 7;
-        const thumbnail_border_color = 'rgb(200, 0, 0)';
-        const thumbnail_image_width = 160;
-        const thumbnail_image_height = 208;
-        const thumbnail_background = 'rgb(100, 100, 100)';
-
-        const thumbnail_text_font_size = 30;
-        const thumbnail_text_font_color = 'rgb(7, 24, 101)'
-        const thumbnail_text_font_shadow_color = 'rgb(255,255,255)'
-
-        // Container
-        const thumbnail_container_border_width = 4
-        const thumbnail_container_border_color = 'rgb(100, 100, 100)';
-        const thumbnail_container_background = 'rgb(100, 100, 100)';
+        // CONTAINER STYLING (groups of thumbnails)
+        const thumbnail_container_border_width = 4           // Border around thumbnail containers
+        const thumbnail_container_border_color = 'rgb(100, 100, 100)'; // Gray container borders
+        const thumbnail_container_background = 'rgb(100, 100, 100)';   // Gray container background
+        // Calculate total container height including borders
         const thumbnail_container_height = thumbnail_image_height + (2 * thumbnail_border_width) + (2 * thumbnail_container_border_width)
 
-        // Container block
+        // CONTAINER BLOCK STYLING (wrapper around containers)
         const thumbnail_container_block_border_width = 1;
-        const thumbnail_container_block_border_color = 'rgb(0, 0, 0)';
-        const thumbnail_container_block_background = 'rgb(40, 40, 40)';
+        const thumbnail_container_block_border_color = 'rgb(0, 0, 0)';  // Black borders
+        const thumbnail_container_block_background = 'rgb(40, 40, 40)'; // Dark gray background
 
-        // Scroll section
-        const scroll_section_border_width = 0;  // Needed to be changed with description_section_border_width. If they are different, then a horizontal slider bar appears in the browser
+        // SCROLL SECTION (main content area with thumbnails)
+        // IMPORTANT: Must match description_section_border_width to prevent horizontal scrollbar
+        const scroll_section_border_width = 0;
         const scroll_section_border_color = 'rgb(30, 30, 30)';
-        const scroll_section_background = 'rgb(30, 30, 30)';
-        const scroll_section_height_portion = 50;
+        const scroll_section_background = 'rgb(30, 30, 30)';  // Dark background
+        const scroll_section_height_portion = 50;             // Takes 50% of viewport height
 
-        // Static section
-        const static_section_height_portion = 50;
+        // STATIC SECTION (description area)
+        const static_section_height_portion = 50;             // Takes remaining 50% of viewport height
 
-        // History section
-        const history_section_background = 'rgb(80, 80, 80)';
+        // HISTORY SECTION (breadcrumb navigation)
+        const history_section_background = 'rgb(80, 80, 80)'; // Medium gray background
         const history_section_border_width = 1
-        const history_section_border_color = 'rgb(0, 0, 0)';
-        const history_section_font_size = 20;
-        const history_section_font_color = 'rgb(0, 0, 0)';
-        const history_section_height = 40;
+        const history_section_border_color = 'rgb(0, 0, 0)';  // Black border
+        const history_section_font_size = 20;                 // Navigation text size
+        const history_section_font_color = 'rgb(0, 0, 0)';    // Black text
+        const history_section_height = 40;                    // Fixed height for navigation bar
 
-        // Description section
-        const description_section_border_width = 0; // Needed to be changed with scroll_section_border_width. If they are different, then a horizontal slider bar appears in the browser
-        const description_section_border_color = 'rgb(9, 60, 41)';
-        const description_section_background = 'rgb(171, 253, 176)';
+        // DESCRIPTION SECTION (movie details)
+        // IMPORTANT: Must match scroll_section_border_width to prevent horizontal scrollbar
+        const description_section_border_width = 0;
+        const description_section_border_color = 'rgb(9, 60, 41)';    // Dark green border
+        const description_section_background = 'rgb(171, 253, 176)';  // Light green background
 
-        const description_text_extra_font_size = 1.6;
-        const description_text_storyline_font_size = 1.3;
-        const description_text_credentials_font_size = 1.3;
+        // DESCRIPTION TEXT SIZING
+        const description_text_extra_font_size = 1.6;         // Large text for title/metadata (em units)
+        const description_text_storyline_font_size = 1.3;     // Medium text for plot summary
+        const description_text_credentials_font_size = 1.3;   // Medium text for cast/crew
 
-        const description_text_storyline_width = 45;
+        const description_text_storyline_width = 45;          // Storyline takes 45% of description width
 
-        const description_text_wrapper_top = scroll_section_border_width;
-        const description_text_wrapper_left = scroll_section_border_width;
+        // DESCRIPTION POSITIONING
+        const description_text_wrapper_top = scroll_section_border_width;   // Align with scroll section
+        const description_text_wrapper_left = scroll_section_border_width;  // Align with scroll section
 
         t = document.querySelector(':root');
 
         // Thumbnail
-        t.style.setProperty('--thumbnail-border-width', thumbnail_border_width + 'px');
-        t.style.setProperty('--thumbnail-border-color', thumbnail_border_color);
-        t.style.setProperty('--thumbnail-image-height', thumbnail_image_height + 'px');
-        t.style.setProperty('--thumbnail-image-width', thumbnail_image_width + 'px');
-        t.style.setProperty('--thumbnail_background', thumbnail_background);
+        setCSSProperties({
+            '--thumbnail-border-width': thumbnail_border_width + 'px'
+        });
+        setCSSProperties({
+            '--thumbnail-border-color': thumbnail_border_color
+        });
+        setCSSProperties({
+            '--thumbnail-image-height': thumbnail_image_height + 'px'
+        });
+        setCSSProperties({
+            '--thumbnail-image-width': thumbnail_image_width + 'px'
+        });
+        setCSSProperties({
+            '--thumbnail_background': thumbnail_background
+        });
 
-        t.style.setProperty('--thumbnail-text-font-size', thumbnail_text_font_size + 'px');
-        t.style.setProperty('--thumbnail-text-font-color', thumbnail_text_font_color);
-        t.style.setProperty('--thumbnail-text-font-shadow-color', thumbnail_text_font_shadow_color);
+        setCSSProperties({
+            '--thumbnail-text-font-size': thumbnail_text_font_size + 'px'
+        });
+        setCSSProperties({
+            '--thumbnail-text-font-color': thumbnail_text_font_color
+        });
+        setCSSProperties({
+            '--thumbnail-text-font-shadow-color': thumbnail_text_font_shadow_color
+        });
 
         // Container
-        t.style.setProperty('--thumbnail-container-border-width', thumbnail_container_border_width + 'px');
-        t.style.setProperty('--thumbnail-container-border-color', thumbnail_container_border_color);
-        t.style.setProperty('--thumbnail-container-background', thumbnail_container_background);
-        t.style.setProperty('--thumbnail-container-height', thumbnail_container_height + 'px');
+        setCSSProperties({
+            '--thumbnail-container-border-width': thumbnail_container_border_width + 'px'
+        });
+        setCSSProperties({
+            '--thumbnail-container-border-color': thumbnail_container_border_color
+        });
+        setCSSProperties({
+            '--thumbnail-container-background': thumbnail_container_background
+        });
+        setCSSProperties({
+            '--thumbnail-container-height': thumbnail_container_height + 'px'
+        });
 
         // Container block
-        t.style.setProperty('--thumbnail-container-block-border-color', thumbnail_container_block_border_color);
-        t.style.setProperty('--thumbnail-container-block-background', thumbnail_container_block_background);
-        t.style.setProperty('--thumbnail-container-block-border-width', thumbnail_container_block_border_width + 'px');
+        setCSSProperties({
+            '--thumbnail-container-block-border-color': thumbnail_container_block_border_color
+        });
+        setCSSProperties({
+            '--thumbnail-container-block-background': thumbnail_container_block_background
+        });
+        setCSSProperties({
+            '--thumbnail-container-block-border-width': thumbnail_container_block_border_width + 'px'
+        });
 
         // Scroll section
         t.style.setProperty('--scroll-section-border-width', scroll_section_border_width + 'px');
@@ -417,46 +429,72 @@
 
         t.style.setProperty('--description-text-storyline-width', description_text_storyline_width + '%');
 
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+        /**
+         * Generate random integer within specified range
+         * @param {number} min - Minimum value (inclusive)
+         * @param {number} max - Maximum value (exclusive)
+         * @returns {number} Random integer between min and max-1
+         */
         function generateRandom(min = 0, max = 100) {
-
-            // find diff
+            // Calculate the range
             let difference = max - min;
-
-            // generate random number
+            // Generate random decimal between 0 and 1
             let rand = Math.random();
-
-            // multiply with difference
+            // Scale to desired range and floor to integer
             rand = Math.floor(rand * difference);
-
-            // add with min value
+            // Add minimum value to shift range
             rand = rand + min;
-
             return rand;
         }
 
+        /**
+         * Get translated text for content level/rating
+         * @param {string} level - Content level key
+         * @returns {string} Translated level text or original if not found
+         */
         function get_translated_level(level){
             if (translated_levels.hasOwnProperty(level)) {
                 return translated_levels[level];
             } else {
-                return level;
+                return level; // Fallback to original if translation not found
             }
         }
 
-// TODO with the other translated_???? dictionaries
+        // TODO: Implement similar translation functions for other dictionaries
+        // (translated_categories, translated_themes, translated_countries, etc.)
+
+
+        // This code is for disabling the page refresh with swipe down
+        // on the 'scroll-section' but it is allowed on the 'static-section'
+        document.addEventListener('touchmove', function(e) {
+            // Only prevent if touch is within scroll-section
+            if (e.target.closest('#scroll-section')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         $(document).ready(function () {
 
-            // Touch swipe configuration - define exact pixel ranges and arrow commands
-            const SWIPE_RANGES = [
-                { min: 50,  max: 79,  commands: 1 },  // Short swipe
-                { min: 80,  max: 159, commands: 1 },  // Medium swipe  
-                { min: 160, max: 239, commands: 2 },  // Long swipe
-                { min: 240, max: 319, commands: 3 },  // Very long swipe
-                { min: 320, max: 999, commands: 4 }   // Extra long swipe
-            ];
-            const MIN_SWIPE_DISTANCE = 50;
+            // ========================================
+            // TOUCH GESTURE CONFIGURATION
+            // ========================================
+            // Load touch swipe configuration from config.js
+            // SWIPE_RANGES defines distance thresholds and corresponding command counts:
+            // - 50-79px: 1 command (short swipe)
+            // - 80-159px: 1 command (medium swipe)
+            // - 160-239px: 2 commands (long swipe - moves 2 positions)
+            // - 240-319px: 3 commands (very long swipe - moves 3 positions)
+            // - 320-999px: 4 commands (extra long swipe - moves 4 positions)
+            const SWIPE_RANGES = HomeFlix.TOUCH.SWIPE_RANGES;
+            const MIN_SWIPE_DISTANCE = HomeFlix.TOUCH.MIN_SWIPE_DISTANCE; // Minimum 50px to register as swipe
 
-            // Helper functions for container visibility
+            // ========================================
+            // CONTAINER VISIBILITY HELPER FUNCTIONS
+            // ========================================
+            // Calculate which container is at the top of the visible scroll area
             function getFirstVisibleContainerIndex() {
                 let scrollSection = oThumbnailController.getScrollSection();
                 let sectionScrollTop = scrollSection.domScrollSection.scrollTop();
@@ -464,6 +502,7 @@
                 return Math.floor(sectionScrollTop / containerBlockHeight);
             }
 
+            // Calculate which container is at the bottom of the visible scroll area
             function getLastVisibleContainerIndex() {
                 let scrollSection = oThumbnailController.getScrollSection();
                 let sectionHeight = scrollSection.domScrollSection.height();
@@ -544,113 +583,150 @@
                 selectedImg.attr('src', selectedImg.data('selected'));
             });
 
-            //
-            // Arrow keyboard event listener
-            //
-
+            // ========================================
+            // KEYBOARD EVENT HANDLING
+            // ========================================
+            // Maps keyboard inputs to navigation actions for TV-like remote control experience
             $(document).on('keydown', function (e) {
+                // Define action functions for each key
                 function clickOnThumbnail() {
-                    oThumbnailController.enter(e);
+                    oThumbnailController.enter(e);  // Enter/Space: Select current thumbnail
                 }
                 function clickOnEscape() {
-                    oThumbnailController.escape();
+                    oThumbnailController.escape();  // Escape: Go back/cancel
                 }
                 function arrowLeft() {
-                    oThumbnailController.arrowLeft();
+                    oThumbnailController.arrowLeft();  // Left arrow: Previous thumbnail
                 }
                 function arrowUp() {
-                    oThumbnailController.arrowUp();
+                    oThumbnailController.arrowUp();    // Up arrow: Previous container/row
                 }
                 function arrowRight() {
-                    oThumbnailController.arrowRight();
+                    oThumbnailController.arrowRight(); // Right arrow: Next thumbnail
                 }
                 function arrowDown() {
-                    oThumbnailController.arrowDown();
+                    oThumbnailController.arrowDown();  // Down arrow: Next container/row
                 }
                 function tab() {
-                    oThumbnailController.tab();
+                    oThumbnailController.tab();        // Tab: Special navigation function
                 }
 
+                // Key code mapping: keyCode -> function
+                // 27=Escape, 13=Enter, 32=Space, 37=Left, 38=Up, 39=Right, 40=Down, 9=Tab
                 var act = { 27: clickOnEscape, 13: clickOnThumbnail, 32: clickOnThumbnail, 37: arrowLeft, 38: arrowUp, 39: arrowRight, 40: arrowDown, 9: tab };
                 if (act[e.keyCode])
-                    var a = new act[e.keyCode];
+                    var a = new act[e.keyCode]; // Execute corresponding action
             });
 
+            // ========================================
+            // TOUCH GESTURE IMPLEMENTATION
+            // ========================================
+            // Variables to track touch start position and context
             let touchStartX, touchStartY, touchInDescriptionSection;
 
+            // TOUCH START EVENT - Capture initial touch position
             $(document).on('touchstart', function (e) {
+                // Record starting coordinates of the touch
                 touchStartX = e.changedTouches[0].clientX;
                 touchStartY = e.changedTouches[0].clientY;
+                // Check if touch started in description section (to disable swipe navigation there)
                 touchInDescriptionSection = $(e.target).closest('#description-section').length > 0;
             });
 
+            // TOUCH END EVENT - Process swipe gestures
             $(document).on('touchend', function (e) {
+                // Skip gesture processing if touch was in description section
+                // (allows normal scrolling/interaction in description area)
                 if (touchInDescriptionSection) return;
-                
+
+                // Calculate touch movement distance
                 let touchEndX = e.changedTouches[0].clientX;
                 let touchEndY = e.changedTouches[0].clientY;
-                let deltaX = touchEndX - touchStartX;
-                let deltaY = touchEndY - touchStartY;
-                
+                let deltaX = touchEndX - touchStartX; // Horizontal movement
+                let deltaY = touchEndY - touchStartY; // Vertical movement
+
+                // Determine number of navigation commands based on swipe distance
+                // Uses SWIPE_RANGES configuration to map distance to command count
                 function getCommandCount(distance) {
                     for (let range of SWIPE_RANGES) {
                         if (distance >= range.min && distance <= range.max) {
                             return range.commands;
                         }
                     }
-                    return 0;
+                    return 0; // Distance too small, no commands
                 }
-                
+
+                // HORIZONTAL SWIPE PROCESSING (thumbnail navigation within container)
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= MIN_SWIPE_DISTANCE) {
                     let steps = getCommandCount(Math.abs(deltaX));
+
                     let scrollSection = oThumbnailController.getScrollSection();
                     let containerIndex = scrollSection.currentContainerIndex;
                     let currentFocused = scrollSection.focusedThumbnailList[containerIndex];
                     let domThumbnails = $('#container-' + containerIndex + ' .thumbnail');
                     let totalThumbnails = domThumbnails.length;
-                    
+
+                    let indexList = scrollSection.getIndexOfFirstAndLastThumbnailInViewPort();
+
+                    // SWIPE RIGHT = MOVE LEFT (previous thumbnails)
                     if (deltaX > 0) {
-                        // Swipe right = left arrow - check if at first thumbnail
+
+                        scrollSection.setFocusToThumbnail(indexList[0]);
+
+                        // Prevent navigation beyond first thumbnail
                         if (currentFocused === 0) {
-                            return; // Prevent circular navigation - already at first
+                            return; // Already at first thumbnail, no circular navigation
                         }
+                        // Execute multiple left arrow commands based on swipe distance
                         for (let i = 0; i < steps; i++) {
                             if (scrollSection.focusedThumbnailList[containerIndex] > 0) {
                                 oThumbnailController.arrowLeft();
                             }
                         }
+
+                    // SWIPE LEFT = MOVE RIGHT (next thumbnails)
                     } else {
-                        // Swipe left = right arrow - check if at last thumbnail
+
+                        scrollSection.setFocusToThumbnail(indexList[1]);
+
+                        // Prevent navigation beyond last thumbnail
                         if (currentFocused === totalThumbnails - 1) {
-                            return; // Prevent circular navigation - already at last
+                            return; // Already at last thumbnail, no circular navigation
                         }
+                        // Execute multiple right arrow commands based on swipe distance
                         for (let i = 0; i < steps; i++) {
                             if (scrollSection.focusedThumbnailList[containerIndex] < totalThumbnails - 1) {
                                 oThumbnailController.arrowRight();
                             }
                         }
                     }
-                } else if (Math.abs(deltaY) >= MIN_SWIPE_DISTANCE) {
+                }
+                // VERTICAL SWIPE PROCESSING (container navigation between rows)
+                else if (Math.abs(deltaY) >= MIN_SWIPE_DISTANCE) {
                     let steps = getCommandCount(Math.abs(deltaY));
                     let scrollSection = oThumbnailController.getScrollSection();
                     let currentContainer = scrollSection.currentContainerIndex;
                     let totalContainers = scrollSection.numberOfContainers;
-                    
+
                     if (deltaY > 0) {
-                        // Swipe down = up arrow - check if at first container
+                        // SWIPE DOWN = MOVE UP (previous containers/rows)
+                        // Prevent navigation beyond first container
                         if (currentContainer === 0) {
-                            return; // Prevent circular navigation - already at first
+                            return; // Already at first container, no circular navigation
                         }
+                        // Execute multiple up arrow commands based on swipe distance
                         for (let i = 0; i < steps; i++) {
                             if (scrollSection.currentContainerIndex > 0) {
                                 oThumbnailController.arrowUp();
                             }
                         }
                     } else {
-                        // Swipe up = down arrow - check if at last container
+                        // SWIPE UP = MOVE DOWN (next containers/rows)
+                        // Prevent navigation beyond last container
                         if (currentContainer === totalContainers - 1) {
-                            return; // Prevent circular navigation - already at last
+                            return; // Already at last container, no circular navigation
                         }
+                        // Execute multiple down arrow commands based on swipe distance
                         for (let i = 0; i < steps; i++) {
                             if (scrollSection.currentContainerIndex < totalContainers - 1) {
                                 oThumbnailController.arrowDown();

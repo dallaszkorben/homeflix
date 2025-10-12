@@ -67,8 +67,8 @@
 
 body {
     margin: 0px;
-    overscroll-behavior: none;
 }
+
 
 #static-section{
     height: var(--static-section-height-portion);               /* to occupy vertically the half part of the screen */

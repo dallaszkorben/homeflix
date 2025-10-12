@@ -441,11 +441,6 @@ class ObjScrollSection {
     }
 
 
-
-
-
-
-
     clickedOnThumbnail(id) {
         let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
 
@@ -484,6 +479,93 @@ class ObjScrollSection {
     escapeOfCode() {
         this.oDescriptionContainer.escapeOfCode();
     }
+
+
+    /**
+     * Gets the index of the currently focused thumbnail in the current container
+     * @returns {number} The index of the focused thumbnail (0-based)
+     */
+    getFocusedThumbnailIndex() {
+        return this.focusedThumbnailList[this.currentContainerIndex];
+    }
+
+    /**
+     * Moves focus to the thumbnail at the specified index in the current container
+     * @param {number} thumbnailIndex - The index of the thumbnail to focus on (0-based)
+     */
+    setFocusToThumbnail(thumbnailIndex) {
+        if (!this.focusedThumbnailList || !this.focusedThumbnailList.length) {
+            return;
+        }
+
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
+        if (thumbnailIndex < 0 || thumbnailIndex >= domThumbnails.length) {
+            return; // Invalid index
+        }
+
+        let currentThumbnailIndex = this.focusedThumbnailList[this.currentContainerIndex];
+
+        // Hide current focus
+        domThumbnails.eq(currentThumbnailIndex).css('border-color', 'transparent');
+
+        // Show new focus
+        domThumbnails.eq(thumbnailIndex).css('border-color', thumbnail_border_color);
+        this.focusedThumbnailList[this.currentContainerIndex] = thumbnailIndex;
+        this.scrollThumbnails();
+        this.showDetails();
+    }
+
+
+    /**
+     * Calculates the indices of the first and last thumbnails that are fully visible in the current container's viewport.
+     *
+     * This method determines which thumbnails are completely within the visible scrollable area of the container,
+     * excluding any partially visible thumbnails at the edges. Uses Math.round() to handle floating-point precision
+     * issues that can occur with CSS pixel calculations.
+     *
+     * AmazonQ generated this viewport calculation logic and floating-point precision fix
+     *
+     * @returns {Array<number>} A two-element array [firstIndex, lastIndex] where:
+     *   - firstIndex: The index of the first fully visible thumbnail (0-based)
+     *   - lastIndex: The index of the last fully visible thumbnail (0-based)
+     *   - Returns [0, 0] if no thumbnails exist in the container
+     *
+     * @example
+     * // With 9 thumbnails where indices 4-8 are fully visible:
+     * const [first, last] = getIndexOfFirstAndLastThumbnailInViewPort();
+     * // Returns [4, 8]
+     */
+    getIndexOfFirstAndLastThumbnailInViewPort() {
+        let domThumbnails = $('#container-' + this.currentContainerIndex + ' .thumbnail');
+        if (domThumbnails.length === 0) return [0, 0];
+
+        let domContainer = $('#container-' + this.currentContainerIndex);
+        let containerScrollLeft = Math.round(domContainer.scrollLeft());
+        let containerWidth = Math.round(domContainer.width());
+        let viewportRight = containerScrollLeft + containerWidth;
+
+        let firstFullyVisibleIndex = -1;
+        let lastFullyVisibleIndex = -1;
+
+        domThumbnails.each(function(index) {
+            let thumbnail = $(this);
+            let thumbnailLeft = Math.round(thumbnail.position().left + containerScrollLeft);
+            let thumbnailRight = thumbnailLeft + Math.round(thumbnail.outerWidth());
+
+            // Check if thumbnail is FULLY visible in viewport
+            if (thumbnailLeft >= containerScrollLeft && thumbnailRight <= viewportRight) {
+                if (firstFullyVisibleIndex === -1) firstFullyVisibleIndex = index;
+                lastFullyVisibleIndex = index;
+            }
+        });
+
+        return [firstFullyVisibleIndex === -1 ? 0 : firstFullyVisibleIndex, lastFullyVisibleIndex === -1 ? 0 : lastFullyVisibleIndex];
+    }
+
+
+
+
+
 
     // Take the next thumbnail
     arrowRight() {
@@ -2841,7 +2923,7 @@ class ThumbnailController {
         player.style.display = 'block';
 
         // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
-        $('#video_player').focus();
+        //$('#video_player').focus();
 
         refToThis.focusTask = FocusTask.Player;
     }
@@ -3138,10 +3220,19 @@ class ThumbnailController {
         if (event == 'fullscreenchange') {
 
         } else if (event == 'ended') {
-            $('video')[0].webkitExitFullScreen();
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else if (document.webkitFullscreenElement) {
+                document.webkitExitFullscreen();
+            } else if (document.mozFullScreenElement) {
+                document.mozCancelFullScreen();
+            }
         }
 
         player.load();
+
+
+
     }
 
     escape() {
@@ -3196,6 +3287,7 @@ class ThumbnailController {
             //this.objScrollSection.arrowDown();
         }
     }
+
 
     /**
      * POST REST request to register the recent media in the History

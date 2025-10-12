@@ -290,7 +290,7 @@ genre:
     entertainment:
         <<: *music
         music: music
-        performace: Performace
+        performance: Performace
         standup: Standup
         skit: Kabaré
         analysis: Elemzés
@@ -300,6 +300,8 @@ genre:
         news: Híradó
         talk: Beszélgetés
         footage: Filmfelvétel
+        record: Hangfelvétel
+        montage: Montázs
         picture: Fénykép
         hearing: Meghallgatás
         presentation: Bemutató
@@ -308,6 +310,7 @@ genre:
         propaganda: Propaganda
         press_conference: Sajtótájékoztató
         report: Riport
+        news_analysis: Hírelemzés
         demonstration: Tüntetés
         statement: Nyilatkozat
         speech: Beszéd
@@ -477,7 +480,7 @@ theme:
     weird: Furcsaság
     time_travel: Időutazás
     pedophilia: Pedofilia
-
+    misdeed: Gaztett
 
 title:
     title: Cím

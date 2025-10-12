@@ -2528,10 +2528,11 @@ class SqlDatabase:
         if (username is None and password is None) or (not username and not password):
             if session.get('logged_in_user'):
 
-                username = session['logged_in_user']['username']
-                data = self._get_publishable_user_data(username)
-                result = True
-                error = None
+                if 'logged_in_user' in session and 'username' in session['logged_in_user']:
+                    username = session['logged_in_user']['username']
+                    data = self._get_publishable_user_data(username)
+                    result = True
+                    error = None
 
             return {'result': result, 'data':data, 'error': error}
 

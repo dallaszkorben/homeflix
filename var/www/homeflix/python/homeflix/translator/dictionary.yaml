@@ -290,7 +290,7 @@ genre:
     entertainment:
         <<: *music
         music: Zene
-        performace: Előadás
+        performance: Előadás
         standup: Standup
         skit: Skit
         analysis: Analysis
@@ -300,6 +300,8 @@ genre:
         news: News
         talk: Talk
         footage: Footage
+        record: Record
+        montage: Montage
         picture: Picture
         hearing: Hearing
         presentation: Presentation
@@ -308,6 +310,7 @@ genre:
         propaganda: Propaganda
         press_conference: Press Conference
         report: Report
+        news_analysis: New Analysis
         demonstration: Demonstration
         statement: Statement
         speech: Speech
@@ -477,7 +480,7 @@ theme:
     weird: Weird
     time_travel: Time travel
     pedophilia: Pedophilia
-
+    misdeed: Misdeed
 
 title:
     title: Title
