@@ -40,7 +40,7 @@
     --history-section-border-color: rgb(13, 30, 53);
     --history-section-font-size: 10 px;
     --history-section-font-color: rgb(0, 0, 0);
-    --history-section-height: 1.5em;
+    --history-section-height: 50px;
 
     --description-section-border-width: 0px;
     --description-section-border-color: rgb(70, 70, 70);
@@ -478,47 +478,6 @@ body {
 
 /* --- */
 
-
-/* ****************
- *
- * History section
- *
- **************** */
- /* #history-section {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    font-family: "Comic Sans MS", "Arial", "Times New Roman", Cursive, Sans-Serif, Serif;
-    font-weight: bold;
-    font-size: var(--history-section-font-size);
-    color: var(--history-section-font-color);
-    min-height: var(--history-section-height);
-    border: var(--history-section-border-width) var(--history-section-border-color) solid;
-    background-color: var(--history-section-background);
-}
-
-#history-section-text, #history-section-link {
-    font-family: inherit;
-    font-weight: inherit;
-    font-size: inherit;
-}
-
-#history-section-link {
-    color: blue;
-    cursor: pointer;
-    text-decoration: underline;
-}
-
-#control-container-add-section {
-    cursor: pointer;
-    margin-left: auto;
-    font-family: inherit;
-    font-weight: inherit;
-    font-size: inherit;
-    filter: invert(0%) sepia(100%) saturate(3000%) hue-rotate(215deg) brightness(100%) contrast(100%);
-    margin-right: 10px;
-} */
-
 #container-control-section {
     display: flex;
     justify-content: space-between;
@@ -530,7 +489,7 @@ body {
     font-weight: bold;
     font-size: var(--history-section-font-size);
     color: var(--history-section-font-color);
-    min-height: var(--history-section-height);
+    height: var(--history-section-height);
     border: var(--history-section-border-width) var(--history-section-border-color) solid;
     background-color: var(--history-section-background);
 }
@@ -548,15 +507,20 @@ body {
 }
 
 #history-section-link {
-    color: blue;
     cursor: pointer;
+    color: rgb(100, 200, 255) !important; /* Bright cyan for visibility */
     text-decoration: underline;
     margin-left: 0; /* Remove any space */
 }
 
+#history-section-link:hover {
+    color: rgb(150, 220, 255) !important; /* Lighter on hover */
+}
+
 #container-controllers {
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    height: 100%;
 }
 
 #container-controllers-add {
@@ -569,6 +533,43 @@ body {
 }
 
 
+
+
+
+/*
+=== Up/Down buttons for the mobiles ===
+*/
+
+#container-controllers-up-down {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    position: relative;
+}
+
+#container-controllers-up-down img {
+    height: 100px;
+    width: auto;
+    cursor: pointer;
+
+    z-index: 3000;  /* Needed to be not covered by any other elements - beeng on the top */
+    position: relative;
+}
+
+#container-controllers-up-down img:first-child {
+    margin-top: -50px;  /*half of the vertical size of the image (100px)*/
+}
+
+#container-controllers-up-down img:last-child {
+    margin-bottom: -50px;  /*half of the vertical size of the image (100px)*/
+}
+
+@media (max-width: 980px) {
+    #container-controllers-up-down {
+        display: flex;
+    }
+}
 
 
 

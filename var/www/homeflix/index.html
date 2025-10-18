@@ -321,12 +321,21 @@
         const static_section_height_portion = 50;             // Takes remaining 50% of viewport height
 
         // HISTORY SECTION (breadcrumb navigation)
-        const history_section_background = 'rgb(80, 80, 80)'; // Medium gray background
+        const history_section_background = 'rgb(100, 100, 100)'; // Medium gray background
         const history_section_border_width = 1
         const history_section_border_color = 'rgb(0, 0, 0)';  // Black border
-        const history_section_font_size = 20;                 // Navigation text size
         const history_section_font_color = 'rgb(0, 0, 0)';    // Black text
-        const history_section_height = 40;                    // Fixed height for navigation bar
+
+        // Check if device is mobile and adjust height accordingly
+        let history_section_height = undefined;
+        let history_section_font_size = undefined;
+        if (window.innerWidth <= 980) {
+            history_section_font_size = 30; // Navigation text size
+            history_section_height = 100;   // Increased height for mobile
+        }else{
+            history_section_font_size = 22;                             // Navigation text size
+            history_section_height = history_section_font_size + 15;  // Fixed height for navigation bar
+        }
 
         // DESCRIPTION SECTION (movie details)
         // IMPORTANT: Must match scroll_section_border_width to prevent horizontal scrollbar
@@ -734,6 +743,15 @@
                         }
                     }
                 }
+            });
+
+            // Mobile arrow navigation click handlers
+            $('#container-controllers-up-down img[src*="arrow-mobile-up.png"]').on('click', function() {
+                oThumbnailController.arrowUp();
+            });
+
+            $('#container-controllers-up-down img[src*="arrow-mobile-down.png"]').on('click', function() {
+                oThumbnailController.arrowDown();
             });
 
             /********
@@ -1304,8 +1322,12 @@
                     <div id="history-section-link"></div>
                 </div>
                 <div id="container-controllers">
-                    <div id="container-controllers-add">&#10133;</div>
                     <!-- ➕ -->
+                    <div id="container-controllers-add">&#10133;</div>
+                    <div id="container-controllers-up-down">
+                        <img src="images/tools/arrow-mobile-up.png" alt="Up/Down Navigation">
+                        <img src="images/tools/arrow-mobile-down.png" alt="Down Navigation">
+                    </div>
                 </div>
             </div>
         </div>

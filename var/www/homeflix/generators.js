@@ -77,7 +77,7 @@ class RestGenerator extends Generator{
             thumbnailListCache[lineIndex] = thumbnail_list;  // Cache the result
 
 //            // skip to show the empty containers - bad idea, it will still be in the list, so the result ends with bad indexing in case of modification
-//            if(thumbnail_list.length > 0){
+            if(thumbnail_list.length > 0){
 //                let oContainer = new ObjThumbnailContainer(request["title"]);
                 let oContainer = new ObjThumbnailContainer(request, request["title"]);
                 containerList.push(oContainer);
@@ -94,7 +94,7 @@ class RestGenerator extends Generator{
                 objScrollSection.addThumbnailContainerObject(oContainer);
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-//        }
+        }
 
         Generator.stopSpinner();
         objScrollSection.focusDefault();

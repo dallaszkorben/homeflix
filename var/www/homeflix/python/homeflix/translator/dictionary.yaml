@@ -413,6 +413,7 @@ theme:
     a_bomb: A-bomb
     movie: Movie
     film: Film
+    book: Book
     politics: Politics
     culture: Culture
     totalitarianism: Totalitarianism
@@ -504,7 +505,7 @@ title:
     movie_sequels: Movie Sequels
     movie_remakes: Movie Remakes
     movie_individual: Movie Individual
-    movie_mixed: Movie All
+    movie_mixed: Mixed Movies
     movie_documentaries: Documentaries
     movie_hungarian: Hungarian
 

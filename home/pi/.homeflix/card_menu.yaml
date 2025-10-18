@@ -440,46 +440,7 @@ definitions:
                                         request: *request_collect_highest_mixed
                                         title:
                                           - variable: data_value
-                            # Movie Filtered by ABC - Queried
-                            - thumbnail:
-                                image: images/categories/movie_by_title_abc.jpg
-                                title:
-                                  - trans:
-                                      translator: translated_labels
-                                      key: movie_by_title_abc
-                              description:
-                                image: images/categories/movie_by_title_abc.jpg
-                                title:
-                                  - trans:
-                                      translator: translated_labels
-                                      key: movie_by_title_abc
-                              history:
-                                  - trans:
-                                      translator: translated_labels
-                                      key: movie_by_title_abc
-                              execution:
-                                container_list:
-                                  - dynamic_queried:
-                                      pre_query:
-                                        data:
-                                          category: movie
-                                          maximum: 20     # this part does not work. The strategy should be figured out and implemented
-                                        request:
-                                          method: GET
-                                          protocol: http
-                                          path: "/collect/abc/by/movie_title/count"
-                                      query_loop:
-                                        data:
-                                          category: movie
-                                          filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
-                                        # take the value of the response of pre_query and use it as 'title' in the new request
-                                        data_from_pre_response_list:
-                                          type: dict
-                                          dict:
-                                            title: filter
-                                        request: *request_collect_highest_mixed
-                                        title:
-                                          - variable: data_dict["name"]
+
                 # ----------------
                 # Series thumbnail
                 # ----------------
@@ -593,6 +554,7 @@ definitions:
                             level: series
                             genres: documentary
                           request: *request_collect_highest_mixed
+
                 # ----------------
                 # Sequel thumbnail
                 # ----------------
@@ -680,6 +642,7 @@ definitions:
                             level: sequel
                             genres: scifi
                           request: *request_collect_highest_mixed
+
                 # ----------------
                 # Remake thumbnail
                 # ----------------
@@ -712,6 +675,50 @@ definitions:
                             category: movie
                             level: remake
                           request: *request_collect_highest_mixed
+
+                # ---------------------
+                # Movie Filtered by ABC
+                # ---------------------
+                - thumbnail:
+                    image: images/categories/movie_by_title_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: movie_by_title_abc
+                  description:
+                    image: images/categories/movie_by_title_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: movie_by_title_abc
+                  history:
+                      - trans:
+                          translator: translated_labels
+                          key: movie_by_title_abc
+                  execution:
+                    container_list:
+                      - dynamic_queried:
+                          pre_query:
+                            data:
+                              category: movie
+                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
+                            request:
+                              method: GET
+                              protocol: http
+                              path: "/collect/abc/by/movie_title/count"
+                          query_loop:
+                            data:
+                              category: movie
+                              filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
+                            # take the value of the response of pre_query and use it as 'title' in the new request
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                title: filter
+                            request: *request_collect_highest_mixed
+                            title:
+                              - variable: data_dict["name"]
+
                 # ------------------
                 # Playlist thumbnail
                 # ------------------

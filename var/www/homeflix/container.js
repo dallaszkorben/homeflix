@@ -87,6 +87,12 @@ class ObjScrollSection {
 
         this.domThumbnailContainerBlocks = $('#scroll-section .thumbnail-container-block');
 
+        // Restore + icon visibility if this is a search container
+        const containerType = this.oContainerGenerator.menu_dict?.container_type ?? "normal";
+        if (containerType === "search") {
+            $("#container-controllers-add").show();
+        }
+
         this.focus();
     }
 
@@ -3184,7 +3190,7 @@ class ThumbnailController {
 
                 player.load();
                 this.startPlayer()
-                //player.play();
+//                player.play();
 
                 // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
                 domPlayer.focus();
@@ -3255,7 +3261,9 @@ class ThumbnailController {
     arrowLeft() {
         if (this.focusTask === FocusTask.Menu) {
             this.objScrollSection.arrowLeft();
-
+        } else if (this.focusTask === FocusTask.Player) {
+            let player = $("#video_player")[0];
+            player.currentTime = Math.max(0, player.currentTime - 10);
         } else if (this.focusTask === FocusTask.Code) {
             this.objScrollSection.escapeOfCode();
         }
@@ -3270,6 +3278,10 @@ class ThumbnailController {
     arrowRight() {
         if (this.focusTask === FocusTask.Menu) {
             this.objScrollSection.arrowRight();
+
+        } else if (this.focusTask === FocusTask.Player) {
+            let player = $("#video_player")[0];
+            player.currentTime = Math.min(player.duration, player.currentTime + 10);
 
         } else if (this.focusTask === FocusTask.Code) {
             this.objScrollSection.escapeOfCode();

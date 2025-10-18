@@ -413,6 +413,7 @@ theme:
     a_bomb: Atombomba
     movie: Mozi
     film: Film
+    book: Könyv
     politics: Politika
     culture: Kultura
     totalitarianism: Totalitarizmus
@@ -504,7 +505,7 @@ title:
     movie_sequels: Folytatásos filmek
     movie_remakes: Feldolgozások
     movie_individual: Filmek
-    movie_mixed: Filmek
+    movie_mixed: Vegyes
     movie_documentaries: Dokumentumfilmek
     movie_hungarian: Magyar
 
