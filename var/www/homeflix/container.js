@@ -157,7 +157,11 @@ class ObjScrollSection {
         if('menu_dict' in this.oContainerGenerator){
             container_list = this.oContainerGenerator.menu_dict.container_list;
         }
-        if (container_list && ((container_list.length == 1 && 'dynamic_hard_coded' in container_list[0]) || (container_list.length > 1 && 'dynamic_hard_coded' in container_list[containerIndex]))){
+
+        /*
+        Here is the logic how the modifier/delete icons are displayed
+        */
+        if (container_list && ((container_list.length == 1 && 'dynamic_hard_coded' in container_list[0]) || (container_list.length > 1 && containerIndex < container_list.length && 'dynamic_hard_coded' in container_list[containerIndex]))){
 
 
             let domThumbnailContainerControlSectionDelete = $("<div>", {
