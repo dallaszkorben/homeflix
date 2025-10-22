@@ -754,6 +754,58 @@
                 oThumbnailController.arrowDown();
             });
 
+            // ========================================
+            // MOBILE ARROW DRAG FUNCTIONALITY
+            // ========================================
+            let touchOnArrows = false;
+            let arrowDragStartX, arrowDragStartY;
+
+            // Touch start on arrows
+            $('#container-controllers-up-down').on('touchstart', function(e) {
+                touchOnArrows = true;
+
+                // Get current transform value
+                let currentTransform = $(this).css('transform');
+                let currentX = 0;
+                if (currentTransform && currentTransform !== 'none') {
+                    let matrix = currentTransform.match(/matrix\(([^)]+)\)/);
+                    if (matrix) {
+                        currentX = parseFloat(matrix[1].split(',')[4]) || 0;
+                    }
+                }
+
+                arrowDragStartX = e.changedTouches[0].clientX - currentX;
+                arrowDragStartY = e.changedTouches[0].clientY;
+                e.stopPropagation();
+            });
+
+            // Touch move on arrows (horizontal drag)
+            $('#container-controllers-up-down').on('touchmove', function(e) {
+                if (!touchOnArrows) return;
+
+                let deltaX = e.changedTouches[0].clientX - arrowDragStartX;
+                let deltaY = e.changedTouches[0].clientY - arrowDragStartY;
+
+                // Only process horizontal drags
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                    // Move both arrows together horizontally
+                    $(this).css('transform', `translateX(${deltaX}px)`);
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            // Touch end on arrows
+            $('#container-controllers-up-down').on('touchend', function(e) {
+                if (!touchOnArrows) return;
+
+                // Reset position
+            //    $(this).css('transform', '');
+                touchOnArrows = false;
+                e.stopPropagation();
+            });
+
             /********
              *      *
              * MENU *

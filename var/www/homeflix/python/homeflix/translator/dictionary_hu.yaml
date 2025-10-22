@@ -372,7 +372,7 @@ theme:
     utopia: Utópia
     dystopia: Disztópia
     post_apocalypse: Post-apokalipszis
-    apocalypse: Apocalipszis
+    apocalypse: Apokalipszis
     zombie: Zombi
     money: Pénz
     greed: Kapzsiság
@@ -482,6 +482,8 @@ theme:
     time_travel: Időutazás
     pedophilia: Pedofilia
     misdeed: Gaztett
+    mystery: Rejtély
+
 
 title:
     title: Cím

@@ -517,11 +517,11 @@ body {
     color: rgb(150, 220, 255) !important; /* Lighter on hover */
 }
 
-#container-controllers {
+/* #container-controllers {
     display: flex;
     align-items: stretch;
     height: 100%;
-}
+} */
 
 #container-controllers-add {
     cursor: pointer;
@@ -540,22 +540,33 @@ body {
 === Up/Down buttons for the mobiles ===
 */
 
+#container-controllers {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    position: relative; /* Add this line */
+}
+
+
 #container-controllers-up-down {
     display: none;
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    position: relative;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 3000 !important;
 }
+
 
 #container-controllers-up-down img {
     height: 100px;
     width: auto;
     cursor: pointer;
-
-    z-index: 3000;  /* Needed to be not covered by any other elements - beeng on the top */
     position: relative;
 }
+
 
 #container-controllers-up-down img:first-child {
     margin-top: -50px;  /*half of the vertical size of the image (100px)*/

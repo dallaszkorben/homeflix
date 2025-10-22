@@ -2933,7 +2933,7 @@ class ThumbnailController {
         player.style.display = 'block';
 
         // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
-        //$('#video_player').focus();
+        $('#video_player').focus();
 
         refToThis.focusTask = FocusTask.Player;
     }
