@@ -207,6 +207,8 @@ genre:
         noclassical_dark_wave: Neoclassical dark wave
         heavy_metal: Heavy Metal
         R&B: Rhythm and Blues
+        ambient: Ambient
+        soundtrack: Filmzene
 
     movie:
         <<: *common
@@ -453,6 +455,7 @@ theme:
     ufo: UFO
     iot: IoT
     it: IT
+    mechanics: Mechanika
     hardware: Hardware
     electronics: Elektronika
     technology: Technológia

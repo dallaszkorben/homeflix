@@ -705,7 +705,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc/by/movie_title/count"
+                              path: "/collect/abc/by/movie_title/count"  # it is a static ABC list
                           query_loop:
                             data:
                               category: movie
@@ -1663,7 +1663,7 @@ definitions:
                                         level: band
                                         genres: rock
                                       request: *request_collect_highest_mixed
-                                  # Rock
+                                  # Alternative
                                   - dynamic_hard_coded:
                                       title:
                                         - trans:
@@ -1685,6 +1685,18 @@ definitions:
                                         level: band
                                         genres: punk
                                       request: *request_collect_highest_mixed
+                                  # Soundtrack
+                                  - dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: soundtrack
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: soundtrack
+                                      request: *request_collect_highest_mixed
+
 
                             # -----------------------
                             # Music-Audio-Genre-Record
@@ -1784,6 +1796,17 @@ definitions:
                                         category: music_audio
                                         level: band
                                         genres: punk
+                                      request: *request_collect_lowest
+                                  # Soundtrack
+                                  - dynamic_hard_coded:
+                                      title:
+                                        - trans:
+                                            translator: translated_genre_music
+                                            key: soundtrack
+                                      data:
+                                        category: music_audio
+                                        level: band
+                                        genres: soundtrack
                                       request: *request_collect_lowest
 
                 # ---------------
