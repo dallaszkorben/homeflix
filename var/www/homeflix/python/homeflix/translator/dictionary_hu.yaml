@@ -205,9 +205,12 @@ genre:
         reggae: Reggae
         dance: Dance
         noclassical_dark_wave: Neoclassical dark wave
+        classical: Klasszikus
         heavy_metal: Heavy Metal
         R&B: Rhythm and Blues
         ambient: Ambient
+        jazz: Jazz
+        tango: Tangó
         soundtrack: Filmzene
 
     movie:
@@ -486,7 +489,7 @@ theme:
     pedophilia: Pedofilia
     misdeed: Gaztett
     mystery: Rejtély
-
+    violence: Erőszak
 
 title:
     title: Cím

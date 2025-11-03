@@ -4386,9 +4386,9 @@ class SqlDatabase:
                 mixed_id_list.id=core.id
 
             ORDER BY CASE
-                WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
-                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
-                WHEN sequence<0 THEN basename
+                WHEN sequence IS NULL AND title_req IS NOT NULL THEN LOWER(title_req)
+                WHEN sequence IS NULL AND title_orig IS NOT NULL THEN LOWER(title_orig)
+                WHEN sequence<0 THEN LOWER(basename)
                 WHEN sequence>=0 THEN sequence
             END
             LIMIT :limit; '''

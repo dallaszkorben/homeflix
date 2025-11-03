@@ -205,9 +205,12 @@ genre:
         reggae: Reggae
         dance: Dance
         noclassical_dark_wave: Neoclassical dark wave
+        classical: Classical
         heavy_metal: Heavy Metal
         R&B: Rhythm and Blues
         ambient: Ambient
+        jazz: Jazz
+        tango: Tango
         soundtrack: Soundtrack
 
     movie:
@@ -486,6 +489,7 @@ theme:
     pedophilia: Pedophilia
     misdeed: Misdeed
     mystery: Mystery
+    violence: Violence
 
 title:
     title: Title
