@@ -89,6 +89,8 @@ class ObjScrollSection {
 
         // Restore + icon visibility if this is a search container
         const containerType = this.oContainerGenerator.menu_dict?.container_type ?? "normal";
+
+        // If the container_type == 'search' configured in card_menu.yaml
         if (containerType === "search") {
             $("#container-controllers-add").show();
         }
@@ -159,10 +161,29 @@ class ObjScrollSection {
         }
 
         /*
-        Here is the logic how the modifier/delete icons are displayed
+        Here is the logic how the randomize 🎲 icons are displayed
         */
         if (container_list && ((container_list.length == 1 && 'dynamic_hard_coded' in container_list[0]) || (container_list.length > 1 && containerIndex < container_list.length && 'dynamic_hard_coded' in container_list[containerIndex]))){
 
+            let domThumbnailContainerControlSectionRandomize = $("<div>", {
+                class: "thumbnail-container-control-section-randomize",
+                text: "  \u{1F3B2}  "
+            }); // 🎲
+            // Add click listener on the delete icon
+            domThumbnailContainerControlSectionRandomize.click(function () {
+                refToThis.clickedOnRandomizeThumbnailContainer(thumbnailContainer, domThumbnailContainerBlock);
+            });
+
+            domThumbnailContainerControlSection.append(domThumbnailContainerControlSectionRandomize);
+        }
+
+        /*
+        Here is the logic how the modifier/delete 🗑🖊 icons are displayed
+        If the container_type == 'search'               - configured in card_menu.yaml
+        And the container_list == 'dynamic_hard_coded   - configured in card_menu.yaml
+        */
+        const containerType = this.oContainerGenerator.menu_dict?.container_type ?? "normal";
+        if (containerType === "search" && container_list && ((container_list.length == 1 && 'dynamic_hard_coded' in container_list[0]) || (container_list.length > 1 && containerIndex < container_list.length && 'dynamic_hard_coded' in container_list[containerIndex]))){
 
             let domThumbnailContainerControlSectionDelete = $("<div>", {
                 class: "thumbnail-container-control-section-delete",
@@ -326,7 +347,118 @@ class ObjScrollSection {
 
         // Shows the actual Description
         this.oDescriptionContainer.refreshDescription(thumbnail, card_id, image, title, storyline, lyrics, credentials, extra, appendix);
+    }
 
+
+    /**
+     * Randomizes the order of thumbnails within a thumbnail container while maintaining data consistency.
+     *
+     * This method is triggered when the user clicks the 🎲 (dice) icon on a container. It performs a complete
+     * shuffle of thumbnails that involves three critical data structures that must stay synchronized:
+     *
+     * 1. DOM Elements: The visual thumbnail elements in the browser
+     * 2. Data Array: The thumbnailList containing all thumbnail data (titles, images, progress, etc.)
+     * 3. Focus Tracking: The focusedThumbnailList tracking which thumbnail has the red border
+     *
+     * The synchronization is crucial because:
+     * - DOM position determines visual order and click detection
+     * - Data array position determines which data is shown when a thumbnail is selected
+     * - Focus tracking determines which thumbnail gets the red border and shows details
+     *
+     * @param {ObjThumbnailContainer} thumbnailContainer - The container object being randomized
+     * @param {jQuery} domThumbnailContainerBlock - The DOM element of the container block
+     */
+    clickedOnRandomizeThumbnailContainer(thumbnailContainer, domThumbnailContainerBlock) {
+        // Extract container index from DOM ID (e.g., "container-block-2" -> 2)
+        let containerId = domThumbnailContainerBlock.attr('id');
+        let containerIndex = parseInt(containerId.replace('container-block-', ''));
+
+        // Get the DOM container and its thumbnail children
+        let domContainer = $('#container-' + containerIndex);
+        let domThumbnails = domContainer.children('.thumbnail');
+
+        // Only randomize if there are multiple thumbnails
+        if (domThumbnails.length > 1) {
+            let refToThis = this;
+
+            // STEP 1: Generate random shuffle order using Fisher-Yates algorithm
+            // Create array [0, 1, 2, 3, ...] representing original positions
+            let indices = Array.from({length: domThumbnails.length}, (_, i) => i);
+
+            // Fisher-Yates shuffle: randomly swap elements to create new order
+            // This ensures each possible permutation has equal probability
+            for (let i = indices.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            // After shuffle, indices might be [2, 0, 3, 1] meaning:
+            // - Position 0 gets thumbnail that was originally at position 2
+            // - Position 1 gets thumbnail that was originally at position 0, etc.
+
+            // STEP 2: Reorder the data array to match the new shuffle order
+            // This is critical: the data must follow the visual elements
+            let originalThumbnailList = [...this.thumbnailContainerList[containerIndex].thumbnailList];
+            for (let i = 0; i < indices.length; i++) {
+                // Put the data from original position indices[i] into new position i
+                this.thumbnailContainerList[containerIndex].thumbnailList[i] = originalThumbnailList[indices[i]];
+            }
+
+            // STEP 3: Reorder DOM elements to match the shuffle
+            // Convert jQuery collection to array for easier manipulation
+            let thumbnailsArray = domThumbnails.toArray();
+            domContainer.empty(); // Remove all thumbnails from DOM
+
+            // Re-add thumbnails in the new shuffled order
+            indices.forEach(originalIndex => {
+                domContainer.append(thumbnailsArray[originalIndex]);
+            });
+
+            // STEP 4: Update DOM IDs and restore click functionality
+            // When we move DOM elements, they lose their event listeners and may have wrong IDs
+            domContainer.children('.thumbnail').each(function (newIndex) {
+                let thumbnailElement = $(this);
+
+                // Update ID to reflect new position (needed for click detection)
+                thumbnailElement.attr('id', 'container-' + containerIndex + '-thumbnail-' + newIndex);
+
+                // Re-attach click listener (lost when DOM was manipulated)
+                thumbnailElement.click(function () {
+                    refToThis.clickedOnThumbnail($(this).attr('id'));
+                });
+            });
+
+            // STEP 5: Update focus tracking to follow the moved thumbnail
+            // If thumbnail at position 0 was focused and moved to position 3, focus should move to position 3
+            let currentFocusedIndex = this.focusedThumbnailList[containerIndex];
+            let newFocusedIndex = indices.indexOf(currentFocusedIndex);
+            this.focusedThumbnailList[containerIndex] = newFocusedIndex;
+
+            // STEP 7: Rebuild continuous play arrays based on new shuffled order
+            for (let i = 0; i < this.thumbnailContainerList[containerIndex].thumbnailList.length; i++) {
+                let thumbnail = this.thumbnailContainerList[containerIndex].thumbnailList[i];
+                let functionForSelection = thumbnail.getFunctionForSelection();
+
+                if (functionForSelection && functionForSelection.continuous) {
+                    // Build new continuous array starting from current position in new order
+                    let newContinuous = [];
+                    for (let j = i; j < this.thumbnailContainerList[containerIndex].thumbnailList.length; j++) {
+                        let nextThumbnail = this.thumbnailContainerList[containerIndex].thumbnailList[j];
+                        let nextFunction = nextThumbnail.getFunctionForSelection();
+                        if (nextFunction && nextFunction.continuous && nextFunction.continuous[0]) {
+                            newContinuous.push(nextFunction.continuous[0]);
+                        }
+                    }
+
+                    functionForSelection.continuous = newContinuous;
+                    thumbnail.setFunctionForSelection(functionForSelection);
+                }
+            }
+
+            // STEP 6: Scroll container to ensure focused thumbnail remains visible
+            // If the focused thumbnail moved outside the viewport, scroll to show it
+            this.scrollThumbnails();
+
+        }
     }
 
     /**
@@ -2668,7 +2800,7 @@ class ThumbnailController {
         let medium_dict = {};
         let screenshot_path = null;
 
-        if(!hit["is_appendix"]){
+        if(hit["is_appendix"] === false){
             screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
         }
 
