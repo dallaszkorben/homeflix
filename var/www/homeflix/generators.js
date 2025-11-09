@@ -314,7 +314,7 @@ class RestGenerator extends Generator{
             thumbnail.setAppendix(appendix_list);
         }
 
-        if(hit["level"]){
+        if(hit["level"] && hit["level"] !== "episode" && hit["level"] !== "record"){
 
             let thumbnail_path = RestGenerator.getRandomSnapshotPath(hit["source_path"]);
             let screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
@@ -323,7 +323,7 @@ class RestGenerator extends Generator{
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
             thumbnail.setTextCard({storyline:hit["storyline"], lyrics:hit["lyrics"]});
-            thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"] });
+            thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"], sequence: hit["sequence"] });
 
             thumbnail.setFunctionForSelection({
                 "single":
@@ -418,7 +418,7 @@ class RestGenerator extends Generator{
 
             // TODO: fix it
             // This is not the best choice to store 'medium_path' and 'download' in the 'extras', but that is what I choose. It could be changed
-            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], full_time: card["full_time"],net_start_time: card["net_start_time"], net_stop_time: card["net_stop_time"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"], recent_state: hit["recent_state"], 'rate': hit['rate'], 'skip_continuous_play': hit['skip_continuous_play'], 'tags': hit['tags']});
+            thumbnail.setExtras({medium_path: medium_path, download: card["download"], length: card["length"], full_time: card["full_time"],net_start_time: card["net_start_time"], net_stop_time: card["net_stop_time"], date: card["date"], origins: card["origins"], genres: card["genres"], themes: card["themes"], level: card["level"], recent_state: hit["recent_state"], 'rate': hit['rate'], 'skip_continuous_play': hit['skip_continuous_play'], 'tags': hit['tags'], sequence: hit["sequence"]});
 
             thumbnail.setFunctionForSelection({
                 "single":

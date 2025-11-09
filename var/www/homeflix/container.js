@@ -981,14 +981,19 @@ class ObjThumbnailContainer {
         domThumbnailTextWrapper.append(domThumbnailText);
         domThumbnail.append(domThumbnailTextWrapper);
 
-
-
         // Add LEVEL RIBBON if necessary
-        if(level && ( level == "series" || level =="remake" || level == "sequel" )){
+        if(level && ( level == "series" || level =="remake" || level == "sequel" || level == "season" || level == "episode" || level == "lp" || level == "band" || level == "record")){
+            let ribbonText = get_translated_level(level);
+
+            // Add sequence number for season and episode levels
+            if(((level == "season" || level == "episode") || (level == "lp" || level == "record"))  && extras["sequence"] && extras["sequence"] >= 0){
+                ribbonText += ": " + extras["sequence"];
+            }
+
             let domLevelRib = $("<div>",{
                 class: "ribbon-level",
                 level: level,
-                text: get_translated_level(level)
+                text: ribbonText
             });
             domThumbnail.append(domLevelRib);
         }
@@ -1166,7 +1171,7 @@ class Thumbnail {
         }
     }
 
-    setExtras({ medium_path = undefined, download = undefined, length = undefined, full_time = undefined, net_start_time = undefined, net_stop_time = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined, recent_state = {}, rate = undefined, skip_continuous_play = undefined, tags = []}) {
+    setExtras({ medium_path = undefined, download = undefined, length = undefined, full_time = undefined, net_start_time = undefined, net_stop_time = undefined, date = undefined, origins = undefined, genres = undefined, themes = undefined, level = undefined, recent_state = {}, rate = undefined, skip_continuous_play = undefined, tags = [], sequence = undefined}) {
         this.thumbnailDict["extras"] = {}
 
         // TODO: This is not the best choice to store 'medium_path' in the 'extras', but that is what I chose. It could be changed
@@ -1200,6 +1205,8 @@ class Thumbnail {
         this.thumbnailDict["extras"]["skip_continuous_play"] = skip_continuous_play;
 
         this.thumbnailDict["extras"]["tags"] = tags;
+
+        this.thumbnailDict["extras"]["sequence"] = sequence;
     }
 
     setExtrasRate(rate){

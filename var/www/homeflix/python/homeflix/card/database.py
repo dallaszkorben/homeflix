@@ -18,6 +18,9 @@ from homeflix.exceptions.not_existing_table import NotExistingTable
 
 class SqlDatabase:
 
+    # Media card level condition - cards that represent playable media content
+    MEDIA_CARD_LEVEL_CONDITION = "(card.level IS NULL OR card.level = 'record' OR card.level = 'episode')"
+
     TABLE_CATEGORY = "Category"
     TABLE_PERSON = "Person"
     TABLE_COUNTRY = "Country"
@@ -878,7 +881,7 @@ class SqlDatabase:
         return mediatype_id
 
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None,  level=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -901,11 +904,11 @@ class SqlDatabase:
             #
             # if the card has its own ID, meaning it is media card
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_start_time, net_stop_time, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_start_time, :net_stop_time, :basename, :source_path, :id_higher_card, :sequence)
+                    (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_start_time, net_stop_time, basename, source_path, id_higher_card, sequence)
+                    VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_start_time, :net_stop_time, :basename, :source_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'id': card_id, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_start_time': net_start_time, 'net_stop_time': net_stop_time, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_start_time': net_start_time, 'net_stop_time': net_stop_time, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -2613,7 +2616,7 @@ class SqlDatabase:
                        Person person,
                        Category category
                     WHERE
-                       card.level IS NULL
+                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                        AND category.name = :category
                        AND card.id_category = category.id
                        AND card_actor.id_actor = person.id
@@ -2673,7 +2676,7 @@ class SqlDatabase:
                                 Person person,
                                 Category category
                             WHERE
-                                card.level IS NULL
+                                ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                                 AND category.name = :category
                                 AND card.id_category = category.id
                                 AND card_actor.id_actor = person.id
@@ -2756,7 +2759,7 @@ class SqlDatabase:
                        Person person,
                        Category category
                     WHERE
-                       card.level IS NULL
+                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                        AND category.name = :category
                        AND card.id_category = category.id
                        AND card_voice.id_voice = person.id
@@ -2816,7 +2819,7 @@ class SqlDatabase:
                                 Person person,
                                 Category category
                             WHERE
-                                card.level IS NULL
+                                ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                                 AND category.name = :category
                                 AND card.id_category = category.id
                                 AND card_voice.id_voice = person.id
@@ -2897,7 +2900,7 @@ class SqlDatabase:
                        Person person,
                        Category category
                     WHERE
-                       card.level IS NULL
+                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                        AND category.name = :category
                        AND card.id_category = category.id
                        AND card_director.id_director = person.id
@@ -2956,7 +2959,7 @@ class SqlDatabase:
                                 Person person,
                                 Category category
                             WHERE
-                                card.level IS NULL
+                                ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                                 AND category.name = :category
                                 AND card.id_category = category.id
                                 AND card_director.id_director = person.id
@@ -3038,7 +3041,7 @@ class SqlDatabase:
                        Person person,
                        Category category
                     WHERE
-                       card.level IS NULL
+                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
                        AND category.name = :category
                        AND card.id_category = category.id
                        AND card_writer.id_writer = person.id
@@ -4013,14 +4016,14 @@ class SqlDatabase:
 
                                 -- level: ^ (*, None), filter: v (*, None) => show the HIGHEST level and filter on the LOWEST level on any type => filter LOWEST level
                                 -- Genre: Standalone Scifi
-                                WHEN (:level IS NULL OR :level = '^') AND (:filter_on IS NULL OR :filter_on = 'v') THEN card.level IS NULL
+                                WHEN (:level IS NULL OR :level = '^') AND (:filter_on IS NULL OR :filter_on = 'v') THEN ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
 
                                 -- level: ^ (*, None), filter: ^ (-) => show the HIGHEST level and filter on the same (HIGHEST) level on any type => filter HIGHEST level
                                 -- Title: Standalone or Series
                                 WHEN (:level IS NULL OR :level = '^') AND :filter_on IS not NULL AND :filter_on = '-' THEN card.id_higher_card IS NULL
 
                                 -- level: <level>, filter: v (* None) => show the GIVEN level and filter on the LOWEST level on any type => filter LOWEST level
-                                WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND (:filter_on IS NULL OR :filter_on = 'v') THEN card.level IS NULL AND card.id_higher_card IS not NULL
+                                WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND (:filter_on IS NULL OR :filter_on = 'v') THEN ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + ''' AND card.id_higher_card IS not NULL
 
                                 -- level: <level>, filter: - => show the GIVEN level and filter on the same (GIVEN) level on any type => filter GIVEN level
                                 WHEN :level IS not NULL AND :level != '^' and :level != 'v' AND :filter_on IS not NULL AND :filter_on = '-' THEN card.level = :level
@@ -4963,7 +4966,7 @@ class SqlDatabase:
                             AND category.id=card.id_category
 
                             -- Find the lowest level --
-                            AND card.level IS NULL
+                            AND ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
 
                             -- Select the given category --
                             AND category.name = :category
@@ -5630,7 +5633,7 @@ class SqlDatabase:
                     rec
                 WHERE
 
-                    level IS NULL
+                    " + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION.replace('card.', '') + "
 
                 GROUP BY id
 

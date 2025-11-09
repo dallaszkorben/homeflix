@@ -282,6 +282,8 @@ genre:
         syllabus: Tananyag
         document: Dokumentum
         tutorial: Utmutató
+        summary: Összefoglaló
+        note: Jegyzet
 
     recipe:
         soup: Leves

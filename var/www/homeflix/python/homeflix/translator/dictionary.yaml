@@ -282,6 +282,8 @@ genre:
         syllabus: Syllabus
         document: Document
         tutorial: Tutorial
+        summary: Summary
+        note: Note
 
     recipe:
         soup: Soup

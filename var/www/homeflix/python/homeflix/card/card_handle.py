@@ -515,6 +515,7 @@ class CardHandle:
                             show=show,
                             download=download,
                             category=category,
+                            level=level,
                             storylines=storylines,
                             lyrics=lyrics,
                             decade=decade,

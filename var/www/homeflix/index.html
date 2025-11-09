@@ -465,8 +465,8 @@
          * @returns {string} Translated level text or original if not found
          */
         function get_translated_level(level){
-            if (translated_levels.hasOwnProperty(level)) {
-                return translated_levels[level];
+            if (translated_levels.has(level)) {
+                return translated_levels.get(level);
             } else {
                 return level; // Fallback to original if translation not found
             }

@@ -14,6 +14,21 @@
     --thumbnail-ribbon-level-sequel-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-sequel-background: rgb(0, 102, 0);
 
+    --thumbnail-ribbon-level-season-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-season-background: rgb(128, 0, 128);
+
+    --thumbnail-ribbon-level-lp-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-lp-background: rgb(255, 140, 0);
+
+    --thumbnail-ribbon-level-band-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-band-background: rgb(139, 69, 19);
+
+    --thumbnail-ribbon-level-episode-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-episode-background: rgb(0, 128, 128);
+
+    --thumbnail-ribbon-level-record-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-record-background: rgb(75, 0, 130);
+
     --thumbnail-image-width: 100px;
     --thumbnail-image-height: 100px;
     --thumbnail-text-font-size: 30px;
@@ -744,6 +759,31 @@ body {
 [level="sequel"]{
     color: var(--thumbnail-ribbon-level-sequel-font-color);
     background-color: var(--thumbnail-ribbon-level-sequel-background);
+}
+
+[level="season"]{
+    color: var(--thumbnail-ribbon-level-season-font-color);
+    background-color: var(--thumbnail-ribbon-level-season-background);
+}
+
+[level="lp"]{
+    color: var(--thumbnail-ribbon-level-lp-font-color);
+    background-color: var(--thumbnail-ribbon-level-lp-background);
+}
+
+[level="band"]{
+    color: var(--thumbnail-ribbon-level-band-font-color);
+    background-color: var(--thumbnail-ribbon-level-band-background);
+}
+
+[level="episode"]{
+    color: var(--thumbnail-ribbon-level-episode-font-color);
+    background-color: var(--thumbnail-ribbon-level-episode-background);
+}
+
+[level="record"]{
+    color: var(--thumbnail-ribbon-level-record-font-color);
+    background-color: var(--thumbnail-ribbon-level-record-background);
 }
 
 .ribbon-level {
