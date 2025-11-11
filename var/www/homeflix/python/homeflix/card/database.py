@@ -3126,7 +3126,6 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-
     def get_abc_of_movie_title(self, category, maximum, lang):
         """
         Returns the list of the ABC of the movie titles on the highest level. If the number of movies > maximum on a single letter (like A%), then it narrows the the filter (like An%) to make the list to fit to the maximum.
@@ -5632,8 +5631,8 @@ class SqlDatabase:
                 FROM
                     rec
                 WHERE
-
-                    " + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION.replace('card.', '') + "
+--                    (level IS NULL OR level = 'record' OR level = 'episode')
+                    ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION.replace('card.', '') + '''
 
                 GROUP BY id
 

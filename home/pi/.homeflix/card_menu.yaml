@@ -69,7 +69,7 @@ definitions:
                           key: movie_mixed
                   execution:
                     container_list:
-                      # Movie Filte container
+                      # Movie Filter container
                       - static_hard_coded:
                           title:
                             - trans:
@@ -95,6 +95,7 @@ definitions:
                                       translator: translated_labels
                                       key: movie_by_genre
                               execution:
+                                randomizable: True
                                 container_list:
                                   - dynamic_hard_coded:
                                       title:
@@ -259,6 +260,7 @@ definitions:
                                       translator: translated_labels
                                       key: movie_by_theme
                               execution:
+                                randomizable: True
                                 container_list:
                                   - dynamic_hard_coded:
                                       title:
@@ -378,6 +380,7 @@ definitions:
                                       translator: translated_labels
                                       key: movie_by_director
                               execution:
+                                randomizable: True
                                 container_list:
                                   - dynamic_queried:
                                       pre_query:
@@ -419,6 +422,7 @@ definitions:
                                       translator: translated_labels
                                       key: movie_by_actor
                               execution:
+                                randomizable: True
                                 container_list:
                                   - dynamic_queried:
                                       pre_query:
@@ -696,6 +700,7 @@ definitions:
                           translator: translated_labels
                           key: movie_by_title_abc
                   execution:
+                    randomizable: True
                     container_list:
                       - dynamic_queried:
                           pre_query:
@@ -813,6 +818,7 @@ definitions:
                           translator: translated_labels
                           key: movie_search
                   execution:
+                    randomizable: False
                     container_type: search
                     container_list:
 #                      # ????
@@ -985,6 +991,7 @@ definitions:
                                       translator: translated_labels
                                       key: music_level_record
                               execution:
+                                randomizable: True
                                 container_list:
                                   - dynamic_hard_coded:
                                       title:
@@ -1187,6 +1194,7 @@ definitions:
                                       translator: translated_labels
                                       key: music_level_record
                               execution:
+                                randomizable: True
                                 container_list:
                                   # New wave
                                   - dynamic_hard_coded:
@@ -1505,6 +1513,7 @@ definitions:
                                       translator: translated_labels
                                       key: music_level_record
                               execution:
+                                randomizable: True
                                 container_list:
                                   - dynamic_hard_coded:
                                       title:
@@ -1697,7 +1706,6 @@ definitions:
                                         genres: soundtrack
                                       request: *request_collect_highest_mixed
 
-
                             # -----------------------
                             # Music-Audio-Genre-Record
                             # -----------------------
@@ -1719,6 +1727,7 @@ definitions:
                                       translator: translated_labels
                                       key: music_level_record
                               execution:
+                                randomizable: True
                                 container_list:
                                   # New wave
                                   - dynamic_hard_coded:

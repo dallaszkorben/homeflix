@@ -76,9 +76,9 @@ class RestGenerator extends Generator{
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
             thumbnailListCache[lineIndex] = thumbnail_list;  // Cache the result
 
-//            // skip to show the empty containers - bad idea, it will still be in the list, so the result ends with bad indexing in case of modification
-            if(thumbnail_list.length > 0){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
+            // A show the empty thumbnail container as well
+            if(thumbnail_list.length >= 0){
+
                 let oContainer = new ObjThumbnailContainer(request, request["title"]);
                 containerList.push(oContainer);
 
