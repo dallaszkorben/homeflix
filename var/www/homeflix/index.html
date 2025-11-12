@@ -53,6 +53,7 @@
         let rq_data = {"username": null, "password": null};  // No credentials = session check
         let rq_assync = false;  // Synchronous to ensure user data is available before UI loads
         let result = $.getJSON({ method: rq_method, url: rq_url, async: rq_assync, data: rq_data, dataType: "json" });
+console.log("result of auth/login with no credentials: " + JSON.stringify(result, null, 2))
         let user_data = result.responseJSON['data'];
 
         // If session restoration fails, use default guest user settings

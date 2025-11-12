@@ -2,6 +2,7 @@ import os
 import sqlite3
 import logging
 import hashlib
+import time
 
 from flask import session
 
@@ -10,6 +11,16 @@ from sqlite3 import Error
 from datetime import datetime, timedelta
 
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# SQLAlchemy imports
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import StaticPool
+
+# Import SQLAlchemy models
+from homeflix.card.models import Base, User, Category, Genre, Language, Country, Theme, MediaType, Person, Card, Tag, History, Rating
+from homeflix.card.models import card_actor_table, card_voice_table, card_director_table, card_writer_table
+from sqlalchemy.exc import SQLAlchemyError
 
 from homeflix.config.config import getConfig
 from homeflix.translator.translator import Translator
@@ -119,6 +130,10 @@ class SqlDatabase:
 
         self.lock = Lock()
 
+        # Query cache infrastructure
+        self._cache = {}
+        self._cache_timestamps = {}
+
         # create connection
         self.conn = None
         try:
@@ -130,6 +145,16 @@ class SqlDatabase:
 
             # TODO: handle this case
             exit()
+
+        # SQLAlchemy setup (coexisting with existing SQLite)
+        self.engine = create_engine(
+            f'sqlite:///{self.db_path}',
+            poolclass=StaticPool,
+            connect_args={'check_same_thread': False},
+            echo=False  # Set to True for SQL debugging
+        )
+        self.SessionLocal = sessionmaker(bind=self.engine)
+        self.Base = Base  # Use imported Base from models
 
         # check if the static databases are corrupted/not existed
         if not self.is_static_dbs_ok():
@@ -144,6 +169,58 @@ class SqlDatabase:
 
     def __del__(self):
         self.conn.close()
+
+    def _get_cached_or_execute(self, cache_key, cache_duration_seconds, func, *args, **kwargs):
+        """Get cached result or execute function and cache the result"""
+        now = time.time()
+
+        # Check if we have a valid cached result
+        if (cache_key in self._cache and
+            cache_key in self._cache_timestamps and
+            now - self._cache_timestamps[cache_key] < cache_duration_seconds):
+            age = now - self._cache_timestamps[cache_key]
+            logging.info(f"🚀 CACHE HIT: {cache_key} (age: {age:.1f}s, expires in: {cache_duration_seconds - age:.1f}s)")
+            return self._cache[cache_key]
+
+        # Execute function and cache result
+        logging.info(f"💾 CACHE MISS: {cache_key} - executing function and caching result")
+        result = func(*args, **kwargs)
+        self._cache[cache_key] = result
+        self._cache_timestamps[cache_key] = now
+        logging.info(f"✅ CACHED: {cache_key} (expires in: {cache_duration_seconds}s)")
+        return result
+
+    def _invalidate_cache(self, pattern=None):
+        """Invalidate cache entries matching pattern or all if pattern is None"""
+        if pattern is None:
+            cache_count = len(self._cache)
+            self._cache.clear()
+            self._cache_timestamps.clear()
+            logging.info(f"💥 CACHE CLEARED: All {cache_count} entries invalidated")
+        else:
+            keys_to_remove = [key for key in self._cache.keys() if pattern in key]
+            for key in keys_to_remove:
+                self._cache.pop(key, None)
+                self._cache_timestamps.pop(key, None)
+            logging.info(f"💥 CACHE INVALIDATED: {len(keys_to_remove)} entries matching '{pattern}'")
+
+    def get_sqlalchemy_session(self):
+        """Get SQLAlchemy session for new operations"""
+        return self.SessionLocal()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     def is_static_dbs_ok(self):
@@ -198,6 +275,13 @@ class SqlDatabase:
 
         # Fill up the database
         self.web_gadget.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self )
+
+        # Clear all cache since database was completely rebuilt
+        self._invalidate_cache()
+
+
+
+
 
 
     def recreate_personal_dbs(self):
@@ -288,8 +372,50 @@ class SqlDatabase:
 
         self.fill_up_user_table()
 
-
     def fill_up_user_table(self):
+        """SQLAlchemy version of fill_up_user_table"""
+        with self.get_sqlalchemy_session() as session:
+            try:
+                # admin user
+                admin_id = self.append_user(
+                    session, 'admin',
+                    generate_password_hash('admin'),
+                    is_admin=True,
+                    user_id=1234,
+                    language_code='en',
+                    descriptor_color='rgb(0, 117, 104)',
+                    show_original_title=True,
+                    show_lyrics_anyway=True,
+                    show_storyline_anyway=True,
+                    play_continuously=True,
+                    history_days=365
+                )
+
+                # default user
+                default_id = self.append_user(
+                    session, 'default',
+                    generate_password_hash('default'),
+                    is_admin=False,
+                    user_id=1235,
+                    language_code='en',
+                    descriptor_color='rgb(69, 113, 144)',
+                    show_original_title=True,
+                    show_lyrics_anyway=True,
+                    show_storyline_anyway=True,
+                    play_continuously=True,
+                    history_days=365
+                )
+
+                session.commit()
+                logging.info(f"SQLAlchemy: Created users - admin: {admin_id}, default: {default_id}")
+
+            except Exception as e:
+                session.rollback()
+                logging.error(f"SQLAlchemy fill_up_user_table failed: {e}")
+                raise
+
+
+    def fill_up_user_table_legacy(self):
 
         with self.lock:
             try:
@@ -311,7 +437,7 @@ class SqlDatabase:
                 history_days = 365
                 play_continuously = True
 
-                id = self.append_user(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously, history_days=history_days)
+                id = self.append_user_legacy(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously, history_days=history_days)
 
                 # default
                 username = 'default'
@@ -327,7 +453,7 @@ class SqlDatabase:
                 history_days = 365
                 play_continuously = True
 
-                id = self.append_user(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously, history_days=history_days)
+                id = self.append_user_legacy(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously, history_days=history_days)
 
             except sqlite3.Error as e:
                 error_message = "Filling up the User table FAILED: {0}".format(e)
@@ -736,84 +862,80 @@ class SqlDatabase:
 
 
     def fill_up_category_table_from_dict(self):
-        cur = self.conn.cursor()
-        cur.execute("begin")
-        self.category_name_id_dict = {}
-        self.category_id_name_dict = {}
-        category_list = self.translator.get_all_category_codes()
-        for category in category_list:
-            id = self.append_category(cur, category)
-            self.category_name_id_dict[category] = id
-            self.category_id_name_dict[id] = category
-        cur.execute("commit")
+        with self.get_sqlalchemy_session() as session:
+            self.category_name_id_dict = {}
+            self.category_id_name_dict = {}
+            category_list = self.translator.get_all_category_codes()
+            for category in category_list:
+                id = self.append_category(session, category)
+                self.category_name_id_dict[category] = id
+                self.category_id_name_dict[id] = category
+            session.commit()
+
+
 
 
     def fill_up_genre_table_from_dict(self):
-        cur = self.conn.cursor()
-        cur.execute("begin")
-        self.genre_name_id_dict = {}
-        self.genre_id_name_dict = {}
-        genre_list = self.translator.get_all_genre_codes()
-        for genre in genre_list:
-            id = self.append_genre(cur, genre)
-            self.genre_name_id_dict[genre] = id
-            self.genre_id_name_dict[id] = genre
-        cur.execute("commit")
+        with self.get_sqlalchemy_session() as session:
+            self.genre_name_id_dict = {}
+            self.genre_id_name_dict = {}
+            genre_list = self.translator.get_all_genre_codes()
+            for genre in genre_list:
+                id = self.append_genre(session, genre)
+                self.genre_name_id_dict[genre] = id
+                self.genre_id_name_dict[id] = genre
+            session.commit()
 
 
     def fill_up_mediatype_table_from_dict(self):
-        cur = self.conn.cursor()
-        cur.execute("begin")
-        self.mediatype_name_id_dict = {}
-        self.mediatype_id_name_dict = {}
-        mediatype_list = self.translator.get_all_mediatype_codes()
-        for mediatype in mediatype_list:
-            id = self.append_mediatype(cur, mediatype)
-            self.mediatype_name_id_dict[mediatype] = id
-            self.mediatype_id_name_dict[id] = mediatype
-        cur.execute("commit")
+        with self.get_sqlalchemy_session() as session:
+            self.mediatype_name_id_dict = {}
+            self.mediatype_id_name_dict = {}
+            mediatype_list = self.translator.get_all_mediatype_codes()
+            for mediatype in mediatype_list:
+                id = self.append_mediatype(session, mediatype)
+                self.mediatype_name_id_dict[mediatype] = id
+                self.mediatype_id_name_dict[id] = mediatype
+            session.commit()
 
 
     def fill_up_theme_table_from_dict(self):
-        cur = self.conn.cursor()
-        cur.execute("begin")
-        self.theme_name_id_dict = {}
-        self.theme_id_name_dict = {}
-        theme_list = self.translator.get_all_theme_codes()
-        for theme in theme_list:
-            id = self.append_theme(cur, theme)
-            self.theme_name_id_dict[theme] = id
-            self.theme_id_name_dict[id] = theme
-        cur.execute("commit")
+        with self.get_sqlalchemy_session() as session:
+            self.theme_name_id_dict = {}
+            self.theme_id_name_dict = {}
+            theme_list = self.translator.get_all_theme_codes()
+            for theme in theme_list:
+                id = self.append_theme(session, theme)
+                self.theme_name_id_dict[theme] = id
+                self.theme_id_name_dict[id] = theme
+            session.commit()
 
 
     def fill_up_language_table_from_dict(self):
-        cur = self.conn.cursor()
-        cur.execute("begin")
-        self.language_name_id_dict = {}
-        self.language_id_name_dict = {}
-        lang_list = self.translator.get_all_language_codes()
-        for lang in lang_list:
-            id = self.append_language(cur, lang)
-            self.language_name_id_dict[lang] = id
-            self.language_id_name_dict[id] = lang
-        cur.execute("commit")
+        with self.get_sqlalchemy_session() as session:
+            self.language_name_id_dict = {}
+            self.language_id_name_dict = {}
+            lang_list = self.translator.get_all_language_codes()
+            for lang in lang_list:
+                id = self.append_language(session, lang)
+                self.language_name_id_dict[lang] = id
+                self.language_id_name_dict[id] = lang
+            session.commit()
 
 
     def fill_up_country_table_from_dict(self):
-        cur = self.conn.cursor()
-        cur.execute("begin")
-        self.country_name_id_dict = {}
-        self.country_id_name_dict = {}
-        country_list = self.translator.get_all_country_codes()
-        for country in country_list:
-            id = self.append_country(cur, country)
-            self.country_name_id_dict[country] = id
-            self.country_id_name_dict[id] = country
-        cur.execute("commit")
+        with self.get_sqlalchemy_session() as session:
+            self.country_name_id_dict = {}
+            self.country_id_name_dict = {}
+            country_list = self.translator.get_all_country_codes()
+            for country in country_list:
+                id = self.append_country(session, country)
+                self.country_name_id_dict[country] = id
+                self.country_id_name_dict[id] = country
+            session.commit()
 
 
-    def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True, history_days=365):
+    def append_user_legacy(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True, history_days=365):
         created_epoch = int(datetime.now().timestamp())
         id_language = self.language_name_id_dict[language_code]
         if user_id:
@@ -836,52 +958,706 @@ class SqlDatabase:
         (user_id, ) = record if record else (None,)
         return user_id
 
+    def append_user(self, session, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True, history_days=365):
+        """SQLAlchemy version of append_user"""
+        try:
+            # Get language ID
+            language = session.query(Language).filter(Language.name == language_code).first()
+            if not language:
+                logging.error(f"Language '{language_code}' not found")
+                return None
 
-    def append_category(self, cur, category):
-        #cur = self.conn.cursor()
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_CATEGORY + ' (name) VALUES (?) RETURNING id', (category,))
-        record = cur.fetchone()
-        (category_id, ) = record if record else (None,)
-        return category_id
+            created_epoch = int(datetime.now().timestamp())
 
+            new_user = User(
+                name=username,
+                password=password,
+                is_admin=is_admin,
+                id_language=language.id,
+                descriptor_color=descriptor_color,
+                show_original_title=show_original_title,
+                show_lyrics_anyway=show_lyrics_anyway,
+                show_storyline_anyway=show_storyline_anyway,
+                play_continuously=play_continuously,
+                history_days=history_days,
+                created_epoch=created_epoch
+            )
 
-    def append_language(self, cur, sound):
-        #cur = self.conn.cursor()
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_LANGUAGE + ' (name) VALUES (?) RETURNING id', (sound,))
-        record = cur.fetchone()
-        (language_id, ) = record if record else (None,)
-        return language_id
+            if user_id:
+                new_user.id = user_id
 
+            session.add(new_user)
+            session.flush()
+            return new_user.id
 
-    def append_country(self, cur, origin):
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_COUNTRY + ' (name) VALUES (?) RETURNING id', (origin,))
-        record = cur.fetchone()
-        (country_id, ) = record if record else (None,)
-        return country_id
-
-
-    def append_genre(self, cur, genre):
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_GENRE + ' (name) VALUES (?) RETURNING id', (genre,))
-        record = cur.fetchone()
-        (genre_id, ) = record if record else (None,)
-        return genre_id
-
-
-    def append_theme(self, cur, theme):
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_THEME + ' (name) VALUES (?) RETURNING id', (theme,))
-        record = cur.fetchone()
-        (theme_id, ) = record if record else (None,)
-        return theme_id
-
-
-    def append_mediatype(self, cur, mediatype):
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_MEDIATYPE + ' (name) VALUES (?) RETURNING id', (mediatype,))
-        record = cur.fetchone()
-        (mediatype_id, ) = record if record else (None,)
-        return mediatype_id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_user failed: {e}")
+            return None
 
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None,  level=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_category(self, session, category):
+        """SQLAlchemy version of append_category"""
+        try:
+            # Check if category already exists
+            existing = session.query(Category).filter(Category.name == category).first()
+            if existing:
+                return existing.id
+
+            # Create new category
+            new_category = Category(name=category)
+            session.add(new_category)
+            session.flush()  # Get the ID without committing
+            return new_category.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_category failed: {e}")
+            return None
+
+
+    def append_language(self, session, language_name):
+        """SQLAlchemy version of append_language"""
+        try:
+            existing = session.query(Language).filter(Language.name == language_name).first()
+            if existing:
+                return existing.id
+            new_language = Language(name=language_name)
+            session.add(new_language)
+            session.flush()
+            return new_language.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_language failed: {e}")
+            return None
+
+
+    def append_country(self, session, country_name):
+        """SQLAlchemy version of append_country"""
+        try:
+            new_country = Country(name=country_name)
+            session.add(new_country)
+            session.flush()
+            return new_country.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_country failed: {e}")
+            return None
+
+
+    def append_genre(self, session, genre_name):
+        """SQLAlchemy version of append_genre"""
+        try:
+            existing = session.query(Genre).filter(Genre.name == genre_name).first()
+            if existing:
+                return existing.id
+            new_genre = Genre(name=genre_name)
+            session.add(new_genre)
+            session.flush()
+            return new_genre.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_genre failed: {e}")
+            return None
+
+
+    def append_theme(self, session, theme_name):
+        """SQLAlchemy version of append_theme"""
+        try:
+            new_theme = Theme(name=theme_name)
+            session.add(new_theme)
+            session.flush()
+            return new_theme.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_theme failed: {e}")
+            return None
+
+
+    def append_mediatype(self, session, mediatype_name):
+        """SQLAlchemy version of append_mediatype"""
+        try:
+            new_mediatype = MediaType(name=mediatype_name)
+            session.add(new_mediatype)
+            session.flush()
+            return new_mediatype.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_mediatype failed: {e}")
+            return None
+
+    def append_person(self, session, person_name):
+        """SQLAlchemy version for Person table"""
+        try:
+            new_person = Person(name=person_name)
+            session.add(new_person)
+            session.flush()
+            return new_person.id
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_person failed: {e}")
+            return None
+
+    def append_card_media(self, card_path, title_orig, category, titles={}, level=None, card_id=None, isappendix=0, show=1, download=0, title_on_thumbnail=1, title_show_sequence='', storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+        """SQLAlchemy version of append_card_media"""
+        try:
+            with self.get_sqlalchemy_session() as session:
+                language = session.query(Language).filter(Language.name == title_orig).first()
+                if not language:
+                    return None
+
+                category_obj = session.query(Category).filter(Category.name == category).first()
+                if not category_obj:
+                    return None
+
+                if card_id is None:
+                    hasher = hashlib.md5()
+                    hasher.update(card_path.encode('utf-8'))
+                    card_id = hasher.hexdigest()
+
+                new_card = Card(
+                    id=card_id,
+                    level=level,
+                    show=show,
+                    download=download,
+                    isappendix=isappendix,
+                    id_title_orig=language.id,
+                    title_on_thumbnail=title_on_thumbnail,
+                    title_show_sequence=title_show_sequence,
+                    id_category=category_obj.id,
+                    decade=decade,
+                    date=date,
+                    length=length,
+                    full_time=full_time,
+                    net_start_time=net_start_time,
+                    net_stop_time=net_stop_time,
+                    basename=basename,
+                    source_path=source_path,
+                    id_higher_card=higher_card_id,
+                    sequence=sequence
+                )
+
+                session.add(new_card)
+                session.flush()
+
+                # Add titles
+                for lang, title in titles.items():
+                    self.add_card_text(session, new_card.id, lang, title, "T")
+
+                # Add storylines
+                for lang, storyline in storylines.items():
+                    self.add_card_text(session, new_card.id, lang, storyline, "S")
+
+                # Add lyrics
+                for lang, lyric in lyrics.items():
+                    self.add_card_text(session, new_card.id, lang, lyric, "L")
+
+                # Add genres
+                for genre in genres:
+                    self.add_card_genre(session, new_card.id, genre)
+
+                # Add themes
+                for theme in themes:
+                    self.add_card_theme(session, new_card.id, theme)
+
+                # Add origins
+                for origin in origins:
+                    self.add_card_origin(session, new_card.id, origin)
+
+                # Add sounds
+                for sound in sounds:
+                    self.add_card_sound(session, new_card.id, sound)
+
+                # Add subtitles
+                for sub in subs:
+                    self.add_card_subtitle(session, new_card.id, sub)
+
+                # Add writers
+                for writer in writers:
+                    if writer:
+                        person = session.query(Person).filter(Person.name == writer).first()
+                        if not person:
+                            person = Person(name=writer)
+                            session.add(person)
+                            session.flush()
+                        if person not in new_card.writers:
+                            new_card.writers.append(person)
+
+                # Add actors (can be list or dict with roles)
+                if isinstance(actors, list):
+                    for actor in actors:
+                        if actor:
+                            self.add_card_actor(session, new_card.id, actor)
+                else:
+                    for actor, role in actors.items():
+                        if actor:
+                            self.add_card_actor(session, new_card.id, actor)
+                            # TODO: Handle roles - requires Role table implementation
+
+                # Add directors
+                for director in directors:
+                    if director:
+                        person = session.query(Person).filter(Person.name == director).first()
+                        if not person:
+                            person = Person(name=director)
+                            session.add(person)
+                            session.flush()
+                        if person not in new_card.directors:
+                            new_card.directors.append(person)
+
+                # Add voices (can be list or dict with roles)
+                if isinstance(voices, list):
+                    for voice in voices:
+                        if voice:
+                            person = session.query(Person).filter(Person.name == voice).first()
+                            if not person:
+                                person = Person(name=voice)
+                                session.add(person)
+                                session.flush()
+                            if person not in new_card.voices:
+                                new_card.voices.append(person)
+                else:
+                    for voice, role in voices.items():
+                        if voice:
+                            person = session.query(Person).filter(Person.name == voice).first()
+                            if not person:
+                                person = Person(name=voice)
+                                session.add(person)
+                                session.flush()
+                            if person not in new_card.voices:
+                                new_card.voices.append(person)
+                            # TODO: Handle roles - requires Role table implementation
+
+                # Add media files
+                for media_type, media_list in media.items():
+                    for medium in media_list:
+                        self.add_card_media(session, new_card.id, medium, media_type)
+
+                # Invalidate relevant caches when new media is added
+#                logging.info(f"🎬 NEW MEDIA ADDED: Invalidating all caches for card {new_card.id}")
+#                self._invalidate_cache("actors_")
+#                self._invalidate_cache("directors_")
+#                self._invalidate_cache("writers_")
+#                self._invalidate_cache("highest_cards_")
+#                self._invalidate_cache("next_cards_")
+#                self._invalidate_cache("lowest_cards_")
+
+                session.commit()
+                return new_card.id
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy append_card_media failed: {e}")
+            return None
+
+    def append_hierarchy(self, card_path, title_orig, category, titles, level=None, card_id=None, show=1, download=0, isappendix=0, title_on_thumbnail=1, title_show_sequence='', storylines={}, date=None, decade=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+        """SQLAlchemy version of append_hierarchy"""
+        try:
+            with self.get_sqlalchemy_session() as session:
+                language = session.query(Language).filter(Language.name == title_orig).first()
+                if not language:
+                    return None
+
+                category_obj = session.query(Category).filter(Category.name == category).first()
+                if not category_obj:
+                    return None
+
+                if card_id is None:
+                    hasher = hashlib.md5()
+                    hasher.update(card_path.encode('utf-8'))
+                    card_id = hasher.hexdigest()
+
+                new_card = Card(
+                    id=card_id,
+                    level=level,
+                    show=show,
+                    download=download,
+                    isappendix=isappendix,
+                    id_title_orig=language.id,
+                    title_on_thumbnail=title_on_thumbnail,
+                    title_show_sequence=title_show_sequence,
+                    id_category=category_obj.id,
+                    decade=decade,
+                    date=date,
+                    basename=basename,
+                    source_path=source_path,
+                    id_higher_card=higher_card_id,
+                    sequence=sequence
+                )
+
+                session.add(new_card)
+                session.flush()
+
+                # Add titles
+                for lang, title in titles.items():
+                    self.add_card_text(session, new_card.id, lang, title, "T")
+
+                # Add storylines
+                for lang, storyline in storylines.items():
+                    self.add_card_text(session, new_card.id, lang, storyline, "S")
+
+                # Add genres
+                if genres:
+                    for genre in genres:
+                        self.add_card_genre(session, new_card.id, genre)
+
+                # Add themes
+                if themes:
+                    for theme in themes:
+                        self.add_card_theme(session, new_card.id, theme)
+
+                # Add origins
+                if origins:
+                    for origin in origins:
+                        self.add_card_origin(session, new_card.id, origin)
+
+                # Invalidate relevant caches when new hierarchy is added
+#                logging.info(f"🏗️ NEW HIERARCHY ADDED: Invalidating all caches for card {new_card.id}")
+#                self._invalidate_cache("actors_")
+#                self._invalidate_cache("directors_")
+#                self._invalidate_cache("writers_")
+#                self._invalidate_cache("highest_cards_")
+#                self._invalidate_cache("next_cards_")
+#                self._invalidate_cache("lowest_cards_")
+
+                session.commit()
+                return new_card.id
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy append_hierarchy failed: {e}")
+            return None
+
+
+    def get_card_by_id(self, session, card_id):
+        """SQLAlchemy version to get card by ID"""
+        try:
+            return session.query(Card).filter(Card.id == card_id).first()
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy get_card_by_id failed: {e}")
+            return None
+
+
+    def add_card_text(self, session, card_id, language_code, text, text_type):
+        """SQLAlchemy version to add text to card"""
+        try:
+            from homeflix.card.models import TextCardLang
+
+            language = session.query(Language).filter(Language.name == language_code).first()
+            if not language:
+                return False
+
+            # Check if text already exists
+            existing = session.query(TextCardLang).filter(
+                TextCardLang.id_card == card_id,
+                TextCardLang.id_language == language.id,
+                TextCardLang.type == text_type
+            ).first()
+
+            if existing:
+                # Update existing text
+                existing.text = text
+                session.flush()
+                return True
+            else:
+                # Create new text
+                text_card = TextCardLang(
+                    id_card=card_id,
+                    id_language=language.id,
+                    text=text,
+                    type=text_type
+                )
+
+                session.add(text_card)
+                session.flush()
+                return True
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy add_card_text failed: {e}")
+            return False
+
+
+    def add_card_media(self, session, card_id, media_name, media_type_name):
+        """SQLAlchemy version to add media to card"""
+        try:
+            from homeflix.card.models import CardMedia
+
+            media_type = session.query(MediaType).filter(MediaType.name == media_type_name).first()
+            if not media_type:
+                return False
+
+            card_media = CardMedia(
+                id_card=card_id,
+                name=media_name,
+                id_mediatype=media_type.id
+            )
+
+            session.add(card_media)
+            session.flush()
+            return True
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            logging.error(f"SQLAlchemy add_card_media failed: {e}")
+            return False
+
+
+    def get_card_texts(self, session, card_id, text_type=None):
+        """SQLAlchemy version to get card texts"""
+        try:
+            from homeflix.card.models import TextCardLang
+
+            query = session.query(TextCardLang).filter(TextCardLang.id_card == card_id)
+            if text_type:
+                query = query.filter(TextCardLang.type == text_type)
+
+            return query.all()
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy get_card_texts failed: {e}")
+            return []
+
+
+    def get_card_media(self, session, card_id):
+        """SQLAlchemy version to get card media"""
+        try:
+            from homeflix.card.models import CardMedia
+
+            return session.query(CardMedia).filter(CardMedia.id_card == card_id).all()
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy get_card_media failed: {e}")
+            return []
+
+
+    def add_card_genre(self, session, card_id, genre_name):
+        """SQLAlchemy version to add genre to card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            genre = session.query(Genre).filter(Genre.name == genre_name).first()
+
+            if card and genre and genre not in card.genres:
+                card.genres.append(genre)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy add_card_genre failed: {e}")
+            return False
+
+
+    def add_card_theme(self, session, card_id, theme_name):
+        """SQLAlchemy version to add theme to card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            theme = session.query(Theme).filter(Theme.name == theme_name).first()
+
+            if card and theme and theme not in card.themes:
+                card.themes.append(theme)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy add_card_theme failed: {e}")
+            return False
+
+
+    def add_card_sound(self, session, card_id, language_name):
+        """SQLAlchemy version to add sound language to card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            language = session.query(Language).filter(Language.name == language_name).first()
+
+            if card and language and language not in card.sounds:
+                card.sounds.append(language)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy add_card_sound failed: {e}")
+            return False
+
+
+    def add_card_subtitle(self, session, card_id, language_name):
+        """SQLAlchemy version to add subtitle language to card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            language = session.query(Language).filter(Language.name == language_name).first()
+
+            if card and language and language not in card.subs:
+                card.subs.append(language)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy add_card_subtitle failed: {e}")
+            return False
+
+
+    def add_card_origin(self, session, card_id, country_name):
+        """SQLAlchemy version to add origin country to card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            country = session.query(Country).filter(Country.name == country_name).first()
+
+            if card and country and country not in card.origins:
+                card.origins.append(country)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy add_card_origin failed: {e}")
+            return False
+
+
+    def add_card_actor(self, session, card_id, person_name):
+        """SQLAlchemy version to add actor to card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            person = session.query(Person).filter(Person.name == person_name).first()
+
+            if not person:
+                person = Person(name=person_name)
+                session.add(person)
+                session.flush()
+
+            if card and person and person not in card.actors:
+                card.actors.append(person)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy add_card_actor failed: {e}")
+            return False
+
+
+    def remove_card_genre(self, session, card_id, genre_name):
+        """SQLAlchemy version to remove genre from card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            genre = session.query(Genre).filter(Genre.name == genre_name).first()
+
+            if card and genre and genre in card.genres:
+                card.genres.remove(genre)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy remove_card_genre failed: {e}")
+            return False
+
+
+    def remove_card_actor(self, session, card_id, person_name):
+        """SQLAlchemy version to remove actor from card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            person = session.query(Person).filter(Person.name == person_name).first()
+
+            if card and person and person in card.actors:
+                card.actors.remove(person)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy remove_card_actor failed: {e}")
+            return False
+
+
+    def remove_card_sound(self, session, card_id, language_name):
+        """SQLAlchemy version to remove sound language from card"""
+        try:
+            card = session.query(Card).filter(Card.id == card_id).first()
+            language = session.query(Language).filter(Language.name == language_name).first()
+
+            if card and language and language in card.sounds:
+                card.sounds.remove(language)
+                session.flush()
+                return True
+            return False
+
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy remove_card_sound failed: {e}")
+            return False
+
+    # Step 11: Simple List Methods - SQLAlchemy versions
+
+
+    def get_list_of_actors_by_role_count(self, category, minimum=3, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_actors_by_role_count"""
+        # This is a complex recursive query - for now, delegate to the original method
+        # TODO: Convert to proper SQLAlchemy recursive CTE in future
+        return self.get_list_of_actors_by_role_count(category, minimum, limit, json)
+
+
+
+    def get_list_of_voices_by_role_count(self, category, minimum=3, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_voices_by_role_count"""
+        # This is a complex recursive query - for now, delegate to the original method
+        # TODO: Convert to proper SQLAlchemy recursive CTE in future
+        return self.get_list_of_voices_by_role_count(category, minimum, limit, json)
+
+
+
+    def get_list_of_directors_by_movie_count(self, category, minimum=3, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_directors_by_movie_count"""
+        # This is a complex recursive query - for now, delegate to the original method
+        # TODO: Convert to proper SQLAlchemy recursive CTE in future
+        return self.get_list_of_directors_by_movie_count(category, minimum, limit, json)
+
+
+
+    def get_list_of_tags(self, category, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_tags"""
+        result = False
+        error_message = "Lock error"
+        records = {}
+
+        try:
+            from flask import session as flask_session
+            user_data = flask_session.get('logged_in_user', None)
+            if user_data:
+                user_id = user_data['user_id']
+            else:
+                user_id = -1
+        except RuntimeError:
+            # Working outside of request context - use default user_id
+            user_id = -1
+
+        with self.lock:
+            try:
+                with self.get_sqlalchemy_session() as db_session:
+                    # Query for distinct tag names for given category and user
+                    query = db_session.query(Tag.name.label('tag')).distinct()\
+                        .join(Card, Tag.id_card == Card.id)\
+                        .join(Category, Card.id_category == Category.id)\
+                        .filter(Category.name == category)\
+                        .filter(Tag.id_user == user_id)\
+                        .order_by(Tag.name)\
+                        .limit(limit)
+
+                    records = query.all()
+
+                    if json:
+                        records = [record.tag for record in records]
+
+                    result = True
+                    error_message = None
+
+            except SQLAlchemyError as e:
+                error_message = f"Fetching the tag list failed: {e}"
+                logging.error(error_message)
+
+        return {"result": result, "data": records, "error": error_message}
+
+
+    def append_card_media_legacy(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None,  level=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -1406,245 +2182,15 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
-
-        cur = self.conn.cursor()
-        cur.execute("begin")
-
-        try:
-
-            category_id = self.category_name_id_dict[category]
-            title_orig_id = self.language_name_id_dict[title_orig]
-
-            # Generate ID
-            if card_id is None:
-                hasher = hashlib.md5()
-                hasher.update(card_path.encode('utf-8'))
-                card_id = hasher.hexdigest()
-
-            #
-            # INSERT into Level
-            #
-
-            query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-                VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
-                RETURNING id;
-            '''
-            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
-            record = cur.fetchone()
-            (hierarchy_id, ) = record if record else (None,)
-
-            #
-            # INSERT into TABLE_TEXT_CARD_LANG Title
-            #
-            for lang, title in titles.items():
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''
-                    (id_language, id_card, text, type)
-                    VALUES (?, ?, ?, "T");
-                '''
-                cur.execute(query, (self.language_name_id_dict[lang], hierarchy_id, title))
-
-            #
-            # INSERT into TABLE_CARD_GENRE
-            #
-            for sub in genres:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_GENRE + '''
-                    (id_genre, id_card)
-                    VALUES (?, ?);
-                '''
-                cur.execute(query, (self.genre_name_id_dict[sub], hierarchy_id))
-
-            #
-            # INSERT into TABLE_CARD_THEME
-            #
-            for theme in themes:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_THEME + '''
-                    (id_theme, id_card)
-                    VALUES (?, ?);
-                '''
-                cur.execute(query, (self.theme_name_id_dict[theme], hierarchy_id))
-
-            #
-            # INSERT into TABLE_CARD_ORIGIN
-            #
-            for origin in origins:
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_ORIGIN + '''
-                    (id_origin, id_card)
-                    VALUES (?, ?);
-                '''
-                cur.execute(query, (self.country_name_id_dict[origin], hierarchy_id))
-
-            #
-            # INSERT into TABLE_TEXT_CARD_LANG Storyline
-            #
-            for lang, storyline in storylines.items():
-                query = '''INSERT INTO ''' + SqlDatabase.TABLE_TEXT_CARD_LANG + '''
-                    (id_language, id_card, text, type)
-                    VALUES (?, ?, ?, "S");
-                '''
-                cur.execute(query, (self.language_name_id_dict[lang], hierarchy_id, storyline))
-
-        except sqlite3.Error as e:
-            logging.error("To append hierarchy failed with: '{0}' while inserting record. Level: {1}, configured in {2} card".format(e, level, card_path))
-
-            cur.execute("rollback")
-
-        cur.execute("commit")
-
-        #logging.error("TEST returns {0} with id: {1}".format(titles, hierarchy_id))
-        return hierarchy_id
-
-
     # ================
     #
     # === requests ===
     #
     # ================
 
-    def update_play_position(self, card_id, recent_position, start_epoch=None):
-        """
-        Updates the player's position of a movie. This method is periodically called from the browser
-        It returns with the start_epoch value if the UPDATE or INSERT was successful.
-        If the start_epoch is given, it is an UPDATE, if it is not given, it is INSERT.
-        If something went wrong, it returns with None
-        card_id           Card ID
-        recent_position   Player's recent position in seconds
-        start_epoch       Timestamp when the play started. This method generates this value
-        """
-
-        with self.lock:
-            result = False
-            data = {}
-            error_message = "Lock error"
-
-            try:
-
-                cur = self.conn.cursor()
-                cur.execute("begin")
-
-                # TODO
-                # put this block after the connection to be handled well in the catch
-                # But it is really stupid to start a coursor before I decide if the user is logged in or not
-                # figure out how to make this code clean
-                #
-
-                user_data = session.get('logged_in_user')
-                if user_data:
-                    user_id = user_data["user_id"]
-                else:
-                    error_message = 'Not logged in'
-                    raise sqlite3.Error(error_message)
-
-                # Verify user existence
-                query = '''
-                    SELECT
-                        COUNT(*) as user_number
-                FROM
-                    ''' + SqlDatabase.TABLE_USER + ''' user
-
-                WHERE
-                    user.id=:user_id;
-                '''
-                query_parameters = {'user_id': user_id}
-                record=cur.execute(query, query_parameters).fetchone()
-                (user_number, ) = record if record else (0,)
-                if user_number == 0:
-                    error_message = "The requested user_id({0}) does NOT exist".format(user_id)
-                    logging.error(error_message)
-                    raise sqlite3.Error(error_message)
-
-                # Verify card existence
-                query = '''
-                    SELECT
-                        COUNT(*) as card_number
-                    FROM
-                        ''' + SqlDatabase.TABLE_CARD + ''' card
-                    WHERE
-                        card.id=:card_id
-                '''
-                query_parameters = {'card_id': card_id}
-                record=cur.execute(query, query_parameters).fetchone()
-                (card_number, ) = record if record else (0,)
-                if card_number == 0:
-                    error_message = "The requested card_id({0}) does NOT exist".format(card_id)
-                    logging.error(error_message)
-                    raise sqlite3.Error(error_message)
-
-
-                # Verify history existence
-                query = '''
-                    SELECT
-                        COUNT(*) as history_number
-                    FROM
-                        ''' + SqlDatabase.TABLE_HISTORY + ''' history
-                    WHERE
-                        history.id_card=:card_id
-                        AND history.id_user=:user_id
-                        AND history.start_epoch=:start_epoch
-                '''
-
-                query_parameters = {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch if start_epoch else 0}
-
-                #                logging.debug("refresh_play_position query: '{0} / {1}'".format(query, query_parameters))
-
-                record=cur.execute(query, query_parameters).fetchone()
-                (history_number, ) = record if record else (0,)
-
-                #                logging.debug("history number of user({0}), card_id({1}), start_epoch({2}): {3} ".format(user_id, card_id, start_epoch, history_number))
-
-                # New history - INSERT
-                if history_number == 0 and not start_epoch:
-
-                    start_epoch = int(datetime.now().timestamp())
-                    recent_epoch = start_epoch
-                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_HISTORY + '''
-                        (id_card, id_user, start_epoch, recent_epoch, recent_position)
-                        VALUES (:card_id, :user_id, :start_epoch, :recent_epoch, :recent_position);
-                    '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'recent_epoch': recent_epoch, 'recent_position': recent_position})
-                    record = cur.fetchone()
-                    logging.debug("The registered new history of card_id: {0} has 'start_epoch': {1}".format(card_id, start_epoch))
-
-                # Update history
-                elif history_number == 1 and start_epoch:
-
-                    recent_epoch = int(datetime.now().timestamp())
-                    query = '''
-                        UPDATE ''' + SqlDatabase.TABLE_HISTORY + '''
-                        SET recent_epoch = :recent_epoch, recent_position = :recent_position
-                        WHERE
-                            history.id_card=:card_id
-                            AND history.id_user=:user_id
-                            AND history.start_epoch=:start_epoch
-                    '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'start_epoch': start_epoch, 'recent_epoch': recent_epoch, 'recent_position': recent_position})
-                    record = cur.fetchone()
-
-                # Something went wrong
-                else:
-                    error_message = "Something went wrong. The parameter 'start_epoch'={0} but the SELECT in History table returned with value={1}".format(start_epoch, history_number)
-                    logging.error(error_message)
-                    raise sqlite3.Error(error_message)
-
-                result = True
-                data['start_epoch'] = int(start_epoch)
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = str(e)
-                logging.error(error_message)
-
-            finally:
-                cur.execute("commit")
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
-
-        # If the lock failed
-        return {"result": result, "data": data, "error": error_message}
-
 
     def get_logged_in_user_data(self):
+        """SQLAlchemy version of get_logged_in_user_data"""
         result = False
         data = {}
         error_message = "Lock error"
@@ -1656,141 +2202,67 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-
             try:
-                cur = self.conn.cursor()
+                with self.get_sqlalchemy_session() as session:
+                    user = session.query(User).filter(User.name == username).first()
 
-                # Verify user existence
-                query = '''
-                    SELECT
-                        user.is_admin as is_admin,
-                        user.name as name,
-                        lang.name as language_code,
-                        user.show_original_title   as show_original_title,
-                        user.show_lyrics_anyway    as show_lyrics_anyway,
-                        user.show_storyline_anyway as show_storyline_anyway,
-                        user.play_continuously     as play_continuously
-                FROM
-                    ''' + SqlDatabase.TABLE_USER + ''' user,
-                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
-                WHERE
-                    user.name=:username
-                    AND user.id_language=lang.id;
-                '''
-                query_parameters = {'username': username}
-                record=cur.execute(query, query_parameters).fetchone()
+                    if user:
+                        result = True
+                        data = {
+                            'is_admin': user.is_admin,
+                            'name': user.name,
+                            'language_code': user.language.name if user.language else None,
+                            'show_original_title': user.show_original_title,
+                            'show_lyrics_anyway': user.show_lyrics_anyway,
+                            'show_storyline_anyway': user.show_storyline_anyway,
+                            'play_continuously': user.play_continuously
+                        }
+                        error_message = None
+                    else:
+                        data = {}
+                        error_message = "Not logged in"
 
-                if record:
-                    result = True
-                    data = dict(record) if record else record
-                    error_message = None
-                else:
-                    data = {}
-                    error_message = "Not logged in"
-
-            except sqlite3.Error as e:
-                error_message = "The operation for user: '{0}' failed because of an error: {1}".format(username, e)
+            except SQLAlchemyError as e:
+                error_message = f"The operation for user: '{username}' failed because of an error: {e}"
                 logging.error(error_message)
 
-            finally:
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
+            return {"result": result, "data": data, "error": error_message}
 
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
 
-    #
-    # Used only locally
-    # Not used in any REST
-    #
+
     def _get_user_data_with_password(self, username):
+        """SQLAlchemy version of _get_user_data_with_password"""
         data = {}
 
-        with self.lock:
+        try:
+            with self.get_sqlalchemy_session() as session:
+                user = session.query(User).filter(User.name == username).first()
 
-            try:
-                cur = self.conn.cursor()
+                if user:
+                    data = {
+                        'id': user.id,
+                        'password': user.password,
+                        'is_admin': user.is_admin,
+                        'name': user.name,
+                        'language_code': user.language.name if user.language else None,
+                        'language_id': user.id_language,
+                        'descriptor_color': user.descriptor_color,
+                        'show_original_title': user.show_original_title,
+                        'show_lyrics_anyway': user.show_lyrics_anyway,
+                        'show_storyline_anyway': user.show_storyline_anyway,
+                        'play_continuously': user.play_continuously
+                    }
 
-                # Verify user existence
-                query = '''
-                    SELECT
-                        user.id                    as id,
-                        user.password              as password,
-                        user.is_admin              as is_admin,
-                        user.name                  as name,
-                        lang.name                  as language_code,
-                        lang.id                    as language_id,
-                        user.descriptor_color      as descriptor_color,
-                        user.show_original_title   as show_original_title,
-                        user.show_lyrics_anyway    as show_lyrics_anyway,
-                        user.show_storyline_anyway as show_storyline_anyway,
-                        user.play_continuously     as play_continuously
-                FROM
-                    ''' + SqlDatabase.TABLE_USER + ''' user,
-                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
-                WHERE
-                    user.name = :username
-                    AND user.id_language=lang.id;
-                '''
-                query_parameters = {'username': username}
-                record=cur.execute(query, query_parameters).fetchone()
+        except SQLAlchemyError as e:
+            logging.error(f"The SELECTION in the database for user: '{username}' failed because of an error: {e}")
 
-                data = dict(record) if record else {}
-
-            finally:
-                cur.close()
-                return data
-
-        # If the lock failed
-        return data
-
-
-    #
-    # Used only locally
-    # Not used in any REST
-    #
-    def _get_publishable_user_data(self, username):
-        data = {}
-
-        with self.lock:
-            try:
-                cur = self.conn.cursor()
-
-                # Verify user existence
-                query = '''
-                    SELECT
-                        user.is_admin              as is_admin,
-                        user.name                  as name,
-                        lang.name                  as language_code,
-                        user.descriptor_color      as descriptor_color,
-                        user.show_original_title   as show_original_title,
-                        user.show_lyrics_anyway    as show_lyrics_anyway,
-                        user.show_storyline_anyway as show_storyline_anyway,
-                        user.play_continuously     as play_continuously
-                FROM
-                    ''' + SqlDatabase.TABLE_USER + ''' user,
-                    ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
-                WHERE
-                    user.name = :username
-                    AND user.id_language=lang.id;
-                '''
-                query_parameters = {'username': username}
-                record=cur.execute(query, query_parameters).fetchone()
-                data = dict(record) if record else {}
-
-            except sqlite3.Error as e:
-                error_message = "The SELECTION in the database for user: '{0}' failed because of an error: {1}".format(username, e)
-                logging.error(error_message)
-
-            finally:
-                cur.close()
-                return data
-
-        # If the lock failed
         return data
 
 
     def update_user_data(self, password=None, language_code=None, descriptor_color=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None, history_days=None):
+        """SQLAlchemy version of update_user_data"""
         result = False
         data = {}
         error_message = "Lock error"
@@ -1802,163 +2274,59 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as session:
+                    user = session.query(User).filter(User.name == username).first()
 
-                # User check
-                query = '''
-                    SELECT
-                        COUNT(*) as user_number
-                    FROM
-                        ''' + SqlDatabase.TABLE_USER + ''' user
-                    WHERE
-                        user.name=:username;
-                '''
-                query_parameters = {'username': username}
-                record=cur.execute(query, query_parameters).fetchone()
-                (user_number, ) = record if record else (0,)
+                    if not user:
+                        error_message = f"The requested username({username}) does NOT exist"
+                        return {"result": result, "data": data, "error": error_message}
 
-                if user_number == 0:
-                    raise sqlite3.Error("The requested username({0}) does NOT exist".format(username))
+                    # Update fields if provided
+                    if language_code:
+                        language = session.query(Language).filter(Language.name == language_code).first()
+                        if not language:
+                            error_message = f"The requested language_code({language_code}) does NOT exist"
+                            return {"result": result, "data": data, "error": error_message}
+                        user.id_language = language.id
 
-                # Language check
-                language_id = None
-                if language_code:
-                    query = '''
-                        SELECT
-                            id
-                        FROM
-                            ''' + SqlDatabase.TABLE_LANGUAGE + ''' lang
-                        WHERE
-                            lang.name = :language_code;
-                    '''
-                    query_parameters = {'language_code': language_code}
-                    record=cur.execute(query, query_parameters).fetchone()
-                    (language_id, ) = record if record else (None,)
+                    if password is not None:
+                        user.password = generate_password_hash(password)
 
-                    if language_id is None:
-                        raise sqlite3.Error("The requested language_code({0}) does NOT exist".format(language_code))
+                    if descriptor_color is not None:
+                        user.descriptor_color = descriptor_color
 
-                #
-                # Update
-                #
-                set_list = []
-                if language_code:
-                    set_list.append("'id_language' = :language_id")
+                    if show_original_title is not None:
+                        user.show_original_title = show_original_title
 
-                if password is not None:
-                    set_list.append("'password' = :password")
-                    hashed_password = generate_password_hash(password)
-                else:
-                    hashed_password = ''
+                    if show_lyrics_anyway is not None:
+                        user.show_lyrics_anyway = show_lyrics_anyway
 
-                if descriptor_color is not None:
-                    set_list.append("'descriptor_color' = :descriptor_color")
+                    if show_storyline_anyway is not None:
+                        user.show_storyline_anyway = show_storyline_anyway
 
-                if show_original_title is not None:
-                    set_list.append("'show_original_title' = :show_original_title")
+                    if play_continuously is not None:
+                        user.play_continuously = play_continuously
 
-                if show_lyrics_anyway is not None:
-                    set_list.append("'show_lyrics_anyway' = :show_lyrics_anyway")
+                    if history_days is not None:
+                        user.history_days = history_days
 
-                if show_storyline_anyway is not None:
-                    set_list.append("'show_storyline_anyway' = :show_storyline_anyway")
-
-                if history_days is not None:
-                    set_list.append("'history_days' = :history_days")
-
-                query = '''
-                        UPDATE ''' + SqlDatabase.TABLE_USER + '''
-                        SET
-                            ''' + ", ".join(set_list) + '''
-                        WHERE
-                            user.name=:username
-                    '''
-
-                cur.execute(query, {'username': username, 'password': hashed_password, 'language_id': language_id, 'descriptor_color': descriptor_color, 'show_original_title': show_original_title, 'show_lyrics_anyway': show_lyrics_anyway, 'show_storyline_anyway': show_storyline_anyway, 'play_continuously': play_continuously, 'history_days': history_days})
-                number_of_updated_rows = cur.rowcount
-
-                if number_of_updated_rows == 1:
+                    session.commit()
                     result = True
                     error_message = None
-                else:
-                    error_message = "User update failed"
 
-            except sqlite3.Error as e:
-                error_message = "The User update for user: '{0}' failed because of an error: {1}".format(username, e)
+            except SQLAlchemyError as e:
+                error_message = f"The User update for user: '{username}' failed because of an error: {e}"
                 logging.error(error_message)
 
-            finally:
-                cur.execute("commit")
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
+            return {"result": result, "data": data, "error": error_message}
 
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
 
 
-    def get_history(self, card_id=None, limit_days=None, limit_records=None):
-        result = False
-        data = []
-        error_message = "Lock error"
-
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            return {'result': result, 'data': data, 'error': 'Not logged in'}
-
-        with self.lock:
-            try:
-                cur = self.conn.cursor()
-                        # cur.execute("begin")
-
-                limit_epoch = None
-                if limit_days:
-                    limit_epoch=int((datetime.now() + timedelta(days=limit_days)).timestamp())
-
-                # Verify user existence
-                query = '''
-                    SELECT
-                        *
-                    FROM
-                        ''' + SqlDatabase.TABLE_HISTORY + ''' history
-                    WHERE
-                        id_user=:user_id
-                        ''' + ('''
-                        AND id_card=:card_id
-                        ''' if card_id else '') + ('''
-                        AND start_epoch <= :limit_epoch
-                        ''' if limit_days else '') + '''
-                    ORDER BY start_epoch DESC''' + ('''
-                    LIMIT :limit_records
-                        ''' if limit_records else '') + '''
-                ;'''
-                query_parameters = {'user_id': user_id, 'card_id': card_id, 'limit_epoch': limit_epoch, 'limit_records': limit_records}
-                records=cur.execute(query, query_parameters).fetchall()
-
-                data = [{key: record[key] for key in record.keys()} for record in records]
-
-                result = True
-                #                data = dict(record) if record else record
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "The operation for user: '{0}' failed because of an error: {1}".format(username, e)
-                logging.error(error_message)
-
-            finally:
-                #                cur.execute("commit")
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
-
-        # If there was a problem with the file lock
-        return {"result": result, "data": data, "error": error_message}
-
-
     def update_rating(self, card_id, rate=None, skip_continuous_play=None):
+        """Update or create rating for a card with SQLAlchemy"""
         result = False
         data = {}
         error_message = "Lock error"
@@ -1971,95 +2339,58 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as db_session:
+                    # Check if rating exists
+                    rating_record = db_session.query(Rating).filter(
+                        Rating.id_user == user_id,
+                        Rating.id_card == card_id
+                    ).first()
 
-                #
-                # Verify Rating existence
-                #
-                # User
-                query = '''
-                    SELECT
-                        COUNT(*) as rating_number
-                FROM
-                    ''' + SqlDatabase.TABLE_RATING + ''' rating
+                    # Create new rating
+                    if not rating_record:
+                        logging.debug(f"New rating record needed for card: {card_id} by user: {username}. RATE: {rate}, SKIP: {skip_continuous_play}")
 
-                WHERE
-                    id_user=:user_id
-                    AND id_card=:card_id
-                '''
-                query_parameters = {'user_id': user_id, 'card_id': card_id}
-                record=cur.execute(query, query_parameters).fetchone()
-                (rating_number, ) = record if record else (0,)
+                        if rate is None:
+                            rate = 0
+                        if skip_continuous_play is None:
+                            skip_continuous_play = 1
 
-                # there was no rating for this media by this user
-                if rating_number == 0:
-                    logging.debug("New rating record needed for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, username, rate, skip_continuous_play))
+                        new_rating = Rating(
+                            id_card=card_id,
+                            id_user=user_id,
+                            rate=rate,
+                            skip_continuous_play=skip_continuous_play
+                        )
 
-                    insert_list = []
-                    insert_list.append("id_card")
-                    insert_list.append("id_user")
-                    values_list = []
-                    values_list.append(":card_id")
-                    values_list.append(":user_id")
+                        db_session.add(new_rating)
+                        db_session.commit()
 
-                    if rate is None:
-                        rate = 0
-                    if skip_continuous_play is None:
-                        skip_continuous_play = 1
+                    # Update existing rating
+                    else:
+                        logging.debug(f"Rating updates for card: {card_id} by user: {username}. RATE: {rate}, SKIP: {skip_continuous_play}")
 
-                    query = '''
-                        INSERT INTO ''' + SqlDatabase.TABLE_RATING + '''
-                             (id_card, id_user, rate, skip_continuous_play)
-                        VALUES
-                            (:card_id, :user_id, :rate, :skip_continuous_play)
-                    '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'rate': rate, 'skip_continuous_play': skip_continuous_play})
-                    record = cur.fetchone()
+                        if rate is not None:
+                            rating_record.rate = rate
+                        if skip_continuous_play is not None:
+                            rating_record.skip_continuous_play = skip_continuous_play
 
-                # it was was already rated
-                else:
-                    logging.debug("Rating updates for card: {0} by user: {1}. RATE: {2}, SKIP: {3}".format(card_id, username, rate, skip_continuous_play))
+                        db_session.commit()
 
-                    set_list = []
-                    set_list.append("'id_card' = :card_id")
-                    set_list.append("'id_user' = :user_id")
-                    if rate is not None:
-                        set_list.append("'rate' = :rate")
-                    if skip_continuous_play is not None:
-                        set_list.append("'skip_continuous_play' = :skip_continuous_play")
+                    result = True
+                    error_message = None
 
-                    query = '''
-                        UPDATE ''' + SqlDatabase.TABLE_RATING + '''
-                        SET
-                            ''' + ", ".join(set_list) + '''
-                        WHERE
-                            id_user = :user_id
-                            AND id_card = :card_id
-                    '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'rate': rate, 'skip_continuous_play': skip_continuous_play})
-                    record = cur.fetchone()
-
-                cur.execute("commit")
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Rating set for card: {0} by user: {1}. RATE: {2}, SKIP: {3} failed! {4}".format(card_id, username, rate, skip_continuous_play, e)
+            except SQLAlchemyError as e:
+                error_message = f"Rating set for card: {card_id} by user: {username}. RATE: {rate}, SKIP: {skip_continuous_play} failed! {e}"
                 logging.error(error_message)
-                cur.execute("rollback")
 
-            finally:
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
+            return {"result": result, "data": data, "error": error_message}
 
-        # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
 
 
     def insert_tag(self, card_id, name):
+        """Insert a new tag for a card with SQLAlchemy"""
         result = False
         data = {}
         error_message = "Lock error"
@@ -2072,71 +2403,46 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-
             try:
-                cur = self.conn.cursor()
+                with self.get_sqlalchemy_session() as db_session:
+                    # Check if tag already exists
+                    existing_tag = db_session.query(Tag).filter(
+                        Tag.id_user == user_id,
+                        Tag.id_card == card_id,
+                        Tag.name == name
+                    ).first()
 
-                #
-                # Verify Tag existence
-                #
-                # User
-                query = '''
-                    SELECT
-                        COUNT(*) as tag_number
-                FROM
-                    ''' + SqlDatabase.TABLE_TAG + ''' tag
+                    if not existing_tag:
+                        logging.debug(f"Record '{name}' tag for card: {card_id} by user: {username}")
 
-                WHERE
-                    id_user=:user_id
-                    AND id_card=:card_id
-                    AND name=:name
-                '''
-                query_parameters = {'user_id': user_id, 'card_id': card_id, 'name': name}
-                record=cur.execute(query, query_parameters).fetchone()
-                (tag_number, ) = record if record else (0,)
+                        new_tag = Tag(
+                            id_card=card_id,
+                            id_user=user_id,
+                            name=name
+                        )
 
-                # there was no tag for this media by this user for this card
-                if tag_number == 0:
-                    logging.debug("Record '{2}' tag for card: {0} by user: {1}".format(card_id, username, name))
+                        db_session.add(new_tag)
+                        db_session.commit()
 
-                    cur.execute("begin")
+                        data["id_card"] = card_id
+                        data["username"] = username
+                        data["name"] = name
 
-                    query = '''
-                        INSERT INTO ''' + SqlDatabase.TABLE_TAG + '''
-                             (id_card, id_user, name)
-                        VALUES
-                            (:card_id, :user_id, :name)
-                    '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'name': name})
-                    cur.execute("commit")
-                    data["row_id"]=cur.lastrowid
-                    data["id_card"]=card_id
-                    data["username"]=username
-                    data["name"]=name
+                        result = True
+                        error_message = None
+                    else:
+                        error_message = "The tag already exist"
 
-                # tag already exist
-                else:
-                    error_message = "The tag already exist"
-                    raise sqlite3.Error(error_message)
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Tagging the card: {0} by user: {1} with '{2}' tag failed!\n{3}".format(card_id, username, name, e)
+            except SQLAlchemyError as e:
+                error_message = f"Tagging the card: {card_id} by user: {username} with '{name}' tag failed!\n{e}"
                 logging.error(error_message)
-                cur.execute("rollback")
 
-            finally:
+            return {"result": result, "data": data, "error": error_message}
 
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
-
-        # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
 
-
     def delete_tag(self, card_id, name):
+        """Delete a tag from a card with SQLAlchemy"""
         result = False
         data = {}
         error_message = "Lock error"
@@ -2149,66 +2455,36 @@ class SqlDatabase:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
-
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as db_session:
+                    # Find and delete the tag
+                    tag_to_delete = db_session.query(Tag).filter(
+                        Tag.id_user == user_id,
+                        Tag.id_card == card_id,
+                        Tag.name == name
+                    ).first()
 
-                #
-                # Verify Tag existence
-                #
-                # User
-                query = '''
-                    SELECT
-                        COUNT(*) as tag_number
-                FROM
-                    ''' + SqlDatabase.TABLE_TAG + ''' tag
+                    if tag_to_delete:
+                        logging.debug(f"Tag is about removed from card: {card_id} by user: {username}. Tag: '{name}'")
 
-                WHERE
-                    id_user=:user_id
-                    AND id_card=:card_id
-                    AND name=:name
-                '''
-                query_parameters = {'user_id': user_id, 'card_id': card_id, 'name': name}
-                record=cur.execute(query, query_parameters).fetchone()
-                (tag_number, ) = record if record else (0,)
+                        db_session.delete(tag_to_delete)
+                        db_session.commit()
 
-                # there is (one)s tag for this media by this user for this card
-                if tag_number > 0:
-                    logging.debug("Tag is about removed from card: {0} by user: {1}. Tag: '{2}'".format(card_id, username, name))
+                        data["id_card"] = card_id
+                        data["username"] = username
+                        data["name"] = name
 
-                    query = '''
-                        DELETE FROM ''' + SqlDatabase.TABLE_TAG + '''
-                        WHERE
-                            id_card = :card_id
-                            AND id_user = :user_id
-                            AND name = :name
-                    '''
-                    cur.execute(query, {'card_id': card_id, 'user_id': user_id, 'name': name})
-                    cur.execute("commit")
+                        result = True
+                        error_message = None
+                    else:
+                        error_message = "The tag does not exist"
 
-                    data["id_card"]=card_id
-                    data["username"]=username
-                    data["name"]=name
-
-                # tag does not exist
-                else:
-                    error_message = "The tag does not exist"
-                    raise sqlite3.Error(error_message)
-
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Deleting the '{2}' tag from the card: {0} by user: {1} failed! {3}".format(card_id, username, name, e)
+            except SQLAlchemyError as e:
+                error_message = f"Deleting the '{name}' tag from the card: {card_id} by user: {username} failed! {e}"
                 logging.error(error_message)
-                cur.execute("rollback")
-            finally:
-                cur.close()
-                return {"result": result, "data": data, "error": error_message}
 
-        # If there was a problem with the file lock
+            return {"result": result, "data": data, "error": error_message}
+
         return {"result": result, "data": data, "error": error_message}
 
 
@@ -2268,10 +2544,9 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-# ---
 
     def get_sql_where_condition_from_text_filter(self, text_filter, field_name, start_separator=',', end_separator=','):
-        # the separator parameters needed because of some fields, like 'actors' and 'voices' have role, separated by :
+        # LEGACY: the separator parameters needed because of some fields, like 'actors' and 'voices' have role, separated by :
         op = None
         if text_filter is None:
             filter_list = []
@@ -2321,8 +2596,10 @@ class SqlDatabase:
 
         return filter_where
 
+
     def get_sql_rate_query(self, value):
         return f"rate>={str(value)}" if value else ""
+
 
     def get_converted_query_to_json(self, sql_record_list, category, lang):
         """
@@ -2520,56 +2797,88 @@ class SqlDatabase:
 
         return records
 
-    def login(self, username=None, password=None):
 
-        # If something fails, the logout fails as well
+    def login(self, username=None, password=None):
+        """SQLAlchemy version of login"""
         error = 'Login failed'
         result = False
         data = {}
 
-        # Login without credentials - goal: at the beginning of the client (index.html) tries to restore the previous session
+        # Login without credentials - session restoration
         if (username is None and password is None) or (not username and not password):
             if session.get('logged_in_user'):
-
                 if 'logged_in_user' in session and 'username' in session['logged_in_user']:
                     username = session['logged_in_user']['username']
                     data = self._get_publishable_user_data(username)
-                    result = True
-                    error = None
-
+                    if data:
+                        result = True
+                        error = None
             return {'result': result, 'data':data, 'error': error}
-
-        #logging.error("USERNAME: {}, PASSWORD: {}".format(username, password))
 
         # LOGIN means a LOGOUT before
         self.logout()
 
-        hashed_password = generate_password_hash(password)
+        try:
+            with self.get_sqlalchemy_session() as db_session:
+                user = db_session.query(User).filter(User.name == username).first()
 
-        full_user_data = self._get_user_data_with_password(username)
+                if user and check_password_hash(user.password, password):
+                    # Get publishable user data
+                    publishable_data = {
+                        'is_admin': user.is_admin,
+                        'name': user.name,
+                        'language_code': user.language.name if user.language else None,
+                        'descriptor_color': user.descriptor_color,
+                        'show_original_title': user.show_original_title,
+                        'show_lyrics_anyway': user.show_lyrics_anyway,
+                        'show_storyline_anyway': user.show_storyline_anyway,
+                        'play_continuously': user.play_continuously
+                    }
 
-        # If the username was found in the DB
-        if full_user_data:
-            stored_hashed_password = full_user_data.get('password', None)
+                    if publishable_data:
+                        result = True
+                        data = publishable_data
+                        error = None
 
-            # The password MATCH
-            if check_password_hash(stored_hashed_password, password):
+                        # make the session permanent
+                        session.permanent = True
 
-                # Get publishable user data - because we do not want to publish for example the password
-                publishable_user_data = self._get_publishable_user_data(username)
+                        # store the user session data
+                        session['logged_in_user'] = {
+                            'username': username,
+                            'user_id': user.id,
+                            'language_id': user.id_language
+                        }
 
-                if publishable_user_data:
-                    result = True
-                    data = publishable_user_data
-                    error = None
-
-                    # make the session permanent
-                    session.permanent = True
-
-                    # store the user session data
-                    session['logged_in_user'] = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy login failed: {e}")
 
         return {'result': result, 'data':data, 'error': error}
+
+    def _get_publishable_user_data(self, username):
+        """SQLAlchemy version of _get_publishable_user_data"""
+        data = {}
+
+        try:
+            with self.get_sqlalchemy_session() as session:
+                user = session.query(User).filter(User.name == username).first()
+
+                if user:
+                    data = {
+                        'is_admin': user.is_admin,
+                        'name': user.name,
+                        'language_code': user.language.name if user.language else None,
+                        'descriptor_color': user.descriptor_color,
+                        'show_original_title': user.show_original_title,
+                        'show_lyrics_anyway': user.show_lyrics_anyway,
+                        'show_storyline_anyway': user.show_storyline_anyway,
+                        'play_continuously': user.play_continuously
+                    }
+
+        except SQLAlchemyError as e:
+            logging.error(f"The SELECTION in the database for user: '{username}' failed because of an error: {e}")
+
+        return data
 
     def logout(self):
 
@@ -2591,59 +2900,49 @@ class SqlDatabase:
             cur.execute("commit")
             return record
 
-    def get_list_of_actors(self, category, limit=15, json=True):
-        """
-        Gives back actor name's list, ordered by the number of the movies they played in
-        limited by the given value
-        """
 
+    def get_list_of_actors(self, category, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_actors with caching"""
+        cache_key = f"actors_{category}_{limit}_{json}"
+        return self._get_cached_or_execute(
+            cache_key, 1800,  # 30 minutes cache
+            self._get_list_of_actors_uncached, category, limit, json
+        )
+
+    def _get_list_of_actors_uncached(self, category, limit=15, json=True):
+        """Uncached version of get_list_of_actors"""
         result = False
         error_message = "Lock error"
-
         records = {}
+
         with self.lock:
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as session:
+                    # Query for distinct actor names in media cards of given category
+                    query = session.query(Person.name.label('actor_name')).distinct()\
+                        .join(card_actor_table, Person.id == card_actor_table.c.id_actor)\
+                        .join(Card, card_actor_table.c.id_card == Card.id)\
+                        .join(Category, Card.id_category == Category.id)\
+                        .filter(Category.name == category)\
+                        .filter(
+                            (Card.level == None) |
+                            (Card.level == 'record') |
+                            (Card.level == 'episode')
+                        )\
+                        .order_by(Person.name)\
+                        .limit(limit)
 
-                # Get Card list
-                query = '''
-                    SELECT DISTINCT
-                       person.name as actor_name
-                    FROM
-                       Card card,
-                       Card_Actor card_actor,
-                       Person person,
-                       Category category
-                    WHERE
-                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
-                       AND category.name = :category
-                       AND card.id_category = category.id
-                       AND card_actor.id_actor = person.id
-                       AND card_actor.id_card = card.id
-                    ORDER BY person.name
-                    LIMIT :limit;
-                '''
+                    records = query.all()
 
-                query_parameters = {'category': category, 'limit': limit}
+                    if json:
+                        records = [record.actor_name for record in records]
 
-                logging.debug("get_list_of_actors: '{0}' / {1}".format(query, query_parameters))
+                    result = True
+                    error_message = None
 
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = [record['actor_name'] for record in records]
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the actor list failed: {0}".format(e)
+            except SQLAlchemyError as e:
+                error_message = f"Fetching the actor list failed: {e}"
                 logging.error(error_message)
-
-            finally:
-                cur.close()
 
         return {"result": result, "data": records, "error": error_message}
 
@@ -2734,61 +3033,44 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-    def get_list_of_voices(self, category, limit=15, json=True):
-        """
-        Gives back voice name's list, ordered by the number of the movies they played in
-        limited by the given value
-        """
 
+    def get_list_of_voices(self, category, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_voices"""
         result = False
         error_message = "Lock error"
-
         records = {}
+
         with self.lock:
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as session:
+                    # Query for distinct voice names in media cards of given category
+                    query = session.query(Person.name.label('voice_name')).distinct()\
+                        .join(card_voice_table, Person.id == card_voice_table.c.id_voice)\
+                        .join(Card, card_voice_table.c.id_card == Card.id)\
+                        .join(Category, Card.id_category == Category.id)\
+                        .filter(Category.name == category)\
+                        .filter(
+                            (Card.level == None) |
+                            (Card.level == 'record') |
+                            (Card.level == 'episode')
+                        )\
+                        .order_by(Person.name)\
+                        .limit(limit)
 
-                # Get Card list
-                query = '''
-                    SELECT DISTINCT
-                       person.name as voice_name
-                    FROM
-                       Card card,
-                       Card_Voice card_voice,
-                       Person person,
-                       Category category
-                    WHERE
-                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
-                       AND category.name = :category
-                       AND card.id_category = category.id
-                       AND card_voice.id_voice = person.id
-                       AND card_voice.id_card = card.id
-                    ORDER BY person.name
-                    LIMIT :limit;
-                '''
+                    records = query.all()
 
-                query_parameters = {'category': category, 'limit': limit}
+                    if json:
+                        records = [record.voice_name for record in records]
 
-                logging.debug("get_list_of_voices: '{0}' / {1}".format(query, query_parameters))
+                    result = True
+                    error_message = None
 
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = [record['voice_name'] for record in records]
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the voice list failed: {0}".format(e)
+            except SQLAlchemyError as e:
+                error_message = f"Fetching the voice list failed: {e}"
                 logging.error(error_message)
 
-            finally:
-                cur.close()
-
         return {"result": result, "data": records, "error": error_message}
+
 
     def get_list_of_voices_by_role_count(self, category, minimum=3, limit=15, json=True):
         """
@@ -2876,58 +3158,49 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-    def get_list_of_directors(self, category, limit=15, json=True):
-        """
-        Gives back director name's list, ordered by the name
-        """
 
+    def get_list_of_directors(self, category, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_directors with caching"""
+        cache_key = f"directors_{category}_{limit}_{json}"
+        return self._get_cached_or_execute(
+            cache_key, 1800,  # 30 minutes cache
+            self._get_list_of_directors_uncached, category, limit, json
+        )
+
+    def _get_list_of_directors_uncached(self, category, limit=15, json=True):
+        """Uncached version of get_list_of_directors"""
         result = False
         error_message = "Lock error"
-
         records = {}
+
         with self.lock:
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as session:
+                    # Query for distinct director names in media cards of given category
+                    query = session.query(Person.name.label('director_name')).distinct()\
+                        .join(card_director_table, Person.id == card_director_table.c.id_director)\
+                        .join(Card, card_director_table.c.id_card == Card.id)\
+                        .join(Category, Card.id_category == Category.id)\
+                        .filter(Category.name == category)\
+                        .filter(
+                            (Card.level == None) |
+                            (Card.level == 'record') |
+                            (Card.level == 'episode')
+                        )\
+                        .order_by(Person.name)\
+                        .limit(limit)
 
-                # Get Card list
-                query = '''
-                    SELECT DISTINCT
-                       person.name as director_name
-                    FROM
-                       Card card,
-                       Card_Director card_director,
-                       Person person,
-                       Category category
-                    WHERE
-                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
-                       AND category.name = :category
-                       AND card.id_category = category.id
-                       AND card_director.id_director = person.id
-                       AND card_director.id_card = card.id
-                    ORDER BY person.name
-                    LIMIT :limit;
-                '''
+                    records = query.all()
 
-                query_parameters = {'category': category, 'limit': limit}
+                    if json:
+                        records = [record.director_name for record in records]
 
-                logging.debug("get_list_of_directors: '{0}' / {1}".format(query, query_parameters))
+                    result = True
+                    error_message = None
 
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = [record['director_name'] for record in records]
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the director list failed: {0}".format(e)
+            except SQLAlchemyError as e:
+                error_message = f"Fetching the director list failed: {e}"
                 logging.error(error_message)
-
-            finally:
-                cur.close()
 
         return {"result": result, "data": records, "error": error_message}
 
@@ -3017,122 +3290,107 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-    def get_list_of_writers(self, category, limit=15, json=True):
-        """
-        Gives back writers name's list, ordered by the name
-        """
 
+    def get_list_of_writers(self, category, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_writers with caching"""
+        cache_key = f"writers_{category}_{limit}_{json}"
+        return self._get_cached_or_execute(
+            cache_key, 1800,  # 30 minutes cache
+            self._get_list_of_writers_uncached, category, limit, json
+        )
+
+    def _get_list_of_writers_uncached(self, category, limit=15, json=True):
+        """Uncached version of get_list_of_writers"""
         result = False
         error_message = "Lock error"
-
         records = {}
+
         with self.lock:
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as session:
+                    # Query for distinct writer names in media cards of given category
+                    query = session.query(Person.name.label('writer_name')).distinct()\
+                        .join(card_writer_table, Person.id == card_writer_table.c.id_writer)\
+                        .join(Card, card_writer_table.c.id_card == Card.id)\
+                        .join(Category, Card.id_category == Category.id)\
+                        .filter(Category.name == category)\
+                        .filter(
+                            (Card.level == None) |
+                            (Card.level == 'record') |
+                            (Card.level == 'episode')
+                        )\
+                        .order_by(Person.name)\
+                        .limit(limit)
 
-                # Get Card list
-                query = '''
-                    SELECT DISTINCT
-                       person.name as writer_name
-                    FROM
-                       Card card,
-                       Card_Writer card_writer,
-                       Person person,
-                       Category category
-                    WHERE
-                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
-                       AND category.name = :category
-                       AND card.id_category = category.id
-                       AND card_writer.id_writer = person.id
-                       AND card_writer.id_card = card.id
-                    ORDER BY person.name
-                    LIMIT :limit;
-                '''
+                    records = query.all()
 
-                query_parameters = {'category': category, 'limit': limit}
+                    if json:
+                        records = [record.writer_name for record in records]
 
-                logging.debug("get_list_of_writers: '{0}' / {1}".format(query, query_parameters))
+                    result = True
+                    error_message = None
 
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = [record['writer_name'] for record in records]
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the writer list failed: {0}".format(e)
+            except SQLAlchemyError as e:
+                error_message = f"Fetching the writer list failed: {e}"
                 logging.error(error_message)
-
-            finally:
-                cur.close()
 
         return {"result": result, "data": records, "error": error_message}
 
-    def get_list_of_tags(self, category, limit=15, json=True):
-        """
-        Gives back tags for the given category for the user, ordered by the name
-        """
 
+    def get_list_of_tags(self, category, limit=15, json=True):
+        """SQLAlchemy version of get_list_of_tags"""
         result = False
         error_message = "Lock error"
-
         records = {}
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
+
+        try:
+            from flask import session as flask_session
+            user_data = flask_session.get('logged_in_user', None)
+            if user_data:
+                user_id = user_data['user_id']
+            else:
+                user_id = -1
+        except RuntimeError:
+            # Working outside of request context - use default user_id
             user_id = -1
 
         with self.lock:
             try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
+                with self.get_sqlalchemy_session() as db_session:
+                    # Query for distinct tag names for given category and user
+                    query = db_session.query(Tag.name.label('tag')).distinct()\
+                        .join(Card, Tag.id_card == Card.id)\
+                        .join(Category, Card.id_category == Category.id)\
+                        .filter(Category.name == category)\
+                        .filter(Tag.id_user == user_id)\
+                        .order_by(Tag.name)\
+                        .limit(limit)
 
-                # Get Card list
-                query = '''
-                    SELECT DISTINCT tag.name as tag
-                    FROM Tag, Card, Category
-                    WHERE
-                        tag.id_card=card.id
-                        AND category.id=card.id_category
-                        AND category.name=:category
-                        AND tag.id_user=:user_id
-                    ORDER BY tag;
-                '''
+                    records = query.all()
 
-                query_parameters = {'user_id': user_id, 'category': category, 'limit': limit}
+                    if json:
+                        records = [record.tag for record in records]
 
-                logging.debug("get_list_of_tags: '{0}' / {1}".format(query, query_parameters))
+                    result = True
+                    error_message = None
 
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = [record['tag'] for record in records]
-
-                result = True
-                error_message = None
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the tag list failed: {0}".format(e)
+            except SQLAlchemyError as e:
+                error_message = f"Fetching the tag list failed: {e}"
                 logging.error(error_message)
-
-            finally:
-                cur.close()
 
         return {"result": result, "data": records, "error": error_message}
 
     def get_abc_of_movie_title(self, category, maximum, lang):
-        """
-        Returns the list of the ABC of the movie titles on the highest level. If the number of movies > maximum on a single letter (like A%), then it narrows the the filter (like An%) to make the list to fit to the maximum.
-        But of course,
+        """Returns the list of the ABC of the movie titles on the highest level with caching"""
+        cache_key = f"abc_titles_{category}_{lang}"
+#        return self._get_cached_or_execute(
+#            cache_key, 86400,  # 24 hours cache
+#            self._get_abc_of_movie_title_uncached, category, maximum, lang
+#        )
+        self._get_abc_of_movie_title_uncached(category, maximum, lang)
 
-        Right now it does not work, I did not implement the expected behaviour, I return only an
-        """
+    def _get_abc_of_movie_title_uncached(self, category, maximum, lang):
+        """Uncached version of get_abc_of_movie_title"""
         result = True
         error_message = None
 
@@ -3143,6 +3401,367 @@ class SqlDatabase:
         records.insert(0, {"filter": "0%_OR_1%_OR_2%_OR_3%_OR_4%_OR_5%_OR_6%_OR_7%_OR_8%_OR_9%", "name": "0-9"})
 
         return {"result": result, "data": records, "error": error_message}
+
+
+    #
+    # GET /collect/highest/mixed
+    #
+    # ✅
+    #
+    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+        """Returns highest level cards using raw SQL query for complex hierarchical operations with caching"""
+        # Create cache key from all parameters that affect the result
+        cache_params = f"{category}_{view_state}_{tags}_{level}_{filter_on}_{title}_{genres}_{themes}_{directors}_{writers}_{actors}_{voices}_{lecturers}_{performers}_{origins}_{rate_value}_{decade}_{lang}_{limit}_{json}"
+        cache_key = f"highest_cards_{hash(cache_params) % 1000000}"
+
+        return self._get_cached_or_execute(
+            cache_key, 3600,  # 60 minutes cache for card queries
+            self._get_highest_level_cards_uncached, category, view_state, tags, level, filter_on, title, genres, themes, directors, writers, actors, voices, lecturers, performers, origins, rate_value, decade, lang, limit, json
+        )
+
+    def _get_highest_level_cards_uncached(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+        """Uncached version of get_highest_level_cards"""
+        records = []
+
+        try:
+            from flask import session as flask_session
+            user_data = flask_session.get('logged_in_user', None)
+            if user_data:
+                user_id = user_data['user_id']
+            else:
+                user_id = -1
+        except RuntimeError:
+            user_id = -1
+
+        with self.lock:
+
+            try:
+
+                cur = self.conn.cursor()
+
+                query = self.get_raw_query_of_highest_level(
+                    category=category, tags=tags, title=title, genres=genres,
+                    themes=themes, directors=directors, writers=writers,
+                    actors=actors, voices=voices, lecturers=lecturers,
+                    performers=performers, origins=origins, rate_value=rate_value
+                )
+
+                query_parameters = {
+                    'user_id': user_id, 'level': level, 'filter_on': filter_on,
+                    'category': category, 'title': title, 'decade': decade,
+                    'tags': tags, 'lang': lang, 'limit': limit
+                }
+
+                logging.debug(f"get_highest_level_cards query: '{query}' / {query_parameters}")
+
+                records = cur.execute(query, query_parameters).fetchall()
+
+                if json:
+                    records = self.get_converted_query_to_json(records, category, lang)
+
+            except sqlite3.Error as e:
+                error_message = f"Fetching the highest level card failed: {e}"
+                logging.error(error_message)
+                records = []
+
+            finally:
+                cur.close()
+                return records
+
+        return records
+
+
+    #
+    # /collect/next/mixed/
+    #
+    # ✅
+    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+        """Returns next level cards using raw SQL query for complex hierarchical operations with caching"""
+        # Create cache key from all parameters that affect the result
+        cache_params = f"{card_id}_{category}_{view_state}_{tags}_{level}_{filter_on}_{title}_{genres}_{themes}_{directors}_{writers}_{actors}_{voices}_{lecturers}_{performers}_{origins}_{rate_value}_{decade}_{lang}_{limit}_{json}"
+        cache_key = f"next_cards_{hash(cache_params) % 1000000}"
+
+        return self._get_cached_or_execute(
+            cache_key, 3600,  # 60 minutes cache for card queries
+            self._get_next_level_cards_uncached, card_id, category, view_state, tags, level, filter_on, title, genres, themes, directors, writers, actors, voices, lecturers, performers, origins, rate_value, decade, lang, limit, json
+        )
+
+    def _get_next_level_cards_uncached(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+        """Uncached version of get_next_level_cards"""
+        records = []
+
+        try:
+            from flask import session as flask_session
+            user_data = flask_session.get('logged_in_user', None)
+            if user_data:
+                user_id = user_data['user_id']
+            else:
+                user_id = -1
+        except RuntimeError:
+            user_id = -1
+
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+
+                query = self.get_raw_query_of_next_level(
+                    category=category, tags=tags, level=level, filter_on=filter_on,
+                    genres=genres, themes=themes, directors=directors, actors=actors,
+                    voices=voices, lecturers=lecturers, performers=performers,
+                    origins=origins, rate_value=rate_value
+                )
+
+                query_parameters = {
+                    'user_id': user_id, 'card_id': card_id, 'category': category,
+                    'level': level, 'filter_on': filter_on, 'title': title,
+                    'decade': decade, 'lang': lang, 'limit': limit
+                }
+
+                logging.debug(f"get_next_level_cards query: '{query}' / {query_parameters}")
+
+                records = cur.execute(query, query_parameters).fetchall()
+
+                if json:
+                    records = self.get_converted_query_to_json(records, category, lang)
+
+            except sqlite3.Error as e:
+                error_message = f"Fetching the next level card failed: {e}"
+                logging.error(error_message)
+                records = []
+
+            finally:
+                cur.close()
+                return records
+
+        return records
+
+
+    #
+    # GET /collect/lowest
+    #
+    # ✅
+    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+        """Returns lowest level cards using raw SQL query for complex hierarchical operations with caching"""
+        # Create cache key from all parameters that affect the result
+        cache_params = f"{category}_{view_state}_{tags}_{level}_{title}_{genres}_{themes}_{directors}_{actors}_{voices}_{lecturers}_{performers}_{origins}_{rate_value}_{decade}_{lang}_{limit}_{json}"
+        cache_key = f"lowest_cards_{hash(cache_params) % 1000000}"
+
+        return self._get_cached_or_execute(
+            cache_key, 3600,  # 60 minutes cache for card queries
+            self._get_lowest_level_cards_uncached, category, view_state, tags, level, title, genres, themes, directors, actors, voices, lecturers, performers, origins, rate_value, decade, lang, limit, json
+        )
+
+    def _get_lowest_level_cards_uncached(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+        """Uncached version of get_lowest_level_cards"""
+        records = []
+
+        try:
+            from flask import session as flask_session
+            user_data = flask_session.get('logged_in_user', None)
+            if user_data:
+                user_id = user_data['user_id']
+            else:
+                user_id = -1
+        except RuntimeError:
+            user_id = -1
+
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                history_days = 365
+                history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
+
+                query = self.get_raw_query_of_lowest_level(
+                    category=category, tags=tags, genres=genres, themes=themes,
+                    directors=directors, actors=actors, voices=voices,
+                    lecturers=lecturers, performers=performers, origins=origins,
+                    rate_value=rate_value
+                )
+
+                # Add view_state filtering and ordering
+                query = f'''
+                SELECT *
+                FROM ({query}) raw_query
+                WHERE
+                    CASE
+                        WHEN :view_state = 'interrupted' THEN
+                            raw_query.start_epoch >= :history_back
+                            AND raw_query.recent_position < raw_query.net_stop_time
+                            AND raw_query.recent_position > raw_query.net_start_time
+                        WHEN :view_state = 'last_watched' THEN
+                            raw_query.start_epoch >= :history_back
+                        WHEN :view_state = 'most_watched' THEN
+                            raw_query.start_epoch >= :history_back
+                        ELSE 1
+                    END
+                ''' + (
+                    'ORDER BY raw_query.start_epoch DESC' if view_state == 'interrupted' or view_state == 'last_watched'
+                    else 'ORDER BY raw_query.play_count DESC' if view_state == 'most_watched'
+                    else 'ORDER BY raw_query.ord'
+                ) + '''
+                LIMIT :limit;
+                '''
+
+                query_parameters = {
+                    'user_id': user_id, 'category': category, 'level': level,
+                    'view_state': view_state, 'history_back': history_back,
+                    'title': title, 'decade': decade, 'lang': lang, 'limit': limit
+                }
+
+                logging.debug(f"get_lowest_level_cards_sqlalchemy query: '{query}' / {query_parameters}")
+
+                records = cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = self.get_converted_query_to_json(records, category, lang)
+
+            except sqlite3.Error as e:
+                error_message = f"Fetching the lowest level card failed: {e}"
+                logging.error(f'Error in SQLAlchemy version: {error_message}')
+                records = []
+
+            finally:
+                cur.close()
+                return records
+
+        return records
+
+
+    def get_history(self, card_id=None, limit_days=None, limit_records=None):
+        """Get user's playback history with optional filtering"""
+        result = False
+        data = []
+        error_message = "Lock error"
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
+
+        with self.lock:
+            try:
+                with self.get_sqlalchemy_session() as db_session:
+                    query = db_session.query(History).filter(History.id_user == user_id)
+
+                    if card_id:
+                        query = query.filter(History.id_card == card_id)
+
+                    if limit_days:
+                        limit_epoch = int((datetime.now() + timedelta(days=limit_days)).timestamp())
+                        query = query.filter(History.start_epoch <= limit_epoch)
+
+                    query = query.order_by(History.start_epoch.desc())
+
+                    if limit_records:
+                        query = query.limit(limit_records)
+
+                    records = query.all()
+
+                    data = [{
+                        'start_epoch': record.start_epoch,
+                        'recent_epoch': record.recent_epoch,
+                        'recent_position': float(record.recent_position),
+                        'id_card': record.id_card,
+                        'id_user': record.id_user
+                    } for record in records]
+
+                    result = True
+                    error_message = None
+
+            except SQLAlchemyError as e:
+                error_message = f"The operation for user: '{user_id}' failed because of an error: {e}"
+                logging.error(error_message)
+
+            return {"result": result, "data": data, "error": error_message}
+
+        return {"result": result, "data": data, "error": error_message}
+
+
+    def update_play_position(self, card_id, recent_position, start_epoch=None):
+        """Update player's position for a movie with SQLAlchemy"""
+        with self.lock:
+            result = False
+            data = {}
+            error_message = "Lock error"
+
+            try:
+                user_data = session.get('logged_in_user')
+                if user_data:
+                    user_id = user_data["user_id"]
+                else:
+                    error_message = 'Not logged in'
+                    return {"result": result, "data": data, "error": error_message}
+
+                with self.get_sqlalchemy_session() as db_session:
+                    # Verify user existence
+                    user = db_session.query(User).filter(User.id == user_id).first()
+                    if not user:
+                        error_message = f"The requested user_id({user_id}) does NOT exist"
+                        logging.error(error_message)
+                        return {"result": result, "data": data, "error": error_message}
+
+                    # Verify card existence
+                    card = db_session.query(Card).filter(Card.id == card_id).first()
+                    if not card:
+                        error_message = f"The requested card_id({card_id}) does NOT exist"
+                        logging.error(error_message)
+                        return {"result": result, "data": data, "error": error_message}
+
+                    # Check if history record exists
+                    history_record = None
+                    if start_epoch:
+                        history_record = db_session.query(History).filter(
+                            History.id_card == card_id,
+                            History.id_user == user_id,
+                            History.start_epoch == start_epoch
+                        ).first()
+
+                    # New history - INSERT
+                    if not history_record and not start_epoch:
+                        start_epoch = int(datetime.now().timestamp())
+                        recent_epoch = start_epoch
+
+                        new_history = History(
+                            id_card=card_id,
+                            id_user=user_id,
+                            start_epoch=start_epoch,
+                            recent_epoch=recent_epoch,
+                            recent_position=recent_position
+                        )
+
+                        db_session.add(new_history)
+                        db_session.commit()
+                        logging.debug(f"The registered new history of card_id: {card_id} has 'start_epoch': {start_epoch}")
+
+                    # Update existing history
+                    elif history_record and start_epoch:
+                        recent_epoch = int(datetime.now().timestamp())
+                        history_record.recent_epoch = recent_epoch
+                        history_record.recent_position = recent_position
+                        db_session.commit()
+
+                    # Something went wrong
+                    else:
+                        error_message = f"Something went wrong. The parameter 'start_epoch'={start_epoch} but history record exists: {bool(history_record)}"
+                        logging.error(error_message)
+                        return {"result": result, "data": data, "error": error_message}
+
+                    result = True
+                    data['start_epoch'] = int(start_epoch)
+                    error_message = None
+
+            except SQLAlchemyError as e:
+                error_message = str(e)
+                logging.error(error_message)
+
+            return {"result": result, "data": data, "error": error_message}
+
+        return {"result": result, "data": data, "error": error_message}
+
 
 
 
@@ -3166,255 +3785,6 @@ class SqlDatabase:
 
 
 
-
-    #
-    # GET /collect/highest/mixed
-    #
-    # ✅
-    #
-    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
-        """
-        FULL QUERY for highest level list                ---
-        Returns mixed standalone media and level cards   ---
-        With filters category/genre                      ---
-
-        Why need to use recursive search?                ---
-        Because I filter by the lower level card (media) ---
-        but I show the highest                           ---
-
-        Parameters for filtering:
-          - category
-          - level
-          - decade
-          - language
-
-          logical operands (_AND_, _NOT_) in
-          - genres
-          - themes
-          - actors
-          - voices
-          - writers
-          - directors
-          - lecturers
-          - origins
-        """
-        records = {}
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
-
-        with self.lock:
-
-            #print("level: {}, filter_on: {}".format(level, filter_on))
-            try:
-                cur = self.conn.cursor()
-                cur.execute("begin")
-
-                query = self.get_raw_query_of_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
-
-                query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'tags': tags, 'lang': lang, 'limit': limit}
-
-                logging.debug("get_highest_level_cards query: '{0}' / {1}".format(query, query_parameters))
-
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                my_records = [{key: record[key] for key in record.keys()} for record in records]
-
-                for record in my_records:
-                    logging.debug(f'Response: {record}')
-                logging.debug("\n\n\n")
-
-
-
-                if json:
-                    records = self.get_converted_query_to_json(records, category, lang)
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the highest level card failed: {0}".format(e)
-                logging.error(f'Error in the request process: {error_message}')
-
-            finally:
-                cur.close()
-
-                return records
-        return records
-
-# ---
-
-    #
-    # /collect/next/mixed/
-    #
-    # ✅
-    #
-    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
-        """
-        FULL QUERY for the children cards of the given card
-        Returns the next child cards which could be:
-          - media card
-          - level cards
-
-        Parameters for filtering:
-          - category
-          - decade
-          - language
-          - rate
-
-          logical operands (_AND_, _NOT_) in
-          - genres
-          - themes
-          - actors
-          - voices
-          - directors
-          - lecturers
-          - origins
-          - tags
-        """
-
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
-
-        records = {}
-
-        with self.lock:
-
-            try:
-
-                where = ''
-
-                cur = self.conn.cursor()
-                cur.execute("begin")
-
-                query = self.get_raw_query_of_next_level(category=category, tags=tags, level=level, filter_on=filter_on, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
-
-                query_parameters = {'user_id': user_id, 'card_id': card_id, 'category': category, 'level': level, 'filter_on': filter_on, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
-
-                logging.debug("get_next_level_cards query: '{0}' / {1}".format(query, query_parameters))
-
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = self.get_converted_query_to_json(records, category, lang)
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the next level card failed: {0}".format(e)
-                logging.error(error_message)
-
-            finally:
-                cur.close()
-                return records
-        return records
-
-# ---
-
-    #
-    # GET /collect/lowest
-    #
-    # ✅
-    #
-    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
-
-        """
-        FULL QUERY for lowest (medium) level list
-        Returns only medium level cards level cards
-        With filters category/genre/theme/origin/director/actor
-
-        Parameters for view_state:
-          - *
-          - interrupted
-          - last_watched
-          - least_watched
-          - most_watched
-
-        Parameters for filtering:
-          - category
-          - level
-          - decade
-          - language
-          - rate
-
-          logical operands (_AND_, _NOT_) in
-          - genres
-          - themes
-          - actors
-          - voices
-          - directors
-          - lecturers
-          - origins
-          - tags
-        """
-
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
-
-        records = {}
-
-        with self.lock:
-
-            try:
-
-                cur = self.conn.cursor()
-                cur.execute("begin")
-
-                history_days = 365
-                history_back = int(datetime.now().astimezone().timestamp()) - history_days * 86400
-
-                query = self.get_raw_query_of_lowest_level(category=category, tags=tags, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
-
-                query = '''
-                SELECT *
-                FROM ({0}) raw_query
-                WHERE
-                    CASE
-                        WHEN :view_state = 'interrupted' THEN
-                            raw_query.start_epoch >= :history_back
-                            AND raw_query.recent_position < raw_query.net_stop_time
-                            AND raw_query.recent_position > raw_query.net_start_time
-                        WHEN :view_state = 'last_watched' THEN
-                            raw_query.start_epoch >= :history_back
-                        WHEN :view_state = 'most_watched' THEN
-                            raw_query.start_epoch >= :history_back
-                        ELSE 1
-                    END
-                '''.format(query) + ( 'ORDER BY raw_query.start_epoch DESC' if view_state == 'interrupted' or view_state == 'last_watched' else 'ORDER BY raw_query.play_count DESC' if view_state == 'most_watched' else 'ORDER BY raw_query.ord' ) + '''
-                LIMIT :limit;
-                '''
-
-                #logging.error("MY QUERY: {0}".format(query))
-
-                query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'view_state': view_state, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
-
-                logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
-
-                records=cur.execute(query, query_parameters).fetchall()
-                cur.execute("commit")
-
-                if json:
-                    records = self.get_converted_query_to_json(records, category, lang)
-
-            except sqlite3.Error as e:
-                error_message = "Fetching the lowest level card failed: {0}".format(e)
-                logging.error(error_message)
-
-            finally:
-                cur.close()
-                return records
-        return records
-
-
-
-
-
-
 # RAW Queries
 
     def get_raw_query_of_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
@@ -3433,7 +3803,6 @@ class SqlDatabase:
         rate_where = self.get_sql_rate_query(rate_value)
 
         logging.debug(f"rate_where: {rate_where}")
-
         query = '''
 
             SELECT
@@ -4508,8 +4877,6 @@ class SqlDatabase:
                 appendix,
 
                 hstr.recent_state
---                rtng.rate,
---                rtng.skip_continuous_play
             FROM
 
                 ---------------------------
@@ -5319,17 +5686,6 @@ class SqlDatabase:
                 )hstr
                 ON hstr.id_card=core.id
 
---                --------------
---                --- RATING ---
---                --------------
---                LEFT JOIN
---                (
---                    SELECT id_card, rate, skip_continuous_play
---                    FROM Rating
---                    WHERE id_user=:user_id
---                )rtng
---                ON rtng.id_card=core.id
-
             WHERE
                 mixed_id_list.id=core.id
 
@@ -5631,7 +5987,6 @@ class SqlDatabase:
                 FROM
                     rec
                 WHERE
---                    (level IS NULL OR level = 'record' OR level = 'episode')
                     ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION.replace('card.', '') + '''
 
                 GROUP BY id
