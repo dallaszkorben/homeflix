@@ -2329,6 +2329,9 @@ class SqlDatabase:
         Convert and translate the given SQL card-response
         """
 
+        # TODO: error handling needed !!! media file name with spaces and strange characters causing error, consequently no converting, and fail later where json is expected
+
+
         records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
 
         trans = Translator.getInstance(lang)

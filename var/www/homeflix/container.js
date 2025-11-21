@@ -1002,7 +1002,7 @@ class ObjThumbnailContainer {
         domThumbnail.append(domThumbnailTextWrapper);
 
         // Add LEVEL RIBBON if necessary
-        if(level && ( level == "series" || level =="remake" || level == "sequel" || level == "season" || level == "episode" || level == "lp" || level == "band" || level == "record")){
+        if(level && ( level == "series" || level =="remake" || level == "sequel" || level == "season" || level == "episode" || level == "lp" || level == "band" || level == "soundtrack" || level == "record")){
             let ribbonText = get_translated_level(level);
 
             // Add sequence number for season and episode levels
@@ -2827,7 +2827,7 @@ class ThumbnailController {
         let medium_dict = {};
         let screenshot_path = null;
 
-        if(hit["is_appendix"] === false){
+        if(hit["is_appendix"] !== true){
             screenshot_path = RestGenerator.getRandomScreenshotPath(hit["source_path"]);
         }
 
@@ -2919,6 +2919,7 @@ class ThumbnailController {
                 setTimeout(() => {
                     $("#dialog-confirm-continue-interrupted-play p").html(translated_interaction_labels.get('dialog')['continue_interrupted_playback']['message']);
                     $("#dialog-confirm-continue-interrupted-play").dialog({
+
                         //closeOnEscape: false,
                         resizable: false,
                         height: "auto",
@@ -3066,6 +3067,9 @@ class ThumbnailController {
 
         player.controls = true;
         player.autoplay = true;
+
+        // Preserve aspect ratio of poster/screenshot images
+        player.style.objectFit = 'contain';
         player.currentTime = recent_position;
         player.load();
         this.startPlayer()

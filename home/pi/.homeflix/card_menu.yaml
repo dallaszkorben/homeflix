@@ -1818,9 +1818,9 @@ definitions:
                                         genres: soundtrack
                                       request: *request_collect_lowest
 
-                # ---------------
-                # Music-Audio-ABC
-                # ---------------
+                # --------------------
+                # Music-Audio-Band-ABC
+                # --------------------
                 - thumbnail:
                     image: images/categories/music_by_band_abc.jpg
                     title:
@@ -1854,6 +1854,50 @@ definitions:
                               category: music_audio
                               filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
                               level: band
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                title: filter
+                            request: *request_collect_highest_mixed
+                            title:
+                              - variable: data_dict["name"]
+
+                # --------------------------
+                # Music-Audio-Soundtrack-ABC
+                # --------------------------
+                - thumbnail:
+                    image: images/categories/music_by_soundtrack_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_by_soundtrack_abc
+                  description:
+                    image: images/categories/music_by_soundtrack_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_by_soundtrack_abc
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_by_soundtrack_abc
+                  execution:
+                    container_list:
+                      - dynamic_queried:
+                          pre_query:
+                            data:
+                              category: music_audio
+                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
+                            request:
+                              method: GET
+                              protocol: http
+                              path: "/collect/abc/by/movie_title/count"
+                          query_loop:
+                            data:
+                              category: music_audio
+                              filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
+                              level: soundtrack
                             data_from_pre_response_list:
                               type: dict
                               dict:

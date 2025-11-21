@@ -545,7 +545,8 @@ title:
     music_video: Music Video
     music_by_decade: Grouped by Decade
     music_by_genre: Grouped by Genre
-    music_by_band_abc: Bands group by ABC
+    music_by_band_abc: Bands by ABC
+    music_by_soundtrack_abc: Soundtracks by ABC
 
     music_audio: Music Audio
     music_hungarian: Hungarian

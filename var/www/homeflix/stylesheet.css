@@ -23,6 +23,9 @@
     --thumbnail-ribbon-level-band-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-band-background: rgb(139, 69, 19);
 
+    --thumbnail-ribbon-level-soundtrack-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-soundtrack-background: rgb(139, 69, 19);
+
     --thumbnail-ribbon-level-episode-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-episode-background: rgb(0, 128, 128);
 
@@ -774,6 +777,11 @@ body {
 [level="band"]{
     color: var(--thumbnail-ribbon-level-band-font-color);
     background-color: var(--thumbnail-ribbon-level-band-background);
+}
+
+[level="soundtrack"]{
+    color: var(--thumbnail-ribbon-level-soundtrack-font-color);
+    background-color: var(--thumbnail-ribbon-level-soundtrack-background);
 }
 
 [level="episode"]{
