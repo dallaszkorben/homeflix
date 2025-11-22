@@ -57,99 +57,6 @@ class RestGenerator extends Generator{
     }
 
 
-    async showAllThumbnails(requestList, objScrollSection){
-        let refToThis = this;
-        let containerList = [];       // Array to store the containers
-        let thumbnailListCache = [];  // Array to store the thumbnail_list results
-        let processedIndexes = [];    // Track which indexes were processed in Phase 1
-
-        // Phase 1: Show only the minimal number of thumbnails - which can be seen in the window
-        const INITIAL_VISIBLE_LINES = 3;        // Maximum number of lines to process initially
-        const INITIAL_THUMBNAILS = 11;          // Maximum number of thumbnails per line initially
-
-        let startedHash = this.getHistoryHash(objScrollSection);
-
-        Generator.startSpinner();
-
-        let processedCount = 0;
-        for (let lineIndex = 0; lineIndex < requestList.length && processedCount < INITIAL_VISIBLE_LINES; lineIndex++) {
-            const request = requestList[lineIndex];
-
-            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
-            thumbnailListCache[lineIndex] = thumbnail_list;
-
-            if(thumbnail_list.length > 0){
-                processedIndexes.push(lineIndex);
-
-                let oContainer = new ObjThumbnailContainer(request, request["title"]);
-                containerList.push(oContainer);
-
-                const actualThumbnails = Math.min(thumbnail_list.length, INITIAL_THUMBNAILS);
-                for(let thumbnail_index = 0; thumbnail_index < actualThumbnails; thumbnail_index++){
-                    let play_list = [];
-                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-                        play_list.push(thumbnail_list[sub_index]);
-                    }
-                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail);
-                }
-                objScrollSection.addThumbnailContainerObject(oContainer);
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                processedCount++;
-            }
-        }
-
-        Generator.stopSpinner();
-        objScrollSection.focusDefault();
-
-        // Phase 2: Continue processing the remaining thumbnails for the processed containers
-        for (let i = 0; i < processedIndexes.length; i++) {
-            const lineIndex = processedIndexes[i];
-            let thumbnail_list = thumbnailListCache[lineIndex];
-            if(thumbnail_list.length > INITIAL_THUMBNAILS){
-                let oContainer = containerList[i];
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                for(let thumbnail_index = INITIAL_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-                    let play_list = [];
-                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-                        play_list.push(thumbnail_list[sub_index]);
-                    }
-                    let thumbnail = refToThis.generateThumbnail(requestList[lineIndex]["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail);
-                }
-            }
-        }
-
-        // Phase 3: Process all remaining lines
-        const lastProcessedIndex = processedIndexes.length > 0 ? Math.max(...processedIndexes) : -1;
-        for (let lineIndex = lastProcessedIndex + 1; lineIndex < requestList.length; lineIndex++) {
-            const request = requestList[lineIndex];
-            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
-            if(thumbnail_list.length > 0){
-                let oContainer = new ObjThumbnailContainer(request, request["title"]);
-
-                for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
-                    let play_list = [];
-                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
-                        play_list.push(thumbnail_list[sub_index]);
-                    }
-                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
-                    oContainer.addThumbnail(thumbnail);
-                }
-
-                if( startedHash !== this.getHistoryHash(objScrollSection)){
-                    return;
-                }
-
-                objScrollSection.addThumbnailContainerObject(oContainer);
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-        }
-    }
-
-
     /**
      * Asynchronously loads and displays thumbnails in a three-phase approach for optimal user experience.
      *
@@ -187,6 +94,7 @@ class RestGenerator extends Generator{
 
             // Make REST request and cache result
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
+            // if thumbnail_list === undefined
             thumbnailListCache[lineIndex] = thumbnail_list;
 
             // Only process containers that have at least 1 thumbnail (skip empty results)

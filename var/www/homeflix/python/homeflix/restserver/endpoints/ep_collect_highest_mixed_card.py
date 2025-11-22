@@ -141,6 +141,6 @@ class EPCollectHighestMixed(EP):
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.request_collect_highest_mixed(category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate_value, lang=lang, limit=100)
+        output = self.web_gadget.db.get_highest_level_cards(category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate_value, lang=lang, limit=100)
 
         return output_json(output, EP.CODE_OK)
