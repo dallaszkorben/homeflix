@@ -94,7 +94,6 @@ class EPControlUpdateSw(EP):
             else:
 
                 print("Copy card_menu.yaml started...")
-
                 output['copy'] = {}
 
                 # Source: card_menu.yaml from project repository
