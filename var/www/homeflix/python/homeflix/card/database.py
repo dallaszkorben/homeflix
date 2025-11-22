@@ -3129,9 +3129,9 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-    def get_abc_of_movie_title(self, category, maximum, lang):
+    def get_abc(self, category, lang):
         """
-        Returns the list of the ABC of the movie titles on the highest level. If the number of movies > maximum on a single letter (like A%), then it narrows the the filter (like An%) to make the list to fit to the maximum.
+        Returns the list of the ABC of the movie titles on the highest level.
         But of course,
 
         Right now it does not work, I did not implement the expected behaviour, I return only an
@@ -4511,8 +4511,8 @@ class SqlDatabase:
                 appendix,
 
                 hstr.recent_state
---                rtng.rate,
---                rtng.skip_continuous_play
+        --        rtng.rate,
+        --        rtng.skip_continuous_play
             FROM
 
                 ---------------------------
@@ -5322,16 +5322,16 @@ class SqlDatabase:
                 )hstr
                 ON hstr.id_card=core.id
 
---                --------------
---                --- RATING ---
---                --------------
---                LEFT JOIN
---                (
---                    SELECT id_card, rate, skip_continuous_play
---                    FROM Rating
---                    WHERE id_user=:user_id
---                )rtng
---                ON rtng.id_card=core.id
+            --    --------------
+            --    --- RATING ---
+            --    --------------
+            --    LEFT JOIN
+            --    (
+            --        SELECT id_card, rate, skip_continuous_play
+            --        FROM Rating
+            --        WHERE id_user=:user_id
+            --    )rtng
+            --    ON rtng.id_card=core.id
 
             WHERE
                 mixed_id_list.id=core.id
@@ -5634,7 +5634,7 @@ class SqlDatabase:
                 FROM
                     rec
                 WHERE
---                    (level IS NULL OR level = 'record' OR level = 'episode')
+        --            (level IS NULL OR level = 'record' OR level = 'episode')
                     ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION.replace('card.', '') + '''
 
                 GROUP BY id

@@ -56,10 +56,12 @@ class RestGenerator extends Generator{
         return text;
     }
 
+
     async showAllThumbnails(requestList, objScrollSection){
         let refToThis = this;
         let containerList = [];       // Array to store the containers
         let thumbnailListCache = [];  // Array to store the thumbnail_list results
+        let processedIndexes = [];    // Track which indexes were processed in Phase 1
 
         // Phase 1: Show only the minimal number of thumbnails - which can be seen in the window
         const INITIAL_VISIBLE_LINES = 3;        // Maximum number of lines to process initially
@@ -69,15 +71,15 @@ class RestGenerator extends Generator{
 
         Generator.startSpinner();
 
-        const initial_lines = Math.min(requestList.length, INITIAL_VISIBLE_LINES);
-        for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
+        let processedCount = 0;
+        for (let lineIndex = 0; lineIndex < requestList.length && processedCount < INITIAL_VISIBLE_LINES; lineIndex++) {
             const request = requestList[lineIndex];
 
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
-            thumbnailListCache[lineIndex] = thumbnail_list;  // Cache the result
+            thumbnailListCache[lineIndex] = thumbnail_list;
 
-            // A show the empty thumbnail container as well
-            if(thumbnail_list.length >= 0){
+            if(thumbnail_list.length > 0){
+                processedIndexes.push(lineIndex);
 
                 let oContainer = new ObjThumbnailContainer(request, request["title"]);
                 containerList.push(oContainer);
@@ -93,18 +95,20 @@ class RestGenerator extends Generator{
                 }
                 objScrollSection.addThumbnailContainerObject(oContainer);
                 await new Promise(resolve => setTimeout(resolve, 100));
+
+                processedCount++;
             }
         }
 
         Generator.stopSpinner();
         objScrollSection.focusDefault();
 
-        // Phase 2: Continue processing the remaining thumbnails for the first INITIAL_VISIBLE_LINES
-        for (let lineIndex = 0; lineIndex < initial_lines; lineIndex++) {
-            const request = requestList[lineIndex];
-            let thumbnail_list = thumbnailListCache[lineIndex];  // Use cached result
+        // Phase 2: Continue processing the remaining thumbnails for the processed containers
+        for (let i = 0; i < processedIndexes.length; i++) {
+            const lineIndex = processedIndexes[i];
+            let thumbnail_list = thumbnailListCache[lineIndex];
             if(thumbnail_list.length > INITIAL_THUMBNAILS){
-                let oContainer = containerList[lineIndex];
+                let oContainer = containerList[i];
                 await new Promise(resolve => setTimeout(resolve, 100));
 
                 for(let thumbnail_index = INITIAL_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
@@ -112,18 +116,18 @@ class RestGenerator extends Generator{
                     for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
                         play_list.push(thumbnail_list[sub_index]);
                     }
-                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
+                    let thumbnail = refToThis.generateThumbnail(requestList[lineIndex]["rq_data"], play_list);
                     oContainer.addThumbnail(thumbnail);
                 }
             }
         }
 
         // Phase 3: Process all remaining lines
-        for (let lineIndex = initial_lines; lineIndex < requestList.length; lineIndex++) {
+        const lastProcessedIndex = processedIndexes.length > 0 ? Math.max(...processedIndexes) : -1;
+        for (let lineIndex = lastProcessedIndex + 1; lineIndex < requestList.length; lineIndex++) {
             const request = requestList[lineIndex];
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
             if(thumbnail_list.length > 0){
-//                let oContainer = new ObjThumbnailContainer(request["title"]);
                 let oContainer = new ObjThumbnailContainer(request, request["title"]);
 
                 for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
@@ -135,12 +139,148 @@ class RestGenerator extends Generator{
                     oContainer.addThumbnail(thumbnail);
                 }
 
-                // If meanwhile the history changed - user went back - the load of the thumbnails STOPPED
-                // If a media is played, it does not change the history, so the load is countinued !
                 if( startedHash !== this.getHistoryHash(objScrollSection)){
                     return;
                 }
+
                 objScrollSection.addThumbnailContainerObject(oContainer);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+    }
+
+
+    /**
+     * Asynchronously loads and displays thumbnails in a three-phase approach for optimal user experience.
+     *
+     * Phase 1: Quickly show initial visible thumbnails (first 3 lines with hits, max 11 thumbnails each)
+     * Phase 2: Complete remaining thumbnails for Phase 1 containers
+     * Phase 3: Load all remaining containers with hits
+     *
+     * @param {Array} requestList - Array of request objects containing REST API parameters
+     * @param {Object} objScrollSection - Scroll section object to add thumbnail containers to
+     */
+    async showAllThumbnails(requestList, objScrollSection){
+        let refToThis = this;
+
+        // Stores created container objects for Phase 2 access
+        let containerList = [];
+
+        // Caches REST responses to avoid duplicate requests
+        let thumbnailListCache = [];
+
+        // Tracks which requestList indexes were processed in Phase 1
+        let processedIndexes = [];
+
+        // Configuration constants
+        const INITIAL_VISIBLE_LINES = 3;
+        const INITIAL_THUMBNAILS = 11;
+
+        let startedHash = this.getHistoryHash(objScrollSection);
+
+        Generator.startSpinner();
+
+        // Phase 1: Fast initial load - show first few containers with hits
+        let processedCount = 0;
+        for (let lineIndex = 0; lineIndex < requestList.length && processedCount < INITIAL_VISIBLE_LINES; lineIndex++) {
+            const request = requestList[lineIndex];
+
+            // Make REST request and cache result
+            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
+            thumbnailListCache[lineIndex] = thumbnail_list;
+
+            // Only process containers that have at least 1 thumbnail (skip empty results)
+            if(thumbnail_list.length > 0){
+
+                // Track this index for Phase 2
+                processedIndexes.push(lineIndex);
+
+                // Create container and add limited thumbnails for fast display
+                let oContainer = new ObjThumbnailContainer(request, request["title"]);
+                containerList.push(oContainer);
+
+                const actualThumbnails = Math.min(thumbnail_list.length, INITIAL_THUMBNAILS);
+                for(let thumbnail_index = 0; thumbnail_index < actualThumbnails; thumbnail_index++){
+
+                    // Build playlist starting from current thumbnail for continuous play
+                    let play_list = [];
+                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
+                        play_list.push(thumbnail_list[sub_index]);
+                    }
+                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
+                    oContainer.addThumbnail(thumbnail);
+                }
+
+                objScrollSection.addThumbnailContainerObject(oContainer);
+
+                // UI breathing room
+                await new Promise(resolve => setTimeout(resolve, 100));
+                processedCount++;
+            }
+        }
+
+        Generator.stopSpinner();
+        objScrollSection.focusDefault();
+
+        // Phase 2: Complete remaining thumbnails for Phase 1 containers
+        for (let i = 0; i < processedIndexes.length; i++) {
+            const lineIndex = processedIndexes[i];
+
+            // Use cached data
+            let thumbnail_list = thumbnailListCache[lineIndex];
+
+            // Add remaining thumbnails if container has more than initial limit
+            if(thumbnail_list.length > INITIAL_THUMBNAILS){
+
+                // Get corresponding container
+                let oContainer = containerList[i];
+
+                // UI breathing room
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                for(let thumbnail_index = INITIAL_THUMBNAILS; thumbnail_index < thumbnail_list.length; thumbnail_index++){
+
+                    // Build playlist starting from current thumbnail for continuous play
+                    let play_list = [];
+                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
+                        play_list.push(thumbnail_list[sub_index]);
+                    }
+                    let thumbnail = refToThis.generateThumbnail(requestList[lineIndex]["rq_data"], play_list);
+                    oContainer.addThumbnail(thumbnail);
+                }
+            }
+        }
+
+        // Phase 3: Process all remaining unprocessed requests
+        const lastProcessedIndex = processedIndexes.length > 0 ? Math.max(...processedIndexes) : -1;
+        for (let lineIndex = lastProcessedIndex + 1; lineIndex < requestList.length; lineIndex++) {
+            const request = requestList[lineIndex];
+            let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
+
+            // Only create containers for requests with results
+            if(thumbnail_list.length > 0){
+                let oContainer = new ObjThumbnailContainer(request, request["title"]);
+
+                // Add all thumbnails for this container
+                for(let thumbnail_index = 0; thumbnail_index < thumbnail_list.length; thumbnail_index++){
+
+                    // Build playlist starting from current thumbnail for continuous play
+                    let play_list = [];
+                    for (let sub_index = thumbnail_index; sub_index < thumbnail_list.length; sub_index++) {
+                        play_list.push(thumbnail_list[sub_index]);
+                    }
+                    let thumbnail = refToThis.generateThumbnail(request["rq_data"], play_list);
+                    oContainer.addThumbnail(thumbnail);
+                }
+
+                // Stop loading if user navigated away (but continue if just playing media)
+                if( startedHash !== this.getHistoryHash(objScrollSection)){
+                    return;
+                }
+
+                objScrollSection.addThumbnailContainerObject(oContainer);
+
+                // UI breathing room
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
         }

@@ -35,7 +35,7 @@ from homeflix.restserver.endpoints.ep_collect_voices import EPCollectVoices
 
 from homeflix.restserver.endpoints.ep_collect_directors_by_movie_count import EPCollectDirectorsByMovieCount
 from homeflix.restserver.endpoints.ep_collect_directors import EPCollectDirectors
-from homeflix.restserver.endpoints.ep_collect_abc_by_movie_title_count import EPCollectAbcByMovieTitleCount
+from homeflix.restserver.endpoints.ep_collect_abc import EPCollectAbc
 from homeflix.restserver.endpoints.ep_collect_writers import EPCollectWriters
 
 from homeflix.restserver.endpoints.ep_collect_tags import EPCollectTags
@@ -90,7 +90,7 @@ class CollectView(FlaskView):
         self.epCollectDirectors = EPCollectDirectors(web_gadget)
         self.epCollectWriters = EPCollectWriters(web_gadget)
         self.epCollectTags = EPCollectTags(web_gadget)
-        self.epCollectAbcByMovieTitleCount = EPCollectAbcByMovieTitleCount(web_gadget)
+        self.epCollectAbc = EPCollectAbc(web_gadget)
 
 # ---
 
@@ -810,34 +810,48 @@ class CollectView(FlaskView):
         return out
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # === collect ABC by movie title count ===
 
     #
     # Gives back abc of the highest movie title count
     #
-    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/abc/by/movie_title/count/category/<category>/maximum/<aximum>/lang/<lang>
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/abc/movie_title/count/category/<category>/lang/<lang>
     #
-    #@route('/abc/by/movie_title/count/category/<category>/maximum/<maximum>/lang/<lang>')
-    @route(EPCollectAbcByMovieTitleCount.PATH_PAR_URL, methods=[EPCollectAbcByMovieTitleCount.METHOD])
-    def collectAbcByMovieTitleWithParameter(self, category, maximum, lang):
-        out = self.EPCollectAbcByMovieTitleCount.executeByParameters(category, maximum=maximum)
+    #@route('/abc/category/<category>/lang/<lang>')
+    @route(EPCollectAbc.PATH_PAR_URL, methods=[EPCollectAbc.METHOD])
+    def collectAbcWithParameter(self, category, maximum, lang):
+        out = self.EPCollectAbc.executeByParameters(category, lang)
         return out
 
     #
     # Gives back list of the highest movie title count
     #
-    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie", "minimum": 3, "limit": 15}' http://localhost:80/collect/abc/by/movie_title/count
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "movie"}' http://localhost:80/collect/abc
     #
-    # GET http://localhost:80/collect/abc/by/movie_title/count
+    # GET http://localhost:80/collect/abc
     #      body: {
     #       "category": "movie",
-    #       "maximum": 15,
     #       "lang": "en"
     #      }
     #
-    #@route('/abc/by/movie_title/count', methods=['GET'])
-    @route(EPCollectAbcByMovieTitleCount.PATH_PAR_PAYLOAD, methods=[EPCollectAbcByMovieTitleCount.METHOD])
-    def collectAbcByMovieTitleWithPayload(self):
+    #@route('/abc', methods=['GET'])
+    @route(EPCollectAbc.PATH_PAR_PAYLOAD, methods=[EPCollectAbc.METHOD])
+    def collectAbcWithPayload(self):
         # CURL
         if request.is_json:
             json_data = request.json
@@ -850,5 +864,5 @@ class CollectView(FlaskView):
         else:
             json_data = request.args
 
-        out = self.epCollectAbcByMovieTitleCount.executeByPayload(json_data)
+        out = self.epCollectAbc.executeByPayload(json_data)
         return out

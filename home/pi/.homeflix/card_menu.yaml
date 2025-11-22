@@ -710,7 +710,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc/by/movie_title/count"  # it is a static ABC list
+                              path: "/collect/abc"  # it is a static ABC list
                           query_loop:
                             data:
                               category: movie
@@ -1304,7 +1304,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc/by/movie_title/count"
+                              path: "/collect/abc"
                           query_loop:
                             data:
                               category: music_video
@@ -1848,7 +1848,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc/by/movie_title/count"
+                              path: "/collect/abc"
                           query_loop:
                             data:
                               category: music_audio
@@ -1892,7 +1892,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc/by/movie_title/count"
+                              path: "/collect/abc"
                           query_loop:
                             data:
                               category: music_audio
