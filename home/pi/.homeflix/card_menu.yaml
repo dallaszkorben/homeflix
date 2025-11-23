@@ -706,7 +706,6 @@ definitions:
                           pre_query:
                             data:
                               category: movie
-                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
                             request:
                               method: GET
                               protocol: http
@@ -1300,7 +1299,6 @@ definitions:
                           pre_query:
                             data:
                               category: music_video
-                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
                             request:
                               method: GET
                               protocol: http
@@ -1844,7 +1842,6 @@ definitions:
                           pre_query:
                             data:
                               category: music_audio
-                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
                             request:
                               method: GET
                               protocol: http
@@ -1888,7 +1885,7 @@ definitions:
                           pre_query:
                             data:
                               category: music_audio
-                              maximum: 20     # this part does not work. The strategy should be figured out and implemented
+                              level: soundtrack
                             request:
                               method: GET
                               protocol: http

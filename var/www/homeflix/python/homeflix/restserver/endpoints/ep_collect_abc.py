@@ -36,15 +36,13 @@ class EPCollectAbc(EP):
         remoteAddress = request.remote_addr
 
         category = payload[EPCollectAbc.ATTR_CATEGORY]
-        lang     = payload.get(EPCollectAbc.ATTR_LANG, "en")
+        lang = payload.get(EPCollectAbc.ATTR_LANG, "en")
 
-        logging.debug( "WEB request ({0}): {1} {2} ('{3}': {4}, '{5}': {6})".format(
-                remoteAddress, EPCollectAbc.METHOD, EPCollectAbc.URL,
-                EPCollectAbc.ATTR_CATEGORY, category,
-                EPCollectAbc.ATTR_LANG, lang
+        logging.debug("WEB request ({0}): {1} {2} - payload: {3}".format(
+                remoteAddress, EPCollectAbc.METHOD, EPCollectAbc.URL, payload
             )
         )
 
-        output = self.web_gadget.db.get_abc(category=category, lang=lang)
+        output = self.web_gadget.db.get_abc(**payload)
 
         return output_json(output, EP.CODE_OK)
