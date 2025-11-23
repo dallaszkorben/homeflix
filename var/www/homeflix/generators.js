@@ -632,6 +632,8 @@ class GeneralRestGenerator extends RestGenerator{
                     for( const[key, value] of Object.entries(pre_query_data_dict)){
                         pre_rq_data[key] = value;
                     };
+
+                    // Give the selected language code automatically to the request data
                     pre_rq_data["lang"] = refToThis.language_code;
 
                     let rq_data = {}

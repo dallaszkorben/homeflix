@@ -709,7 +709,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc"  # it is a static ABC list
+                              path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
                               category: movie
@@ -1299,10 +1299,11 @@ definitions:
                           pre_query:
                             data:
                               category: music_video
+                              level: band
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc"
+                              path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
                               category: music_video
@@ -1842,10 +1843,11 @@ definitions:
                           pre_query:
                             data:
                               category: music_audio
+                              level: band
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc"
+                              path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
                               category: music_audio
@@ -1889,7 +1891,7 @@ definitions:
                             request:
                               method: GET
                               protocol: http
-                              path: "/collect/abc"
+                              path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
                               category: music_audio

@@ -4,7 +4,7 @@ import logging
 import hashlib
 import locale
 
-from flask import session
+from flask import has_request_context, session
 
 from threading import Lock
 from sqlite3 import Error
@@ -15,7 +15,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from homeflix.config.config import getConfig
 from homeflix.translator.translator import Translator
 from homeflix.exceptions.not_existing_table import NotExistingTable
-
 
 class SqlDatabase:
 
@@ -68,7 +67,10 @@ class SqlDatabase:
         config = getConfig()
         self.db_path = os.path.join(config["path"], config['card-db-name'])
         self.mediaAbsolutePath = config["media-absolute-path"]
-        self.translator = Translator.getInstance("en")
+
+        # used for getting language independent code lists
+        self.translator = Translator.getInstance()
+        self.language = self.translator.get_actual_language_code()
 
         self.table_static_list = [
             SqlDatabase.TABLE_TEXT_CARD_LANG,
@@ -140,19 +142,50 @@ class SqlDatabase:
         if not self.is_personal_dbs_ok():
             self.recreate_personal_dbs()
 
-        self.language = self.translator.get_actual_language_code()
+        # set the default locale. The locale.strxfrm needed it for sorting in the right language specific order
+        # It depends on the user's selected language - session needed - so it must be set after the login
+        self.locale_map = {'hu': 'hu_HU.UTF-8', 'en': 'en_US.UTF-8', 'sv': 'sv_SE.UTF-8'}
+        self._set_locale()
 
-        print(f'language: {self.language}')
 
+    def _set_locale(self):
+        """
+        Sets the system locale based on the logged-in user's language preference.
+        This is crucial for proper string sorting (locale.strxfrm) in language-specific order.
 
-        # Here I have no user yet !!!
-        # If no user, no language !!!
-        # Set locale for proper language-specific sorting
-        locale_map = {'hu': 'hu_HU.UTF-8', 'en': 'en_US.UTF-8', 'sv': 'sv_SE.UTF-8'}
+        The locale affects:
+        - String collation and sorting order - ! this is the real reason I need it !
+        - Date/time formatting
+        - Number formatting
+        - Character classification
+
+        Must be called after user login since it depends on session data.
+        """
+
+        # Attempt to get the logged-in user's language preference
+        result = self.get_logged_in_user_data()
+
+        # Use user's preferred language if login successful
+        if result['result']:
+            language_code = result['data']['language_code']
+
+        else:
+            # Fall back to translator's default language if user not logged in
+            language_code = self.language
+
+        # Attempt to set the locale using the language-to-locale mapping
         try:
-            locale.setlocale(locale.LC_ALL, locale_map.get(self.language, 'en_US.UTF-8'))
+
+            # Map language code to full locale string (e.g., 'en' -> 'en_US.UTF-8')
+            locale.setlocale(locale.LC_ALL, self.locale_map.get(language_code, 'en_US.UTF-8'))
+
         except locale.Error:
-            locale.setlocale(locale.LC_ALL, 'C.UTF-8')  # fallback
+
+            # Fallback to C.UTF-8 if the desired locale is not available on the system
+            locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+
+        # Debug output to verify the set locale
+        # print(f"\n\nlocale: {locale.getlocale()}\n\n")
 
 
     def __del__(self):
@@ -1662,10 +1695,19 @@ class SqlDatabase:
         data = {}
         error_message = "Lock error"
 
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            username = user_data['username']
+        username = None
+
+        if has_request_context():
+
+            user_data = session.get('logged_in_user', None)
+            if user_data:
+                username = user_data['username']
+            else:
+                error_message = 'Not logged in'
         else:
+            error_message = 'No request context'
+
+        if username is None:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
@@ -1757,19 +1799,60 @@ class SqlDatabase:
         # If the lock failed
         return data
 
-
     #
     # Used only locally
     # Not used in any REST
     #
-    def _get_publishable_user_data(self, username):
+    def _get_publishable_user_data(self, username=None):
+        """
+        Retrieves user profile data safe for client consumption (excludes sensitive information).
+
+        This method fetches user preferences and settings from the database while
+        filtering out sensitive data like password hashes. It provides fallback
+        defaults for anonymous/guest users when no username is provided.
+
+        Args:
+            username (str, optional): Username to fetch data for.
+                                      If None, returns default guest user configuration.
+
+        Returns:
+            dict: User profile data containing:
+                - is_admin (bool): Administrative privileges flag
+                - name (str): Username or None for guest users
+                - language_code (str): User's preferred language code
+                - descriptor_color (str): UI color theme preference
+                - show_original_title (bool): Display original title preference
+                - show_lyrics_anyway (bool): Always show lyrics preference
+                - show_storyline_anyway (bool): Always show storyline preference
+                - play_continuously (bool): Continuous playback preference
+
+        Note:
+            - Used internally by login and session management methods
+            - Does NOT include sensitive data (password, user ID, etc.)
+            - Returns empty dict if database error occurs
+            - Provides guest defaults when username is None
+        """
         data = {}
+
+        # Return guest/anonymous user defaults when no username provided
+        if username is None:
+            data = {
+                "is_admin": False,
+                "name": None,
+                "language_code": self.language,
+                "descriptor_color": 'rgb(129, 60, 41)',
+                "always_show_original_title": True,
+                "show_lyrics_anyway": True,
+                "show_storyline_anyway": True,
+                "play_continuously": True
+            }
+            return data
 
         with self.lock:
             try:
                 cur = self.conn.cursor()
 
-                # Verify user existence
+                # Fetch user profile data excluding sensitive information
                 query = '''
                     SELECT
                         user.is_admin              as is_admin,
@@ -1789,6 +1872,8 @@ class SqlDatabase:
                 '''
                 query_parameters = {'username': username}
                 record=cur.execute(query, query_parameters).fetchone()
+
+                # Convert SQLite Row to dictionary, return empty dict if user not found
                 data = dict(record) if record else {}
 
             except sqlite3.Error as e:
@@ -1804,13 +1889,50 @@ class SqlDatabase:
 
 
     def update_user_data(self, password=None, language_code=None, descriptor_color=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None, history_days=None):
+        """
+        Updates user profile data in the database with selective field updates.
+
+        This method allows partial updates of user preferences and settings.
+        Only non-None parameters will be updated in the database, allowing
+        clients to update specific fields without affecting others.
+
+        Args:
+            password (str, optional): New password (will be hashed before storage)
+            language_code (str, optional): Language preference code (e.g., 'en', 'hu')
+            descriptor_color (str, optional): UI color theme preference
+            show_original_title (bool, optional): Whether to show original titles
+            show_lyrics_anyway (bool, optional): Whether to always show lyrics
+            show_storyline_anyway (bool, optional): Whether to always show storylines
+            play_continuously (bool, optional): Continuous playback preference
+            history_days (int, optional): Number of days to keep history
+
+        Returns:
+            dict: {'result': bool, 'data': dict, 'error': str|None}
+                  result: True if update successful
+                  data: Empty dict (no data returned)
+                  error: Error message if operation failed
+
+        Side Effects:
+            - Updates database User table
+            - Synchronizes Flask session with updated data
+            - Triggers locale reconfiguration if language changed
+        """
         result = False
         data = {}
         error_message = "Lock error"
 
+        # Extract username from current session
         user_data = session.get('logged_in_user', None)
         if user_data:
             username = user_data['username']
+
+        # language can be set even the user is not looged in
+        elif language_code:
+            self.language = language_code
+            self._set_locale()
+
+            return {'result': True, 'data': data, 'error': 'Not logged in'}
+
         else:
             return {'result': result, 'data': data, 'error': 'Not logged in'}
 
@@ -1820,7 +1942,7 @@ class SqlDatabase:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                # User check
+                # Verify user exists in database
                 query = '''
                     SELECT
                         COUNT(*) as user_number
@@ -1836,7 +1958,7 @@ class SqlDatabase:
                 if user_number == 0:
                     raise sqlite3.Error("The requested username({0}) does NOT exist".format(username))
 
-                # Language check
+                # Validate language code if provided
                 language_id = None
                 if language_code:
                     query = '''
@@ -1854,14 +1976,14 @@ class SqlDatabase:
                     if language_id is None:
                         raise sqlite3.Error("The requested language_code({0}) does NOT exist".format(language_code))
 
-                #
-                # Update
-                #
+                # Build dynamic UPDATE query based on provided parameters
                 set_list = []
                 if language_code:
                     set_list.append("'id_language' = :language_id")
 
                 if password is not None:
+
+                    # Hash password before storage for security
                     set_list.append("'password' = :password")
                     hashed_password = generate_password_hash(password)
                 else:
@@ -1882,6 +2004,7 @@ class SqlDatabase:
                 if history_days is not None:
                     set_list.append("'history_days' = :history_days")
 
+                # Execute the dynamic UPDATE query
                 query = '''
                         UPDATE ''' + SqlDatabase.TABLE_USER + '''
                         SET
@@ -1893,6 +2016,7 @@ class SqlDatabase:
                 cur.execute(query, {'username': username, 'password': hashed_password, 'language_id': language_id, 'descriptor_color': descriptor_color, 'show_original_title': show_original_title, 'show_lyrics_anyway': show_lyrics_anyway, 'show_storyline_anyway': show_storyline_anyway, 'play_continuously': play_continuously, 'history_days': history_days})
                 number_of_updated_rows = cur.rowcount
 
+                # Verify exactly one row was updated
                 if number_of_updated_rows == 1:
                     result = True
                     error_message = None
@@ -1906,10 +2030,51 @@ class SqlDatabase:
             finally:
                 cur.execute("commit")
                 cur.close()
-                return {"result": result, "data": data, "error": error_message}
+
+        # Synchronize session with updated database state if update succeeded
+        if result:
+
+            # Update Flask session with fresh database values
+            self._update_session_with_db(username)
+
+            return {"result": result, "data": data, "error": error_message}
 
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
+
+
+    def _update_session_with_db(self, username):
+        """
+        Synchronizes the Flask session data with the current database state for a user.
+
+        This method is called after user profile updates to ensure the session
+        reflects the latest user preferences, particularly language settings that
+        affect locale and UI behavior.
+
+        Args:
+            username (str): The username to fetch updated data for
+
+        Side Effects:
+            - Updates Flask session['logged_in_user'] with fresh database values
+            - Triggers locale reconfiguration via _set_locale()
+        """
+
+        # Fetch the complete user data from database including password hash
+        full_user_data = self._get_user_data_with_password(username)
+
+        # Proceed only if user exists in database
+        if full_user_data:
+
+            # Extract password hash (not used here but validates user existence)
+            stored_hashed_password = full_user_data.get('password', None)
+
+            # Update session with fresh language preferences from database
+            session['logged_in_user']['language_id'] = full_user_data['language_id']
+            session['logged_in_user']['language_code'] = full_user_data['language_code']
+
+            # Reconfigure system locale based on updated language preference
+            # Not needed because after user data update, SESSION RESTORATION MODE will automatically exexuted doing _set_lacale() anyway
+            # self._set_locale()
 
 
     def get_history(self, card_id=None, limit_days=None, limit_records=None):
@@ -2337,27 +2502,34 @@ class SqlDatabase:
     def get_sql_rate_query(self, value):
         return f"rate>={str(value)}" if value else ""
 
-    def get_converted_query_to_json(self, sql_record_list, category, lang):
+    def get_converted_query_to_json(self, sql_record_list, lang):
         """
         Convert and translate the given SQL card-response
         """
 
         # TODO: error handling needed !!! media file name with spaces and strange characters causing error, consequently no converting, and fail later where json is expected
 
-
         records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
+
+        #if sort:
+        #    records = sorted(records, key=lambda arg: locale.strxfrm((arg['title_req'] or arg['title_orig'] or '').lower()))
+        #records = sorted([{key: record[key] for key in record.keys()} for record in sql_record_list], key=lambda arg: locale.strxfrm((arg['title_req'] or arg['title_orig'] or '').lower()))
 
         trans = Translator.getInstance(lang)
         for record in records:
+
+            category = record["category"]
 
             # Lang Orig
             lang_orig = record["lang_orig"]
             lang_orig_translated = trans.translate_language_short(lang_orig)
             record["lang_orig"] = lang_orig_translated
+
             # Lang Req
             lang_req = record["lang_req"]
             lang_req_translated = trans.translate_language_short(lang_req)
             record["lang_req"] = lang_req_translated
+
             # Media
             medium_string = record["medium"]
             media_dict = {}
@@ -2369,6 +2541,7 @@ class SqlDatabase:
                         media_dict[media_type] = []
                     media_dict[media_type].append(media)
             record["medium"] = media_dict
+
             # Appendix
             appendix_string = record["appendix"]
             appendix_list = []
@@ -2382,6 +2555,7 @@ class SqlDatabase:
                         appendix_dict[key] = value
                     appendix_list.append(appendix_dict)
             record["appendix"] = appendix_list
+
             # Recent State (history)
             recent_state_string = record["recent_state"]
             recent_state_dict = {'recent_position':0, 'play_count':0}
@@ -2391,21 +2565,25 @@ class SqlDatabase:
                     (key, value) = var_pair.split("=")
                     recent_state_dict[key] = value
             record["recent_state"] = recent_state_dict
+
             # Rate
             record["rate"] = record["rate"] if record["rate"] else 0
             record["skip_continuous_play"] = True if record["skip_continuous_play"] else False
+
             # Writers
             writers_string = record["writers"]
             writers_list = []
             if writers_string:
                 writers_list = writers_string.split(',')
             record["writers"] = writers_list
+
             # Directors
             directors_string = record["directors"]
             directors_list = []
             if directors_string:
                 directors_list = directors_string.split(',')
             record["directors"] = directors_list
+
             # Stars
             stars_string = record["stars"]
             stars_list = []
@@ -2449,48 +2627,56 @@ class SqlDatabase:
             if hosts_string:
                 hosts_list = hosts_string.split(',')
             record["hosts"] = hosts_list
+
             # Guests
             guests_string = record.get("guests")
             guests_list = []
             if guests_string:
                 guests_list = guests_string.split(',')
             record["guests"] = guests_list
+
             # Interviewers
             interviewers_string = record.get("interviewers")
             interviewers_list = []
             if interviewers_string:
                 interviewers_list = interviewers_string.split(',')
             record["interviewers"] = interviewers_list
+
             # Interviewees
             interviewees_string = record.get("interviewees")
             interviewees_list = []
             if interviewees_string:
                 interviewees_list = interviewees_string.split(',')
             record["interviewees"] = interviewees_list
+
             # Presenters
             presenters_string = record.get("presenters")
             presenters_list = []
             if presenters_string:
                 presenters_list = presenters_string.split(',')
             record["presenters"] = presenters_list
+
             # Lecturers
             lecturers_string = record.get("lecturers")
             lecturers_list = []
             if lecturers_string:
                 lecturers_list = lecturers_string.split(',')
             record["lecturers"] = lecturers_list
+
             # Performers
             performers_string = record.get("performers")
             performers_list = []
             if performers_string:
                 performers_list = performers_string.split(',')
             record["performers"] = performers_list
+
             # Reporters
             reporters_string = record.get("reporters")
             reporters_list = []
             if reporters_string:
                 reporters_list = reporters_string.split(',')
             record["reporters"] = reporters_list
+
             # Genre
             genres_string = record.get("genres")
             genres_list = []
@@ -2498,6 +2684,7 @@ class SqlDatabase:
                 genres_list = genres_string.split(',')
                 genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
             record["genres"] = genres_list
+
             # Theme
             themes_string = record["themes"]
             themes_list = []
@@ -2505,6 +2692,7 @@ class SqlDatabase:
                 themes_list = themes_string.split(',')
                 themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
             record["themes"] = themes_list
+
             # Origin
             origins_string = record["origins"]
             origins_list = []
@@ -2512,6 +2700,7 @@ class SqlDatabase:
                 origins_list = origins_string.split(',')
                 origins_list = [trans.translate_country_long(origin) for origin in origins_list]
             record["origins"] = origins_list
+
             # Sub
             subs_string = record["subs"]
             subs_list = []
@@ -2519,6 +2708,7 @@ class SqlDatabase:
                 subs_list = subs_string.split(',')
                 subs_list = [trans.translate_language_long(sub) for sub in subs_list]
             record["subs"] = subs_list
+
             # Sounds
             sounds_string = record["sounds"]
             sounds_list = []
@@ -2526,6 +2716,7 @@ class SqlDatabase:
                 sounds_list = sounds_string.split(',')
                 sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
             record["sounds"] = sounds_list
+
             # Tags
             tags_string = record["tags"]
             tags_list = []
@@ -2537,41 +2728,98 @@ class SqlDatabase:
         return records
 
     def login(self, username=None, password=None):
+        """
+        Handles user authentication with support for both credential-based login
+        and session restoration.
 
-        # If something fails, the logout fails as well
+        This method supports two login modes:
+        1. Credential-based: Validates username/password against database
+        2. Session restoration: Restores existing session without credentials
+
+        Args:
+            username (str, optional): Username for authentication
+            password (str, optional): Plain text password for authentication
+
+        Returns:
+            dict: {'result': bool, 'data': dict, 'error': str|None}
+                  result: True if login successful
+                  data: User profile data (without sensitive information)
+                  error: Error message if login failed
+
+        Side Effects:
+            - Creates or restores Flask session
+            - Sets session as permanent
+            - Configures system locale based on user language
+            - Clears any existing session before new login
+        """
+
+        # Initialize response structure with failure defaults
         error = 'Login failed'
         result = False
         data = {}
 
-        # Login without credentials - goal: at the beginning of the client (index.html) tries to restore the previous session
+        # SESSION RESTORATION MODE: No credentials provided
+        # Used by client to restore existing session on page load
         if (username is None and password is None) or (not username and not password):
+
             if session.get('logged_in_user'):
 
+                # Extract username from existing session
                 if 'logged_in_user' in session and 'username' in session['logged_in_user']:
+
                     username = session['logged_in_user']['username']
+
+                    # Fetch current user data from database
                     data = self._get_publishable_user_data(username)
                     result = True
                     error = None
 
+                    # Apply user's language preference to system locale
+                    self._set_locale()
+
+                else:
+
+                    # Fetch NON-user data from database
+                    data = self._get_publishable_user_data()
+                    result = True
+                    error = "Not loggged in"
+
+                    # Apply user's language preference to system locale
+                    self._set_locale()
+
+            # user is not logged in
+            else:
+
+                # Fetch NON-user data from database
+                data = self._get_publishable_user_data()
+                result = True
+                error = "Not loggged in"
+
+                # Apply user's language preference to system locale
+                self._set_locale()
+
+
             return {'result': result, 'data':data, 'error': error}
 
-        #logging.error("USERNAME: {}, PASSWORD: {}".format(username, password))
+        # CREDENTIAL-BASED LOGIN MODE: Username and password provided
 
-        # LOGIN means a LOGOUT before
+        # Clear any existing session before attempting new login
         self.logout()
 
+        # Note: This hash is not used for comparison (legacy code)
         hashed_password = generate_password_hash(password)
 
+        # Fetch complete user data including stored password hash
         full_user_data = self._get_user_data_with_password(username)
 
-        # If the username was found in the DB
+        # Proceed with authentication if user exists in database
         if full_user_data:
             stored_hashed_password = full_user_data.get('password', None)
 
-            # The password MATCH
+            # Verify provided password against stored hash
             if check_password_hash(stored_hashed_password, password):
 
-                # Get publishable user data - because we do not want to publish for example the password
+                # Get user data without sensitive information (e.g., password)
                 publishable_user_data = self._get_publishable_user_data(username)
 
                 if publishable_user_data:
@@ -2579,11 +2827,20 @@ class SqlDatabase:
                     data = publishable_user_data
                     error = None
 
-                    # make the session permanent
+                    # Make session persistent across browser restarts
                     session.permanent = True
 
-                    # store the user session data
-                    session['logged_in_user'] = {'username': username, 'user_id': full_user_data['id'], 'language_id': full_user_data['language_id']}
+                    # Store essential user information in Flask session
+                    session['logged_in_user'] = {
+                        'username': username,
+                        'user_id': full_user_data['id'],
+                        'language_id': full_user_data['language_id'],
+                        'language_code': full_user_data['language_code']
+                    }
+
+                    # Apply user's language preference to system locale
+                    # Not needed because after login, SESSION RESTORATION MODE will automatically exexuted doing _set_lacale() anyway
+                    # self._set_locale()
 
         return {'result': result, 'data':data, 'error': error}
 
@@ -2592,6 +2849,24 @@ class SqlDatabase:
         # remove the session
         session.pop('logged_in_user', None)
         return {'result': True, 'data':{}, 'error': None}
+
+    def get_user_id_and_lang(self):
+
+        user_data = None
+        if has_request_context():
+            user_data = session.get('logged_in_user', None)
+
+        if user_data:
+            user_id = user_data['user_id']
+            lang = user_data['language_code']
+        else:
+            user_id = -1
+            lang = self.language
+
+        return user_id, lang
+
+
+
 
     def get_numbers_of_records_in_card(self):
         """
@@ -3142,20 +3417,6 @@ class SqlDatabase:
 
         return {"result": result, "data": records, "error": error_message}
 
-#    def get_abc(self, category, lang):
-    def get_abc(self, **kwargs):
-        """
-        Returns the list of the ABC of the movie titles on the highest level.
-        """
-        result = True
-        error_message = None
-
-        records = self.get_abc_highest_level_cards(**kwargs)
-
-        return {"result": result, "data": records, "error": error_message}
-
-
-
 # ================================================================================================================================================
 # ================================================================================================================================================
 # ================================================================================================================================================
@@ -3209,15 +3470,10 @@ class SqlDatabase:
           - origins
         """
         records = {}
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
+        user_id, lang = self.get_user_id_and_lang()
 
         with self.lock:
 
-            #print("level: {}, filter_on: {}".format(level, filter_on))
             try:
                 cur = self.conn.cursor()
                 cur.execute("begin")
@@ -3231,16 +3487,8 @@ class SqlDatabase:
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
 
-                my_records = [{key: record[key] for key in record.keys()} for record in records]
-
-                for record in my_records:
-                    logging.debug(f'Response: {record}')
-                logging.debug("\n\n\n")
-
-
-
                 if json:
-                    records = self.get_converted_query_to_json(records, category, lang)
+                    records = self.get_converted_query_to_json(records, lang)
 
             except sqlite3.Error as e:
                 error_message = "Fetching the highest level card failed: {0}".format(e)
@@ -3283,13 +3531,8 @@ class SqlDatabase:
           - tags
         """
 
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
-
         records = {}
+        user_id, lang = self.get_user_id_and_lang()
 
         with self.lock:
 
@@ -3310,7 +3553,7 @@ class SqlDatabase:
                 cur.execute("commit")
 
                 if json:
-                    records = self.get_converted_query_to_json(records, category, lang)
+                    records = self.get_converted_query_to_json(records, lang)
 
             except sqlite3.Error as e:
                 error_message = "Fetching the next level card failed: {0}".format(e)
@@ -3360,13 +3603,8 @@ class SqlDatabase:
           - tags
         """
 
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
-
         records = {}
+        user_id, lang = self.get_user_id_and_lang()
 
         with self.lock:
 
@@ -3399,8 +3637,6 @@ class SqlDatabase:
                 LIMIT :limit;
                 '''
 
-                #logging.error("MY QUERY: {0}".format(query))
-
                 query_parameters = {'user_id': user_id, 'category': category, 'level': level, 'view_state': view_state, 'history_back': history_back, 'title': title, 'decade': decade, 'lang': lang, 'limit': limit}
 
                 logging.debug("get_lowest_level_cards query: '{0}' / {1}".format(query, query_parameters))
@@ -3409,7 +3645,7 @@ class SqlDatabase:
                 cur.execute("commit")
 
                 if json:
-                    records = self.get_converted_query_to_json(records, category, lang)
+                    records = self.get_converted_query_to_json(records, lang)
 
             except sqlite3.Error as e:
                 error_message = "Fetching the lowest level card failed: {0}".format(e)
@@ -3423,53 +3659,71 @@ class SqlDatabase:
 # ---
 
     #
-    # GET /collect/abc/highest
+    # GET /collect/highest/mixed/abc
     #
     # ✅
     #
-    def get_abc_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=1000, json=True):
+    def get_highest_level_abc(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=1000, json=True):
 
-        records = {}
-        user_data = session.get('logged_in_user', None)
-        if user_data:
-            user_id = user_data['user_id']
-        else:
-            user_id = -1
+        records = []
+        user_id, lang = self.get_user_id_and_lang()
+
+        result = False
+        error_message = "Lock error"
 
         with self.lock:
 
-            #print("level: {}, filter_on: {}".format(level, filter_on))
             try:
                 cur = self.conn.cursor()
                 cur.execute("begin")
 
-                query = self.get_raw_query_of_abc_highest_level(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
+                query = self.get_raw_query_of_highest_level_abc(category=category, tags=tags, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value)
 
                 query_parameters = {'user_id': user_id, 'level': level, 'filter_on': filter_on, 'category': category, 'title': title, 'decade': decade, 'tags': tags, 'lang': lang, 'limit': limit}
 
                 records=cur.execute(query, query_parameters).fetchall()
                 cur.execute("commit")
 
-                records = [{key: record[key] for key in record.keys()} for record in records]
-                records = sorted(records, key=lambda arg: locale.strxfrm(arg['name']))
-
-            #    for record in my_records:
-            #        print(f'- {record}')
-            #    print("\n\n\n")
-
-            #    if json:
-            #        records = self.get_converted_query_to_json(records, category, lang)
+                records = sorted([dict(record) for record in records], key=lambda arg: locale.strxfrm(arg['name']))
+                #records = [{key: record[key] for key in record.keys()} for record in records]
+                #records = sorted(records, key=lambda arg: locale.strxfrm(arg['name']))
 
             except sqlite3.Error as e:
                 error_message = "Fetching the highest level card failed: {0}".format(e)
                 logging.error(f'Error in the request process: {error_message}')
+                error_message = e
 
             finally:
                 cur.close()
 
-                return records
-        return records
+                result = True
+                error_message = None
+                return {"result": result, "data": records, "error": error_message}
 
+        return {"result": result, "data": records, "error": error_message}
+
+
+# ---
+
+    #
+    # GET /collect/abc
+    #
+    # ✅
+    #
+    def get_abc(self, lang):
+        """
+        Returns the list of the static ABC
+        """
+        result = True
+        error_message = None
+
+        trans = Translator.getInstance(lang)
+        alphabet_string = trans.get_alphabet(case="upper")
+        alphabet_list = list(alphabet_string)
+        records = [{'name': letter, 'filter': letter + '%'} for letter in alphabet_list]
+        records.insert(0, {"filter": "0%_OR_1%_OR_2%_OR_3%_OR_4%_OR_5%_OR_6%_OR_7%_OR_8%_OR_9%", "name": "0-9"})
+
+        return {"result": result, "data": records, "error": error_message}
 
 
 
@@ -6336,11 +6590,7 @@ class SqlDatabase:
 
         return query
 
-
-# ---
-
-
-    def get_raw_query_of_abc_highest_level(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
+    def get_raw_query_of_highest_level_abc(self, category, tags=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None):
         tags_where = self.get_sql_where_condition_from_text_filter(tags, 'tags')
         genres_where = self.get_sql_where_condition_from_text_filter(genres, 'genres')
         themes_where = self.get_sql_where_condition_from_text_filter(themes, 'themes')
