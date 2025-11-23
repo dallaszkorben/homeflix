@@ -1701,8 +1701,7 @@ definitions:
                                             key: soundtrack
                                       data:
                                         category: music_audio
-                                        level: band
-                                        genres: soundtrack
+                                        level: soundtrack
                                       request: *request_collect_highest_mixed
 
                             # -----------------------
