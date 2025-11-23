@@ -167,7 +167,7 @@ level:
     remake: Feldolgozás
     band: Együttes
     concert: Koncert
-    lp: Lemez
+    lp: Album
     episode: Epizód
     record: Zeneszám
 
@@ -196,6 +196,7 @@ genre:
         electronica: Electronica
         electronic: Electronic
         rock: Rock
+        progressive_rock: Progresszív Rock
         disco: Disco
         soul: Soul
         funk: Funk
