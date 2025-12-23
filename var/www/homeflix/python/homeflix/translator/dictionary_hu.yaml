@@ -213,6 +213,7 @@ genre:
         jazz: Jazz
         tango: Tangó
         soundtrack: Filmzene
+        techno: Techno
 
     movie:
         <<: *common
@@ -328,6 +329,7 @@ genre:
         commercial: Reklám
         announcement: Bejelentés
         parliament: Parlament
+        re_dubbing: Ujra-szinkronizálás
 
     personal:
         photos: Fotók
@@ -587,6 +589,14 @@ title:
     audiobook_last_watched: Utoljára hallgatott
     audiobook_least_watched: Legritkábban hallgatott
     audiobook_most_watched: Leggyakrabban hallgatott
+
+    # Poetry
+    poetry: Költészet
+    poetry_playlists: Lejátszási listák
+    poetry_interrupted: Folytasd
+    poetry_last_watched: Utoljára hallgatott
+    poetry_least_watched: Legritkábban hallgatott
+    poetry_most_watched: Leggyakrabban hallgatott
 
     ebook: Ebook
     dia: Dia

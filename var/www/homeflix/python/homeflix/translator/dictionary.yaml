@@ -213,6 +213,7 @@ genre:
         jazz: Jazz
         tango: Tango
         soundtrack: Soundtrack
+        techno: Techno
 
     movie:
         <<: *common
@@ -328,6 +329,7 @@ genre:
         commercial: Commercial
         announcement: Announcement
         parliament: Parliament
+        re_dubbing: Re-Dubbing
 
     personal:
         photos: Photos
@@ -564,6 +566,14 @@ title:
     music_audio_least_watched: Least Listened
     music_audio_most_watched: Most Listened
 
+    # Standup comedy
+    standup: Standup
+    standup_playlists: Playlists
+    standup_interrupted: Continue Playing
+    standup_last_watched: Last Listened
+    standup_least_watched: Least Listened
+    standup_most_watched: Most Listened
+
     # Radioplay
     radioplay: Radioplay
     radioplay_playlists: Playlists
@@ -579,6 +589,14 @@ title:
     audiobook_last_watched: Last Listened
     audiobook_least_watched: Least Listened
     audiobook_most_watched: Most Listened
+
+    # Poetry
+    poetry: Poetry
+    poetry_playlists: Playlists
+    poetry_interrupted: Continue Playing
+    poetry_last_watched: Last Listened
+    poetry_least_watched: Least Listened
+    poetry_most_watched: Most Listened
 
     ebook: Ebook
     dia: Diafilm

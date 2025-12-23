@@ -87,6 +87,9 @@ class RestGenerator extends Generator{
 
         Generator.startSpinner();
 
+        // Need a small dalay to show the spinner
+        await new Promise(resolve => setTimeout(resolve, 10)); // Quick solution: Allow spinner to render
+
         // Phase 1: Fast initial load - show first few containers with hits
         let processedCount = 0;
         for (let lineIndex = 0; lineIndex < requestList.length && processedCount < INITIAL_VISIBLE_LINES; lineIndex++) {
