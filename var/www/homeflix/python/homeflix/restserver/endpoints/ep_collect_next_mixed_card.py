@@ -12,7 +12,7 @@ class EPCollectNextMixed(EP):
     URL = '/collect/next/mixed'
 
     PATH_PAR_PAYLOAD = '/next/mixed'
-    PATH_PAR_URL = '/next/mixed/card_id/<card_id>/category/<category>/view_state/<view_state>/tags/<tags>/level/<level>/filter_on/<filter_on>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/voices/<voices>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/rate_value/<rate_value>/decade/<decade>/lang/<lang>'
+    PATH_PAR_URL = '/next/mixed/card_id/<card_id>/category/<category>/view_state/<view_state>/tags/<tags>/level/<level>/filter_on/<filter_on>/title/<title>/genres/<genres>/themes/<themes>/directors/<directors>/actors/<actors>/voices/<voices>/lecturers/<lecturers>/performers/<performers>/origins/<origins>/rate/<rate>/decade/<decade>/lang/<lang>'
 
     METHOD = 'GET'
 
@@ -31,7 +31,7 @@ class EPCollectNextMixed(EP):
     ATTR_LECTURER = 'lecturers'
     ATTR_PERFORMER = 'performers'
     ATTR_ORIGIN = 'origins'
-    ATTR_RATE_VALUE = 'rate_value'
+    ATTR_RATE = 'rate'
     ATTR_DECADE = 'decade'
     ATTR_LANG = 'lang'
 
@@ -56,7 +56,7 @@ class EPCollectNextMixed(EP):
         payload[EPCollectNextMixed.ATTR_LECTURER] = lecturers
         payload[EPCollectNextMixed.ATTR_PERFORMER] = performers
         payload[EPCollectNextMixed.ATTR_ORIGIN] = origins
-        payload[EPCollectNextMixed.ATTR_RATE_VALUE] = rate_value
+        payload[EPCollectNextMixed.ATTR_RATE] = rate
         payload[EPCollectNextMixed.ATTR_DECADE] = decade
         payload[EPCollectNextMixed.ATTR_LANG] = lang
 
@@ -81,7 +81,7 @@ class EPCollectNextMixed(EP):
         lecturers  = payload.get(EPCollectNextMixed.ATTR_LECTURER, '*')
         performers = payload.get(EPCollectNextMixed.ATTR_PERFORMER, '*')
         origins    = payload.get(EPCollectNextMixed.ATTR_ORIGIN, '*')
-        rate_value = payload.get(EPCollectNextMixed.ATTR_RATE_VALUE, '*')
+        rate = payload.get(EPCollectNextMixed.ATTR_RATE, '*')
         decade     = payload.get(EPCollectNextMixed.ATTR_DECADE, '*')
         lang       = payload.get(EPCollectNextMixed.ATTR_LANG, 'en')
 
@@ -102,7 +102,7 @@ class EPCollectNextMixed(EP):
                 EPCollectNextMixed.ATTR_LECTURER, lecturers,
                 EPCollectNextMixed.ATTR_PERFORMER, performers,
                 EPCollectNextMixed.ATTR_ORIGIN, origins,
-                EPCollectNextMixed.ATTR_RATE_VALUE, rate_value,
+                EPCollectNextMixed.ATTR_RATE, rate,
                 EPCollectNextMixed.ATTR_DECADE, decade,
                 EPCollectNextMixed.ATTR_LANG, lang
             )
@@ -134,11 +134,11 @@ class EPCollectNextMixed(EP):
             performers = None
         if origins == '*':
             origins = None
-        if rate_value == '*':
-            rate_value = None
+        if rate == '*':
+            rate = None
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_next_level_cards(card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=100)
+        output = self.web_gadget.db.get_next_level_cards(card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate, decade=decade, lang=lang, limit=100)
 
         return output_json(output, EP.CODE_OK)

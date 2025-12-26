@@ -799,7 +799,8 @@ definitions:
                 # ------------------
                 # Search thumbnail
                 # ------------------
-                - thumbnail:
+                - id: movie_search
+                  thumbnail:
                     image: images/categories/movie_search.jpg
                     title:
                       - trans:
@@ -819,6 +820,99 @@ definitions:
                   execution:
                     randomizable: False
                     container_type: search
+                    static_fields:
+                      - field_name: category
+                        field_value: movie
+                    used_fields:
+                      - dict_id: genres
+                        tr_id: dialog-search-tr-genre
+                        label_for: dialog-search-genre
+                        input_id: dialog-search-genre
+                        translate_dialog_label: genres                      # in dictionary.yaml 'interarction_labels'
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: translated_genre_movie  # dict variable storing the value and translation
+                        default: ""
+                      - dict_id: themes
+                        tr_id: dialog-search-tr-theme
+                        label_for: dialog-search-theme
+                        input_id: dialog-search-theme
+                        translate_dialog_label: themes
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: translated_themes
+                        default: ""
+                      - dict_id: directors
+                        tr_id: dialog-search-tr-director
+                        label_for: dialog-search-director
+                        input_id: dialog-search-director
+                        translate_dialog_label: directors
+                        field_type: auto-complete
+                        options_dict_variable_name: all_movie_director_list
+                        default: ""
+                      - dict_id: writers
+                        tr_id: dialog-search-tr-writer
+                        label_for: dialog-search-writer
+                        input_id: dialog-search-writer
+                        translate_dialog_label: writers
+                        field_type: auto-complete
+                        options_dict_variable_name: all_movie_writer_list
+                        default: ""
+                      - dict_id: actors
+                        tr_id: dialog-search-tr-actor
+                        label_for: dialog-search-actor
+                        input_id: dialog-search-actor
+                        translate_dialog_label: actors
+                        field_type: auto-complete
+                        options_dict_variable_name: all_movie_actor_list
+                        default: ""
+                      - dict_id: voices
+                        tr_id: dialog-search-tr-voice
+                        label_for: dialog-search-voice
+                        input_id: dialog-search-voice
+                        translate_dialog_label: voices
+                        field_type: auto-complete
+                        options_dict_variable_name: all_movie_voice_list
+                        default: ""
+                      - dict_id: origins
+                        tr_id: dialog-search-tr-origin
+                        label_for: dialog-search-origin
+                        input_id: dialog-search-origin
+                        translate_dialog_label: origins
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: translated_countries
+                        default: ""
+                      - dict_id: tags
+                        tr_id: dialog-search-tr-tag
+                        label_for: dialog-search-tag
+                        input_id: dialog-search-tag
+                        translate_dialog_label: tags
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: all_movie_tag_dict
+                        default: ""
+                      - dict_id: show_level
+                        tr_id: dialog-search-tr-show-level
+                        label_for: dialog-search-show-level
+                        input_id: dialog-search-show-level
+                        translate_dialog_label: show_level
+                        field_type: dropdown
+                        options_dict_variable_name: translated_show_levels
+                        default: "/collect/highest/mixed"
+                      - dict_id: view_state
+                        tr_id: dialog-search-tr-view-state
+                        label_for: dialog-search-view-state
+                        input_id: dialog-search-view-state
+                        translate_dialog_label: view_state
+                        field_type: dropdown
+                        options_dict_variable_name: translated_view_state
+                        default: ""
+                      - dict_id: rate
+                        tr_id: dialog-search-tr-rate
+                        label_for: dialog-search-rate
+                        input_id: dialog-search-rate
+                        translate_dialog_label: rate
+                        field_type: dropdown
+                        options_dict_variable_name: translated_rates
+                        default: ""
+
                     container_list:
 #                      # ????
 #                      - dynamic_search:
@@ -876,12 +970,14 @@ definitions:
                       - trans:
                           translator: translated_labels
                           key: music_by_decade
+
                   description:
                     image: images/categories/music_by_decade.jpg
                     title:
                       - trans:
                           translator: translated_labels
                           key: music_by_decade
+
                   history:
                     title:
                       - trans:
@@ -1379,6 +1475,84 @@ definitions:
                             request: *request_collect_lowest
                             title:
                               - variable: data_dict["name"]
+
+
+                # ----------------------------
+                # Music-Video Search thumbnail
+                # ----------------------------
+                - id: music_video_search
+                  thumbnail:
+                    image: images/categories/music_video_search.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_video_search
+                  description:
+                    image: images/categories/music_video_search.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_video_search
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_video_search
+                  execution:
+                    randomizable: True
+                    container_type: search
+                    static_fields:
+                      - field_name: category
+                        field_value: music_video
+                    used_fields:
+                      - dict_id: performers
+                        tr_id: dialog-search-tr-performer
+                        label_for: dialog-search-performer
+                        input_id: dialog-search-performer
+                        translate_dialog_label: performers
+                        field_type: auto-complete
+                        options_dict_variable_name: all_music_video_performer_list
+                        default: ""
+                      - dict_id: genres
+                        tr_id: dialog-search-tr-genre
+                        label_for: dialog-search-genre
+                        input_id: dialog-search-genre
+                        translate_dialog_label: genres                            # in dictionary.yaml 'interarction_labels'
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: translated_genre_music_video  # dict variable storing the value and translation
+                        default: ""
+                      - dict_id: tags
+                        tr_id: dialog-search-tr-tag
+                        label_for: dialog-search-tag
+                        input_id: dialog-search-tag
+                        translate_dialog_label: tags
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: all_music_video_tag_dict
+                        default: ""
+                      - dict_id: show_level
+                        tr_id: dialog-search-tr-show-level
+                        label_for: dialog-search-show-level
+                        input_id: dialog-search-show-level
+                        translate_dialog_label: show_level
+                        field_type: dropdown
+                        options_dict_variable_name: translated_show_levels
+                        default: "/collect/highest/mixed"
+                      - dict_id: view_state
+                        tr_id: dialog-search-tr-view-state
+                        label_for: dialog-search-view-state
+                        input_id: dialog-search-view-state
+                        translate_dialog_label: view_state
+                        field_type: dropdown
+                        options_dict_variable_name: translated_view_state
+                        default: ""
+                      - dict_id: rate
+                        tr_id: dialog-search-tr-rate
+                        label_for: dialog-search-rate
+                        input_id: dialog-search-rate
+                        translate_dialog_label: rate
+                        field_type: dropdown
+                        options_dict_variable_name: translated_rates
+                        default: ""
 
           # -------------
           # Music - Audio
@@ -1967,6 +2141,87 @@ definitions:
                             title:
                               - variable: data_dict["name"]
 
+
+                # ----------------------------
+                # Music-Audio Search thumbnail
+                # ----------------------------
+                - id: music_audio_search
+                  thumbnail:
+                    image: images/categories/music_audio_search.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_audio_search
+                  description:
+                    image: images/categories/music_audio_search.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_audio_search
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_audio_search
+                  execution:
+                    randomizable: True
+                    container_type: search
+                    static_fields:
+                      - field_name: category
+                        field_value: music_audio
+                    used_fields:
+                      - dict_id: performers
+                        tr_id: dialog-search-tr-performer
+                        label_for: dialog-search-performer
+                        input_id: dialog-search-performer
+                        translate_dialog_label: performers
+                        field_type: auto-complete
+                        options_dict_variable_name: all_music_audio_performer_list
+                        default: ""
+                      - dict_id: genres
+                        tr_id: dialog-search-tr-genre
+                        label_for: dialog-search-genre
+                        input_id: dialog-search-genre
+                        translate_dialog_label: genres                            # in dictionary.yaml 'interarction_labels'
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: translated_genre_music_audio  # dict variable storing the value and translation
+                        default: ""
+                      - dict_id: tags
+                        tr_id: dialog-search-tr-tag
+                        label_for: dialog-search-tag
+                        input_id: dialog-search-tag
+                        translate_dialog_label: tags
+                        field_type: combo-box-with-dict
+                        options_dict_variable_name: all_music_audio_tag_dict
+                        default: ""
+                      - dict_id: show_level
+                        tr_id: dialog-search-tr-show-level
+                        label_for: dialog-search-show-level
+                        input_id: dialog-search-show-level
+                        translate_dialog_label: show_level
+                        field_type: dropdown
+                        options_dict_variable_name: translated_show_levels
+                        default: "/collect/highest/mixed"
+                      - dict_id: view_state
+                        tr_id: dialog-search-tr-view-state
+                        label_for: dialog-search-view-state
+                        input_id: dialog-search-view-state
+                        translate_dialog_label: view_state
+                        field_type: dropdown
+                        options_dict_variable_name: translated_view_state
+                        default: ""
+                      - dict_id: rate
+                        tr_id: dialog-search-tr-rate
+                        label_for: dialog-search-rate
+                        input_id: dialog-search-rate
+                        translate_dialog_label: rate
+                        field_type: dropdown
+                        options_dict_variable_name: translated_rates
+                        default: ""
+
+
+
+
 # ====================================================================
 
     # ===================
@@ -2139,12 +2394,6 @@ definitions:
                 request: *request_collect_lowest
                 title:
                   - variable: data_dict["name"]
-
-
-
-
-
-
 # ====================================================================
 
     # ===================
@@ -2178,7 +2427,6 @@ definitions:
               data:
                 category: ebook
               request: *request_collect_highest_mixed
-
 # ====================================================================
 
     # ===================
@@ -2212,7 +2460,6 @@ definitions:
               data:
                 category: dia
               request: *request_collect_highest_mixed
-
 # ====================================================================
 
     # =======================

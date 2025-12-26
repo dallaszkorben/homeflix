@@ -559,12 +559,15 @@ title:
     music_video_last_watched: Utoljára nézett
     music_video_least_watched: Legritkábban nézett
     music_video_most_watched: Leggyakrabban nézett
+    music_video_search: Keresés
+
 
     music_audio_playlists: Lejátszási listák
     music_audio_interrupted: Folytasd
     music_audio_last_watched: Utoljára hallgatott
     music_audio_least_watched: Legritkábban hallgatott
     music_audio_most_watched: Leggyakrabban hallgatott
+    music_audio_search: Keresés
 
     # Standup comedy
     standup: Standup
@@ -707,14 +710,15 @@ interaction_labels:
             message: blabla
             labels:
                 container_title: Találati konténer cím
-                writer: Író
-                director: Rendező
-                actor: Szereplő
-                voice: Hang
-                genre: Műfaj
-                theme: Téma
-                origin: Ország
-                tag: Cimke
+                performers: Előadó
+                writers: Író
+                directors: Rendező
+                actors: Szereplő
+                voices: Hang
+                genres: Műfaj
+                themes: Téma
+                origins: Ország
+                tags: Cimke
                 show_level: Mutatott szint
                 view_state: Megtekintés állapota
                 rate: Értékelés

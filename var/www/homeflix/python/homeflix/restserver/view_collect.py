@@ -38,6 +38,7 @@ from homeflix.restserver.endpoints.ep_collect_directors import EPCollectDirector
 from homeflix.restserver.endpoints.ep_collect_abc import EPCollectAbc
 from homeflix.restserver.endpoints.ep_collect_highest_mixed_abc import EPCollectHighestMixedAbc
 from homeflix.restserver.endpoints.ep_collect_writers import EPCollectWriters
+from homeflix.restserver.endpoints.ep_collect_performers import EPCollectPerformers
 
 from homeflix.restserver.endpoints.ep_collect_tags import EPCollectTags
 
@@ -84,6 +85,7 @@ class CollectView(FlaskView):
         self.epCollectMediaByCardId = EPCollectMediaByCardId(web_gadget)
         self.epCollectAllAppendixByCardId = EPCollectAllAppendixByCardId(web_gadget)
         self.epCollectActorsByRoleCount = EPCollectActorsByRoleCount(web_gadget)
+        self.epCollectPerformers = EPCollectPerformers(web_gadget)
         self.epCollectActors = EPCollectActors(web_gadget)
         self.epCollectVoicesByRoleCount = EPCollectVoicesByRoleCount(web_gadget)
         self.epCollectVoices = EPCollectVoices(web_gadget)
@@ -682,6 +684,47 @@ class CollectView(FlaskView):
         out = self.epCollectDirectorsByMovieCount.executeByPayload(json_data)
         return out
 
+# === collect all performers  ===
+
+    #
+    # Gives back list of the performers
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/collect/performers/category/<category>/limit/<limit>
+    #
+    #@route('/performers/category/<category>/limit/<limit>')
+    @route(EPCollectPerformers.PATH_PAR_URL, methods=[EPCollectPerformers.METHOD])
+    def collectPerformersWithParameter(self, category, imit):
+        out = self.epCollectPerformers.executeByParameters(category, limit=limit)
+        return out
+
+    #
+    # Gives back list of the performers
+    #
+    # curl  --header "Content-Type: application/json" --request GET --data '{"category": "music_audio", "limit": 15}' http://localhost:80/collect/performers
+    #
+    # GET http://localhost:80/collect/performers
+    #      body: {
+    #       "category": "music_audio",
+    #       "limit": 15,
+    #      }
+    #
+    #@route('/performers', methods=['GET'])
+    @route(EPCollectPerformers.PATH_PAR_PAYLOAD, methods=[EPCollectPerformers.METHOD])
+    def collectPerformersWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.epCollectPerformers.executeByPayload(json_data)
+        return out
 
 # === collect all directors  ===
 

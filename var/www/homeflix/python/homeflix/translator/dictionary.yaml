@@ -565,6 +565,7 @@ title:
     music_audio_last_watched: Last Listened
     music_audio_least_watched: Least Listened
     music_audio_most_watched: Most Listened
+    music_audio_search: Search
 
     # Standup comedy
     standup: Standup
@@ -707,16 +708,17 @@ interaction_labels:
             message: blabla
             labels:
                 container_title: Hit container title
-                writer: Writer
-                director: Director
-                actor: Actor
-                voice: Voice
-                genre: Genre
-                theme: Theme
-                origin: Country
+                performers: Performer
+                writers: Writer
+                directors: Director
+                actors: Actor
+                voices: Voice
+                genres: Genre
+                themes: Theme
+                origins: Country
+                tags: Tag
                 show_level: Show Level
                 view_state: View State
-                tag: Tag
                 rate: Rate
             buttons:
                 submit: Submit

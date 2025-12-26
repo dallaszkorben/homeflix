@@ -73,17 +73,29 @@
         // GLOBAL DATA VARIABLES
         // ========================================
         // These variables store application data loaded from the server
-        let version;                        // Application version string
-        let translated_labels;              // UI labels in user's language
-        let translated_genre_movie;         // Movie genre translations
-        let translated_categories;          // Content category translations
-        let translated_themes;              // Theme/topic translations
-        let translated_countries;           // Country name translations
-        let all_movie_director_list;        // Complete list of directors
-        let all_movie_writer_list;          // Complete list of writers
-        let all_movie_actor_list;           // Complete list of actors
-        let all_movie_voice_list;           // Complete list of voice actors
-        let all_movie_rate_list;            // Available rating values
+        let version;                            // Application version string
+        let translated_labels;                  // UI labels in user's language
+        let translated_genre_movie;             // Movie genre translations
+        let translated_genre_music_audio;       // Music audio genre translations
+        let translated_genre_music_video;       // Music video genre translations
+        let translated_categories;              // Content category translations
+        let translated_themes;                  // Theme/topic translations
+        let translated_countries;               // Country name translations
+
+        let all_movie_director_list;            // Complete list of directors
+        let all_movie_writer_list;              // Complete list of writers
+        let all_movie_actor_list;               // Complete list of actors
+        let all_movie_voice_list;               // Complete list of voice actors
+        let all_movie_rate_list;                // Available rating values
+
+        let all_music_audio_rate_list;
+        let all_music_video_rate_list;
+        let all_music_audio_performer_list
+        let all_music_video_performer_list
+
+        let translated_show_levels;
+        let translated_view_state;
+        let translated_rate;
 
         // ========================================
         // APPLICATION VERSION LOADING
@@ -96,7 +108,7 @@
         version = result['version'];
 
         // ========================================
-        // TRANSLATION DATA LOADING
+        // TRANSLATION DATA LOADING - ALL
         // ========================================
         // Load all translation dictionaries based on user's language preference
         // All requests are synchronous to ensure data is available before UI initialization
@@ -121,14 +133,20 @@
         // Load country name translations
         translated_countries = getAllElements("dict", data, "/translate/countries/lang/" + user_data['language_code'])
 
-        // Load movie genre translations (action, comedy, drama, etc.)
-        translated_genre_movie = getAllElements("dict", data, "/translate/genres/category/movie/lang/" + user_data['language_code'])
-
         // Load theme/topic translations (war, love, friendship, etc.)
         translated_themes = getAllElements("dict", data, "/translate/themes/lang/" + user_data['language_code'])
 
+        // Load movie genre translations (action, comedy, drama, etc.)
+        translated_genre_movie = getAllElements("dict", data, "/translate/genres/category/movie/lang/" + user_data['language_code'])
+
+        // Load music video genre translations
+        translated_genre_music_video = getAllElements("dict", data, "/translate/genres/category/music_video/lang/" + user_data['language_code'])
+
+        // Load music audio genre translations
+        translated_genre_music_audio = getAllElements("dict", data, "/translate/genres/category/music_audio/lang/" + user_data['language_code'])
+
         // ========================================
-        // METADATA COLLECTION LOADING
+        // COLLECT MOVIE DATA
         // ========================================
         // Load complete lists of people and metadata for search/filter functionality
         data = {
@@ -148,14 +166,56 @@
         // Load all voice actors for autocomplete/search
         all_movie_voice_list = getAllElements("list", data, "/collect/voices")
 
-        // ========================================
-        // TAG DICTIONARY LOADING
-        // ========================================
-        // Load all available tags as a dictionary (value->value mapping)
-        // Used for tag-based filtering and search functionality
+        // Load all available movie tags as a dictionary (value->value mapping)
         all_movie_tag_dict = getAllElements("list_to_dict", data, "/collect/tags")
 
+        // ===========================================
+        // COLLECT MUSIC-AUDIO DATA
+        // ===========================================
+        //
+        data = {
+            "category": "music_audio",
+            "limit": 9999,
+        };
 
+        all_music_audio_performer_list = getAllElements("list", data, "/collect/performers")
+
+        all_music_audio_tag_dict = getAllElements("list_to_dict", data, "/collect/tags")
+
+        // ===========================================
+        // COLLECT MUSIC-VIDEO DATA
+        // ===========================================
+        //
+        data = {
+            "category": "music_video",
+            "limit": 9999,
+        };
+
+        all_music_video_performer_list = getAllElements("list", data, "/collect/performers")
+
+        all_music_video_tag_dict = getAllElements("list_to_dict", data, "/collect/tags")
+
+        // ---
+
+        translated_show_levels = {
+            '/collect/highest/mixed': translated_labels.get('movie_show_level_highest'),
+            '/collect/lowest': translated_labels.get('movie_show_level_lowest')
+        }
+
+        translated_view_state = {
+            interrupted: translated_labels.get('movie_interrupted'),
+            last_watched: translated_labels.get('movie_last_watched'),
+            most_watched: translated_labels.get('movie_most_watched')
+        }
+
+        translated_rates = {
+            0: "",
+            1: "★",
+            2: "★★",
+            3: "★★★",
+            4: "★★★★",
+            5: "★★★★★"
+        }
 
         // ========================================
         // ASYNC UTILITIES
@@ -1180,68 +1240,75 @@
     <div id="dialog-form-search" title="Search Media" style="display:none">
         <fieldset>
             <table>
+
+                <!-- Title -->
                 <tr>
                     <td><label for="dialog-search-container-title">Title: </label></td>
                     <td><input type="text" name="dialog-search-container-title" id="dialog-search-container-title" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
-                    <tr><td colspan="2"><div class="dialog-search-separator"></div></td>
+
+                <!-- Separator -->
+                <tr>
+                    <td colspan="2"><div class="dialog-search-separator"></div></td>
                 </tr>
 
-
-
+                <!-- Performer -->
+                <tr id="dialog-search-tr-performer">
+                    <td><label for="dialog-search-performer">Performer: </label></td>
+                    <td><input type="text" name="dialog-search-performer" id="dialog-search-performer" class="text ui-widget-content ui-corner-all" /></td>
+                </tr>
 
                 <!-- Genre -->
-                <tr>
+                <tr id="dialog-search-tr-genre">
                     <td><label for="dialog-search-genre">Genre: </label></td>
                     <td><input type="text" name="dialog-search-genre" id="dialog-search-genre" class="text ui-widget-content ui-corner-all" /></td>
-                    <!-- <td><select name="dialog-search-genre" id="dialog-search-genre" class="ui-widget-content ui-corner-all" /></td> -->
                 </tr>
 
                 <!-- Theme -->
-                <tr>
+                <tr id="dialog-search-tr-theme">
                     <td><label for="dialog-search-theme">Theme: </label></td>
                     <td><input type="text" name="dialog-search-theme" id="dialog-search-theme" class="text ui-widget-content ui-corner-all" /></td>
                     <!-- <td><select name="dialog-search-theme" id="dialog-search-theme" class="ui-widget-content ui-corner-all"/></td> -->
                 </tr>
 
                 <!-- Director -->
-                <tr>
+                <tr id="dialog-search-tr-director">
                     <td><label for="dialog-search-director">Directors: </label></td>
                     <td><input type="text" name="dialog-search-director" id="dialog-search-director" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Writer -->
-                <tr>
+                <tr id="dialog-search-tr-writer">
                     <td><label for="dialog-search-writer">Writers: </label></td>
                     <td><input type="text" name="dialog-search-writer" id="dialog-search-writer" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Actor -->
-                <tr>
+                <tr id="dialog-search-tr-actor">
                     <td><label for="dialog-search-actor">Actors: </label></td>
                     <td><input type="text" name="dialog-search-actor" id="dialog-search-actor" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Voice -->
-                <tr>
+                <tr id="dialog-search-tr-voice">
                     <td><label for="dialog-search-voice">Voices: </label></td>
                     <td><input type="text" name="dialog-search-voice" id="dialog-search-voice" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Origin -->
-                <tr>
+                <tr id="dialog-search-tr-origin">
                     <td><label for="dialog-search-origin">Origins: </label></td>
                     <td><input type="text" name="dialog-search-origin" id="dialog-search-origin" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Tag -->
-                <tr>
+                <tr id="dialog-search-tr-tag">
                     <td><label for="dialog-search-tag">Tag: </label></td>
                     <td><input type="text" name="dialog-search-tag" id="dialog-search-tag" class="text ui-widget-content ui-corner-all"></td>
                 </tr>
 
                 <!-- Show Level -->
-                <tr>
+                <tr id="dialog-search-tr-show-level">
                     <td><label for="dialog-search-show-level">View State: </label></td>
                     <td>
                         <select name="dialog-search-show-level" id="dialog-search-show-level" class="ui-widget-content ui-corner-all">
@@ -1252,7 +1319,7 @@
                 </tr>
 
                 <!-- View State -->
-                <tr>
+                <tr id="dialog-search-tr-view-state">
                     <td><label for="dialog-search-view-state">View State: </label></td>
                     <td>
                         <select name="dialog-search-view-state" id="dialog-search-view-state" class="ui-widget-content ui-corner-all">
@@ -1265,7 +1332,7 @@
                 </tr>
 
                 <!-- Rate -->
-                <tr>
+                <tr id="dialog-search-tr-rate">
                     <td><label for="dialog-search-rate">Rate: </label></td>
                     <td>
                         <select name="dialog-search-rate" id="dialog-search-rate" class="ui-widget-content ui-corner-all">

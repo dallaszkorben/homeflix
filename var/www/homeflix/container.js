@@ -596,8 +596,8 @@ class ObjScrollSection {
 //        // TODO:
 //        let container_title = container_list[containerIndex]['dynamic_hard_coded']['title'][0]['text'];
 
-        data_dict['show_level'] = show_level;
-        data_dict['container_title'] = container_title;
+        data_dict["show_level"] = show_level;
+        data_dict["container_title"] = container_title;
 
         this.objThumbnailController.editThumbnailContainerForm(data_dict, containerIndex);
     }
@@ -2189,8 +2189,6 @@ class FocusTask {
 }
 
 
-
-
 var search_merge_something;
 
 /**
@@ -2200,24 +2198,33 @@ var search_merge_something;
  * @param {Object} callbacks - Object containing callback functions
  * @returns {Object} - Dialog configuration object
  */
-function searchFilterForm(data_dict = null, callbacks = {}) {
+function searchFilterForm(callbacks = {}, menu_dict, data_dict = null) {
+
     // Initialize empty data if not provided (for adding new container)
     if (data_dict === null) {
+
         data_dict = {
-            "container_title": "",
-            "genres": "",
-            "themes": "",
-            "directors": "",
-            "writers": "",
-            "actors": "",
-            "voices": "",
-            "origins": "",
-            "tags": "",
-            "show_level": "/collect/highest/mixed",
-            "view_state": "",
-            "rate": ""
-        };
+            "container_title": ""
+        }
+        menu_dict["used_fields"].forEach(field => {
+            data_dict[field["dict_id"]] = field["default"];
+        });
     }
+//        data_dict = {
+//            "container_title": "",
+//            "genres": "",
+//            "themes": "",
+//            "directors": "",
+//            "writers": "",
+//            "actors": "",
+//            "voices": "",
+//            "origins": "",
+//            "tags": "",
+//            "show_level": "/collect/highest/mixed",
+//            "view_state": "",
+//            "rate": ""
+//        };
+//    }
 
     let dialog_dict = translated_interaction_labels.get('dialog');
     let submit_button = dialog_dict['search']['buttons']['submit'];
@@ -2227,130 +2234,24 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
     $("#dialog-form-search label[for='dialog-search-container-title']").html(dialog_dict['search']['labels']['container_title'] + ': ');
     $("#dialog-search-container-title").val(data_dict["container_title"] || "");
 
+    // Hide all search fields by default (except title and separator)
+    $("#dialog-form-search table tr").not(":first, :has(.dialog-search-separator)").hide();
 
+    //
+    // Show only fields specified in used_fields
+    //
+    if (menu_dict && menu_dict["used_fields"]) {
+        menu_dict["used_fields"].forEach(field => {
+            $("#" + field["tr_id"]).show();
 
-//// Merge element
-//$("#dialog-form-search label[for='dialog-search-merge-something']").html("Something" + ': ');
-////let search_merge_something = createComboBoxMergeWithDict('dialog-search-merge-something', translated_genre_movie);
-//let search_merge_something = createFieldWithAutocompleteMergeFromList('dialog-search-merge-something', all_movie_director_list);
-//search_merge_something.setItems([
-//    { value: 'Frank Marino', label: 'Frank Marino', not_flag: '' },
-//    { value: 'James Bridges', label: 'James Bridges', not_flag: '_NOT_' }
-//]);
-////search_merge_something.setItems() 'Frank Marino', 'James Bridges'
-////let search_merge_something = createFreeComboBoxMergeWithDict('dialog-search-merge-something', translated_genre_movie);
-//console.log(search_merge_something.getMergedValues());
+            // Show translated label
+            $("#dialog-form-search label[for='" + field["label_for"] + "']").html(dialog_dict['search']['labels'][field['translate_dialog_label']] + ': ');
 
-
-
-
-    // Genre
-    $("#dialog-form-search label[for='dialog-search-genre']").html(dialog_dict['search']['labels']['genre'] + ': ');
-//    createComboBoxWithDict('dialog-search-genre', translated_genre_movie);
-//    if (data_dict["genres"]) {
-//        setComboboxValue('#dialog-search-genre', data_dict["genres"]);
-//    }
-    let search_by_genre = createComboBoxMergeWithDict("dialog-search-genre", translated_genre_movie);
-    if (data_dict["genres"]) {
-        search_by_genre.setItems(parseMergedDictElements(data_dict["genres"], translated_genre_movie));
+        });
     }
 
-
-    // Theme
-    $("#dialog-form-search label[for='dialog-search-theme']").html(dialog_dict['search']['labels']['theme'] + ': ');
-//    createComboBoxWithDict('dialog-search-theme', translated_themes);
-//    if (data_dict["themes"]) {
-//        setComboboxValue('#dialog-search-theme', data_dict["themes"]);
-//    }
-    let search_by_theme = createComboBoxMergeWithDict("dialog-search-theme", translated_themes);
-    if (data_dict["themes"]) {
-        search_by_theme.setItems(parseMergedDictElements(data_dict["themes"], translated_themes));
-    }
-
-    // Director
-    $("#dialog-form-search label[for='dialog-search-director']").html(dialog_dict['search']['labels']['director'] + ': ');
-//    createFieldWithAutocompleteFromList('dialog-search-director', all_movie_director_list);
-//    if (data_dict["directors"]) {
-//        $("#dialog-search-director").val(data_dict["directors"]);
-//    }
-    let search_by_director = createFieldWithAutocompleteMergeFromList("dialog-search-director", all_movie_director_list);
-    if (data_dict["directors"]) {
-        search_by_director.setItems(parseMergedListElements(data_dict["directors"]));
-    }
-
-    // Writer
-    $("#dialog-form-search label[for='dialog-search-writer']").html(dialog_dict['search']['labels']['writer'] + ': ');
-//    createFieldWithAutocompleteFromList('dialog-search-writer', all_movie_writer_list);
-//    if (data_dict["writers"]) {
-//        $("#dialog-search-writer").val(data_dict["writers"]);
-//    }
-    let search_by_writer = createFieldWithAutocompleteMergeFromList("dialog-search-writer", all_movie_writer_list);
-    if (data_dict["writers"]) {
-        search_by_writer.setItems(parseMergedListElements(data_dict["writers"]));
-    }
-
-    // Actor
-    $("#dialog-form-search label[for='dialog-search-actor']").html(dialog_dict['search']['labels']['actor'] + ': ');
-//    createFieldWithAutocompleteFromList('dialog-search-actor', all_movie_actor_list);
-//    if (data_dict["actors"]) {
-//        $("#dialog-search-actor").val(data_dict["actors"]);
-//    }
-    let search_by_actor = createFieldWithAutocompleteMergeFromList("dialog-search-actor", all_movie_actor_list);
-    if (data_dict["actors"]) {
-        search_by_actor.setItems(parseMergedListElements(data_dict["actors"]));
-    }
-
-    // Voice
-    $("#dialog-form-search label[for='dialog-search-voice']").html(dialog_dict['search']['labels']['voice'] + ': ');
-    let search_by_voice = createFieldWithAutocompleteMergeFromList("dialog-search-voice", all_movie_voice_list);
-    if (data_dict["voices"]) {
-        search_by_voice.setItems(parseMergedListElements(data_dict["voices"]));
-    }
-
-    // Origin
-    $("#dialog-form-search label[for='dialog-search-origin']").html(dialog_dict['search']['labels']['origin'] + ': ');
-//    createComboBoxWithDict('dialog-search-origin', translated_countries);
-//    if (data_dict["origins"]) {
-//        setComboboxValue('#dialog-search-origin', data_dict["origins"]);
-//    }
-    let search_by_origin = createComboBoxMergeWithDict("dialog-search-origin", translated_countries);
-    if (data_dict["origins"]) {
-        search_by_origin.setItems(parseMergedDictElements(data_dict["origins"], translated_countries));
-    }
-
-    // Tag
-    $("#dialog-form-search label[for='dialog-search-tag']").html(dialog_dict['search']['labels']['tag'] + ': ');
-//    createComboBoxWithDict('dialog-search-tag', all_movie_tag_dict);
-//    if (data_dict["tags"]) {
-//        setComboboxValue('#dialog-search-tag', data_dict["tags"]);
-//    }
-    let search_by_tag = createComboBoxMergeWithDict("dialog-search-tag", all_movie_tag_dict);
-    if (data_dict["tags"]) {
-        search_by_tag.setItems(parseMergedListElements(data_dict["tags"]));
-    }
-
-    // Shown level
-    $("#dialog-form-search label[for='dialog-search-show-level']").html(dialog_dict['search']['labels']['show_level'] + ': ');
-    $("#dialog-form-search select option[value='/collect/highest/mixed']").html(translated_labels.get('movie_show_level_highest'));
-    $("#dialog-form-search select option[value='/collect/lowest']").html(translated_labels.get('movie_show_level_lowest'));
-    if (data_dict["show_level"]) {
-        $("#dialog-search-show-level").val(data_dict["show_level"]);
-    }
-
-    // Viewed state
-    $("#dialog-form-search label[for='dialog-search-view-state']").html(dialog_dict['search']['labels']['view_state'] + ': ');
-    $("#dialog-form-search select option[value='interrupted']").html(translated_labels.get('movie_interrupted'));
-    $("#dialog-form-search select option[value='last_watched']").html(translated_labels.get('movie_last_watched'));
-    $("#dialog-form-search select option[value='most_watched']").html(translated_labels.get('movie_most_watched'));
-    if (data_dict["view_state"]) {
-        $("#dialog-search-view-state").val(data_dict["view_state"]);
-    }
-
-    // Show rate
-    $("#dialog-form-search label[for='dialog-search-rate']").html(dialog_dict['search']['labels']['rate'] + ': ');
-    if (data_dict["rate"]) {
-        $("#dialog-search-rate").val(data_dict["rate"]);
-    }
+    // list for variables for the fields
+    let search_var_dict = {};
 
     // Default submit callback if not provided
     const submitCallback = callbacks.onSubmit || function(formData) {
@@ -2392,21 +2293,34 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
                     [submit_button]: function() {
                         $(this).dialog("close");
 
+                        //
+                        // Collect the values of fields to send it the the REST request
+                        //
                         var formData = {
-                            "container_title": $("#dialog-search-container-title").val(),
-                            "genres": search_by_genre.getMergedValues(),
-                            "themes": search_by_theme.getMergedValues(),
-                            "directors": search_by_director.getMergedValues(),
-                            "writers": search_by_writer.getMergedValues(),
-                            "actors": search_by_actor.getMergedValues(),
-                            "voices": search_by_voice.getMergedValues(),
-                            "origins": search_by_origin.getMergedValues(),
-                            "tags": search_by_tag.getMergedValues(),
-                            //"tags": getComboboxValue("#dialog-search-tag"),
-                            "show_level": $("#dialog-search-show-level").val(),
-                            "view_state": $("#dialog-search-view-state").val(),
-                            "rate": $("#dialog-search-rate").val()
+                            "container_title": $("#dialog-search-container-title").val()
                         };
+
+                        // Values from the form
+                        menu_dict["used_fields"].forEach(field => {
+                            let inputId = field["input_id"]
+                            let dictId = field["dict_id"]
+
+                            if (field["field_type"] === "combo-box-with-dict"){
+                                formData[dictId] = search_var_dict[inputId].getMergedValues();
+
+                            }else if(field["field_type"] === "auto-complete"){
+                                formData[dictId] = search_var_dict[inputId].getMergedValues();
+
+                            }else{
+                                formData[dictId] = search_var_dict[inputId].val();
+                            }
+                        });
+
+                        // Static values
+                        menu_dict["static_fields"].forEach( field => {
+                            formData[field["field_name"]] = field["field_value"]
+                        });
+
                         submitCallback(formData);
                     },
                     [cancel_button]: function() {
@@ -2417,6 +2331,30 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
 
                 // Right/Left button to focus buttons
                 open: function() {
+
+                    //
+                    // Construct the fields and set them with values (new: default values / modify: existing values)
+                    //
+                    menu_dict["used_fields"].forEach(field => {
+                        let inputId = field["input_id"]
+                        let optionsDictVarName = field["options_dict_variable_name"]
+
+                        if (field["field_type"] === "combo-box-with-dict"){
+                            search_var_dict[inputId] = createComboBoxMergeWithDict(inputId, eval(optionsDictVarName));
+                            search_var_dict[inputId].setItems(parseMergedDictElements(data_dict[field["dict_id"]], eval(optionsDictVarName)));
+                        }else if(field["field_type"] === "auto-complete"){
+                            search_var_dict[inputId] = createFieldWithAutocompleteMergeFromList(inputId, eval(optionsDictVarName));
+                            search_var_dict[inputId].setItems(parseMergedListElements(data_dict[field["dict_id"]]));
+                        }else{
+                            // First fill up the dropdown (possible) values
+                            search_var_dict[inputId] = $("#" + inputId);
+                            Object.entries(eval(optionsDictVarName)).forEach(([key, value]) => {
+                                $("#dialog-form-search select option[value='" + key + "']").html(value);
+                            });
+                            search_var_dict[inputId].val(data_dict[field["dict_id"]]);
+                        }
+                    });
+
                     const buttons = $(this).parent().find(".ui-dialog-buttonset button");
                     let focusedButtonIndex = 0;
 
@@ -2452,13 +2390,6 @@ function searchFilterForm(data_dict = null, callbacks = {}) {
 }
 
 
-
-
-
-
-
-
-
 class ThumbnailController {
 
     constructor(mainMenuGenerator) {
@@ -2487,12 +2418,10 @@ class ThumbnailController {
     }
 
 
-
-
-
-
     editThumbnailContainerForm(data_dict, containerIndex) {
         let refToThis = this;
+
+        let menu_dict = this.objScrollSection.oContainerGenerator.menu_dict
 
         // Disable keys behind the Dialog() - prevent the ESC button to go back in history
         refToThis.originalTask = refToThis.focusTask;
@@ -2519,7 +2448,7 @@ class ThumbnailController {
         };
 
         // Use the global searchFilterForm function to set up the form and get dialog options
-        const dialogConfig = searchFilterForm(data_dict, callbacks);
+        const dialogConfig = searchFilterForm( callbacks, menu_dict, data_dict);
 
         // Wait 200ms before showing the Dialog
         setTimeout(() => {
@@ -2528,9 +2457,10 @@ class ThumbnailController {
     }
 
 
-
     addNewThumbnailContainerForm(){
         let refToThis = this;
+
+        let menu_dict = this.objScrollSection.oContainerGenerator.menu_dict
 
         // Disable keys behind the Dialog() - prevent the ESC button to go back in history
         refToThis.originalTask = refToThis.focusTask;
@@ -2562,7 +2492,7 @@ class ThumbnailController {
         };
 
         // Use the global searchFilterForm function to set up the form and get dialog options
-        const dialogConfig = searchFilterForm(null, callbacks);
+        const dialogConfig = searchFilterForm(callbacks, menu_dict, null);
 
         // Wait 200ms before showing the Dialog
         setTimeout(() => {
@@ -2571,61 +2501,28 @@ class ThumbnailController {
     }
 
     addNewThumbnailContainerExecution( data_dict ){
-        let container_title = data_dict["container_title"]
-        let genres = data_dict["genres"]
-        let themes = data_dict["themes"]
-        let directors = data_dict["directors"]
-        let writers = data_dict["writers"]
-        let actors = data_dict["actors"]
-        let voices = data_dict["voices"]
-        let origins = data_dict["origins"]
-        let tags = data_dict["tags"]
-        let show_level = data_dict["show_level"]
-        let view_state = data_dict["view_state"]
-        let rate = data_dict["rate"]
+        let data = {};
+        let container_title = "";
+        let show_level = "";
+
+        Object.entries(data_dict).forEach(([key, value]) => {
+            if(key == "container_title"){
+                container_title = value;
+            }else if(key == "show_level"){
+                show_level = value;
+            }else if (value != "") {
+                data[key] = value;
+            }
+        });
 
         if(container_title == ""){
             // TODO: must translate
             container_title = "My search"
         }
 
-        let data = {};
-        data["category"] = "movie"
-        if(genres !== ""){
-            data["genres"] = genres;
-        }
-        if(themes !== ""){
-            data["themes"] = themes;
-        }
-        if(directors !== ""){
-            data["directors"] = directors;
-        }
-        if(writers !== ""){
-            data["writers"] = writers;
-        }
-        if(actors !== ""){
-            data["actors"] = actors;
-        }
-        if(voices !== ""){
-            data["voices"] = voices;
-        }
-        if(origins !== ""){
-            data["origins"] = origins;
-        }
-        if(tags !== ""){
-            data["tags"] = tags;
-        }
-
-        if(view_state !== ""){
-            data["view_state"] = view_state;
-        }
-        if(rate !== ""){
-            data["rate_value"] = rate;
-        }
-
         let thumbnailContainerElement =
         {
-          "dynamic_hard_coded":{
+            "dynamic_hard_coded":{
               "title": [
                   {
                       "text": container_title
@@ -2638,7 +2535,7 @@ class ThumbnailController {
                   "path": show_level,
                   "static": true
               }
-          }
+            }
         }
 
         // fetch the container_list where we insert the new thumbnail container
@@ -2657,56 +2554,23 @@ class ThumbnailController {
 
 
     updateThumbnailContainerExecution(data_dict, containerIndex){
-        let container_title = data_dict["container_title"]
-        let genres = data_dict["genres"]
-        let themes = data_dict["themes"]
-        let directors = data_dict["directors"]
-        let writers = data_dict["writers"]
-        let actors = data_dict["actors"]
-        let voices = data_dict["voices"]
-        let origins = data_dict["origins"]
-        let tags = data_dict["tags"]
-        let show_level = data_dict["show_level"]
-        let view_state = data_dict["view_state"]
-        let rate = data_dict["rate"]
+        let data = {};
+        let container_title = "";
+        let show_level = "";
+
+        Object.entries(data_dict).forEach(([key, value]) => {
+            if(key == "container_title"){
+                container_title = value;
+            }else if(key == "show_level"){
+                show_level = value;
+            }else if (value != "") {
+                data[key] = value;
+            }
+        });
 
         if(container_title == ""){
             // TODO: must translate
             container_title = "My search"
-        }
-
-        let data = {};
-        data["category"] = "movie"
-        if(genres !== ""){
-            data["genres"] = genres;
-        }
-        if(themes !== ""){
-            data["themes"] = themes;
-        }
-        if(directors !== ""){
-            data["directors"] = directors;
-        }
-        if(writers !== ""){
-            data["writers"] = writers;
-        }
-        if(actors !== ""){
-            data["actors"] = actors;
-        }
-        if(voices !== ""){
-            data["voices"] = voices;
-        }
-        if(origins !== ""){
-            data["origins"] = origins;
-        }
-        if(tags !== ""){
-            data["tags"] = tags;
-        }
-
-        if(view_state !== ""){
-            data["view_state"] = view_state;
-        }
-        if(rate !== ""){
-            data["rate_value"] = rate;
         }
 
         let thumbnailContainerElement =
@@ -2726,7 +2590,6 @@ class ThumbnailController {
               }
           }
         }
-
 
         // fetch the container_list where we insert the new thumbnail container
         let oContainerGenerator = this.objScrollSection.oContainerGenerator;

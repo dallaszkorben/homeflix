@@ -2882,6 +2882,61 @@ class SqlDatabase:
             cur.execute("commit")
             return record
 
+    def get_list_of_performers(self, category, limit=15, json=True):
+        """
+        Gives back performer name's list ordered by abc
+        """
+
+        result = False
+        error_message = "Lock error"
+
+        records = {}
+        with self.lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get Card list
+                query = '''
+                    SELECT DISTINCT
+                       performer.name as performer_name
+                    FROM
+                       Person performer,
+                       Card card,
+                       Card_Performer card_performer,
+                       Category category
+                    WHERE
+                       ''' + SqlDatabase.MEDIA_CARD_LEVEL_CONDITION + '''
+                       AND category.name = :category
+                       AND card.id_category = category.id
+                       AND card_performer.id_performer = performer.id
+                       AND card_performer.id_card = card.id
+                    ORDER BY performer.name
+                    LIMIT :limit;
+                '''
+
+                query_parameters = {'category': category, 'limit': limit}
+
+                logging.debug("get_list_of_performers: '{0}' / {1}".format(query, query_parameters))
+
+                records=cur.execute(query, query_parameters).fetchall()
+                cur.execute("commit")
+
+                if json:
+                    records = [record['performer_name'] for record in records]
+
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = "Fetching the performer list failed: {0}".format(e)
+                logging.error(error_message)
+
+            finally:
+                cur.close()
+
+        return {"result": result, "data": records, "error": error_message}
+
     def get_list_of_actors(self, category, limit=15, json=True):
         """
         Gives back actor name's list, ordered by the number of the movies they played in
@@ -3701,6 +3756,7 @@ class SqlDatabase:
                 return {"result": result, "data": records, "error": error_message}
 
         return {"result": result, "data": records, "error": error_message}
+
 
 
 # ---

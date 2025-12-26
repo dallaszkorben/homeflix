@@ -462,23 +462,6 @@ function setComboboxValue(selector, value) {
  */
 function createMergeComponent(inputId, createInputFn, createInputArgs) {
 
-
-//    if (!$('#autocomplete-font-fix').length) {
-//        $('<style>', {
-//            id: 'autocomplete-font-fix'
-//        }).text(`
-//            .ui-autocomplete {
-//                font-family: inherit !important;
-//                font-size: inherit !important;
-//            }
-//            .ui-menu-item, .ui-menu-item-wrapper {
-//                font-family: inherit !important;
-//                font-size: inherit !important;
-//            }
-//        `).appendTo('head');
-//    }
-
-
     // Create container
     const containerClass = `merge-container-${inputId}`;
 
@@ -579,21 +562,6 @@ function createMergeComponent(inputId, createInputFn, createInputArgs) {
         'font-family': 'inherit',
         'fontSize': 'inherit'
     });
-
-    // Apply styling to the autocomplete menu when it's created
-//    $(`#${inputId2}`).on("autocompleteopen", function() {
-//        $(".ui-autocomplete").css({
-//            'font-family': 'inherit',
-//            'font-size': 'inherit'
-//        });
-//
-//        $(".ui-menu-item").css({
-//            'font-family': 'inherit',
-//            'font-size': 'inherit'
-//        });
-//    });
-
-
 
 
 

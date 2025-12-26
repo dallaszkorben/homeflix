@@ -97,18 +97,27 @@ class RestGenerator extends Generator{
 
             // Make REST request and cache result
             let thumbnail_list = await RestGenerator.sendRestRequest(request["rq_method"], request["rq_protocol"], request["rq_path"], request["rq_data"]);
+
+if( thumbnail_list === undefined){
+    alert("No results found for " + request["title"]);
+}
+
             // if thumbnail_list === undefined
             thumbnailListCache[lineIndex] = thumbnail_list;
+
+            // --- this part is out of the 'if' so the container will be shown even if it is empty
+
+            // Create container and add limited thumbnails for fast display
+            let oContainer = new ObjThumbnailContainer(request, request["title"]);
+            containerList.push(oContainer);
+
+            // ---
 
             // Only process containers that have at least 1 thumbnail (skip empty results)
             if(thumbnail_list.length > 0){
 
                 // Track this index for Phase 2
                 processedIndexes.push(lineIndex);
-
-                // Create container and add limited thumbnails for fast display
-                let oContainer = new ObjThumbnailContainer(request, request["title"]);
-                containerList.push(oContainer);
 
                 const actualThumbnails = Math.min(thumbnail_list.length, INITIAL_THUMBNAILS);
                 for(let thumbnail_index = 0; thumbnail_index < actualThumbnails; thumbnail_index++){
@@ -122,12 +131,17 @@ class RestGenerator extends Generator{
                     oContainer.addThumbnail(thumbnail);
                 }
 
-                objScrollSection.addThumbnailContainerObject(oContainer);
-
                 // UI breathing room
                 await new Promise(resolve => setTimeout(resolve, 100));
                 processedCount++;
             }
+
+            // --- this part is out of the 'if' (after the 'for') so the container will be shown even if it is empty
+
+            objScrollSection.addThumbnailContainerObject(oContainer);
+
+            // ---
+
         }
 
         Generator.stopSpinner();
@@ -505,7 +519,7 @@ class GeneralRestGenerator extends RestGenerator{
         return this.menu_dict;
     }
 
-    produceContainers(objScrollSection){
+    async produceContainers(objScrollSection){
         const refToThis = this;
         const containerConfigList = this.menu_dict.container_list ?? [];
 
@@ -518,185 +532,184 @@ class GeneralRestGenerator extends RestGenerator{
         let watingForStopSpinner = false;
 
         Generator.startSpinner();
-        setTimeout(function() {
 
-            if (containerType === "search"){
-                $("#container-controllers-add").show();
-            }
+        // Need a small dalay to show the spinner
+        await new Promise(resolve => setTimeout(resolve, 10)); // Quick solution: Allow spinner to render
 
-            // Go through all the containers
-            for (let containerDict of containerConfigList) {
+        // Show the container controllers, like delete/modify/add
+        if (containerType === "search"){
+            $("#container-controllers-add").show();
+        }
 
-                const descriptorStaticHardCodedDict = containerDict.static_hard_coded ?? null;
-                const descriptorDynamicHardCodedDict = containerDict.dynamic_hard_coded ?? null;
-                const descriptorDynamicQueriedDict = containerDict.dynamic_queried ?? null;
+        // Go through all the containers
+        for (let containerDict of containerConfigList) {
 
-                // Static - Hard Coded Container Definitions
-                if(descriptorStaticHardCodedDict !== null){
+            const descriptorStaticHardCodedDict = containerDict.static_hard_coded ?? null;
+            const descriptorDynamicHardCodedDict = containerDict.dynamic_hard_coded ?? null;
+            const descriptorDynamicQueriedDict = containerDict.dynamic_queried ?? null;
 
-                    const container_title_list = descriptorStaticHardCodedDict.title ?? [];
-                    const container_title = eval(buildTitleFromTitleList(container_title_list));
+            // Static - Hard Coded Container Definitions
+            if(descriptorStaticHardCodedDict !== null){
 
-                    //const containerInstance = new ObjThumbnailContainer(container_title);
-                    const containerInstance = new ObjThumbnailContainer(null, container_title);
+                const container_title_list = descriptorStaticHardCodedDict.title ?? [];
+                const container_title = eval(buildTitleFromTitleList(container_title_list));
 
-                    const thumbnailList = descriptorStaticHardCodedDict.thumbnails ?? [];
+                //const containerInstance = new ObjThumbnailContainer(container_title);
+                const containerInstance = new ObjThumbnailContainer(null, container_title);
 
-                    // Go through the thumbnails
-                    for (let thumbnailDict of thumbnailList){
+                const thumbnailList = descriptorStaticHardCodedDict.thumbnails ?? [];
 
-                        const thumbnailImage = thumbnailDict.thumbnail.image ?? "";
+                // Go through the thumbnails
+                for (let thumbnailDict of thumbnailList){
 
-                        const thumbnail_title_list = thumbnailDict.thumbnail.title ?? [];
-                        const thumbnail_title = eval(buildTitleFromTitleList(thumbnail_title_list));
+                    const descriptionImage = thumbnailDict.description.image ?? "";
+                    const description_title_list = thumbnailDict.description.title ?? [];
+                    const description_title = eval(buildTitleFromTitleList(description_title_list));
 
-                        const descriptionImage = thumbnailDict.description.image ?? "";
+                    const thumbnailImage = thumbnailDict.thumbnail.image ?? "";
+                    const thumbnail_title_list = thumbnailDict.thumbnail.title ?? [];
+                    const thumbnail_title = eval(buildTitleFromTitleList(thumbnail_title_list));
 
-                        const description_title_list = thumbnailDict.description.title = [];
-                        const description_title = eval(buildTitleFromTitleList(description_title_list));
+                    const historyTitleList = thumbnailDict.history.title ?? [];
+                    const historyTitle = eval(buildTitleFromTitleList(historyTitleList));
 
-                        const historyTitleList = thumbnailDict.history.title ?? [];
-                        const historyTitle = eval(buildTitleFromTitleList(historyTitleList));
+                    let nextMenuDict = thumbnailDict.execution ?? {};
 
-                        let nextMenuDict = thumbnailDict.execution ?? {};
+                    const thumbnailInstance = new Thumbnail();
+                    thumbnailInstance.setImageSources({thumbnail_src: thumbnailImage, description_src: descriptionImage});
+                    thumbnailInstance.setTitles({main: description_title, thumb: thumbnail_title, history: historyTitle});
+                    thumbnailInstance.setFunctionForSelection({
+                        "single":
+                            {
+                                "menu":
+                                (function(next_menu_dict, thumbnail_title) {
+                                    return function() {
+                                        return new GeneralRestGenerator(next_menu_dict, refToThis.language_code, thumbnail_title);
+                                    };
+                                })(nextMenuDict, thumbnail_title)
+                            },
+                        "continuous": []
+                    });
+                    containerInstance.addThumbnail(thumbnailInstance);
+                }
+                containerList.push(containerInstance);
 
-                        const thumbnailInstance = new Thumbnail();
-                        thumbnailInstance.setImageSources({thumbnail_src: descriptionImage, description_src: thumbnailImage});
-                        thumbnailInstance.setTitles({main: description_title, thumb: thumbnail_title, history: historyTitle});
-                        thumbnailInstance.setFunctionForSelection({
-                            "single":
-                                {
-                                    "menu":
-                                    (function(next_menu_dict, thumbnail_title) {
-                                        return function() {
-                                            return new GeneralRestGenerator(next_menu_dict, refToThis.language_code, thumbnail_title);
-                                        };
-                                    })(nextMenuDict, thumbnail_title)
-                                },
-                            "continuous": []
-                        });
-                        containerInstance.addThumbnail(thumbnailInstance);
-                    }
-                    containerList.push(containerInstance);
+            // Dynamic - Hard Coded Container Definitions
+            }else if(descriptorDynamicHardCodedDict !== null){
+                const container_title_list = descriptorDynamicHardCodedDict.title ?? [];
+                const container_title = eval(buildTitleFromTitleList(container_title_list));
 
-                // Dynamic - Hard Coded Container Definitions
-                }else if(descriptorDynamicHardCodedDict !== null){
-                    const container_title_list = descriptorDynamicHardCodedDict.title ?? [];
-                    const container_title = eval(buildTitleFromTitleList(container_title_list));
+                const data = descriptorDynamicHardCodedDict.data ?? {};
+                const requestDict = descriptorDynamicHardCodedDict.request ?? {method: "GET", protocol: "http", path: ""};
+                const rq_method = requestDict.method;
+                const rq_protocol = requestDict.protocol;
+                const rq_path = requestDict.path;
 
-                    const data = descriptorDynamicHardCodedDict.data ?? {};
-                    const requestDict = descriptorDynamicHardCodedDict.request ?? {method: "GET", protocol: "http", path: ""};
-                    const rq_method = requestDict.method;
-                    const rq_protocol = requestDict.protocol;
-                    const rq_path = requestDict.path;
+                let rq_data = {}
+                for( const[key, value] of Object.entries(data)){
+                    rq_data[key] = value;
+                };
+                rq_data["lang"] = refToThis.language_code;
 
-                    let rq_data = {}
-                    for( const[key, value] of Object.entries(data)){
-                        rq_data[key] = value;
-                    };
-                    rq_data["lang"] = refToThis.language_code;
+                const request = {title: container_title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: rq_data};
+                requestList.push(request);
 
-                    const request = {title: container_title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: rq_data};
-                    requestList.push(request);
+                watingForStopSpinner = true;
+                //requestType = "dynamic";
 
-                    watingForStopSpinner = true;
-                    //requestType = "dynamic";
+            // Dynamic - Queried Container Definitions
+            }else if(descriptorDynamicQueriedDict !== null){
 
-                // Dynamic - Queried Container Definitions
-                }else if(descriptorDynamicQueriedDict !== null){
+                let pre_query_dict = descriptorDynamicQueriedDict.pre_query ?? {};
+                let pre_query_data_dict = pre_query_dict.data ?? {};
+                let pre_query_request_dict = pre_query_dict.request ?? {};
+                let pre_rq_satic = pre_query_request_dict.static ?? true;
+                let pre_rq_method = pre_query_request_dict.method ?? "GET";
+                let pre_rq_protocol = pre_query_request_dict.protocol ?? "http";
+                let pre_rq_path = pre_query_request_dict.path ?? "";
+                let pre_rq_assync = false;
+                let query_loop_dict = descriptorDynamicQueriedDict.query_loop ?? {};
+                let query_data_dict = query_loop_dict.data ?? {};
 
-                    let pre_query_dict = descriptorDynamicQueriedDict.pre_query ?? {};
-                    let pre_query_data_dict = pre_query_dict.data ?? {};
-                    let pre_query_request_dict = pre_query_dict.request ?? {};
-                    let pre_rq_satic = pre_query_request_dict.static ?? true;
-                    let pre_rq_method = pre_query_request_dict.method ?? "GET";
-                    let pre_rq_protocol = pre_query_request_dict.protocol ?? "http";
-                    let pre_rq_path = pre_query_request_dict.path ?? "";
-                    let pre_rq_assync = false;
-                    let query_loop_dict = descriptorDynamicQueriedDict.query_loop ?? {};
-                    let query_data_dict = query_loop_dict.data ?? {};
+                let query_data_dict_map_dict = null;
+                let query_data_list_map_value = null;
+                let data_from_pre_response_list_dict = query_loop_dict.data_from_pre_response_list ?? {};
+                let data_from_pre_response_list_type = data_from_pre_response_list_dict.type ?? "value";
+                if(data_from_pre_response_list_type === 'dict'){
+                    query_data_dict_map_dict = data_from_pre_response_list_dict.dict ?? null;
+                }else if(data_from_pre_response_list_type === 'value'){
+                    query_data_list_map_value = data_from_pre_response_list_dict.value;
+                }
 
-                    let query_data_dict_map_dict = null;
-                    let query_data_list_map_value = null;
-                    let data_from_pre_response_list_dict = query_loop_dict.data_from_pre_response_list ?? {};
-                    let data_from_pre_response_list_type = data_from_pre_response_list_dict.type ?? "value";
-                    if(data_from_pre_response_list_type === 'dict'){
-                        query_data_dict_map_dict = data_from_pre_response_list_dict.dict ?? null;
-                    }else if(data_from_pre_response_list_type === 'value'){
-                        query_data_list_map_value = data_from_pre_response_list_dict.value;
-                    }
+                let query_request_dict = query_loop_dict.request ?? {};
+                let rq_method = query_request_dict.method ?? "GET";
+                let rq_protocol = query_request_dict.protocol ?? "http";
+                let rq_path = query_request_dict.path ?? "";
 
-                    let query_request_dict = query_loop_dict.request ?? {};
-                    let rq_method = query_request_dict.method ?? "GET";
-                    let rq_protocol = query_request_dict.protocol ?? "http";
-                    let rq_path = query_request_dict.path ?? "";
+                let pre_rq_data = {}
+                for( const[key, value] of Object.entries(pre_query_data_dict)){
+                    pre_rq_data[key] = value;
+                };
 
-                    let pre_rq_data = {}
-                    for( const[key, value] of Object.entries(pre_query_data_dict)){
-                        pre_rq_data[key] = value;
-                    };
+                // Give the selected language code automatically to the request data
+                pre_rq_data["lang"] = refToThis.language_code;
 
-                    // Give the selected language code automatically to the request data
-                    pre_rq_data["lang"] = refToThis.language_code;
+                let rq_data = {}
+                for( const[key, value] of Object.entries(query_data_dict)){
+                    rq_data[key] = value;
+                };
+                rq_data["lang"] = refToThis.language_code;
 
-                    let rq_data = {}
-                    for( const[key, value] of Object.entries(query_data_dict)){
-                        rq_data[key] = value;
-                    };
-                    rq_data["lang"] = refToThis.language_code;
+                const container_title_list = query_loop_dict.title ?? [];
+                const response = $.getJSON({ method: pre_rq_method, url: pre_rq_protocol + "://" + host + port + pre_rq_path, data: pre_rq_data, async: pre_rq_assync});
+                if(response.status == 200 && response.responseJSON["result"]){
 
-                    const container_title_list = query_loop_dict.title ?? [];
-                    const response = $.getJSON({ method: pre_rq_method, url: pre_rq_protocol + "://" + host + port + pre_rq_path, data: pre_rq_data, async: pre_rq_assync});
-                    if(response.status == 200 && response.responseJSON["result"]){
+                    // In case of DICT list response from the pre-request
+                    if(query_data_dict_map_dict !== null){
 
-                        // In case of DICT list response from the pre-request
-                        if(query_data_dict_map_dict !== null){
-
-                            for (let data_dict of response.responseJSON["data"]){
-                                let local_rq_data = {...rq_data};
-                                for( const[key, value] of Object.entries(query_data_dict_map_dict)){
-                                    local_rq_data[key] = data_dict[value];
-                                }
-                                const title = eval(buildTitleFromTitleList(container_title_list));
-                                let request = {title: title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: local_rq_data};
-                                requestList.push(request);
+                        for (let data_dict of response.responseJSON["data"]){
+                            let local_rq_data = {...rq_data};
+                            for( const[key, value] of Object.entries(query_data_dict_map_dict)){
+                                local_rq_data[key] = data_dict[value];
                             }
-
-                            watingForStopSpinner = true;
-                            //requestType = "dynamic";
-
-                        // In case of VALUE list response from the pre-request
-                        }else if(query_data_list_map_value !== null){
-
-                            for (let data_value of response.responseJSON["data"]){
-                                let local_rq_data = {...rq_data};
-                                local_rq_data[query_data_list_map_value] = data_value;
-                                const title = eval(buildTitleFromTitleList(container_title_list));
-                                const request = {title: title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: local_rq_data};
-                                requestList.push(request);
-                            }
-
-                            watingForStopSpinner = true;
-                            //requestType = "dynamic";
+                            const title = eval(buildTitleFromTitleList(container_title_list));
+                            let request = {title: title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: local_rq_data};
+                            requestList.push(request);
                         }
+
+                        watingForStopSpinner = true;
+                        //requestType = "dynamic";
+
+                    // In case of VALUE list response from the pre-request
+                    }else if(query_data_list_map_value !== null){
+
+                        for (let data_value of response.responseJSON["data"]){
+                            let local_rq_data = {...rq_data};
+                            local_rq_data[query_data_list_map_value] = data_value;
+                            const title = eval(buildTitleFromTitleList(container_title_list));
+                            const request = {title: title, rq_method: rq_method, rq_protocol: rq_protocol, rq_path: rq_path, rq_data: local_rq_data};
+                            requestList.push(request);
+                        }
+
+                        watingForStopSpinner = true;
+                        //requestType = "dynamic";
                     }
                 }
             }
+        }
 
-            if(requestList && requestList.length > 0){
-                refToThis.showAllThumbnails(requestList, objScrollSection);
-            }
+        if(requestList && requestList.length > 0){
+            refToThis.showAllThumbnails(requestList, objScrollSection);
+        }
 
-            //if(requestType === "static"){
-            if(!watingForStopSpinner){
-                containerList.forEach(oContainer => {
-                    objScrollSection.addThumbnailContainerObject(oContainer);
-                });
-                Generator.stopSpinner();
-                objScrollSection.focusDefault();
-            }
-
-        },1);
+        //if(requestType === "static"){
+        if(!watingForStopSpinner){
+            containerList.forEach(oContainer => {
+                objScrollSection.addThumbnailContainerObject(oContainer);
+            });
+            Generator.stopSpinner();
+            objScrollSection.focusDefault();
+        }
     }
 }
 
