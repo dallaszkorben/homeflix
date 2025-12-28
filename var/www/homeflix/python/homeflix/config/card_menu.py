@@ -2,10 +2,12 @@ import os
 import configparser
 from pathlib import Path
 import logging
+import copy
 
 from flask import session
 
 from homeflix.property.property import Property
+from homeflix.card.database import SqlDatabase
 
 class CardMenu( Property ):
     HOME = str(Path.home())
@@ -33,6 +35,28 @@ class CardMenu( Property ):
             self.card_menu_dict = self.getDict()
         except FileNotFoundError:
             self.card_menu_dict = self.buildCardMenuDict()
+
+    def _process_search_containers(self, data):
+        """Process search containers in the card menu structure"""
+        if isinstance(data, dict):
+            if 'execution' in data and isinstance(data['execution'], dict):
+                execution = data['execution']
+
+                container_type = execution.get('container_type', None)
+                thumbnail_id = execution.get('thumbnail_id', None)
+
+                if container_type == 'search' and thumbnail_id is not None:
+                    db = SqlDatabase(None)  # Assuming web_gadget can be None for get_search
+                    result = db.get_search(thumbnail_id)
+
+                    if result['result']:
+                        execution['container_list'] = result['data']
+
+            for value in data.values():
+                self._process_search_containers(value)
+        elif isinstance(data, list):
+            for item in data:
+                self._process_search_containers(item)
 
     def buildCardMenuDict(self):
         card_menu_dict = {
@@ -585,15 +609,21 @@ class CardMenu( Property ):
 
     def get_card_menu(self):
         user_data = session.get('logged_in_user', None)
+        card_menu_dict_to_back=copy.deepcopy(self.card_menu_dict['default'])
+
         if user_data:
             user_id = user_data['user_id']
             username = user_data['username']
+
+            # insert the user specific search thumbnails into the card_menu - if there is any
+            self._process_search_containers(card_menu_dict_to_back)
+
         else:
             user_id = -1
 
-#        print("user_id: {0}".format(user_id))
+            # If the user is not logged in, there is NOTHING to insert into to the card_menu
 
-        return {'result': True, 'data': self.card_menu_dict['default'], 'error': None}
+        return {'result': True, 'data': card_menu_dict_to_back, 'error': None}
 
 def getCardMenuInstance():
     cm = CardMenu.getInstance()

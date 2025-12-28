@@ -300,9 +300,7 @@ if( thumbnail_list === undefined){
         if(show_sequence != "" && hit['sequence'] && hit['sequence'] > 0){
             let part = translated_labels.get('sequence')[show_sequence].format("0", hit['sequence']);
 
-            if(result_title){
-                result_title = result_title + separator + part;
-            }
+            result_title = result_title ? result_title + separator + part : part;
         }
         return result_title;
     }

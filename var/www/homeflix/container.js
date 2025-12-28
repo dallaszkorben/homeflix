@@ -503,22 +503,28 @@ class ObjScrollSection {
         // Remove the container at containerIndex from the DB and from the container_list
         if (container_list && container_list.length > containerIndex) {
 
-            // --- Remove it from the DB ---
+            //let search_result = true;
 
-            let db_search_id = container_list[containerIndex]['dynamic_hard_coded']['db_search_id'];
-            let rq_data = {'search_id': db_search_id};
-            let rq_method = "DELETE";
-            let rq_url = "http://" + host + port + "/personal/search/delete";
-            let rq_assync = false;  // Synchronous
-            let result = $.ajax({
-                method: rq_method,
-                url: rq_url,
-                async: rq_assync,
-                contentType: "application/json",
-                data: JSON.stringify(rq_data),
-                dataType: "json"
-            });
-            let search_result = result.responseJSON?.result || false;
+            // if logged in user
+            if(user_data.name != null){
+
+                // --- Remove it from the DB ---
+
+                let db_search_id = container_list[containerIndex]['dynamic_hard_coded']['db_search_id'];
+                let rq_data = {'search_id': db_search_id};
+                let rq_method = "DELETE";
+                let rq_url = "http://" + host + port + "/personal/search/delete";
+                let rq_assync = false;  // Synchronous
+                let result = $.ajax({
+                    method: rq_method,
+                    url: rq_url,
+                    async: rq_assync,
+                    contentType: "application/json",
+                    data: JSON.stringify(rq_data),
+                    dataType: "json"
+                });
+                //search_result = result.responseJSON?.result || false;
+            }
 
             // --- Remove it from the container_list ---
 
@@ -2527,26 +2533,33 @@ class ThumbnailController {
         origMenuDict.container_list = container_list;
         oContainerGenerator.setMenuDict(origMenuDict);
 
-        // --- Record the Search into the DB ---
+        let search_result = true;
 
-        // Search object for storing in database
-        let rq_data = JSON.parse(JSON.stringify(thumbnailContainerElement));
-        rq_data["thumbnail_id"] = origMenuDict.thumbnail_id;
-        rq_data["dynamic_hard_coded"]["db_search_id"] = db_search_id;
-        let rq_method = "POST";
-        let rq_url = "http://" + host + port + "/personal/search/store";
-        let rq_assync = false;  // Synchronous
-        let result = $.ajax({
-            method: rq_method,
-            url: rq_url,
-            async: rq_assync,
-            contentType: "application/json",
-            data: JSON.stringify(rq_data),
-            dataType: "json"
-        });
-        let search_result = result.responseJSON?.result || false;
+        // if logged in user
+        if(user_data.name != null){
 
-        // Successfully recorded the Search in the DB
+            // --- Record the Search into the DB ---
+
+            // Search object for storing in database
+            let rq_data = JSON.parse(JSON.stringify(thumbnailContainerElement));
+            rq_data["thumbnail_id"] = origMenuDict.thumbnail_id;
+            rq_data["dynamic_hard_coded"]["db_search_id"] = db_search_id;
+            let rq_method = "POST";
+            let rq_url = "http://" + host + port + "/personal/search/store";
+            let rq_assync = false;  // Synchronous
+            let result = $.ajax({
+                method: rq_method,
+                url: rq_url,
+                async: rq_assync,
+                contentType: "application/json",
+                data: JSON.stringify(rq_data),
+                dataType: "json"
+            });
+            search_result = result.responseJSON?.result || false;
+
+        }
+
+        // Successfully recorded the Search in the DB or NOT logged in user
         if(search_result){
 
             // Scroll Section added
@@ -2655,23 +2668,29 @@ class ThumbnailController {
 
         // --- Record the Search into the DB ---
 
-        // Search object for storing in database
-        let rq_data = JSON.parse(JSON.stringify(thumbnailContainerElement));
-        rq_data["thumbnail_id"] = origMenuDict.thumbnail_id;
-        let rq_method = "POST";
-        let rq_url = "http://" + host + port + "/personal/search/store";
-        let rq_assync = false;  // Synchronous
-        let result = $.ajax({
-            method: rq_method,
-            url: rq_url,
-            async: rq_assync,
-            contentType: "application/json",
-            data: JSON.stringify(rq_data),
-            dataType: "json"
-        });
-        let search_result = result.responseJSON?.result || false;
+        let search_result = true;
 
-        // Successfully recorded the Search in the DB
+        // if logged in user
+        if(user_data.name != null){
+
+            // Search object for storing in database
+            let rq_data = JSON.parse(JSON.stringify(thumbnailContainerElement));
+            rq_data["thumbnail_id"] = origMenuDict.thumbnail_id;
+            let rq_method = "POST";
+            let rq_url = "http://" + host + port + "/personal/search/store";
+            let rq_assync = false;  // Synchronous
+            let result = $.ajax({
+                method: rq_method,
+                url: rq_url,
+                async: rq_assync,
+                contentType: "application/json",
+                data: JSON.stringify(rq_data),
+                dataType: "json"
+            });
+            search_result = result.responseJSON?.result || false;
+        }
+
+        // Successfully recorded the Search in the DB or NOT logged in user
         if(search_result){
 
             let search_data = result.responseJSON['data'];

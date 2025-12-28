@@ -6,7 +6,7 @@ import logging
 from builtins import UnicodeDecodeError
 
 class Property(object):
- 
+
     def __init__(self, file_full_path):
         self.file_full_path = file_full_path
 

@@ -1015,19 +1015,23 @@ class SqlDatabase:
                     }
             :return: A dictionary containing the result, data, and error message.
         """
+        result = False
+        data = {}
+        error_message = "Lock error"
+
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+            username = user_data['username']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
+
         with self.lock:
-            result = False
-            result_data = {}
-            error_message = "Lock error"
 
             try:
 
                 cur = self.conn.cursor()
                 cur.execute("begin")
-
-                user_id = 0
-
-                logging.error(f"!!! START\n {thumbnail_dict}")
 
                 if thumbnail_dict:
                     db_search_id = thumbnail_dict['db_search_id']
@@ -1041,9 +1045,6 @@ class SqlDatabase:
                     # INSERT
                     # ------
                     if db_search_id <= 0:
-
-                        logging.error("INSER Start")
-
 
                         # --- Check if Search_Request exists, if not then create it ---
 
@@ -1081,8 +1082,6 @@ class SqlDatabase:
                     # UPDATE
                     # ------
                     else:
-
-                        logging.error("UPDATE Start")
 
                         # --- Validate thumbnail_id matches ---
 
@@ -1147,13 +1146,12 @@ class SqlDatabase:
         data = {}
         error_message = "Lock error"
 
-#        user_data = session.get('logged_in_user', None)
-#        if user_data:
-#            user_id = user_data['user_id']
-#            username = user_data['username']
-#        else:
-#            return {'result': result, 'data': data, 'error': 'Not logged in'}
-        user_id = 0
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+            username = user_data['username']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
 
         with self.lock:
 
@@ -1195,7 +1193,91 @@ class SqlDatabase:
         return {"result": result, "data": data, "error": error_message}
 
 
+    def get_search(self, thumbnail_id):
+        result = False
+        data = {}
+        error_message = "Lock error"
 
+        user_data = session.get('logged_in_user', None)
+        if user_data:
+            user_id = user_data['user_id']
+            username = user_data['username']
+        else:
+            return {'result': result, 'data': data, 'error': 'Not logged in'}
+
+        with self.lock:
+
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # Get all Search records for the given thumbnail_id and user_id
+                query = '''
+                    SELECT
+                        s.id,
+                        s.title,
+                        sr.id_request_method,
+                        sr.id_request_protocol,
+                        sr.id_request_path
+                    FROM ''' + SqlDatabase.TABLE_SEARCH + ''' s
+                    JOIN ''' + SqlDatabase.TABLE_SEARCH_REQUEST + ''' sr ON s.id_search_request = sr.id
+                    WHERE
+                        s.thumbnail_id = :thumbnail_id
+                        AND s.id_user = :user_id
+                '''
+                searches = cur.execute(query, {'thumbnail_id': thumbnail_id, 'user_id': user_id}).fetchall()
+
+                # Build the result structure
+                data = []
+                for search in searches:
+                    search_id = search[0]
+
+                    # Get search data fields
+                    query = '''
+                        SELECT name, value
+                        FROM ''' + SqlDatabase.TABLE_SEARCH_DATA_FIELD + '''
+                        WHERE id_search = :search_id
+                    '''
+                    fields = cur.execute(query, {'search_id': search_id}).fetchall()
+
+                    # Build data dict from fields
+                    search_data = {}
+                    for field in fields:
+                        search_data[field[0]] = field[1]
+
+                    # Build the structure
+                    item = {
+                        "dynamic_hard_coded": {
+                            "data": search_data,
+                            "db_search_id": search_id,
+                            "request": {
+                                "method": search[2],
+                                "path": search[4],
+                                "protocol": search[3],
+                                "static": True
+                            },
+                            "title": [
+                                {
+                                    "text": search[1]
+                                }
+                            ]
+                        }
+                    }
+                    data.append(item)
+
+                cur.execute("commit")
+                result = True
+                error_message = None
+            except sqlite3.Error as e:
+                error_message = str(e)
+                logging.error(error_message)
+                cur.execute("rollback")
+            finally:
+                cur.close()
+                return {"result": result, "data": data, "error": error_message}
+
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
 
 
     def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True, history_days=365):

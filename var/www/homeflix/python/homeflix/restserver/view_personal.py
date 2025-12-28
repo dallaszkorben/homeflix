@@ -20,10 +20,7 @@ from homeflix.restserver.endpoints.ep_personal_tag_get import EPPersonalTagGet
 from homeflix.restserver.endpoints.ep_personal_card_menu_get import EPPersonalCardMenuGet
 from homeflix.restserver.endpoints.ep_personal_search_store import EPPersonalSearchStore
 from homeflix.restserver.endpoints.ep_personal_search_delete import EPPersonalSearchDelete
-
-
-
-
+from homeflix.restserver.endpoints.ep_personal_search_get import EPPersonalSearchGet
 
 # -----------------------------------
 #
@@ -65,6 +62,8 @@ class PersonalView(FlaskView):
         self.ePPersonalCardMenuGet = EPPersonalCardMenuGet(web_gadget)
         self.ePPersonalSearchStore = EPPersonalSearchStore(web_gadget)
         self.ePPersonalSearchDelete = EPPersonalSearchDelete(web_gadget)
+        self.ePPersonalSearchGet = EPPersonalSearchGet(web_gadget)
+
     #
     # GET http://localhost:5000/personal/
     #
@@ -483,4 +482,47 @@ class PersonalView(FlaskView):
             return "Not valid request", EP.CODE_BAD_REQUEST
 
         out = self.ePPersonalSearchDelete.executeByPayload(json_data)
+        return out
+
+
+# === Get Search ===
+
+    #
+    # Get Search
+    #
+    # curl  --header "Content-Type: application/json" --data '{"thumbnail_id":"movie_search"}' --request GET http://localhost:80/personal/search/get
+    #
+    # GET http://localhost:80/personal/tag/get
+    #      body: {
+    #           thumbnail_id: "movie_search"
+    #      }
+    #@route('/search/get', methods=['GET'])
+    @route(EPPersonalSearchGet.PATH_PAR_PAYLOAD, methods=[EPPersonalSearchGet.METHOD])
+    def personalSearchGetWithPayload(self):
+        # CURL
+        if request.is_json:
+            json_data = request.json
+
+        # WEB
+        elif request.form:
+            json_data = request.form
+
+        # ajax
+        else:
+            json_data = request.args
+
+        out = self.ePPersonalSearchGet.executeByPayload(json_data)
+        return out
+
+    #
+    # Get Search
+    #
+    # curl  --header "Content-Type: application/json" --request GET http://localhost:80/personal/search/get/thumbnail_id/movie_search
+    #
+    # GET http://localhost:80/personal/search/get/thumbnail_id/movie_search
+    #
+    #@route('/search/get/thumbnail_id/<thumbnail_id>', methods=['GET'])
+    @route(EPPersonalTagGet.PATH_PAR_URL, methods=[EPPersonalTagGet.METHOD])
+    def personalSearchGetWithParameters(self, thumbnail_id):
+        out = self.ePPersonalSearchGet.executeByParameters(thumbnail_id=thumbnail_id)
         return out
