@@ -56,10 +56,20 @@ class SqlDatabase:
     TABLE_ACTOR_ROLE = "Actor_Role"
     TABLE_VOICE_ROLE = "Voice_Role"
 
+    # --- User tables ---
+
     TABLE_USER = "User"
     TABLE_HISTORY = "History"
     TABLE_RATING = "Rating"
     TABLE_TAG = "Tag"
+
+    TABLE_SEARCH_REQUEST_METHOD = "Search_Request_Method"
+    TABLE_SEARCH_REQUEST_PROTOCOL = "Search_Request_Protocol"
+    TABLE_SEARCH_REQUEST_PATH = "Search_Request_Path"
+    TABLE_SEARCH_REQUEST = "Search_Request"
+    TABLE_SEARCH = "Search"
+    TABLE_SEARCH_DATA_FIELD = "Search_Data_Field"
+
 
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
@@ -116,6 +126,13 @@ class SqlDatabase:
             SqlDatabase.TABLE_HISTORY,
             SqlDatabase.TABLE_RATING,
             SqlDatabase.TABLE_TAG,
+
+            SqlDatabase.TABLE_SEARCH_REQUEST_METHOD,
+            SqlDatabase.TABLE_SEARCH_REQUEST_PROTOCOL,
+            SqlDatabase.TABLE_SEARCH_REQUEST_PATH,
+            SqlDatabase.TABLE_SEARCH_REQUEST,
+            SqlDatabase.TABLE_SEARCH,
+            SqlDatabase.TABLE_SEARCH_DATA_FIELD,
         ]
 
         self.lock = Lock()
@@ -332,6 +349,59 @@ class SqlDatabase:
             );
         ''')
 
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_SEARCH_REQUEST_METHOD + '''(
+                name TEXT PRIMARY KEY NOT NULL
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_SEARCH_REQUEST_PROTOCOL + '''(
+                name TEXT PRIMARY KEY NOT NULL
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_SEARCH_REQUEST_PATH + '''(
+                name TEXT PRIMARY KEY NOT NULL
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_SEARCH_REQUEST + '''(
+                id INTEGER          PRIMARY KEY AUTOINCREMENT   NOT NULL,
+                id_request_method   TEXT                        NOT NULL,
+                id_request_protocol TEXT                        NOT NULL,
+                id_request_path     TEXT                        NOT NULL,
+                FOREIGN KEY (id_request_method) REFERENCES ''' + SqlDatabase.TABLE_SEARCH_REQUEST_METHOD + ''' (name),
+                FOREIGN KEY (id_request_protocol) REFERENCES ''' + SqlDatabase.TABLE_SEARCH_REQUEST_PROTOCOL + ''' (name),
+                FOREIGN KEY (id_request_path) REFERENCES ''' + SqlDatabase.TABLE_SEARCH_REQUEST_PATH + ''' (name),
+                UNIQUE(id_request_method, id_request_protocol, id_request_path)
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_SEARCH + '''(
+                id                  INTEGER     PRIMARY KEY AUTOINCREMENT   NOT NULL,
+                thumbnail_id        TEXT                                    NOT NULL,
+                title               TEXT                                    NOT NULL,
+                id_search_request   INTEGER                                 NOT NULL,
+                id_user             INTEGER                                 NOT NULL,
+                FOREIGN KEY     (id_search_request) REFERENCES ''' + SqlDatabase.TABLE_SEARCH_REQUEST + ''' (id),
+                FOREIGN KEY     (id_user)           REFERENCES ''' + SqlDatabase.TABLE_USER + ''' (id)
+            );
+        ''')
+
+        self.conn.execute('''
+            CREATE TABLE ''' + SqlDatabase.TABLE_SEARCH_DATA_FIELD + '''(
+                id_search           INTEGER                                 NOT NULL,
+                name                TEXT                                    NOT NULL,
+                value               TEXT                                    NOT NULL,
+                FOREIGN KEY     (id_search) REFERENCES ''' + SqlDatabase.TABLE_SEARCH + ''' (id),
+                PRIMARY KEY (id_search, name)
+            );
+        ''')
+
         self.fill_up_user_table()
 
 
@@ -375,8 +445,42 @@ class SqlDatabase:
 
                 id = self.append_user(cur, username, password=hashed_password, is_admin=is_admin, user_id=user_id, language_code=language_code, descriptor_color=descriptor_color, show_original_title=show_original_title, show_lyrics_anyway=show_lyrics_anyway, show_storyline_anyway=show_storyline_anyway, play_continuously=play_continuously, history_days=history_days)
 
+                # method: GET
+                name = 'GET'
+                name = self.append_search_request_method(cur, name)
+                logging.debug(f'added search method: {name}')
+
+                # protocol: http
+                name = 'http'
+                name = self.append_search_request_protocol(cur, name)
+                logging.debug(f'added search protocol: {name}')
+
+                # path: /collect/highest/mixed
+                name = '/collect/highest/mixed'
+                name = self.append_search_request_path(cur, name)
+                logging.debug(f'added search path: {name}')
+
+                # path: /collect/lowest
+                name = '/collect/lowest'
+                name = self.append_search_request_path(cur, name)
+                logging.debug(f'added search path: {name}')
+
+                # request: GET http://.../collect/lowest
+                method = 'GET'
+                protocol = 'http'
+                path = '/collect/lowest'
+                id = self.append_search_request(cur, method, protocol, path)
+                logging.debug(f'added search request: id: {id}: {method}, {protocol}, {path}')
+
+                # request: GET http://.../collect/highest/mixed
+                method = 'GET'
+                protocol = 'http'
+                path = '/collect/highest/mixed'
+                id = self.append_search_request(cur, method, protocol, path)
+                logging.debug(f'added search request: id: {id}: {method}, {protocol}, {path}')
+
             except sqlite3.Error as e:
-                error_message = "Filling up the User table FAILED: {0}".format(e)
+                error_message = "Filling up the personal tables FAILED: {0}".format(e)
                 logging.error(error_message)
 
             finally:
@@ -857,6 +961,241 @@ class SqlDatabase:
             self.country_name_id_dict[country] = id
             self.country_id_name_dict[id] = country
         cur.execute("commit")
+
+
+    def append_search_request_method(self, cur, name):
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST_METHOD + ' (name) VALUES (?) RETURNING name', (name,))
+        record = cur.fetchone()
+        (method_name, ) = record if record else (None,)
+        return method_name
+
+
+    def append_search_request_protocol(self, cur, name):
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST_PROTOCOL + ' (name) VALUES (?) RETURNING name', (name,))
+        record = cur.fetchone()
+        (protocol_name, ) = record if record else (None,)
+        return protocol_name
+
+
+    def append_search_request_path(self, cur, name):
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST_PATH + ' (name) VALUES (?) RETURNING name', (name,))
+        record = cur.fetchone()
+        (path_name, ) = record if record else (None,)
+        return path_name
+
+
+    def append_search_request(self, cur, method, protocol, path):
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST + ' (id_request_method, id_request_protocol, id_request_path) VALUES (?, ?, ?) RETURNING id', (method, protocol, path))
+        record = cur.fetchone()
+        (id, ) = record if record else (None,)
+        return id
+
+
+    def store_search(self, thumbnail_id, thumbnail_dict):
+        """
+        Sets the search in the database.
+            :param thumbnail_id: The ID of the search.
+            :param thumbnail_dict: The container.
+                    {
+                      "db_search_id: -1,
+                      "data": {
+                          "category": "movie"
+                      },
+                      "request": {
+                          "method": "GET",
+                          "path": "/collect/highest/mixed",
+                          "protocol": "http",
+                          "static": true
+                      },
+                      "title": [
+                          {
+                              "text": "my search"
+                          }
+                      ]
+                    }
+            :return: A dictionary containing the result, data, and error message.
+        """
+        with self.lock:
+            result = False
+            result_data = {}
+            error_message = "Lock error"
+
+            try:
+
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                user_id = 0
+
+                logging.error(f"!!! START\n {thumbnail_dict}")
+
+                if thumbnail_dict:
+                    db_search_id = thumbnail_dict['db_search_id']
+                    title = thumbnail_dict['title'][0]['text']
+                    method = thumbnail_dict['request']['method']
+                    path = thumbnail_dict['request']['path']
+                    protocol = thumbnail_dict['request']['protocol']
+                    static = thumbnail_dict['request']['static']
+
+                    # ------
+                    # INSERT
+                    # ------
+                    if db_search_id <= 0:
+
+                        logging.error("INSER Start")
+
+
+                        # --- Check if Search_Request exists, if not then create it ---
+
+                        query = '''SELECT id FROM ''' + SqlDatabase.TABLE_SEARCH_REQUEST + '''
+                                   WHERE id_request_method = ? AND id_request_protocol = ? AND id_request_path = ?'''
+                        record = cur.execute(query, (method, protocol, path)).fetchone()
+                        if record:
+                            search_request_id = record[0]
+                        else:
+                            search_request_id = self.append_search_request(cur, method, protocol, path)
+
+                        # --- Create Search record ---
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_SEARCH + '''
+                                   (thumbnail_id, title, id_search_request, id_user) VALUES (?, ?, ?, ?) RETURNING id'''
+                        record = cur.execute(query, (thumbnail_id, title, search_request_id, user_id)).fetchone()
+                        db_search_id = record[0]
+                        logging.debug(f"Inserted {SqlDatabase.TABLE_SEARCH} record: \n{query}")
+
+                        result_data = {'id': db_search_id}
+
+                        # --- Create Search_Data_Field records ---
+
+                        data = thumbnail_dict['data']
+                        for key, value in data.items():
+                            query = '''INSERT INTO ''' + SqlDatabase.TABLE_SEARCH_DATA_FIELD + '''
+                                       (id_search, name, value) VALUES (?, ?, ?)'''
+                            cur.execute(query, (db_search_id, key, value))
+                            logging.debug(f"Inserted {SqlDatabase.TABLE_SEARCH_DATA_FIELD} record: \n{query}")
+
+                        result = True
+                        error_message = None
+
+                    # ------
+                    # UPDATE
+                    # ------
+                    else:
+
+                        logging.error("UPDATE Start")
+
+                        # --- Validate thumbnail_id matches ---
+
+                        query = '''SELECT thumbnail_id FROM ''' + SqlDatabase.TABLE_SEARCH + ''' WHERE id = ?'''
+                        record = cur.execute(query, (db_search_id,)).fetchone()
+                        if not record or record[0] != thumbnail_id:
+                            error_msg = f"thumbnail_id mismatch: expected {thumbnail_id}, found {record[0] if record else 'None'}"
+                            logging.error(error_msg)
+                            raise sqlite3.Error(error_msg)
+
+                        result_data = {'id': db_search_id}
+
+                        # --- Check if Search_Request exists, if not then create it ---
+
+                        query = '''SELECT id FROM ''' + SqlDatabase.TABLE_SEARCH_REQUEST + '''
+                                   WHERE id_request_method = ? AND id_request_protocol = ? AND id_request_path = ?'''
+                        record = cur.execute(query, (method, protocol, path)).fetchone()
+                        if record:
+                            search_request_id = record[0]
+                        else:
+                            search_request_id = self.append_search_request(cur, method, protocol, path)
+
+                        # --- Update Search record ---
+
+                        query = '''UPDATE ''' + SqlDatabase.TABLE_SEARCH + '''
+                                   SET title = ?, id_search_request = ? WHERE id = ?'''
+                        cur.execute(query, (title, search_request_id, db_search_id))
+                        logging.debug(f"Updated {SqlDatabase.TABLE_SEARCH} record: {query}")
+
+                        # --- Delete existing Search_Data_Field records ---
+
+                        query = '''DELETE FROM ''' + SqlDatabase.TABLE_SEARCH_DATA_FIELD + ''' WHERE id_search = ?'''
+                        cur.execute(query, (db_search_id,))
+
+                        # --- Create new Search_Data_Field records ---
+
+                        data = thumbnail_dict['data']
+                        for key, value in data.items():
+                            query = '''INSERT INTO ''' + SqlDatabase.TABLE_SEARCH_DATA_FIELD + '''
+                                       (id_search, name, value) VALUES (?, ?, ?)'''
+                            cur.execute(query, (db_search_id, key, value))
+                            logging.debug(f"Inserted {SqlDatabase.TABLE_SEARCH_DATA_FIELD} record: {query}")
+
+                        result = True
+                        error_message = None
+
+            except sqlite3.Error as e:
+                error_message = str(e)
+                logging.error(error_message)
+
+            finally:
+                cur.execute("commit")
+                cur.close()
+                return {"result": result, "data": result_data, "error": error_message}
+
+        # If the lock failed
+        return {"result": result, "data": result_data, "error": error_message}
+
+
+    def delete_search(self, search_id):
+        result = False
+        data = {}
+        error_message = "Lock error"
+
+#        user_data = session.get('logged_in_user', None)
+#        if user_data:
+#            user_id = user_data['user_id']
+#            username = user_data['username']
+#        else:
+#            return {'result': result, 'data': data, 'error': 'Not logged in'}
+        user_id = 0
+
+        with self.lock:
+
+            try:
+                cur = self.conn.cursor()
+                cur.execute("begin")
+
+                # --- Delete the existing Search_Data_Field records belonging to the given search ---
+
+                query = '''
+                    DELETE FROM ''' + SqlDatabase.TABLE_SEARCH_DATA_FIELD + '''
+                    WHERE
+                        id_search=:search_id
+                '''
+                cur.execute(query, {'search_id': search_id})
+
+                # --- Delete the Search record ---
+
+                query = '''
+                    DELETE FROM ''' + SqlDatabase.TABLE_SEARCH + '''
+                    WHERE
+                        id=:search_id
+                '''
+                cur.execute(query, {'search_id': search_id})
+
+                cur.execute("commit")
+                result = True
+                error_message = None
+
+            except sqlite3.Error as e:
+                error_message = str(e)
+                logging.error(error_message)
+                cur.execute("rollback")
+            finally:
+                cur.close()
+                return {"result": result, "data": data, "error": error_message}
+
+        # If there was a problem with the file lock
+        return {"result": result, "data": data, "error": error_message}
+
+
+
 
 
     def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True, history_days=365):

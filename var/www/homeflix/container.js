@@ -482,7 +482,7 @@ class ObjScrollSection {
     }
 
     /**
-     * Remove the given container block from the DOM and from the menuDict as well
+     * Remove the given container block from the DOM, from the menuDict and from the DB as well
      *
      * AmazonQ generated this code - the deletion from the DOM
      *
@@ -500,8 +500,28 @@ class ObjScrollSection {
         let origMenuDict = oContainerGenerator.getMenuDict();
         let container_list = origMenuDict.container_list ?? [];
 
-        // Remove the container at containerIndex from the container_list
+        // Remove the container at containerIndex from the DB and from the container_list
         if (container_list && container_list.length > containerIndex) {
+
+            // --- Remove it from the DB ---
+
+            let db_search_id = container_list[containerIndex]['dynamic_hard_coded']['db_search_id'];
+            let rq_data = {'search_id': db_search_id};
+            let rq_method = "DELETE";
+            let rq_url = "http://" + host + port + "/personal/search/delete";
+            let rq_assync = false;  // Synchronous
+            let result = $.ajax({
+                method: rq_method,
+                url: rq_url,
+                async: rq_assync,
+                contentType: "application/json",
+                data: JSON.stringify(rq_data),
+                dataType: "json"
+            });
+            let search_result = result.responseJSON?.result || false;
+
+            // --- Remove it from the container_list ---
+
             container_list.splice(containerIndex, 1);
 
             // Update the menuDict with the modified container_list
@@ -599,7 +619,7 @@ class ObjScrollSection {
         data_dict["show_level"] = show_level;
         data_dict["container_title"] = container_title;
 
-        this.objThumbnailController.editThumbnailContainerForm(data_dict, containerIndex);
+        this.objThumbnailController.updateThumbnailContainerForm(data_dict, containerIndex);
     }
 
 
@@ -2418,7 +2438,7 @@ class ThumbnailController {
     }
 
 
-    editThumbnailContainerForm(data_dict, containerIndex) {
+    updateThumbnailContainerForm(data_dict, containerIndex) {
         let refToThis = this;
 
         let menu_dict = this.objScrollSection.oContainerGenerator.menu_dict
@@ -2456,6 +2476,87 @@ class ThumbnailController {
         }, 200);
     }
 
+    updateThumbnailContainerExecution(data_dict, containerIndex){
+        let data = {};
+        let container_title = "";
+        let show_level = "";
+
+        Object.entries(data_dict).forEach(([key, value]) => {
+            if(key == "container_title"){
+                container_title = value;
+            }else if(key == "show_level"){
+                show_level = value;
+            }else if (value != "") {
+                data[key] = value;
+            }
+        });
+
+        if(container_title == ""){
+            // TODO: must translate
+            container_title = "My search"
+        }
+
+        // fetch the container_list where we insert the new thumbnail container
+        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
+        let origMenuDict = oContainerGenerator.getMenuDict();
+        let container_list = origMenuDict.container_list ?? []
+
+        // fetch the db id from the original search container
+        let db_search_id = container_list[containerIndex].dynamic_hard_coded["db_search_id"]
+
+        let thumbnailContainerElement =
+        {
+          "dynamic_hard_coded":{
+              "db_search_id": db_search_id,
+              "title": [
+                  {
+                      "text": container_title
+                  }
+              ],
+              "data": data,
+              "request": {
+                  "method": "GET",
+                  "protocol": "http",
+                  "path": show_level,
+                  "static": true
+              }
+          }
+        }
+
+        container_list[containerIndex] = thumbnailContainerElement
+        origMenuDict.container_list = container_list;
+        oContainerGenerator.setMenuDict(origMenuDict);
+
+        // --- Record the Search into the DB ---
+
+        // Search object for storing in database
+        let rq_data = JSON.parse(JSON.stringify(thumbnailContainerElement));
+        rq_data["thumbnail_id"] = origMenuDict.thumbnail_id;
+        rq_data["dynamic_hard_coded"]["db_search_id"] = db_search_id;
+        let rq_method = "POST";
+        let rq_url = "http://" + host + port + "/personal/search/store";
+        let rq_assync = false;  // Synchronous
+        let result = $.ajax({
+            method: rq_method,
+            url: rq_url,
+            async: rq_assync,
+            contentType: "application/json",
+            data: JSON.stringify(rq_data),
+            dataType: "json"
+        });
+        let search_result = result.responseJSON?.result || false;
+
+        // Successfully recorded the Search in the DB
+        if(search_result){
+
+            // Scroll Section added
+            this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
+
+        // Failed to record the Search
+        }else{
+            console.error("Failed to record the Search into the DB");
+        }
+    }
 
     addNewThumbnailContainerForm(){
         let refToThis = this;
@@ -2466,13 +2567,10 @@ class ThumbnailController {
         refToThis.originalTask = refToThis.focusTask;
         refToThis.focusTask = FocusTask.Modal_Continue_Play;
 
-//        let dialog_dict = translated_interaction_labels.get('dialog');
-//
-//        let submit_button = dialog_dict['search']['buttons']['submit'];
-//        let cancel_button = dialog_dict['search']['buttons']['cancel'];
-
         // Define callbacks for the form
         const callbacks = {
+
+            // Click on 'Search'
             onSubmit: function(formData) {
                 refToThis.addNewThumbnailContainerExecution(formData);
             },
@@ -2500,6 +2598,12 @@ class ThumbnailController {
         }, 200);
     }
 
+    /**
+     *
+     * Click on Search button in case of NEW
+     *
+     * @param {*} data_dict
+     */
     addNewThumbnailContainerExecution( data_dict ){
         let data = {};
         let container_title = "";
@@ -2523,6 +2627,7 @@ class ThumbnailController {
         let thumbnailContainerElement =
         {
             "dynamic_hard_coded":{
+              "db_search_id": -1,
               "title": [
                   {
                       "text": container_title
@@ -2548,62 +2653,40 @@ class ThumbnailController {
         origMenuDict.container_list = container_list;
         oContainerGenerator.setMenuDict(origMenuDict);
 
-        // Scroll Section added
-        this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
-    }
+        // --- Record the Search into the DB ---
 
-
-    updateThumbnailContainerExecution(data_dict, containerIndex){
-        let data = {};
-        let container_title = "";
-        let show_level = "";
-
-        Object.entries(data_dict).forEach(([key, value]) => {
-            if(key == "container_title"){
-                container_title = value;
-            }else if(key == "show_level"){
-                show_level = value;
-            }else if (value != "") {
-                data[key] = value;
-            }
+        // Search object for storing in database
+        let rq_data = JSON.parse(JSON.stringify(thumbnailContainerElement));
+        rq_data["thumbnail_id"] = origMenuDict.thumbnail_id;
+        let rq_method = "POST";
+        let rq_url = "http://" + host + port + "/personal/search/store";
+        let rq_assync = false;  // Synchronous
+        let result = $.ajax({
+            method: rq_method,
+            url: rq_url,
+            async: rq_assync,
+            contentType: "application/json",
+            data: JSON.stringify(rq_data),
+            dataType: "json"
         });
+        let search_result = result.responseJSON?.result || false;
 
-        if(container_title == ""){
-            // TODO: must translate
-            container_title = "My search"
+        // Successfully recorded the Search in the DB
+        if(search_result){
+
+            let search_data = result.responseJSON['data'];
+
+            let db_search_id = search_data['id'];  // database id
+            thumbnailContainerElement.dynamic_hard_coded["db_search_id"] = db_search_id;  // save the db_search_id into menu_dict (needed in case of Search modification)
+
+            // Scroll Section added
+            this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
+
+        // Failed to record the Search
+        }else{
+            console.error("Failed to record the Search into the DB");
         }
-
-        let thumbnailContainerElement =
-        {
-          "dynamic_hard_coded":{
-              "title": [
-                  {
-                      "text": container_title
-                  }
-              ],
-              "data": data,
-              "request": {
-                  "method": "GET",
-                  "protocol": "http",
-                  "path": show_level,
-                  "static": true
-              }
-          }
-        }
-
-        // fetch the container_list where we insert the new thumbnail container
-        let oContainerGenerator = this.objScrollSection.oContainerGenerator;
-        let origMenuDict = oContainerGenerator.getMenuDict();
-        let container_list = origMenuDict.container_list ?? []
-
-        container_list[containerIndex] = thumbnailContainerElement
-        origMenuDict.container_list = container_list;
-        oContainerGenerator.setMenuDict(origMenuDict);
-
-        // Scroll Section added
-        this.objScrollSection = this.generateScrollSection(oContainerGenerator, self.history);
     }
-
 
     /*
     After the size of the description-section changed, the description-image size recalculation is needed.

@@ -799,8 +799,7 @@ definitions:
                 # ------------------
                 # Search thumbnail
                 # ------------------
-                - id: movie_search
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/movie_search.jpg
                     title:
                       - trans:
@@ -818,6 +817,7 @@ definitions:
                           translator: translated_labels
                           key: movie_search
                   execution:
+                    thumbnail_id: movie_search
                     randomizable: False
                     container_type: search
                     static_fields:
@@ -1480,8 +1480,7 @@ definitions:
                 # ----------------------------
                 # Music-Video Search thumbnail
                 # ----------------------------
-                - id: music_video_search
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_video_search.jpg
                     title:
                       - trans:
@@ -1499,6 +1498,7 @@ definitions:
                           translator: translated_labels
                           key: music_video_search
                   execution:
+                    thumbnail_id: music_video_search
                     randomizable: True
                     container_type: search
                     static_fields:
@@ -2145,8 +2145,7 @@ definitions:
                 # ----------------------------
                 # Music-Audio Search thumbnail
                 # ----------------------------
-                - id: music_audio_search
-                  thumbnail:
+                - thumbnail:
                     image: images/categories/music_audio_search.jpg
                     title:
                       - trans:
@@ -2164,6 +2163,7 @@ definitions:
                           translator: translated_labels
                           key: music_audio_search
                   execution:
+                    thumbnail_id: music_audio_search
                     randomizable: True
                     container_type: search
                     static_fields:

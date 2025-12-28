@@ -559,6 +559,7 @@ title:
     music_video_last_watched: Last Watched
     music_video_least_watched: Least Watched
     music_video_most_watched: Most Watched
+    music_video_search: Search
 
     music_audio_playlists: Playlists
     music_audio_interrupted: Continue Playing

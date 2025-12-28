@@ -18,6 +18,12 @@ from homeflix.restserver.endpoints.ep_personal_tag_insert import EPPersonalTagIn
 from homeflix.restserver.endpoints.ep_personal_tag_delete import EPPersonalTagDelete
 from homeflix.restserver.endpoints.ep_personal_tag_get import EPPersonalTagGet
 from homeflix.restserver.endpoints.ep_personal_card_menu_get import EPPersonalCardMenuGet
+from homeflix.restserver.endpoints.ep_personal_search_store import EPPersonalSearchStore
+from homeflix.restserver.endpoints.ep_personal_search_delete import EPPersonalSearchDelete
+
+
+
+
 
 # -----------------------------------
 #
@@ -57,6 +63,8 @@ class PersonalView(FlaskView):
         self.ePPersonalTagDelete = EPPersonalTagDelete(web_gadget)
         self.ePPersonalTagGet = EPPersonalTagGet(web_gadget)
         self.ePPersonalCardMenuGet = EPPersonalCardMenuGet(web_gadget)
+        self.ePPersonalSearchStore = EPPersonalSearchStore(web_gadget)
+        self.ePPersonalSearchDelete = EPPersonalSearchDelete(web_gadget)
     #
     # GET http://localhost:5000/personal/
     #
@@ -391,4 +399,88 @@ class PersonalView(FlaskView):
     @route(EPPersonalCardMenuGet.PATH_PAR_URL, methods=[EPPersonalCardMenuGet.METHOD])
     def personalCardMenuGetWithParameters(self):
         out = self.ePPersonalCardMenuGet.executeByParameters()
+        return out
+
+
+
+# === Store the Search ===
+
+    #
+    # Stores (update/install) the search for a card by a user
+    #
+    # curl  --header "Content-Type: application/json" --request POST --data '{"thumbnail_id": "movie_search","dynamic_hard_coded": {"db_search_id": -1,"data": {"category": "movie"},"request": {"method": "GET","path": "/collect/highest/mixed","protocol": "http","static": true},"title": [{"text": "my search"}]}}' http://localhost:80/personal/search/store
+    #
+    # POST http://localhost:80/personal/search/store
+    #      body:
+    #           {
+    #             "thumbnail_id": "movie_search",
+    #             "dynamic_hard_coded": {
+    #               "db_search_id": -1
+    #               "data": {
+    #                 "category": "movie"
+    #               },
+    #               "request": {
+    #                 "method": "GET",
+    #                 "path": "/collect/highest/mixed",
+    #                 "protocol": "http",
+    #                 "static": true
+    #               },
+    #               "title": [
+    #                 {
+    #                   "text": "my search"
+    #                 }
+    #               ]
+    #             }
+    #           }
+    #
+    # depending on the body.dynamic_hard_coded.db_search_id:
+    #   db_search_id <= 0: insert
+    #   db_search_id > 0:  update
+    #
+    #@route('/search/store', methods=['POST'])
+    @route(EPPersonalSearchStore.PATH_PAR_PAYLOAD, methods=[EPPersonalSearchStore.METHOD])
+    def personalSearchStoreWithPayload(self):
+
+        # WEB
+        if request.form:
+            json_data = request.form
+
+        # CURL
+        elif request.json:
+            json_data = request.json
+
+        else:
+            return "Not valid request", EP.CODE_BAD_REQUEST
+
+        out = self.ePPersonalSearchStore.executeByPayload(json_data)
+        return out
+
+# === Delete the Search ===
+
+    #
+    # Delete a search from a card by a user
+    #
+    # curl  --header "Content-Type: application/json" --request DELETE --data '{"search_id": "1"}' http://localhost:80/personal/search/delete
+    #
+    # DELETE http://localhost:80/personal/search/delete
+    #        body: {
+    #           "search_id": "!",
+    #        }
+    #
+    #@route('/search/delete', methods=['DELETE'])
+    @route(EPPersonalSearchDelete.PATH_PAR_PAYLOAD, methods=[EPPersonalSearchDelete.METHOD])
+    def personalSearchDeleteWithPayload(self):
+
+        # WEB
+        if request.form:
+            json_data = request.form
+
+        # CURL
+        elif request.json:
+            json_data = request.json
+
+        else:
+            return "Not valid request", EP.CODE_BAD_REQUEST
+
+        out = self.ePPersonalSearchDelete.executeByPayload(json_data)
         return out
