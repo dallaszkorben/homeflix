@@ -1873,7 +1873,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, performers=[], basename=None, source_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1933,7 +1933,7 @@ class SqlDatabase:
                 cur.execute(query, (self.theme_name_id_dict[theme], hierarchy_id))
 
             #
-            # INSERT into TABLE_CARD_ORIGIN
+            # INSERT into TABLE_CARD_ORIGIN - mainly because of music band/LP
             #
             for origin in origins:
                 query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_ORIGIN + '''
@@ -1941,6 +1941,30 @@ class SqlDatabase:
                     VALUES (?, ?);
                 '''
                 cur.execute(query, (self.country_name_id_dict[origin], hierarchy_id))
+
+            #
+            # INSERT into TABLE_CARD_PERFORMER - mainly because of music band/LP
+            #
+            for performer in performers:
+
+                if performer:
+                    query = '''SELECT id FROM ''' + SqlDatabase.TABLE_PERSON + '''
+                        WHERE name= :name;
+                    '''
+                    record=cur.execute(query, {'name': performer}).fetchone()
+                    (person_id, ) = record if record else (None,)
+                    if not person_id:
+
+                        query = '''INSERT INTO ''' + SqlDatabase.TABLE_PERSON + '''
+                                (name)
+                                VALUES (:name);'''
+                        res = cur.execute(query, {'name': performer})
+                        person_id = res.lastrowid
+
+                    query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD_PERFORMER + '''
+                            (id_performer, id_card)
+                            VALUES (:person_id, :card_id);'''
+                    cur.execute(query, {'person_id': person_id, 'card_id': card_id})
 
             #
             # INSERT into TABLE_TEXT_CARD_LANG Storyline
@@ -5787,15 +5811,15 @@ class SqlDatabase:
                             card.title_show_sequence,
 
                             NULL decade,
-                            NULL date,
+                            card.date date,
                             NULL length,
                             NULL full_time,
                             NULL net_start_time,
                             NULL net_stop_time,
 
                             NULL themes,
-                            NULL genres,
-                            NULL origins,
+                            gnr.genres genres,
+                            rgn.origins origins,
                             NULL directors,
                             NULL actors,
                             NULL lecturers,
@@ -5815,7 +5839,7 @@ class SqlDatabase:
                             NULL interviewees,
                             NULL presenters,
                             NULL reporters,
-                            NULL performers,
+                            prm.performers performers,
 
                             NULL ttitle_req,
                             NULL llang_req,
@@ -5826,6 +5850,55 @@ class SqlDatabase:
                             rec,
                             Card card,
                             Category category
+
+                            --------------------------------------
+                            --- PERFORMER for the higher level ---
+                            --- like band or LP                ---
+                            --------------------------------------
+                            LEFT JOIN
+                            (
+                                SELECT group_concat(person.name) performers, card_performer.id_card
+                                FROM
+                                    Person person,
+                                    Card_Performer card_performer
+                                WHERE
+                                    card_performer.id_performer=person.id
+                                GROUP BY card_performer.id_card
+                            ) prm
+                            ON prm.id_card=card.id
+
+                            -------------
+                            --- GENRE ---
+                            -------------
+                            LEFT JOIN
+                            (
+                                SELECT group_concat(genre.name) genres, card_genre.id_card
+                                FROM
+                                    Genre genre,
+                                    Card_Genre card_genre
+                                WHERE
+                                    card_genre.id_genre=genre.id
+                                GROUP BY card_genre.id_card
+                            )gnr
+                            ON gnr.id_card=card.id
+
+
+                            ------------------------------------
+                            --- ORIGINS for the higher level ---
+                            --- like band or LP              ---
+                            ------------------------------------
+                            LEFT JOIN
+                            (
+                                SELECT group_concat(origin.name) origins, card_origin.id_card
+                                FROM
+                                    Country origin,
+                                    Card_Origin card_origin
+                                WHERE
+                                    card_origin.id_origin=origin.id
+                                GROUP BY card_origin.id_card
+                            )rgn
+                            ON rgn.id_card=card.id
+
                         WHERE
                             rec.id_higher_card=card.id
                             AND category.id=card.id_category

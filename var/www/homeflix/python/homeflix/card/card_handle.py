@@ -133,8 +133,6 @@ class CardHandle:
                 card_file_name = file_name
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
 
-#                logging.debug("SOURCE path: '{0}'".format(source_path))
-
                 break
 
         # If there is CARD in the actual directory
@@ -418,11 +416,6 @@ class CardHandle:
 
  # ---
 
-# !!!
-#                logging.debug("SOURCE path: '{0}'".format(source_path))
-# !!!
-
-
                 # this is a level in the hierarchy / not a media
                 # if not media and not card_error:
                 if not media_dict and not card_error and not is_appendix:
@@ -448,20 +441,17 @@ class CardHandle:
                         genres=genres,
                         themes=themes,
                         origins=origins,
+
+                        performers=performers,
+
                         basename=basename,
                         source_path=source_path,
                         sequence=sequence,
                         higher_card_id=higher_card_id
                     )
                     card_type = 'level'
-# !!!
-#                    logging.debug("    level id: '{0}'".format(card_id))
-# !!!
-
-
 
                 # this must be the lowest level or a simple card or appendix
-#                elif not card_error and card_id:
                 elif not card_error:
 
                     for lang, text in storylines.items():

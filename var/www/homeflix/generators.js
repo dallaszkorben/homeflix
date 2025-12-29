@@ -386,7 +386,10 @@ if( thumbnail_list === undefined){
             thumbnail.setTitles({main: main_title, thumb: thumbnail_title});
 
             thumbnail.setTextCard({storyline:hit["storyline"], lyrics:hit["lyrics"]});
+            thumbnail.setCredentials({directors: hit["directors"], writers: hit["writers"], stars: hit["stars"], actors: hit["actors"], voices: hit["voices"], hosts: hit["hosts"], guests: hit["guests"], interviewers: hit["interviewers"], interviewees: hit["interviewees"], presenters: hit["presenters"], lecturers: hit["lecturers"], performers: hit["performers"], reporters: hit["reporters"]});
+
             thumbnail.setExtras({length: hit["length"], date: hit["date"], origins: hit["origins"], genres: hit["genres"], themes: hit["themes"], level: hit["level"], sequence: hit["sequence"] });
+
 
             thumbnail.setFunctionForSelection({
                 "single":
