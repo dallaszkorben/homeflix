@@ -5104,13 +5104,12 @@ class SqlDatabase:
                 ----------------
                 --- APPENDIX ---
                 ----------------
-                 LEFT JOIN
+                LEFT JOIN
                 (
                     SELECT
                         card_id,
                         group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
                     FROM
-
                         (
                         SELECT
                             merged_appendix.id,
@@ -5120,6 +5119,8 @@ class SqlDatabase:
                             merged_appendix.show,
                             merged_appendix.download,
                             merged_appendix.source_path,
+                            merged_appendix.basename,
+                            merged_appendix.sequence,
                             mt.name media_type,
                             cm.name contact_media
                         FROM
@@ -5131,6 +5132,8 @@ class SqlDatabase:
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
+                                app_card.basename,
+                                app_card.sequence,
                                 "" title_req,
                                 tcl.text title_orig
                             FROM
@@ -5154,6 +5157,8 @@ class SqlDatabase:
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
+                                app_card.basename,
+                                app_card.sequence,
                                 tcl.text title_req,
                                 "" title_orig
                             FROM
@@ -5175,6 +5180,13 @@ class SqlDatabase:
                             AND mt.id=cm.id_mediatype
 
                         GROUP BY merged_appendix.id
+
+                        ORDER BY CASE
+                            WHEN sequence IS NULL AND merged_appendix.title_req IS NOT NULL THEN merged_appendix.title_req
+                            WHEN sequence IS NULL AND merged_appendix.title_orig IS NOT NULL THEN merged_appendix.title_orig
+                            WHEN sequence<0 THEN basename
+                            WHEN sequence>=0 THEN sequence
+                        END
                         )
                     GROUP BY card_id
                 ) pndx
@@ -6089,13 +6101,12 @@ class SqlDatabase:
                 ----------------
                 --- APPENDIX ---
                 ----------------
-                 LEFT JOIN
+                LEFT JOIN
                 (
                     SELECT
                         card_id,
                         group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
                     FROM
-
                         (
                         SELECT
                             merged_appendix.id,
@@ -6105,6 +6116,8 @@ class SqlDatabase:
                             merged_appendix.show,
                             merged_appendix.download,
                             merged_appendix.source_path,
+                            merged_appendix.basename,
+                            merged_appendix.sequence,
                             mt.name media_type,
                             cm.name contact_media
                         FROM
@@ -6116,6 +6129,8 @@ class SqlDatabase:
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
+                                app_card.basename,
+                                app_card.sequence,
                                 "" title_req,
                                 tcl.text title_orig
                             FROM
@@ -6139,6 +6154,8 @@ class SqlDatabase:
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
+                                app_card.basename,
+                                app_card.sequence,
                                 tcl.text title_req,
                                 "" title_orig
                             FROM
@@ -6160,6 +6177,13 @@ class SqlDatabase:
                             AND mt.id=cm.id_mediatype
 
                         GROUP BY merged_appendix.id
+
+                        ORDER BY CASE
+                            WHEN sequence IS NULL AND merged_appendix.title_req IS NOT NULL THEN merged_appendix.title_req
+                            WHEN sequence IS NULL AND merged_appendix.title_orig IS NOT NULL THEN merged_appendix.title_orig
+                            WHEN sequence<0 THEN basename
+                            WHEN sequence>=0 THEN sequence
+                        END
                         )
                     GROUP BY card_id
                 ) pndx
@@ -6849,11 +6873,6 @@ class SqlDatabase:
                 ) ttlor
                 ON ttlor.id_card=card.id AND ttlor.lang_id=card.id_title_orig
 
-
-
-
-                ---
-
                 -----------------
                 --- STORYLINE ---
                 -----------------
@@ -6960,13 +6979,12 @@ class SqlDatabase:
                 ----------------
                 --- APPENDIX ---
                 ----------------
-                 LEFT JOIN
+                LEFT JOIN
                 (
                     SELECT
                         card_id,
                         group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
                     FROM
-
                         (
                         SELECT
                             merged_appendix.id,
@@ -6976,6 +6994,8 @@ class SqlDatabase:
                             merged_appendix.show,
                             merged_appendix.download,
                             merged_appendix.source_path,
+                            merged_appendix.basename,
+                            merged_appendix.sequence,
                             mt.name media_type,
                             cm.name contact_media
                         FROM
@@ -6987,6 +7007,8 @@ class SqlDatabase:
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
+                                app_card.basename,
+                                app_card.sequence,
                                 "" title_req,
                                 tcl.text title_orig
                             FROM
@@ -7010,6 +7032,8 @@ class SqlDatabase:
                                 app_card.show,
                                 app_card.download,
                                 app_card.source_path,
+                                app_card.basename,
+                                app_card.sequence,
                                 tcl.text title_req,
                                 "" title_orig
                             FROM
@@ -7031,6 +7055,13 @@ class SqlDatabase:
                             AND mt.id=cm.id_mediatype
 
                         GROUP BY merged_appendix.id
+
+                        ORDER BY CASE
+                            WHEN sequence IS NULL AND merged_appendix.title_req IS NOT NULL THEN merged_appendix.title_req
+                            WHEN sequence IS NULL AND merged_appendix.title_orig IS NOT NULL THEN merged_appendix.title_orig
+                            WHEN sequence<0 THEN basename
+                            WHEN sequence>=0 THEN sequence
+                        END
                         )
                     GROUP BY card_id
                 ) pndx
