@@ -144,12 +144,19 @@ Each track folder contains:
 ```yaml
 storylines:
   en: |
-    1.	Track Title			Duration
-    2.	Track Title			Duration
-    ...
+    <table class="playlist-table">
+        <tr><td>1.</td><td>Track Title                    </td><td>Duration</td></tr>
+        <tr><td>2.</td><td>Track Title                    </td><td>Duration</td></tr>
+        ...
+    </table>
 ```
-- Use tabs for alignment between number, title, and duration
-- Duration format: M:SS or MM:SS
+- **CRITICAL**: Use HTML table format with 3 separate `<td>` elements:
+  1. Track number with period (1., 2., etc.)
+  2. Track title (padded with spaces for alignment)
+  3. Duration (M:SS or MM:SS format)
+- **4-space indentation** for table rows
+- **Vertical alignment**: Pad track titles with spaces to align duration columns
+- **NEVER use plain text format** - always use HTML table structure
 - Lists all album tracks in sequential order
 
 ### Key Metadata Fields
@@ -184,27 +191,29 @@ sounds:
 ```yaml
 category: music_audio
 level: lp
+sequence: -1
 title:
   onthumbnail: true
   showsequence:
   orig: hu
   titles:
     hu: [Album Title]
+storylines:
+  hu: |
+    <table class="playlist-table">
+        <tr><td>1.</td><td>Track Title                    </td><td>Duration</td></tr>
+        <tr><td>2.</td><td>Track Title                    </td><td>Duration</td></tr>
+        ...
+    </table>
 performer: [Band Name]
 date: [Year]
 decade: [Decade]
-sequence: [Number]
 sounds:
   - hu
 genres:
   - alternative
 origins:
   - hu
-storylines:
-  hu: |
-    1.	Track Title			Duration
-    2.	Track Title			Duration
-    ...
 ```
 
 #### Track Level card.yaml Template:
@@ -236,8 +245,9 @@ origins:
   - hu
 ```
 - **CRITICAL FIELD ORDERING**:
+  - **sequence field MUST come immediately after level field and before title field**
+  - **storylines field MUST come immediately after title field and before performer field**
   - **length, netstart, netstop MUST come immediately after decade field**
-  - **sequence field MUST come after level field and before title field**
   - **lyrics field MUST come after title field and before performer field**
   - **DO NOT place duration fields at the end of the file**
 - **Time Format Requirements**:
@@ -248,8 +258,8 @@ origins:
   - **Valid music genres include**: synthpop, new_wave, electronic, alternative, pop, rock, classical, jazz, ambient, etc.
   - **Location**: Check `genre: > music:` section in dictionary.yaml
 - **Album Sequence**: 
-  - **Set chronologically** based on release year within artist's discography
-  - **Example**: 1981=1, 1982=2, 1983=3, etc. (skip years without releases)
+  - **Set to -1** to let folder name control the order
+  - **Location**: Must come immediately after `level` field and before `title` field
 
 ### Important Processing Rules
 
