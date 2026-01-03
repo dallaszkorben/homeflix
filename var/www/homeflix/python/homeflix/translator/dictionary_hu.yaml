@@ -40,8 +40,8 @@ language:
         zh: Kínai
         nl: Holland
         fi: Finn
-        ro: Románian
-        pt: Portugália
+        ro: Román
+        pt: Portugál
 
     in_native:
         hu: Magyar
@@ -243,13 +243,6 @@ genre:
         teen: Ifjúsági
         road_trip: Utazás
 
-    audiobook:
-        <<: *common
-        novel: Regény
-        fiction: Szépirodalom
-        nonfiction: Tényirodalom
-        political_fiction: Politikai fikció
-
     dia:
         <<: *common
         dia: Dia
@@ -259,6 +252,7 @@ genre:
         radio_play: Radiójáték
 
     ebook:
+        &ebook
         <<: *common
         novel: Regény
         fiction: Szépirodalom
@@ -268,6 +262,12 @@ genre:
         social_science: Társadalomtudomány
         study_guide: Oktatási segédlet
         graphic_novel: Képregényalbum
+        satire: Satíra
+        absurd: Abszurd
+        metafiction: Metaregény
+
+    audiobook:
+        <<: *ebook
 
     music_video:
         <<: *music
@@ -448,6 +448,7 @@ theme:
     2008_financial_crisis: 2008-as gazdasági válság
     informatics: Informatika
     genetics: Genetika
+    eugenetics: Eugenetika
     global_warming: Globális felmelegedés
     environment: Környezet
     polution: Szennyezés
@@ -495,6 +496,12 @@ theme:
     misdeed: Gaztett
     mystery: Rejtély
     violence: Erőszak
+    racism: Rasszizmus
+    vulnerability: kiszolgáltatottság
+    accident: Accident
+    guilt: Guilt
+    social_exclusion: Social Exclusion
+    free_will: Szabadakarat
 
 title:
     title: Cím

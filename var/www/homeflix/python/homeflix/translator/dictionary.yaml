@@ -243,13 +243,6 @@ genre:
         teen: Teen
         road_trip: Road trip
 
-    audiobook:
-        <<: *common
-        novel: Novel
-        fiction: Fiction
-        nonfiction: Non Fiction
-        political_fiction: Political Fiction
-
     dia:
         <<: *common
         dia: Diafilm
@@ -259,6 +252,7 @@ genre:
         radio_play: Radioplay
 
     ebook:
+        &ebook
         <<: *common
         novel: Novel
         fiction: Fiction
@@ -268,6 +262,12 @@ genre:
         social_science: Social Science
         study_guide: Study Guide
         graphic_novel: Graphic Novel
+        satire: Satire
+        absurd: Absurd
+        metafiction: Metafiction
+
+    audiobook:
+        <<: *ebook
 
     music_video:
         <<: *music
@@ -448,6 +448,7 @@ theme:
     2008_financial_crisis: 2008 Financial Crisis
     informatics: Informatics
     genetics: Genetics
+    eugenetics: Eugenetics
     global_warming: Global Warming
     environment: Environment
     polution: Polution
@@ -495,6 +496,12 @@ theme:
     misdeed: Misdeed
     mystery: Mystery
     violence: Violence
+    racism: Racism
+    vulnerability: Vulnerability
+    accident: Accident
+    guilt: Guilt
+    social_exclusion: Social Exclusion
+    free_will: Free Will
 
 title:
     title: Title
