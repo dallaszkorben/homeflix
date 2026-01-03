@@ -545,9 +545,6 @@ class SqlDatabase:
             );
         ''')
 
-
-
-
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD + '''(
                 id                  TEXT        NOT NULL,
@@ -563,6 +560,7 @@ class SqlDatabase:
                 net_start_time      DECIMAL(10,2),
                 net_stop_time       DECIMAL(10,2),
                 source_path         TEXT        NOT NULL,
+                absolute_media_path TEXT        NOT NULL,
                 basename            TEXT        NOT NULL,
                 sequence            INTEGER,
                 id_higher_card      INTEGER,
@@ -1348,7 +1346,7 @@ class SqlDatabase:
         return mediatype_id
 
 
-    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None,  level=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None,  level=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, absolute_media_path=None, sequence=None, higher_card_id=None):
 
         # logging.error( "title_on_thumbnail: '{0}', title_show_sequence: '{1}'".format(title_on_thumbnail, title_show_sequence))
 
@@ -1371,11 +1369,11 @@ class SqlDatabase:
             #
             # if the card has its own ID, meaning it is media card
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                    (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_start_time, net_stop_time, basename, source_path, id_higher_card, sequence)
-                    VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_start_time, :net_stop_time, :basename, :source_path, :id_higher_card, :sequence)
+                    (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, id_category, decade, date, length, full_time, net_start_time, net_stop_time, basename, source_path, absolute_media_path, id_higher_card, sequence)
+                    VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :id_category, :decade, :date, :length, :full_time, :net_start_time, :net_stop_time, :basename, :source_path, :absolute_media_path, :id_higher_card, :sequence)
                     RETURNING id;
             '''
-            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_start_time': net_start_time, 'net_stop_time': net_stop_time, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'id_category': category_id, 'decade': decade, 'date': date, 'length': length, 'full_time': full_time, 'net_start_time': net_start_time, 'net_stop_time': net_stop_time, 'basename': basename, 'source_path': source_path, 'absolute_media_path': absolute_media_path,'id_higher_card': higher_card_id, 'sequence': sequence})
 
             record = cur.fetchone()
             (card_id, ) = record if record else (None,)
@@ -1873,7 +1871,7 @@ class SqlDatabase:
         return card_id
 
 
-    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, performers=[], basename=None, source_path=None, sequence=None, higher_card_id=None):
+    def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, performers=[], basename=None, source_path=None, absolute_media_path=None, sequence=None, higher_card_id=None):
 
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -1894,11 +1892,11 @@ class SqlDatabase:
             #
 
             query = '''INSERT INTO ''' + SqlDatabase.TABLE_CARD + '''
-                (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, id_higher_card, sequence)
-                VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :id_higher_card, :sequence)
+                (id, level, show, download, isappendix, id_title_orig, title_on_thumbnail, title_show_sequence, date, decade, id_category, basename, source_path, absolute_media_path, id_higher_card, sequence)
+                VALUES (:id, :level, :show, :download, :isappendix, :id_title_orig, :title_on_thumbnail, :title_show_sequence, :date, :decade, :id_category, :basename, :source_path, :absolute_media_path, :id_higher_card, :sequence)
                 RETURNING id;
             '''
-            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
+            cur.execute(query, {'id': card_id, 'level': level, 'show': show, 'download': download, 'isappendix': isappendix, 'id_title_orig': title_orig_id, 'title_on_thumbnail': title_on_thumbnail, 'title_show_sequence': title_show_sequence, 'date': date, 'decade': decade, 'id_category': category_id, 'basename': basename, 'source_path': source_path, 'absolute_media_path': absolute_media_path, 'id_higher_card': higher_card_id, 'sequence': sequence})
             record = cur.fetchone()
             (hierarchy_id, ) = record if record else (None,)
 
@@ -2331,6 +2329,66 @@ class SqlDatabase:
 
         # If the lock failed
         return data
+
+    #
+    # Used only locally
+    # Not used in any REST
+    #
+    def _get_full_media_file_name_by_card_id(self, card_id):
+        data = {}
+        full_media_file_name = "???"
+
+        with self.lock:
+
+            try:
+                cur = self.conn.cursor()
+
+                # Verify user existence
+                query = '''
+                    SELECT
+                        card.absolute_media_path as absolute_media_path,
+                        mdt.medium as medium
+                    FROM
+                        ''' + SqlDatabase.TABLE_CARD + ''' card
+                        LEFT JOIN
+                        (
+                            -- SELECT group_concat(media_type.name || "=" || card_media.name) medium, card_media.id_card
+                            SELECT group_concat(card_media.name) medium, card_media.id_card
+                            FROM
+                                ''' + SqlDatabase.TABLE_MEDIATYPE + ''' media_type,
+                                ''' + SqlDatabase.TABLE_CARD_MEDIA + ''' card_media
+                            WHERE
+                                card_media.id_mediatype=media_type.id
+                            GROUP BY card_media.id_card
+                        ) mdt
+                        ON mdt.id_card=card.id
+                    WHERE
+                        card.id=:card_id
+                '''
+
+                query_parameters = {'card_id': card_id}
+                record=cur.execute(query, query_parameters).fetchone()
+                data = dict(record) if record else {}
+
+                # for example:
+                # data={
+                #   'absolute_media_path': '/var/www/homeflix/MEDIA/01.Movie/01.Standalone/Brexit-2019/media',
+                #   'medium': 'video=Brexit-2019.mkv'
+                # }
+
+                full_media_file_name = os.path.sep.join([data['absolute_media_path'], data['medium']])
+
+                #logging.error(f"! data: {data}\n  full_media_file_name 1: {full_media_file_name}")
+
+            except sqlite3.Error as e:
+                logging.error(f"! error: {e}")
+
+            finally:
+                cur.close()
+                return full_media_file_name
+
+        # If the lock failed
+        return full_media_file_name
 
 
     def update_user_data(self, password=None, language_code=None, descriptor_color=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None, history_days=None):

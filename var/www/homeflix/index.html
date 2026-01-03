@@ -339,8 +339,6 @@
             });
         }
 
-
-
         // ========================================
         // UI LAYOUT AND STYLING CONSTANTS
         // ========================================
@@ -535,7 +533,6 @@
         // TODO: Implement similar translation functions for other dictionaries
         // (translated_categories, translated_themes, translated_countries, etc.)
 
-
         // This code is for disabling the page refresh with swipe down
         // on the 'scroll-section' but it is allowed on the 'static-section'
         document.addEventListener('touchmove', function(e) {
@@ -544,6 +541,75 @@
                 e.preventDefault();
             }
         }, { passive: false });
+
+        // ==================
+        // Info-Layer control
+        // ==================
+        //
+        // Global flags to control info-overlay functionality
+        window.infoOverlayEnabled = false;
+        window.infoOverlayExpanded = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let mouseTimer;
+
+            // Show overlay tab on mouse movement during media playback
+            document.addEventListener('mousemove', () => {
+                if (window.infoOverlayEnabled && !window.infoOverlayExpanded) {
+                    const overlay = document.getElementById('info-overlay');
+                    if (overlay) {
+                        // Show the 30px tab sliding from left edge
+                        overlay.classList.add('show-tab');
+                        clearTimeout(mouseTimer);
+
+                        // Auto-hide tab after configured delay if not expanded
+                        const hideDelay = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--overlay-tab-hide-delay')) * 1000 || 2000;
+                        mouseTimer = setTimeout(() => {
+                            if (!window.infoOverlayExpanded) overlay.classList.remove('show-tab');
+                        }, hideDelay);
+                    }
+                }
+            });
+
+            // Expand overlay when tab is clicked
+            $(document).on('click', '#info-overlay.show-tab', function() {
+                if (!window.infoOverlayExpanded) {
+                    // Mark overlay as expanded and animate to center
+                    window.infoOverlayExpanded = true;
+                    $(this).removeClass('show-tab').addClass('expanded');
+                    clearTimeout(mouseTimer);
+
+                    // Calculate animation duration from CSS variable
+                    let containerFadeDuration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--overlay-container-fade-duration')) * 1000;
+                    containerFadeDuration += 1000; // Add buffer time for smooth animation
+
+                    // Wait for container to animate to center, then start mouse tracking
+                    setTimeout(() => {
+                        let hasEntered = false;
+
+                        // Track when mouse enters the expanded overlay container
+                        $(document).on('mouseenter.overlay', '#info-overlay.expanded .info-container', function() {
+                            hasEntered = true;
+                        });
+
+                        // Hide overlay when mouse leaves container (only if it entered first)
+                        $(document).on('mouseleave.overlay', '#info-overlay.expanded .info-container', function() {
+                            if (hasEntered) {
+                                // Start hiding animation
+                                $('#info-overlay').addClass('hiding');
+
+                                // Clean up after animation completes
+                                setTimeout(() => {
+                                    window.infoOverlayExpanded = false;
+                                    $('#info-overlay').removeClass('expanded hiding');
+                                    $(document).off('.overlay'); // Remove namespaced event listeners
+                                }, containerFadeDuration);
+                            }
+                        });
+                    }, containerFadeDuration);
+                }
+            });
+        });
 
         $(document).ready(function () {
 
@@ -1466,6 +1532,50 @@
     <!-- Video container -->
     <div id="video-container">
         <video height="0" id="video_player"></video>
+    </div>
+    <div id="info-overlay">
+        <div class="info-container">
+            <table>
+
+                <!-- Performers -->
+                <tr>
+                    <td class="performer" colspan="3"></td>
+                </tr>
+
+                <!-- Title -->
+                <tr>
+                    <td class="title" colspan="3"></td>
+                </tr>
+
+                <!-- Metadata -->
+                <tr class="metadata">
+                    <td style="width: 25%;" class="date"></td>
+                    <td style="width: 25%; text-align: center;" class="length"></td>
+                    <td style="text-align: right;" class="origin"></td>
+                </tr>
+
+                <!-- Metadata -->
+                <tr class="metadata">
+                    <td colspan="2"></td>
+                    <td style="text-align: right;" class="genre"></td>
+                </tr>
+
+            </table>
+
+            <!-- Storyline -->
+            <div class="storyline-container">
+                <div class="storyline-label">Storyline:</div>
+                <div class="storyline with-scrollbar"></div>
+            </div>
+
+            <!-- Lyrics -->
+            <div class="lyrics-container">
+                <div class="lyrics-label">Lyrics:</div>
+                <div class="lyrics with-scrollbar"></div>
+            </div>
+
+        </div>
+
     </div>
     <div>
         <div id="overlay"></div>

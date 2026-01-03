@@ -1,7 +1,27 @@
 // HomeFlix Utility Functions
 
 /**
- * Join path components with separator
+ * Join path components with separator and clean up duplicate separators
+ *
+ * @param {Array<string>} parts - Array of path segments to join
+ * @param {string} [sep='/'] - Separator character (defaults to '/')
+ * @returns {string} Clean path with no duplicate separators
+ *
+ * @description
+ * This function safely joins path segments and removes duplicate separators that
+ * can occur when path components have trailing/leading separators.
+ *
+ * @example
+ * // Real HomeFlix usage
+ * pathJoin([hit["source_path"], "media", media])
+ * // If source_path = "/var/www/homeflix/MEDIA/Movies/"
+ * // and media = "American.Beauty-1999.mkv"
+ * // Returns: "/var/www/homeflix/MEDIA/Movies/media/American.Beauty-1999.mkv"
+ *
+ * @behavior
+ * 1. Joins array elements with separator: ['a', 'b'] → 'a/b'
+ * 2. Creates regex to match 1+ consecutive separators: /\/{1,}/g
+ * 3. Replaces all matches with single separator: 'a//b///c' → 'a/b/c'
  */
 function pathJoin(parts, sep) {
     var separator = sep || '/';
@@ -129,3 +149,27 @@ function createDialog(config) {
         close: config.close
     };
 }
+
+// Cache device detection result
+let _deviceTypeCache = null;
+
+function getDeviceType() {
+    if (_deviceTypeCache) return _deviceTypeCache;
+
+    const isTV = /TV|SmartTV|SMART-TV|NetCast|webOS.TV/i.test(navigator.userAgent);
+    const isMobile = (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|AppleWebKit|Safari/i.test(navigator.userAgent)
+        && 'ontouchstart' in window
+        && window.innerWidth <= 1024
+    );
+    const isDesktop = !isMobile && !isTV;
+
+//    alert("isTV: " + isTV + "\nisMobile: " + isMobile + "\nuserAgent: " + navigator.userAgent + "\ninnerWidth: " + window.innerWidth + "\ninnerHeight: " + window.innerHeight);
+
+    _deviceTypeCache = { isTV, isMobile, isDesktop };
+//    _deviceTypeCache = { isTV: true, isMobile: false, isDesktop: false };
+    return _deviceTypeCache;
+}
+
+// Global device type variables (run once)
+const { isTV, isMobile, isDesktop } = getDeviceType();

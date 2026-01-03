@@ -26,6 +26,7 @@ from homeflix.restserver.view_translate import TranslateView
 from homeflix.restserver.view_control import ControlView
 from homeflix.restserver.view_personal import PersonalView
 from homeflix.restserver.view_auth import AuthView
+from homeflix.restserver.view_stream import StreamView
 
 class WSHomeflix(Flask):
 
@@ -71,6 +72,7 @@ class WSHomeflix(Flask):
         ControlView.register(self.app, init_argument=self)
         PersonalView.register(self.app, init_argument=self)
         AuthView.register(self.app, init_argument=self)
+        StreamView.register(self.app, init_argument=self)
 
         self.cardHandle = CardHandle(self)
 

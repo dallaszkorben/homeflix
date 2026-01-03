@@ -132,7 +132,6 @@ class CardHandle:
                 card_path = os.path.join(actualDir, file_name)
                 card_file_name = file_name
                 source_path=os.path.join(self.media_relative, str(Path(actualDir).relative_to(self.media_absolute_path)))
-
                 break
 
         # If there is CARD in the actual directory
@@ -446,6 +445,8 @@ class CardHandle:
 
                         basename=basename,
                         source_path=source_path,
+                        absolute_media_path=media_dir,      # added, because we need it in media server
+
                         sequence=sequence,
                         higher_card_id=higher_card_id
                     )
@@ -537,6 +538,7 @@ class CardHandle:
 
                             basename=basename,
                             source_path=source_path,
+                            absolute_media_path=media_dir,      # added, because we need it in media server
 
                             sequence=sequence,
                             higher_card_id=higher_card_id,

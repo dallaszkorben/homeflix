@@ -2824,6 +2824,18 @@ class ThumbnailController {
         medium_dict["net_stop_time"] = hit["net_stop_time"];
         medium_dict["full_time"] = hit["full_time"];
 
+        // Load more into the medium_dict for the overlay
+        medium_dict["length"] = hit["length"];
+        medium_dict["storyline"] = hit["storyline"];
+        medium_dict["lyrics"] = hit["lyrics"];
+        medium_dict["directors"] = hit["directors"];
+        medium_dict["writers"] = hit["writers"];
+        medium_dict["actors"] = hit["actors"];
+        medium_dict["performers"] = hit["performers"];
+        medium_dict["genres"] = hit["genres"];
+        medium_dict["date"] = hit["date"];
+        medium_dict["origins"] = hit["origins"];
+
         return medium_dict;
     }
 
@@ -2952,10 +2964,6 @@ class ThumbnailController {
         }
     }
 
-
-
-
-
     /**
      *
      * @param {*} refToThis
@@ -2964,9 +2972,11 @@ class ThumbnailController {
      */
     configurePlayer(refToThis, continuous_list, recent_position){
 
+        // Store continuous list for ESC handling
+        this.currentContinuousList = continuous_list;
+
         let medium_dict = continuous_list[0];
 
-        let medium_path = medium_dict["medium_path"];
         let screenshot_path = medium_dict["screenshot_path"];
         let card_id = medium_dict["card_id"];
         let title = medium_dict["title"];
@@ -2978,36 +2988,43 @@ class ThumbnailController {
 
         // Remove all media source from the player befor I add the new
         $('#video_player').children("source").remove();
+        $('#video_player').children("track").remove();
 
         // Creates a new source element
         let newSourceElement = $('<source>');
+
+        // === MEDIA PLAY ===
+        let medium_path = medium_dict["medium_path"];
         newSourceElement.attr('src', medium_path);
+        // <=================
+
+        // === MEDIA STREAM ===
+        // let streaming_url = `http://${host}${port}/stream/media/get/card_id/${card_id}/audio_track/0`;
+        // let subtitle_url = `http://${host}${port}/stream/subtitle/get/card_id/${card_id}/subtitle_track/0`;
+        // newSourceElement.attr('src', streaming_url);
+        // ---
+        // A gave up working with media stream
+        // many disadvantages:
+        // - no fastforward/backward
+        // - Stops after some minutes playing (~20 minutes)
+        // - On smart TV I got black screen
+        // <===================
 
         $('#video_player').append(newSourceElement);
-
-
-//            let isInFullScreen = false;
-//            if (document.fullscreenEnabled){
-//                player.requestFullscreen();
-//
-//                isInFullScreen = (document.fullScreenElement && document.fullScreenElement !== null) ||  (document.mozFullScreen || document.webkitIsFullScreen);
-//            }
-//            console.log("fullscreen: " + isInFullScreen);
-
-        if (player.requestFullscreen) {
-            player.requestFullscreen();
-        }else if (player.msRequestFullscreen) {
-            player.msRequestFullscreen();
-        } else if (player.mozRequestFullScreen) {
-            player.mozRequestFullScreen();
-        } else if (player.webkitRequestFullscreen) {
-            player.webkitRequestFullscreen();
-        }
 
         if( screenshot_path != null){
             player.poster = screenshot_path;
         }else{
             player.poster = "";
+        }
+
+        // Keep poster visible for audio content with the original aspect ratio
+        if (medium_dict["media_type"] === "audio") {
+            player.addEventListener('loadeddata', function() {
+                document.documentElement.style.setProperty('--audio-poster-url', `url(${this.poster})`);
+                this.classList.add('audio-player');
+                //this.poster = ''; // Remove poster from video element
+            });
         }
 
         // this part works together with startPlayer() and pausePlayer()
@@ -3021,25 +3038,55 @@ class ThumbnailController {
         this.isPlaying = false;
 
         // On video playing toggle values
-        player.onplaying = function() {
+        player.onplaying = () => {
             this.isPlaying = true;
         };
 
         // On video pause toggle values
-        player.onpause = function() {
+        player.onpause = () => {
             this.isPlaying = false;
         };
 
         player.controls = true;
         player.autoplay = true;
 
+        // === MEDIA STREAM ===
+        //player.preload = 'auto';                // Preload as much as possible
+        //player.setAttribute('buffer', '30');    // Try to buffer 30 seconds ahead
+        //
+        //// Set buffering thresholds (if supported)
+        //if (player.buffered) {
+        //    // These are browser-specific hints
+        //    player.style.setProperty('--buffer-ahead', '30s');
+        //    player.style.setProperty('--buffer-behind', '10s');
+        //}
+        //
+        // Add subtitle track AFTER video loads successfully
+        // STORE THE HANDLER FUNCTION SO WE CAN REMOVE IT LATER
+        // Capture subtitle_url in closure
+        //this.subtitleHandler = () => {
+        //    let subtitleTrackElement = $('<track>');
+        //    subtitleTrackElement.attr('kind', 'subtitles');
+        //    subtitleTrackElement.attr('src', subtitle_url);  // Arrow function preserves scope
+        //    subtitleTrackElement.attr('srclang', 'en');
+        //    subtitleTrackElement.attr('label', 'English');
+        //    subtitleTrackElement.attr('default', true);
+        //    $('#video_player').append(subtitleTrackElement);
+        //};
+        //
+        ////Remove all event listeners first
+        //player.removeEventListener('loadedmetadata', this.subtitleHandler);
+        //// Add the new listener
+        //player.addEventListener('loadedmetadata', this.subtitleHandler, {once: true});
+        //
+        // <===================
+
         // Preserve aspect ratio of poster/screenshot images
         player.style.objectFit = 'contain';
         player.currentTime = recent_position;
         player.load();
-        this.startPlayer()
 
-        // ---
+        this.startPlayer(medium_dict)
 
         // REST request to register this media in the History
         this.media_history_start_epoch = refToThis.registerMediaInHistory(card_id, recent_position);
@@ -3049,38 +3096,93 @@ class ThumbnailController {
             refToThis.finishedPlaying('ended', continuous_list);
         });
 
-        // FULLSCREENCHANGE event listener
-        $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
-            var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-
-            // If exited of full screen
-            if (!state) {
-                refToThis.finishedPlaying('fullscreenchange', continuous_list);
-            }
-        });
         player.style.display = 'block';
 
         // It is important to have this line, otherwise you can not control the voice level, and the progress line will stay
         $('#video_player').focus();
 
+        // Desktop -> "fake fullscreen"
+        if (isDesktop) {
+
+            // Fake fullscreen for desktop
+            player.classList.add('fake-fullscreen');
+
+            // Remove poster for video content to prevent aspect ratio distortion:
+            // Video element stretches poster to fill container, distorting original aspect ratio
+            if (medium_dict["media_type"] === "video") {
+                player.poster = '';
+            }
+
+            $('body').addClass('video-playing');
+
+        // Mobile and TV -> "true fullscreen"
+        } else {
+
+            // Real fullscreen for mobile
+            if (player.requestFullscreen) {
+                player.requestFullscreen();
+            }else if (player.msRequestFullscreen) {
+                player.msRequestFullscreen();
+            } else if (player.mozRequestFullScreen) {
+                player.mozRequestFullScreen();
+            } else if (player.webkitRequestFullscreen) {
+                player.webkitRequestFullscreen();
+            }
+
+            // FULLSCREENCHANGE event listener for mobile
+            $('#video_player').bind('webkitfullscreenchange mozfullscreenchange fullscreenchange', function (e) {
+                var state = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
+                if (!state) {
+                    refToThis.finishedPlaying('fullscreenchange', continuous_list);
+                }
+            });
+        }
+
         refToThis.focusTask = FocusTask.Player;
     }
 
-
     // Using the below 2 functions, instead of just player.play() and player.pause() prevent to get 'The play() request was interrupted by a call to pause()" error' error
-    startPlayer(){
+    startPlayer(medium_dict){
+
+        // here I enable the info-overlay to appear
+        window.infoOverlayEnabled = true;
+
+        $('#info-overlay .performer').text(medium_dict["performers"] ? medium_dict["performers"].join(" ") : "");
+        $('#info-overlay .title').text(medium_dict["title"]);
+        $('#info-overlay .date').text(medium_dict["date"] || "");
+        $('#info-overlay .length').text(medium_dict["length"] || "");
+        $('#info-overlay .origin').text(medium_dict["origins"] ? medium_dict["origins"].join(" ") : "");
+        $('#info-overlay .genre').text(medium_dict["genres"] ? medium_dict["genres"].join(" ") : "");
+
+        if (medium_dict["storyline"]) {
+            $('#info-overlay .storyline-label').text(translated_labels.get('storyline') + ":");
+            $('#info-overlay .storyline-container').show();
+            $('#info-overlay .storyline').text(medium_dict["storyline"]);
+        } else {
+            $('#info-overlay .storyline-container').hide();
+        }
+
+
+        if (medium_dict["lyrics"]) {
+            $('#info-overlay .lyrics-label').text(translated_labels.get('lyrics') + ":");
+            $('#info-overlay .lyrics-container').show();
+            $('#info-overlay .lyrics').text(medium_dict["lyrics"]);
+        } else {
+            $('#info-overlay .lyrics-container').hide();
+        }
+
         let player = $("#video_player")[0];
         if( !player.paused && !this.isPlaying){
             return player.play();
         }
     }
+
     pausePlayer(){
         let player = $("#video_player")[0];
         if( !player.paused && this.isPlaying){
             return player.pause();
         }
     }
-
 
     playMediaPdf(medium_dict){
         let medium_path = medium_dict["medium_path"];
@@ -3109,7 +3211,6 @@ class ThumbnailController {
             });
         }
     }
-
 
     // It can play list of pictures => medium_path = List
     playMediaPicture(medium_dict){
@@ -3207,7 +3308,6 @@ class ThumbnailController {
 
         let player = $("#video_player")[0];
         let domPlayer = $("#video_player");
-
         let card_id = medium_dict["card_id"];
 
         // Update the Current Position at the finished position
@@ -3218,9 +3318,7 @@ class ThumbnailController {
 
         // Refresh the Progress bar
         let recent_position = player.currentTime;
-//        this.objScrollSection.refreshFocusedThumbnailProgresBar(recent_position)
-
-//--
+        // this.objScrollSection.refreshFocusedThumbnailProgresBar(recent_position)
 
         //
         // Set the progressbar in the hierarchy for ALL Thumbnails in all ThumbnailContainer
@@ -3272,9 +3370,6 @@ class ThumbnailController {
             }
         }
 
-
-//--
-
         // Remove the playing list
         domPlayer.children("source").remove();
 
@@ -3321,8 +3416,8 @@ class ThumbnailController {
                 this.media_history_start_epoch = this.registerMediaInHistory(card_id, 0);
 
                 player.load();
-                this.startPlayer()
-//                player.play();
+
+                this.startPlayer(medium_dict)
 
                 // It is important to have this line, otherwise you can not control the voice level and the progress line will stay
                 domPlayer.focus();
@@ -3333,12 +3428,18 @@ class ThumbnailController {
 
         // Stop playing manually or empty list
         } else {
+
             this.stop_playing(player, domPlayer, event);
         }
     }
 
     // No more media in the play list, I stop the play
     stop_playing(player, domPlayer, event){
+
+        // Here I disable the appearance of the info-overlay
+        window.infoOverlayEnabled = false;
+        window.infoOverlayExpanded = false;
+        $('#info-overlay').removeClass('show-tab expanded hiding');
 
         // Remove the listeners
         domPlayer.off('fullscreenchange');
@@ -3355,22 +3456,37 @@ class ThumbnailController {
 
         this.focusTask = FocusTask.Menu;
 
-        if (event == 'fullscreenchange') {
+        // Reset player display
+        player.style.display = 'none';
 
-        } else if (event == 'ended') {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else if (document.webkitFullscreenElement) {
-                document.webkitExitFullscreen();
-            } else if (document.mozFullScreenElement) {
-                document.mozCancelFullScreen();
+        if(isDesktop){
+
+            // === Fake FULL SCREEN mode ===
+            // Clean up fake fullscreen
+            player.classList.remove('fake-fullscreen');
+
+            $('body').removeClass('video-playing');
+
+        // Mobile/Tv
+        }else{
+
+            // === Real FULL SCREEN mode ===
+            if (event == 'fullscreenchange') {
+
+            } else if (event == 'ended') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else if (document.webkitFullscreenElement) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozFullScreenElement) {
+                    document.mozCancelFullScreen();
+                }
             }
         }
 
+        // Remove the playing list
+        domPlayer.children("source").remove();
         player.load();
-
-
-
     }
 
     escape() {
@@ -3384,6 +3500,11 @@ class ThumbnailController {
 
         } else if (this.focusTask === FocusTask.Player) {
             this.focusTask = FocusTask.Menu;
+
+            // === Fake FULL SCREEN mode ===
+            // Call finishedPlaying when ESC is pressed during video playback
+            this.finishedPlaying('escape', this.currentContinuousList || []);
+            // <============================
 
         } else if (this.focusTask === FocusTask.Code) {
             this.objScrollSection.escapeOfCode();
@@ -3506,4 +3627,7 @@ class ThumbnailController {
         }
     }
 }
+
+
+
 
