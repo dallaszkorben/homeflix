@@ -56,7 +56,7 @@ class CardHandle:
         # this keys must be in the dictionary.yaml file 'mediatype' section
         self.media_type_dict = {
             'video':   ['mkv', 'mp4', 'flv', 'divx', 'avi', 'webm', 'mov', 'mpg', 'm4v'],
-            'audio':   ['mp3', 'ogg', 'm4a'],
+            'audio':   ['mp3', 'ogg', 'm4a', 'flac', 'opus'],
             'text':    ['txt'],
             'pdf':     ['pdf'],
             'ebook':   ['epub', 'mobi', 'azw', 'azw3', 'iba', 'pdf'],

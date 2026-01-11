@@ -197,6 +197,7 @@ genre:
         electronic: Electronic
         rock: Rock
         progressive_rock: Progressive Rock
+        symphonic_rock: Symphonic Rock
         disco: Disco
         soul: Soul
         funk: Funk
@@ -447,6 +448,7 @@ theme:
     economy: Economy
     2008_financial_crisis: 2008 Financial Crisis
     informatics: Informatics
+    security: Security
     genetics: Genetics
     eugenetics: Eugenetics
     global_warming: Global Warming
@@ -502,6 +504,7 @@ theme:
     guilt: Guilt
     social_exclusion: Social Exclusion
     free_will: Free Will
+    arctic_circle: Arctic Circle
 
 title:
     title: Title

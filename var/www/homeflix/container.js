@@ -2835,6 +2835,7 @@ class ThumbnailController {
         medium_dict["genres"] = hit["genres"];
         medium_dict["date"] = hit["date"];
         medium_dict["origins"] = hit["origins"];
+        medium_dict["sequence"] = hit["sequence"];
 
         return medium_dict;
     }
@@ -3148,7 +3149,7 @@ class ThumbnailController {
         window.infoOverlayEnabled = true;
 
         $('#info-overlay .performer').text(medium_dict["performers"] ? medium_dict["performers"].join(" ") : "");
-        $('#info-overlay .title').text(medium_dict["title"]);
+        $('#info-overlay .title').text((medium_dict["sequence"] ? "#" + medium_dict["sequence"] + " - " : "") + medium_dict["title"]);
         $('#info-overlay .date').text(medium_dict["date"] || "");
         $('#info-overlay .length').text(medium_dict["length"] || "");
         $('#info-overlay .origin').text(medium_dict["origins"] ? medium_dict["origins"].join(" ") : "");

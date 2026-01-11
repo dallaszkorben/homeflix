@@ -197,6 +197,7 @@ genre:
         electronic: Electronic
         rock: Rock
         progressive_rock: Progresszív Rock
+        symphonic_rock: Szimfonikus Rock
         disco: Disco
         soul: Soul
         funk: Funk
@@ -447,6 +448,7 @@ theme:
     economy: Gazdaság
     2008_financial_crisis: 2008-as gazdasági válság
     informatics: Informatika
+    security: Biztonság
     genetics: Genetika
     eugenetics: Eugenetika
     global_warming: Globális felmelegedés
@@ -502,6 +504,7 @@ theme:
     guilt: Guilt
     social_exclusion: Social Exclusion
     free_will: Szabadakarat
+    arctic_circle: Sarkkör
 
 title:
     title: Cím
