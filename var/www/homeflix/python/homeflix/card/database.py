@@ -3036,13 +3036,29 @@ class SqlDatabase:
             # Media
             medium_string = record["medium"]
             media_dict = {}
+
             if medium_string:
-                medium_string_list = medium_string.split(',')
-                for medium_string in medium_string_list:
-                    (media_type, media) = medium_string.split("=")
-                    if not media_type in media_dict:
-                        media_dict[media_type] = []
-                    media_dict[media_type].append(media)
+                # Split by finding media type prefixes (word=) but keep the word
+                # Use positive lookahead to split before word= patterns
+                import re
+                parts = re.split(r'(?=\b\w+=)', medium_string)
+                # Remove empty first element if string starts with media type
+                parts = [part for part in parts if part.strip()]
+
+                for part in parts:
+                    if '=' in part:
+                        # Find first = to split media_type from media content
+                        eq_index = part.find('=')
+                        media_type = part[:eq_index]
+                        media = part[eq_index + 1:]
+
+                        # Remove trailing comma if present (from splitting)
+                        if media.endswith(','):
+                            media = media[:-1]
+
+                        if not media_type in media_dict:
+                            media_dict[media_type] = []
+                        media_dict[media_type].append(media)
             record["medium"] = media_dict
 
             # Appendix
@@ -3368,9 +3384,6 @@ class SqlDatabase:
 
         return user_id, lang
 
-
-
-
     def get_numbers_of_records_in_card(self):
         """
         Gives back the number of records in the Card table
@@ -3382,6 +3395,21 @@ class SqlDatabase:
             # Get Card list
             query = "SELECT COUNT(*) FROM " + SqlDatabase.TABLE_CARD + ";"
             record=cur.execute(query).fetchone()
+            cur.execute("commit")
+            return record
+
+    def get_numbers_of_media_in_card(self):
+        """
+        Gives back the number of cards that have media files
+        (cards that have entries in the Card_Media table)
+        """
+        with self.lock:
+            cur = self.conn.cursor()
+            cur.execute("begin")
+
+            # Get count of distinct cards that have media files
+            query = """SELECT COUNT(DISTINCT id_card) FROM """ + SqlDatabase.TABLE_CARD_MEDIA + ";"
+            record = cur.execute(query).fetchone()
             cur.execute("commit")
             return record
 
@@ -4114,12 +4142,15 @@ class SqlDatabase:
                     records = self.get_converted_query_to_json(records, lang)
 
             except sqlite3.Error as e:
+                print(f"~~~ Error happened: {e}\n~~~")
                 error_message = "Fetching the next level card failed: {0}".format(e)
                 logging.error(error_message)
 
             finally:
                 cur.close()
                 return records
+
+        # It should never been here
         return records
 
 # ---

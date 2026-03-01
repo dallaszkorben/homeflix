@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Write Protection Warning",
+  "description": "Warns before any file write operations to prevent unauthorized modifications",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "STOP! You are about to modify code. Do you have explicit permission from the user to make this change? If not, explain what you found instead of making changes."
+  }
+}

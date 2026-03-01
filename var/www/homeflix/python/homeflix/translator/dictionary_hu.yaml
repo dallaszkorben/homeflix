@@ -20,6 +20,7 @@ language:
         fi: FIN
         ro: ROM
         pt: Por
+        la: Latin
 
     long:
         hu: Magyar
@@ -42,6 +43,7 @@ language:
         fi: Finn
         ro: Román
         pt: Portugál
+        la: Latin
 
     in_native:
         hu: Magyar
@@ -64,6 +66,7 @@ language:
         fi: Suomi
         ro: Român
         pt: Português
+        la: Latinum
 
 country:
     short:
@@ -206,7 +209,7 @@ genre:
         hip-hop: Hip-Hop
         reggae: Reggae
         dance: Dance
-        noclassical_dark_wave: Neoclassical dark wave
+        neoclassical_dark_wave: Neoclassical dark wave
         classical: Klasszikus
         heavy_metal: Heavy Metal
         R&B: Rhythm and Blues
@@ -287,6 +290,8 @@ genre:
         tutorial: Utmutató
         summary: Összefoglaló
         note: Jegyzet
+        educational_science: Ismeretterjesztés
+        popular_science: Ismeretterjesztés
 
     recipe:
         soup: Leves
@@ -472,6 +477,7 @@ theme:
     technology: Technológia
     light: Fény
     jewellery: Ékszerek
+    archery: Íjjászat
     eu: Europai Unió
     scandal: Botrány
     cathastroph: Katasztrófa
@@ -505,6 +511,7 @@ theme:
     social_exclusion: Social Exclusion
     free_will: Szabadakarat
     arctic_circle: Sarkkör
+    phisics: Fizika
 
 title:
     title: Cím
@@ -560,6 +567,7 @@ title:
     music_by_genre: Műfajok
     music_by_band_abc: Együttesek ABC-ben
     music_by_soundtrack_abc: Filmzene ABC-ben
+    music_by_composer_abc: Klasszikusok ABC-ben
 
     music_audio: Zene-Audio
     music_hungarian: Magyar

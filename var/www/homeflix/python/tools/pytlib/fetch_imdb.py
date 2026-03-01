@@ -495,11 +495,10 @@ class FetchImdb:
             self.fullcredits_soup = BeautifulSoup(response.content, 'html.parser')
 
     def _fetch_episodes_page(self, imdb_id, season):
-        if not hasattr(self, 'episode_soup'):
-            episodes_url = f"https://www.imdb.com/title/{imdb_id}/episodes/?season={season}"
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-            response = requests.get(episodes_url, headers=headers)
-            self.episodes_soup = BeautifulSoup(response.content, 'html.parser')
+        episodes_url = f"https://www.imdb.com/title/{imdb_id}/episodes/?season={season}"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(episodes_url, headers=headers)
+        self.episodes_soup = BeautifulSoup(response.content, 'html.parser')
 
 # --- season related methods ---
 

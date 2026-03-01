@@ -46,9 +46,10 @@ class EPControlRebuildDbStatic(EP):
         end = time.time()
         diff = end-start
 
-        records = self.web_gadget.db.get_numbers_of_records_in_card()
-        logging.debug("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))
-        print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))
+        card_records = self.web_gadget.db.get_numbers_of_records_in_card()
+        media_records = self.web_gadget.db.get_numbers_of_media_in_card()
+        logging.debug("Collecting {0} pcs cards, including {1} pcs media took {2:.1f} seconds".format(card_records[0], media_records[0], diff))
+        print("Collecting {0} pcs cards, including {1} pcs media took {2:.1f} seconds".format(card_records[0], media_records[0], diff))
         output["result"] = "SUCCESS"
 
         return output_json(output, EP.CODE_OK)

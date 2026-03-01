@@ -82,8 +82,9 @@ class WSHomeflix(Flask):
         end = time.time()
         diff = end-start
 
-        records = self.db.get_numbers_of_records_in_card()
-        print("Collecting {0} pcs media took {1:.1f} seconds".format(records[0], diff))
+        card_records = self.db.get_numbers_of_records_in_card()
+        media_records = self.db.get_numbers_of_media_in_card()
+        print("Collecting {0} pcs cards, including {1} pcs media took {2:.1f} seconds".format(card_records[0], media_records[0], diff))
         print("The FQDN of the main file: %s" % (__name__))
         print("Web access: http://localhost{0}".format(self.webRelativePath))
 

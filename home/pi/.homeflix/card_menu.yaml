@@ -2078,6 +2078,50 @@ definitions:
                             title:
                               - variable: data_dict["name"]
 
+                # --------------------------
+                # Music-Audio-Composer-ABC
+                # --------------------------
+                - thumbnail:
+                    image: images/categories/music_by_composer_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_by_composer_abc
+                  description:
+                    image: images/categories/music_by_composer_abc.jpg
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_by_composer_abc
+                  history:
+                    title:
+                      - trans:
+                          translator: translated_labels
+                          key: music_by_composer_abc
+                  execution:
+                    container_list:
+                      - dynamic_queried:
+                          pre_query:
+                            data:
+                              category: music_audio
+                              level: composer
+                            request:
+                              method: GET
+                              protocol: http
+                              path: "/collect/highest/mixed/abc"
+                          query_loop:
+                            data:
+                              category: music_audio
+                              filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
+                              level: composer
+                            data_from_pre_response_list:
+                              type: dict
+                              dict:
+                                title: filter
+                            request: *request_collect_highest_mixed
+                            title:
+                              - variable: data_dict["name"]
+
                 # --------------------
                 # Music-Audio-Playlist
                 # --------------------

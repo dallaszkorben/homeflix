@@ -87,200 +87,200 @@ class SqlDatabase:
         return filter_where
 
 
-    def get_converted_query_to_json(self, sql_record_list, category, lang):
-        """
-        Convert and translate the given SQL card-response
-        """
-        records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
-
-        trans = Translator.getInstance(lang)
-        for record in records:
-
-            # Lang Orig
-            lang_orig = record["lang_orig"]
-            lang_orig_translated = trans.translate_language_short(lang_orig)
-            record["lang_orig"] = lang_orig_translated
-            # Lang Req
-            lang_req = record["lang_req"]
-            lang_req_translated = trans.translate_language_short(lang_req)
-            record["lang_req"] = lang_req_translated
-            # Media
-            medium_string = record["medium"]
-            media_dict = {}
-            if medium_string:
-                medium_string_list = medium_string.split(',')
-                for medium_string in medium_string_list:
-                    (media_type, media) = medium_string.split("=")
-                    if not media_type in media_dict:
-                        media_dict[media_type] = []
-                    media_dict[media_type].append(media)
-            record["medium"] = media_dict
-            # Appendix
-            appendix_string = record["appendix"]
-            appendix_list = []
-            if appendix_string:
-                text_list = appendix_string.split(',')
-                for appendix_string in text_list:
-                    var_list = appendix_string.split(";")
-                    appendix_dict = {}
-                    for var_pair in var_list:
-                        (key, value) = var_pair.split("=")
-                        appendix_dict[key] = value
-                    appendix_list.append(appendix_dict)
-            record["appendix"] = appendix_list
-            # Recent State (history)
-            recent_state_string = record["recent_state"]
-            recent_state_dict = {'recent_position':0, 'play_count':0}
-            if recent_state_string and record["medium"]:
-                var_list = recent_state_string.split(";")
-                for var_pair in var_list:
-                    (key, value) = var_pair.split("=")
-                    recent_state_dict[key] = value
-            record["recent_state"] = recent_state_dict
-            # Rate
-            record["rate"] = record["rate"] if record["rate"] else 0
-            record["skip_continuous_play"] = True if record["skip_continuous_play"] else False
-            # Writers
-            writers_string = record["writers"]
-            writers_list = []
-            if writers_string:
-                writers_list = writers_string.split(',')
-            record["writers"] = writers_list
-            # Directors
-            directors_string = record["directors"]
-            directors_list = []
-            if directors_string:
-                directors_list = directors_string.split(',')
-            record["directors"] = directors_list
-            # Stars
-            stars_string = record["stars"]
-            stars_list = []
-            if stars_string:
-                stars_list = stars_string.split(',')
-            record["stars"] = stars_list
-
-            # Actors
-            actors_play_string = record["actors"]
-            actors_list = []
-            if actors_play_string:
-                actors_play_list = actors_play_string.split(';')
-                for actor_string in actors_play_list:
-                    (actor, characters_string) = actor_string.split(':')
-                    characters = []
-                    if characters_string:
-                        character_list = characters_string.split(',')
-                        for character in character_list:
-                            characters.append(character)
-                    actors_list.append({actor: characters})
-            record["actors"] = actors_list
-
-            # Voices
-            voices_play_string = record["voices"]
-            voices_list = []
-            if voices_play_string:
-                voices_play_list = voices_play_string.split(';')
-                for voice_string in voices_play_list:
-                    (voice, characters_string) = voice_string.split(':')
-                    characters = []
-                    if characters_string:
-                        character_list = characters_string.split(',')
-                        for character in character_list:
-                            characters.append(character)
-                    voices_list.append({voice: characters})
-            record["voices"] = voices_list
-
-            # Host
-            hosts_string = record.get("hosts")
-            hosts_list = []
-            if hosts_string:
-                hosts_list = hosts_string.split(',')
-            record["hosts"] = hosts_list
-            # Guests
-            guests_string = record.get("guests")
-            guests_list = []
-            if guests_string:
-                guests_list = guests_string.split(',')
-            record["guests"] = guests_list
-            # Interviewers
-            interviewers_string = record.get("interviewers")
-            interviewers_list = []
-            if interviewers_string:
-                interviewers_list = interviewers_string.split(',')
-            record["interviewers"] = interviewers_list
-            # Interviewees
-            interviewees_string = record.get("interviewees")
-            interviewees_list = []
-            if interviewees_string:
-                interviewees_list = interviewees_string.split(',')
-            record["interviewees"] = interviewees_list
-            # Presenters
-            presenters_string = record.get("presenters")
-            presenters_list = []
-            if presenters_string:
-                presenters_list = presenters_string.split(',')
-            record["presenters"] = presenters_list
-            # Lecturers
-            lecturers_string = record.get("lecturers")
-            lecturers_list = []
-            if lecturers_string:
-                lecturers_list = lecturers_string.split(',')
-            record["lecturers"] = lecturers_list
-            # Performers
-            performers_string = record.get("performers")
-            performers_list = []
-            if performers_string:
-                performers_list = performers_string.split(',')
-            record["performers"] = performers_list
-            # Reporters
-            reporters_string = record.get("reporters")
-            reporters_list = []
-            if reporters_string:
-                reporters_list = reporters_string.split(',')
-            record["reporters"] = reporters_list
-            # Genre
-            genres_string = record.get("genres")
-            genres_list = []
-            if genres_string:
-                genres_list = genres_string.split(',')
-                genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
-            record["genres"] = genres_list
-            # Theme
-            themes_string = record["themes"]
-            themes_list = []
-            if themes_string:
-                themes_list = themes_string.split(',')
-                themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
-            record["themes"] = themes_list
-            # Origin
-            origins_string = record["origins"]
-            origins_list = []
-            if origins_string:
-                origins_list = origins_string.split(',')
-                origins_list = [trans.translate_country_long(origin) for origin in origins_list]
-            record["origins"] = origins_list
-            # Sub
-            subs_string = record["subs"]
-            subs_list = []
-            if subs_string:
-                subs_list = subs_string.split(',')
-                subs_list = [trans.translate_language_long(sub) for sub in subs_list]
-            record["subs"] = subs_list
-            # Sounds
-            sounds_string = record["sounds"]
-            sounds_list = []
-            if sounds_string:
-                sounds_list = sounds_string.split(',')
-                sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
-            record["sounds"] = sounds_list
-            # Tags
-            tags_string = record["tags"]
-            tags_list = []
-            if tags_string:
-                tags_list = tags_string.split(',')
-            record["tags"] = tags_list
-        logging.debug("Converted records: '{0}'".format(records))
-
-        return records
+#    def get_converted_query_to_json(self, sql_record_list, category, lang):
+#        """
+#        Convert and translate the given SQL card-response
+#        """
+#        records = [{key: record[key] for key in record.keys()} for record in sql_record_list]
+#
+#        trans = Translator.getInstance(lang)
+#        for record in records:
+#
+#            # Lang Orig
+#            lang_orig = record["lang_orig"]
+#            lang_orig_translated = trans.translate_language_short(lang_orig)
+#            record["lang_orig"] = lang_orig_translated
+#            # Lang Req
+#            lang_req = record["lang_req"]
+#            lang_req_translated = trans.translate_language_short(lang_req)
+#            record["lang_req"] = lang_req_translated
+#            # Media
+#            medium_string = record["medium"]
+#            media_dict = {}
+#            if medium_string:
+#                medium_string_list = medium_string.split(',')
+#                for medium_string in medium_string_list:
+#                    (media_type, media) = medium_string.split("=")
+#                    if not media_type in media_dict:
+#                        media_dict[media_type] = []
+#                    media_dict[media_type].append(media)
+#            record["medium"] = media_dict
+#            # Appendix
+#            appendix_string = record["appendix"]
+#            appendix_list = []
+#            if appendix_string:
+#                text_list = appendix_string.split(',')
+#                for appendix_string in text_list:
+#                    var_list = appendix_string.split(";")
+#                    appendix_dict = {}
+#                    for var_pair in var_list:
+#                        (key, value) = var_pair.split("=")
+#                        appendix_dict[key] = value
+#                    appendix_list.append(appendix_dict)
+#            record["appendix"] = appendix_list
+#            # Recent State (history)
+#            recent_state_string = record["recent_state"]
+#            recent_state_dict = {'recent_position':0, 'play_count':0}
+#            if recent_state_string and record["medium"]:
+#                var_list = recent_state_string.split(";")
+#                for var_pair in var_list:
+#                    (key, value) = var_pair.split("=")
+#                    recent_state_dict[key] = value
+#            record["recent_state"] = recent_state_dict
+#            # Rate
+#            record["rate"] = record["rate"] if record["rate"] else 0
+#            record["skip_continuous_play"] = True if record["skip_continuous_play"] else False
+#            # Writers
+#            writers_string = record["writers"]
+#            writers_list = []
+#            if writers_string:
+#                writers_list = writers_string.split(',')
+#            record["writers"] = writers_list
+#            # Directors
+#            directors_string = record["directors"]
+#            directors_list = []
+#            if directors_string:
+#                directors_list = directors_string.split(',')
+#            record["directors"] = directors_list
+#            # Stars
+#            stars_string = record["stars"]
+#            stars_list = []
+#            if stars_string:
+#                stars_list = stars_string.split(',')
+#            record["stars"] = stars_list
+#
+#            # Actors
+#            actors_play_string = record["actors"]
+#            actors_list = []
+#            if actors_play_string:
+#                actors_play_list = actors_play_string.split(';')
+#                for actor_string in actors_play_list:
+#                    (actor, characters_string) = actor_string.split(':')
+#                    characters = []
+#                    if characters_string:
+#                        character_list = characters_string.split(',')
+#                        for character in character_list:
+#                            characters.append(character)
+#                    actors_list.append({actor: characters})
+#            record["actors"] = actors_list
+#
+#            # Voices
+#            voices_play_string = record["voices"]
+#            voices_list = []
+#            if voices_play_string:
+#                voices_play_list = voices_play_string.split(';')
+#                for voice_string in voices_play_list:
+#                    (voice, characters_string) = voice_string.split(':')
+#                    characters = []
+#                    if characters_string:
+#                        character_list = characters_string.split(',')
+#                        for character in character_list:
+#                            characters.append(character)
+#                    voices_list.append({voice: characters})
+#            record["voices"] = voices_list
+#
+#            # Host
+#            hosts_string = record.get("hosts")
+#            hosts_list = []
+#            if hosts_string:
+#                hosts_list = hosts_string.split(',')
+#            record["hosts"] = hosts_list
+#            # Guests
+#            guests_string = record.get("guests")
+#            guests_list = []
+#            if guests_string:
+#                guests_list = guests_string.split(',')
+#            record["guests"] = guests_list
+#            # Interviewers
+#            interviewers_string = record.get("interviewers")
+#            interviewers_list = []
+#            if interviewers_string:
+#                interviewers_list = interviewers_string.split(',')
+#            record["interviewers"] = interviewers_list
+#            # Interviewees
+#            interviewees_string = record.get("interviewees")
+#            interviewees_list = []
+#            if interviewees_string:
+#                interviewees_list = interviewees_string.split(',')
+#            record["interviewees"] = interviewees_list
+#            # Presenters
+#            presenters_string = record.get("presenters")
+#            presenters_list = []
+#            if presenters_string:
+#                presenters_list = presenters_string.split(',')
+#            record["presenters"] = presenters_list
+#            # Lecturers
+#            lecturers_string = record.get("lecturers")
+#            lecturers_list = []
+#            if lecturers_string:
+#                lecturers_list = lecturers_string.split(',')
+#            record["lecturers"] = lecturers_list
+#            # Performers
+#            performers_string = record.get("performers")
+#            performers_list = []
+#            if performers_string:
+#                performers_list = performers_string.split(',')
+#            record["performers"] = performers_list
+#            # Reporters
+#            reporters_string = record.get("reporters")
+#            reporters_list = []
+#            if reporters_string:
+#                reporters_list = reporters_string.split(',')
+#            record["reporters"] = reporters_list
+#            # Genre
+#            genres_string = record.get("genres")
+#            genres_list = []
+#            if genres_string:
+#                genres_list = genres_string.split(',')
+#                genres_list = [trans.translate_genre(category=category, genre=genre) for genre in genres_list]
+#            record["genres"] = genres_list
+#            # Theme
+#            themes_string = record["themes"]
+#            themes_list = []
+#            if themes_string:
+#                themes_list = themes_string.split(',')
+#                themes_list = [trans.translate_theme(theme=theme) for theme in themes_list]
+#            record["themes"] = themes_list
+#            # Origin
+#            origins_string = record["origins"]
+#            origins_list = []
+#            if origins_string:
+#                origins_list = origins_string.split(',')
+#                origins_list = [trans.translate_country_long(origin) for origin in origins_list]
+#            record["origins"] = origins_list
+#            # Sub
+#            subs_string = record["subs"]
+#            subs_list = []
+#            if subs_string:
+#                subs_list = subs_string.split(',')
+#                subs_list = [trans.translate_language_long(sub) for sub in subs_list]
+#            record["subs"] = subs_list
+#            # Sounds
+#            sounds_string = record["sounds"]
+#            sounds_list = []
+#            if sounds_string:
+#                sounds_list = sounds_string.split(',')
+#                sounds_list = [trans.translate_language_long(sounds) for sounds in sounds_list]
+#            record["sounds"] = sounds_list
+#            # Tags
+#            tags_string = record["tags"]
+#            tags_list = []
+#            if tags_string:
+#                tags_list = tags_string.split(',')
+#            record["tags"] = tags_list
+#        logging.debug("Converted records: '{0}'".format(records))
+#
+#        return records
 
 
     def get_sql_rate_query(self, value):

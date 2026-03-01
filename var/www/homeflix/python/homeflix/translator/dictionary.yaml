@@ -20,6 +20,7 @@ language:
         fi: FIN
         ro: ROM
         pt: Por
+        la: Latin
 
     long:
         hu: Hungarian
@@ -42,6 +43,7 @@ language:
         fi: Finnish
         ro: Romanian
         pt: Portuguese
+        la: Latin
 
     in_native:
         hu: Magyar
@@ -64,6 +66,7 @@ language:
         fi: Suomi
         ro: Român
         pt: Português
+        la: Latinum
 
 country:
     short:
@@ -206,7 +209,7 @@ genre:
         hip-hop: Hip-Hop
         reggae: Reggae
         dance: Dance
-        noclassical_dark_wave: Neoclassical dark wave
+        neoclassical_dark_wave: Neoclassical dark wave
         classical: Classical
         heavy_metal: Heavy Metal
         R&B: Rhythm and Blues
@@ -287,6 +290,8 @@ genre:
         tutorial: Tutorial
         summary: Summary
         note: Note
+        educational_science: Educational science
+        popular_science: Poular science
 
     recipe:
         soup: Soup
@@ -472,6 +477,7 @@ theme:
     technology: Technology
     light: Light
     jewellery: Jewellery
+    archery: Archery
     eu: European Union
     scandal: Scandal
     cathastroph: Catastrophe
@@ -505,6 +511,7 @@ theme:
     social_exclusion: Social Exclusion
     free_will: Free Will
     arctic_circle: Arctic Circle
+    phisics: Phisics
 
 title:
     title: Title
@@ -560,6 +567,7 @@ title:
     music_by_genre: Grouped by Genre
     music_by_band_abc: Bands by ABC
     music_by_soundtrack_abc: Soundtracks by ABC
+    music_by_composer_abc: Composers by ABC
 
     music_audio: Music Audio
     music_hungarian: Hungarian
