@@ -870,13 +870,13 @@ END
 
 
 
--- Only sequels
+-- Only franchise
 --''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': None, 'origin': None, 'director': 'Ridley Scott', 'actor': None, 'lecturer': None, 'decade': '80s', 'lang': 'en'}).fetchall()
 
--- ONly 1 movie
+-- Only 1 movie
 --''', {'user_id': 1235, 'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': None, 'origin': None, 'director': 'John Carpenter', 'actor': 'Kurt Russell', 'lecturer': None, 'decade': '80s', 'lang': 'en'}).fetchall()
 
---''', {'level': 'sequel', 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
+--''', {'level': 'franchise', 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 --''', {'level': 'series', 'category': 'movie', 'genre': None, 'theme': None, 'origin': None, 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'it'}).fetchall()
 --''', {'level': None, 'category': 'movie', 'genre': 'scifi', 'theme': 'alien', 'origin': 'us', 'director': None, 'actor': None, 'lecturer': None, 'decade': None, 'lang': 'en'}).fetchall()
 --''', {'category': 'movie', 'genre': 'scifi', 'theme': 'ai', 'origin': 'us', 'director': 'Ridley Scott', 'actor': '*', 'decade': '90s', 'lang': 'en'}).fetchall()

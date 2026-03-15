@@ -11,8 +11,8 @@
     --thumbnail-ribbon-level-remake-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-remake-background: rgb(0, 0, 255);
 
-    --thumbnail-ribbon-level-sequel-font-color: rgb(255, 255, 255);
-    --thumbnail-ribbon-level-sequel-background: rgb(0, 102, 0);
+    --thumbnail-ribbon-level-franchise-font-color: rgb(255, 255, 255);
+    --thumbnail-ribbon-level-franchise-background: rgb(0, 102, 0);
 
     --thumbnail-ribbon-level-season-font-color: rgb(255, 255, 255);
     --thumbnail-ribbon-level-season-background: rgb(128, 0, 128);
@@ -763,9 +763,9 @@ body {
     background-color: var(--thumbnail-ribbon-level-remake-background);
 }
 
-[level="sequel"]{
-    color: var(--thumbnail-ribbon-level-sequel-font-color);
-    background-color: var(--thumbnail-ribbon-level-sequel-background);
+[level="franchise"]{
+    color: var(--thumbnail-ribbon-level-franchise-font-color);
+    background-color: var(--thumbnail-ribbon-level-franchise-background);
 }
 
 [level="season"]{

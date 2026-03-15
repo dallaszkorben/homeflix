@@ -9,7 +9,7 @@ sudo service apache2 restart
 
 sudo umount /var/www/playem/MEDIA
 sudo umount /var/www/playem
-  
+
 source ~/Projects/python/playem/var/www/playem/python/env/bin/activate
 cd /home/akoel/Projects/python/playem/var/www/playem/python
 python3
@@ -41,7 +41,7 @@ sudo service apache2 restart
 
 sudo umount /var/www/playem/MEDIA
 sudo umount /var/www/playem
-  
+
 source ~/Projects/python/playem/var/www/playem/python/env/bin/activate
 cd /home/akoel/Projects/python/playem/var/www/playem/python
 python3
@@ -82,17 +82,17 @@ SELECT
     mixed_id_list.category,
     mixed_id_list.level,
     mixed_id_list.source_path,
-    mixed_id_list.basename,        
+    mixed_id_list.basename,
     mixed_id_list.sequence,
-    
+
     mixed_id_list.title_on_thumbnail,
     mixed_id_list.title_show_sequence,
 
     mixed_id_list.decade,
     mixed_id_list.date,
-    mixed_id_list.length,     
-    
-    
+    mixed_id_list.length,
+
+
     mixed_id_list.themes,
     mixed_id_list.genres,
     mixed_id_list.origins,
@@ -105,7 +105,7 @@ SELECT
     mixed_id_list.voices,
     mixed_id_list.stars,
     mixed_id_list.lecturers,
-    
+
     mixed_id_list.hosts,
     mixed_id_list.guests,
     mixed_id_list.interviewers,
@@ -126,36 +126,36 @@ FROM
     (
     WITH RECURSIVE
         rec(id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers) AS
-        
+
         (
-            SELECT                 
-                card.id, 
+            SELECT
+                card.id,
                 card.id_higher_card,
                 category.name category,
                 card.level,
                 card.source_path,
-                
+
                 card.basename,
                 card.sequence,
                 card.title_on_thumbnail,
                 card.title_show_sequence,
-                
+
                 card.decade,
                 card.date,
-                card.length,     
-                
+                card.length,
+
                 themes,
                 genres,
                 origins,
                 directors,
                 actors,
                 lecturers,
-                
+
                 sounds,
                 subs,
                 writers,
                 voices,
-                stars,        
+                stars,
                 hosts,
                 guests,
                 interviewers,
@@ -163,43 +163,43 @@ FROM
                 presenters,
                 reporters,
                 performers
-                
-            FROM 
+
+            FROM
                 Card card,
-                
+
                 --- Conditional ---
                 Category category
-            
+
             -------------
             --- GENRE ---
             -------------
-            LEFT JOIN 
+            LEFT JOIN
             (
                 SELECT group_concat(genre.name) genres, card_genre.id_card
                 FROM
                     Genre genre,
                     Card_Genre card_genre
-                WHERE            
+                WHERE
                     card_genre.id_genre=genre.id
                 GROUP BY card_genre.id_card
             )gnr
             ON gnr.id_card=card.id
-            
+
             -------------
             --- THEME ---
             -------------
-            LEFT JOIN 
+            LEFT JOIN
             (
                 SELECT group_concat(theme.name) themes, card_theme.id_card
                 FROM
                     Theme theme,
                     Card_Theme card_theme
-                WHERE            
+                WHERE
                     card_theme.id_theme=theme.id
                 GROUP BY card_theme.id_card
             )thm
             ON thm.id_card=card.id
-    
+
             ---------------
             --- ORIGINS ---
             ---------------
@@ -213,18 +213,18 @@ FROM
                     card_origin.id_origin=origin.id
                 GROUP BY card_origin.id_card
             )rgn
-            ON rgn.id_card=card.id    
-    
+            ON rgn.id_card=card.id
+
             -----------------
             --- DIRECTORS ---
             -----------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) directors,  card_dir.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Director card_dir
-                WHERE 
+                WHERE
                     card_dir.id_director = person.id
                 GROUP BY card_dir.id_card
             ) dr
@@ -233,104 +233,104 @@ FROM
             --------------
             --- ACTORS ---
             --------------
-LEFT JOIN    
+LEFT JOIN
 (
-SELECT 
+SELECT
     GROUP_CONCAT(
         person.name || ': ' || COALESCE(role_names, ''), ';'
     ) as actors,
     card_actor.id_card id_card
-FROM 
+FROM
     Person person,
     Card_Actor card_actor,
     (
-        SELECT 
+        SELECT
             actor_role.id_actor,
             role.id_card,
             GROUP_CONCAT(role.name, ',') as role_names
-        FROM 
+        FROM
             role,
-            actor_role 
-        WHERE 
+            actor_role
+        WHERE
             actor_role.id_role = role.id
-        GROUP BY 
+        GROUP BY
             actor_role.id_actor, role.id_card
-    ) roles 
-WHERE 
+    ) roles
+WHERE
     card_actor.id_actor = person.id
-    AND roles.id_actor = person.id 
+    AND roles.id_actor = person.id
     AND roles.id_card = card_actor.id_card
-GROUP BY 
-    card_actor.id_card    
+GROUP BY
+    card_actor.id_card
 ) act
 ON act.id_card=card.id
- 
+
             --------------
             --- VOICES ---
             --------------
-            LEFT JOIN    
+            LEFT JOIN
             (
 
-SELECT 
+SELECT
     GROUP_CONCAT(
         person.name || '::::::: ' || COALESCE(role_names, ''), ';'
     ) as voices,
     card_voice.id_card id_card
-FROM 
+FROM
     Person person,
     Card_Voice card_voice,
     (
-        SELECT 
+        SELECT
             voice_role.id_voice,
             role.id_card,
             GROUP_CONCAT(role.name, ',') as role_names
-        FROM 
+        FROM
             role,
-            voice_role 
-        WHERE 
+            voice_role
+        WHERE
             voice_role.id_role = role.id
-        GROUP BY 
+        GROUP BY
             voice_role.id_voice, role.id_card
-    ) roles 
-WHERE 
+    ) roles
+WHERE
     card_voice.id_voice = person.id
-    AND roles.id_voice = person.id 
+    AND roles.id_voice = person.id
     AND roles.id_card = card_voice.id_card
-GROUP BY 
+GROUP BY
     card_voice.id_card
-                
-            ) vc
-            ON vc.id_card=card.id   
 
-            
+            ) vc
+            ON vc.id_card=card.id
+
+
             ----------------
             --- LECTURER ---
             ----------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) lecturers,  card_lecturer.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Lecturer card_lecturer
-                WHERE 
+                WHERE
                     card_lecturer.id_lecturer = person.id
                 GROUP BY card_lecturer.id_card
             ) lctr
-            ON lctr.id_card=card.id           
-    
+            ON lctr.id_card=card.id
+
             --- No Filter ---
 
             --------------
             --- SOUNDS ---
             --------------
-            LEFT JOIN 
+            LEFT JOIN
             (
                 SELECT group_concat(language.name) sounds, card_sound.id_card
-                FROM 
+                FROM
                     Language language,
                     Card_Sound card_sound
-                WHERE 
-                    card_sound.id_sound=language.id 
+                WHERE
+                    card_sound.id_sound=language.id
                 GROUP BY card_sound.id_card
             ) snd
             ON snd.id_card=card.id
@@ -341,10 +341,10 @@ GROUP BY
             LEFT JOIN
             (
                 SELECT group_concat(language.name) subs, card_sub.id_card
-                FROM 
+                FROM
                     Language language,
                     Card_Sub card_sub
-                WHERE 
+                WHERE
                     card_sub.id_sub=language.id
                 GROUP BY card_sub.id_card
             ) sb
@@ -353,13 +353,13 @@ GROUP BY
             ---------------
             --- WRITERS ---
             ---------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) writers,  card_writer.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Writer card_writer
-                WHERE 
+                WHERE
                     card_writer.id_writer = person.id
                 GROUP BY card_writer.id_card
             ) wr
@@ -368,13 +368,13 @@ GROUP BY
             -------------
             --- STARS ---
             -------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) stars,  card_star.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Star card_star
-                WHERE 
+                WHERE
                     card_star.id_star = person.id
                 GROUP BY card_star.id_card
             ) str
@@ -383,43 +383,43 @@ GROUP BY
             -------------
             --- HOSTS ---
             -------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) hosts,  card_host.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Host card_host
-                WHERE 
+                WHERE
                     card_host.id_host = person.id
                 GROUP BY card_host.id_card
             ) hst
-            ON hst.id_card=card.id    
-    
+            ON hst.id_card=card.id
+
             --------------
             --- GUESTS ---
             --------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) guests,  card_guest.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Guest card_guest
-                WHERE 
+                WHERE
                     card_guest.id_guest = person.id
                 GROUP BY card_guest.id_card
             ) gst
             ON gst.id_card=card.id
-            
+
             ---------------------
             --- INTERVIEWERS  ---
             ---------------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) interviewers,  card_interviewer.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Interviewer card_interviewer
-                WHERE 
+                WHERE
                     card_interviewer.id_interviewer = person.id
                 GROUP BY card_interviewer.id_card
             ) ntrvwr
@@ -428,13 +428,13 @@ GROUP BY
             ---------------------
             --- INTERVIEWEES  ---
             ---------------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) interviewees,  card_interviewee.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Interviewee card_interviewee
-                WHERE 
+                WHERE
                     card_interviewee.id_interviewee = person.id
                 GROUP BY card_interviewee.id_card
             ) ntrw
@@ -443,13 +443,13 @@ GROUP BY
             -------------------
             --- PRESENTERS  ---
             -------------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) presenters,  card_presenter.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Presenter card_presenter
-                WHERE 
+                WHERE
                     card_presenter.id_presenter = person.id
                 GROUP BY card_presenter.id_card
             ) prsntr
@@ -458,13 +458,13 @@ GROUP BY
             ------------------
             --- REPORTERS  ---
             ------------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) reporters,  card_reporter.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Reporter card_reporter
-                WHERE 
+                WHERE
                     card_reporter.id_reporter = person.id
                 GROUP BY card_reporter.id_card
             ) rprtr
@@ -473,24 +473,24 @@ GROUP BY
             ------------------
             --- PERFORMER  ---
             ------------------
-            LEFT JOIN    
+            LEFT JOIN
             (
                 SELECT group_concat(person.name) performers,  card_performer.id_card
-                FROM 
+                FROM
                     Person person,
                     Card_Performer card_performer
-                WHERE 
+                WHERE
                     card_performer.id_performer = person.id
                 GROUP BY card_performer.id_card
             ) prfrmr
-            ON prfrmr.id_card=card.id            
+            ON prfrmr.id_card=card.id
 
             ------------------------
             --- Initial WHERE    ---
             --- the lowest level ---
             ------------------------
-            
-            WHERE 
+
+            WHERE
                 -- card can not be appendix --
                 card.isappendix == 0
 
@@ -499,7 +499,7 @@ GROUP BY
 
                 -- Find the lowest level --
                 AND card.level IS NULL
-               
+
                 -- Select the given category --
                 AND category.name = :category
 
@@ -515,25 +515,25 @@ GROUP BY
                 AND CASE
                     WHEN :decade IS NOT NULL THEN card.decade = :decade ELSE 1
                 END
-                
+
                 --- WHERE THEMES - conditional ---
                 -- AND ',' || themes || ',' LIKE '%,' || :theme || ',%'
                 AND CASE
                     WHEN :theme IS NOT NULL THEN ',' || themes || ',' LIKE '%,' || :theme || ',%' ELSE 1
                 END
-                
+
                 --- WHERE GENRES - conditional ---
                 -- AND ',' || genres || ',' LIKE '%,' || :genre || ',%'
                 AND CASE
                     WHEN :genre IS NOT NULL THEN ',' || genres || ',' LIKE '%,' || :genre || ',%' ELSE 1
                 END
-                
+
                 --- WHERE DIRECTORS - conditional ---
                 -- AND ',' || directors || ',' LIKE '%,' || :director || ',%'
                 AND CASE
                     WHEN :director IS NOT NULL THEN ',' || directors || ',' LIKE '%,' || :director || ',%' ELSE 1
                 END
-                
+
                 --- WHERE ACTORS - conditional ---
                 -- AND ',' || actors || ',' LIKE '%,' || :actor || ',%'
                 AND CASE
@@ -551,25 +551,25 @@ GROUP BY
                 AND CASE
                     WHEN :lecturer IS NOT NULL THEN ',' || lecturers || ',' LIKE '%,' || :lecturer || ',%' ELSE 1
                 END
-                
+
             UNION ALL
 
-            SELECT 
+            SELECT
                 card.id,
                 card.id_higher_card,
                 category.name category,
                 card.level,
                 card.source_path,
-                
+
                 card.basename,
                 card.sequence,
                 card.title_on_thumbnail,
                 card.title_show_sequence,
-                
+
                 NULL decade,
                 NULL date,
                 NULL length,
-                
+
                 NULL themes,
                 NULL genres,
                 NULL origins,
@@ -588,7 +588,7 @@ GROUP BY
                 NULL presenters,
                 NULL reporters,
                 NULL performers
-                
+
             FROM
                 rec,
                 Card card,
@@ -598,7 +598,7 @@ GROUP BY
                 AND category.id=card.id_category
         )
     SELECT id, id_higher_card, category, level, source_path, basename, sequence, title_on_thumbnail, title_show_sequence, decade, date, length, themes, genres, origins, directors, actors, lecturers, sounds, subs, writers, voices, stars, hosts, guests, interviewers, interviewees, presenters, reporters, performers
-    
+
     FROM
         rec
     WHERE
@@ -609,8 +609,8 @@ GROUP BY
         ---   filter    ---
         -------------------
         -------------------
-    
-    
+
+
         --- if :level is set, then takes that specific level as highest level
         --- if :level is NOT set, then takes the highest level
 --        CASE
@@ -621,33 +621,33 @@ GROUP BY
 
     GROUP BY id
     ) mixed_id_list,
-    
+
     --------------------------
     --- unioned with title ---
     --------------------------
     (
-    SELECT 
+    SELECT
         unioned.id id,
-                
-        MAX(title_req) title_req, 
-        MAX(title_orig) title_orig, 
+
+        MAX(title_req) title_req,
+        MAX(title_orig) title_orig,
         MAX(lang_orig) lang_orig,
         MAX(lang_req) lang_req
 
-    FROM 
+    FROM
         (
-        SELECT 
-            card.id id, 
+        SELECT
+            card.id id,
 
-            NULL title_req, 
-            NULL lang_req, 
-            tcl.text title_orig, 
+            NULL title_req,
+            NULL lang_req,
+            tcl.text title_orig,
             lang.name lang_orig
-        FROM                     
+        FROM
             Card card,
-            Text_Card_Lang tcl, 
-            Language lang                    
-        WHERE                
+            Text_Card_Lang tcl,
+            Language lang
+        WHERE
             tcl.id_card=card.id
             AND tcl.id_language=lang.id
             AND tcl.type="T"
@@ -657,31 +657,31 @@ GROUP BY
             AND lang.name <> :lang
         UNION
 
-        SELECT 
+        SELECT
             card.id id,
 
-            tcl.text title_req, 
-            lang.name lang_req, 
-            NULL title_orig, 
+            tcl.text title_req,
+            lang.name lang_req,
+            NULL title_orig,
             NULL lang_orig
-        FROM               
+        FROM
             Card card,
-            Text_Card_Lang tcl, 
-            Language lang                    
-        WHERE               
+            Text_Card_Lang tcl,
+            Language lang
+        WHERE
             tcl.id_card=card.id
             AND tcl.id_language=lang.id
             AND tcl.type="T"
- 
+
             AND card.isappendix = 0
             AND lang.name=:lang
         ) unioned
 
     -- because of the title required and origin
-    GROUP BY unioned.id               
+    GROUP BY unioned.id
 
     ) core
-  
+
     -----------------
     --- STORYLINE ---
     -----------------
@@ -705,21 +705,21 @@ GROUP BY
                 language.name = :lang AND
                 card.id_title_orig<>language.id AND
                 tcl.text IS NOT NULL
-                
+
             UNION
 
             --- Select the storyline on the original language ---
 
             SELECT "2" as ord, tcl.text as storyline, tcl.id_card id_card
-            FROM 
+            FROM
                 Text_Card_Lang tcl,
                 Language language,
                 Card card
-            WHERE 
+            WHERE
                 tcl.type = "S" AND
                 tcl.id_language = language.id AND
                 tcl.id_card = card.id AND
-                card.id_title_orig=language.id AND        
+                card.id_title_orig=language.id AND
                 tcl.text IS NOT NULL
         )
         GROUP BY id_card
@@ -727,7 +727,7 @@ GROUP BY
 --        ORDER BY ord
     )strl
     ON strl.id_card=core.id
-   
+
     --------------
     --- LYRICS ---
     --------------
@@ -751,27 +751,27 @@ GROUP BY
                 language.name = :lang AND
                 card.id_title_orig<>language.id AND
                 tcl.text IS NOT NULL
-                
+
             UNION
 
             --- Select the lyrics on the original language ---
 
             SELECT "2" as ord, tcl.text as lyrics, tcl.id_card id_card
-            FROM 
+            FROM
                 Text_Card_Lang tcl,
                 Language language,
                 Card card
-            WHERE 
+            WHERE
                 tcl.type = "L" AND
                 tcl.id_language = language.id AND
                 tcl.id_card = card.id AND
-                card.id_title_orig=language.id AND        
+                card.id_title_orig=language.id AND
                 tcl.text IS NOT NULL
         )
         GROUP BY id_card
     )lrx
-    ON lrx.id_card=core.id       
-   
+    ON lrx.id_card=core.id
+
     --------------
     --- MEDIUM ---
     --------------
@@ -786,44 +786,44 @@ GROUP BY
         GROUP BY card_media.id_card
     )mdt
     ON mdt.id_card=core.id
-   
+
     ----------------
     --- APPENDIX ---
     ----------------
-     LEFT JOIN    
-    (    
+     LEFT JOIN
+    (
         SELECT
             card_id,
             group_concat("id=" || id || ";mt=" || media_type || ";cm=" || contact_media || ";sw=" || show || ";dl=" || download || ";rt=" || title_req || ";ot=" || title_orig || ";sp=" || source_path) appendix
         FROM
-        
+
             (
-            SELECT                
+            SELECT
                 merged_appendix.id,
                 merged_appendix.card_id,
-                MAX(merged_appendix.title_req) title_req, 
+                MAX(merged_appendix.title_req) title_req,
                 MAX(merged_appendix.title_orig) title_orig,
                 merged_appendix.show,
                 merged_appendix.download,
                 merged_appendix.source_path,
                 mt.name media_type,
-                cm.name contact_media                
+                cm.name contact_media
             FROM
                 (
-                SELECT 
+                SELECT
                     app_card.id id,
                     id_higher_card card_id,
                     app_card.isappendix,
                     app_card.show,
                     app_card.download,
                     app_card.source_path,
-                    "" title_req, 
+                    "" title_req,
                     tcl.text title_orig
-                FROM 
+                FROM
                     CARD app_card,
-                    TEXT_CARD_LANG tcl, 
-                    LANGUAGE lang                    
-                WHERE                
+                    TEXT_CARD_LANG tcl,
+                    LANGUAGE lang
+                WHERE
                     app_card.isappendix=1
                     AND tcl.id_card=app_card.id
                     AND tcl.id_language=lang.id
@@ -833,19 +833,19 @@ GROUP BY
 
                 UNION
 
-                SELECT 
+                SELECT
                     app_card.id id,
                     id_higher_card card_id,
                     app_card.isappendix,
                     app_card.show,
                     app_card.download,
                     app_card.source_path,
-                    tcl.text title_req, 
+                    tcl.text title_req,
                     "" title_orig
-                FROM 
+                FROM
                     CARD app_card,
-                    TEXT_CARD_LANG tcl, 
-                    LANGUAGE lang                    
+                    TEXT_CARD_LANG tcl,
+                    LANGUAGE lang
                 WHERE
                     app_card.isappendix=1
                     AND tcl.id_card=app_card.id
@@ -855,11 +855,11 @@ GROUP BY
                 ) merged_appendix,
                 Card_Media cm,
                 MediaType mt
-                
+
             WHERE
                 cm.id_card=merged_appendix.id
                 AND mt.id=cm.id_mediatype
-                
+
             GROUP BY merged_appendix.id
             )
         GROUP BY card_id
@@ -868,8 +868,8 @@ GROUP BY
 
 WHERE
     mixed_id_list.id=core.id
-                    
-ORDER BY CASE 
+
+ORDER BY CASE
     WHEN sequence IS NULL AND title_req IS NOT NULL THEN title_req
     WHEN sequence IS NULL AND title_orig IS NOT NULL THEN title_orig
     WHEN sequence<0 THEN basename
@@ -888,55 +888,55 @@ LIMIT :limit;
 
 
 [
-(477, None, 'Prometheus', None, None, 'en', 0, '', None, '2012', '2:02:00', 'MEDIA/01.Movie/04.Sequels/Alien/Alien5.Prometheus-2012', 'Alien5.Prometheus-2012', 'fear,ai,search_god,faith,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Benedict Wong,Guy Pearce,Charlize Theron,Rafe Spall,Noomi Rapace,Logan Marshall-Green,Michael Fassbender,Idris Elba,Sean Harris,Emun Elliott,Kate Dickie', 'hu,en', 'hu,en', "Damon Lindelof,Dan O'Bannon,Jon Spaihts", None, 'Noomi Rapace,Logan Marshall-Green,Michael Fassbender', None, None, None, None, None, None, None, None, 'Following clues to the origin of mankind, a team finds a structure on a distant moon, but they soon realize they are not alone.\n', None, 'video=Alien5-Prometheus-2012.mkv', None), 
+(477, None, 'Prometheus', None, None, 'en', 0, '', None, '2012', '2:02:00', 'MEDIA/01.Movie/04.Franchises/Alien/Alien5.Prometheus-2012', 'Alien5.Prometheus-2012', 'fear,ai,search_god,faith,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Benedict Wong,Guy Pearce,Charlize Theron,Rafe Spall,Noomi Rapace,Logan Marshall-Green,Michael Fassbender,Idris Elba,Sean Harris,Emun Elliott,Kate Dickie', 'hu,en', 'hu,en', "Damon Lindelof,Dan O'Bannon,Jon Spaihts", None, 'Noomi Rapace,Logan Marshall-Green,Michael Fassbender', None, None, None, None, None, None, None, None, 'Following clues to the origin of mankind, a team finds a structure on a distant moon, but they soon realize they are not alone.\n', None, 'video=Alien5-Prometheus-2012.mkv', None),
 
-(478, None, 'Alien: Covenant', None, None, 'en', 0, '', None, '2017', '2:02:00', 'MEDIA/01.Movie/04.Sequels/Alien/Alien6.Covenant-2017', 'Alien6.Covenant-2017', 'fear,ai,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Danny McBride,Michael Fassbender,Katherine Waterston,Billy Crudup,Demián Bichir,Carmen Ejogo,Jussie Smollett,Callie Hernandez,Amy Seimetz,Nathaniel Dean,Alexander England,Benjamin Rigby,Uli Latukefu,Tess Haubrich,Lorelei King,Goran D. Kleut', 'hu,en', 'hu,en', "Dan O'Bannon,Ronald Shusett,Jack Paglen", None, 'Michael Fassbender,Katherine Waterston,Billy Crudup', None, None, None, None, None, None, None, None, 'Almost eleven years after the disastrous expedition to the distant moon LV-223, the deep-space colonisation vessel Covenant, with more than 2,000 colonists in cryogenic hibernation, is on course for the remote planet Origae-6 with the intention to build a new world. Instead, a rogue transmission entices the crew to a nearby habitable planet which resembles Earth. The unsuspecting crewmembers of the Covenant will have to cope with biological foes beyond human comprehension.\nUltimately, what was intended as a peaceful exploratory mission, will soon turn into a desperate rescue operation in uncharted space.\n', None, 'video=Alien.Covenant-2017.mkv', None)
+(478, None, 'Alien: Covenant', None, None, 'en', 0, '', None, '2017', '2:02:00', 'MEDIA/01.Movie/04.Franchises/Alien/Alien6.Covenant-2017', 'Alien6.Covenant-2017', 'fear,ai,alien', 'thriller,scifi,horror', 'us', 'Ridley Scott', 'Danny McBride,Michael Fassbender,Katherine Waterston,Billy Crudup,Demián Bichir,Carmen Ejogo,Jussie Smollett,Callie Hernandez,Amy Seimetz,Nathaniel Dean,Alexander England,Benjamin Rigby,Uli Latukefu,Tess Haubrich,Lorelei King,Goran D. Kleut', 'hu,en', 'hu,en', "Dan O'Bannon,Ronald Shusett,Jack Paglen", None, 'Michael Fassbender,Katherine Waterston,Billy Crudup', None, None, None, None, None, None, None, None, 'Almost eleven years after the disastrous expedition to the distant moon LV-223, the deep-space colonisation vessel Covenant, with more than 2,000 colonists in cryogenic hibernation, is on course for the remote planet Origae-6 with the intention to build a new world. Instead, a rogue transmission entices the crew to a nearby habitable planet which resembles Earth. The unsuspecting crewmembers of the Covenant will have to cope with biological foes beyond human comprehension.\nUltimately, what was intended as a peaceful exploratory mission, will soon turn into a desperate rescue operation in uncharted space.\n', None, 'video=Alien.Covenant-2017.mkv', None)
 ]
 
 
 
 --- fetch <actor>: <role> pairs ---
 con.execute('''
-    select group_concat(role.name), actor_role.id_actor as actor_id from 
+    select group_concat(role.name), actor_role.id_actor as actor_id from
         role,
         actor_role
-    where 
+    where
         role.id_card=:card_id
         and actor_role.id_role=role.id
     group by
-        actor_role.id_actor        
+        actor_role.id_actor
 ''', {'card_id': '036c42c37fd8bdb73bc98e6a06578299', 'category': 'music', 'lang': 'hu'}).fetchall()
 
 
 --- final solution ---
 con.execute('''
-SELECT 
+SELECT
     GROUP_CONCAT(
         person.name || ': ' || COALESCE(role_names, '')
     ) as actors,
     card_actor.id_card
-FROM 
+FROM
     Person person,
     Card_Actor card_actor,
     (
-        SELECT 
+        SELECT
             actor_role.id_actor,
             role.id_card,
             GROUP_CONCAT(role.name) as role_names
-        FROM 
+        FROM
             role,
-            actor_role 
-        WHERE 
+            actor_role
+        WHERE
             actor_role.id_role = role.id
-        GROUP BY 
+        GROUP BY
             actor_role.id_actor, role.id_card
-    ) roles 
-WHERE 
+    ) roles
+WHERE
     card_actor.id_actor = person.id
-    AND roles.id_actor = person.id 
+    AND roles.id_actor = person.id
     AND roles.id_card = card_actor.id_card
     AND card_actor.id_card=:card_id
-GROUP BY 
+GROUP BY
     card_actor.id_card
 
 ''', {'card_id': '036c42c37fd8bdb73bc98e6a06578299', 'category': 'music', 'lang': 'hu'}).fetchall()

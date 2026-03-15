@@ -1028,7 +1028,7 @@ class ObjThumbnailContainer {
         domThumbnail.append(domThumbnailTextWrapper);
 
         // Add LEVEL RIBBON if necessary
-        if(level && ( level == "series" || level =="remake" || level == "sequel" || level == "season" || level == "episode" || level == "lp" || level == "band" || level == "soundtrack" || level == "record")){
+        if(level && ( level == "series" || level =="remake" || level == "franchise" || level == "season" || level == "episode" || level == "lp" || level == "band" || level == "soundtrack" || level == "record")){
             let ribbonText = get_translated_level(level);
 
             // Add sequence number for season and episode levels
@@ -3385,7 +3385,7 @@ class ThumbnailController {
             let card_id = medium_dict["card_id"];
             let title = medium_dict["title"];
 
-            // takes the next element until it is a media - skip the collections (series, sequels, ...)
+            // takes the next element until it is a media - skip the collections (series, franchise, ...)
             while(medium_path == null && continuous_list.length > 0){
                 continuous_list.shift();
                 medium_dict = continuous_list[0];

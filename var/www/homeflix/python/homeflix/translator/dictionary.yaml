@@ -166,7 +166,7 @@ mediatype:
 level:
     series: Series
     season: Season
-    sequel: Sequel
+    franchise: Franchise
     remake: Remake
     band: Band
     concert: Concert
@@ -532,7 +532,7 @@ title:
     movie_series: Movie Series
 
     series: Series
-    movie_sequels: Movie Sequels
+    movie_franchise: Movie Franchise
     movie_remakes: Movie Remakes
     movie_individual: Movie Individual
     movie_mixed: Mixed Movies

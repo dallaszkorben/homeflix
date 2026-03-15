@@ -166,7 +166,7 @@ mediatype:
 level:
     series: Sorozat
     season: Évad
-    sequel: Folytatásos
+    franchise: Univerzum
     remake: Feldolgozás
     band: Együttes
     concert: Koncert
@@ -507,8 +507,8 @@ theme:
     racism: Rasszizmus
     vulnerability: kiszolgáltatottság
     accident: Accident
-    guilt: Guilt
-    social_exclusion: Social Exclusion
+    guilt: Vétek
+    social_exclusion: Társadalmi kirekesztés
     free_will: Szabadakarat
     arctic_circle: Sarkkör
     phisics: Fizika
@@ -532,7 +532,7 @@ title:
     movie_series: Sorozatok
 
     series: Sorozatok
-    movie_sequels: Folytatásos filmek
+    movie_franchise: Univerzumok
     movie_remakes: Feldolgozások
     movie_individual: Filmek
     movie_mixed: Vegyes

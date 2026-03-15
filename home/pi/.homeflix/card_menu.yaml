@@ -560,25 +560,25 @@ definitions:
                           request: *request_collect_highest_mixed
 
                 # ----------------
-                # Sequel thumbnail
+                # Franchise thumbnail
                 # ----------------
                 - thumbnail:
-                    image: images/categories/movie_sequels.jpg
+                    image: images/categories/movie_franchise.jpg
                     title:
                       - trans:
                           translator: translated_labels
-                          key: movie_sequels
+                          key: movie_franchise
                   description:
-                    image: images/categories/movie_sequels.jpg
+                    image: images/categories/movie_franchise.jpg
                     title:
                       - trans:
                           translator: translated_labels
-                          key: movie_sequels
+                          key: movie_franchise
                   history:
                     title:
                       - trans:
                           translator: translated_labels
-                          key: movie_sequels
+                          key: movie_franchise
                   execution:
                     container_list:
                       # Drama
@@ -591,7 +591,7 @@ definitions:
                                 key: drama
                           data:
                             category: movie
-                            level: sequel
+                            level: franchise
                             genres: drama
                           request: *request_collect_highest_mixed
                       # Comedy
@@ -604,7 +604,7 @@ definitions:
                                 key: comedy
                           data:
                             category: movie
-                            level: sequel
+                            level: franchise
                             genres: comedy
                           request: *request_collect_highest_mixed
                       # Thriller
@@ -617,7 +617,7 @@ definitions:
                                 key: thriller
                           data:
                             category: movie
-                            level: sequel
+                            level: franchise
                             genres: thriller
                           request: *request_collect_highest_mixed
                       # Action
@@ -630,7 +630,7 @@ definitions:
                                 key: action
                           data:
                             category: movie
-                            level: sequel
+                            level: franchise
                             genres: action
                           request: *request_collect_highest_mixed
                       # Scifi
@@ -643,7 +643,7 @@ definitions:
                                 key: scifi
                           data:
                             category: movie
-                            level: sequel
+                            level: franchise
                             genres: scifi
                           request: *request_collect_highest_mixed
 
