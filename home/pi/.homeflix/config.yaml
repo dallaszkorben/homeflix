@@ -1,0 +1,14 @@
+card:
+  db-name: homeflix.db
+  menu-file-name: card_menu.yaml
+log:
+  file-name: homeflix.log
+  level: DEBUG
+media:
+  absolute-path: /media/pi/MEDIA
+  relative-path: MEDIA
+project:
+  path: /home/pi/Projects/python/homeflix
+web:
+  absolute-path: /var/www/homeflix
+  relative-path: /homeflix

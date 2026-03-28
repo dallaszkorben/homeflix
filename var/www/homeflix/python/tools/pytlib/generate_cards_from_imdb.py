@@ -94,7 +94,7 @@ class GenerateCardsFromImdb:
         year = imdb.getYear()
 
         # Extract basic movie information
-        title = imdb.getOriginalTitle()
+        title = imdb.getOriginalTitle() or "Unknown Title"
 
         storyline = imdb.getStoryline()
         length = imdb.getLength()
@@ -102,7 +102,7 @@ class GenerateCardsFromImdb:
         genres = imdb.getGenres()
 
         netstart_sec = 90
-        netstop_sec = runtime_sec - 90
+        netstop_sec = (runtime_sec - 90) if runtime_sec else 90
         netstart = self._seconds_to_hh_mm_ss(netstart_sec)
         netstop = self._seconds_to_hh_mm_ss(netstop_sec)
 

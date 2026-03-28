@@ -14,6 +14,7 @@ if __name__ == "__main__":
     SOUNDS = ["hu", "en"]
     SUBS = ["en"]
     THEMES = []
+    GENRE = ["satire", "drama"]
 
     IMDB_ID = "tt0137523"   # IMDB ID for individual movie - Fight Club
     IMDB_ID = "tt0078350"   # IMDB ID for individual movie - The Swarm
@@ -29,6 +30,7 @@ if __name__ == "__main__":
     IMDB_ID = "tt0121387"   # IMDB ID for individual movie - Hófehér
     IMDB_ID = "tt0155267"   # IMDB ID for individual movie - The Thomas Crown Affair
 
+
     IMDB_ID = "tt0098936"   # IMDB ID for series - Twin Peaks
     IMDB_ID = "tt0106179"   # IMDB ID for series - X Files
     IMDB_ID = "tt0407362"   # IMDB ID for series - Battlestar Galactica
@@ -42,9 +44,9 @@ if __name__ == "__main__":
     IMDB_ID = "tt1194173"   # IMDB ID for series - The Bourne Legacy
     IMDB_ID = "tt4196776"   # IMDB ID for series - Jason Bourne
     IMDB_ID = "tt0124218"   # IMDB ID for series - Csengetett mylord
+    IMDB_ID = "tt2452242"   # IMDB ID for series - Happy
 
-
-    IMDB_ID = "tt0155267"
+    IMDB_ID = "tt2452242"
 
     cons_path = os.path.expanduser('~/tmp/homeflix/')
     dest_path = os.path.expanduser('/media/akoel/vegyes/MEDIA/01.Movie/01.Standalone')
