@@ -5,7 +5,11 @@ log:
   file-name: homeflix.log
   level: DEBUG
 media:
-  absolute-path: /media/pi/MEDIA
+#  absolute-path: /media/pi/MEDIA
+#  relative-path: MEDIA
+  absolute-path: /var/www/homeflix/MEDIA
+  automount-path: /media/pi
+  drive-pattern: MEDIA*
   relative-path: MEDIA
 project:
   path: /home/pi/Projects/python/homeflix

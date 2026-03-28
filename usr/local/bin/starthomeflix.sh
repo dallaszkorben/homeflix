@@ -17,17 +17,18 @@ sudo systemctl stop apache2
 sudo systemctl daemon-reload
 sudo systemctl restart networking
 
-# Bind-mount the project to the web root
 sudo mount -o bind /home/pi/Projects/python/homeflix/var/www/homeflix/ /var/www/homeflix/
 
+AUTOMOUNT_PATH=$(yq -r '.media["automount-path"]' /home/pi/.homeflix/config.yaml)
+DRIVE_PATTERN=$(yq -r '.media["drive-pattern"]' /home/pi/.homeflix/config.yaml)
 RELATIVE_PATH=$(yq -r '.media["relative-path"]' /home/pi/.homeflix/config.yaml)
 MOUNT_TARGET="/var/www/homeflix/$RELATIVE_PATH"
 
-# Wait for at least one MEDIA* drive to appear (max 60 seconds)
+# Wait for at least one matching drive to appear (max 60 seconds)
 TIMEOUT=60
 ELAPSED=0
 while [ $ELAPSED -lt $TIMEOUT ]; do
-    FOUND=$(find /media/pi -maxdepth 1 -type d -name 'MEDIA*' 2>/dev/null)
+    FOUND=$(find "$AUTOMOUNT_PATH" -maxdepth 1 -type d -name "$DRIVE_PATTERN" 2>/dev/null)
     if [ -n "$FOUND" ]; then
         break
     fi
@@ -35,12 +36,15 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
     ELAPSED=$((ELAPSED + 2))
 done
 
-# Collect all MEDIA* drives into a colon-separated list
-MERGE_PATHS=$(find /media/pi -maxdepth 1 -type d -name 'MEDIA*' 2>/dev/null | sort | tr '\n' ':' | sed 's/:$//')
+# Give additional drives time to appear
+sleep 10
 
-if [ -n "$MERGE_PATHS" ]; then
-    sudo mergerfs -o defaults,allow_other,use_ino,category.create=mfs "$MERGE_PATHS" "$MOUNT_TARGET"
-fi
+# Bind-mount each matching drive as a subdirectory under MEDIA/
+find "$AUTOMOUNT_PATH" -maxdepth 1 -type d -name "$DRIVE_PATTERN" | sort | while read drive; do
+    name=$(basename "$drive")
+    mkdir -p "$MOUNT_TARGET/$name"
+    sudo mount -o bind "$drive" "$MOUNT_TARGET/$name"
+done
 
 sleep 20
 sudo systemctl restart apache2
