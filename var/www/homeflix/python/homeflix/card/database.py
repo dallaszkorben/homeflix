@@ -15,6 +15,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from homeflix.config.config import getConfig
 from homeflix.translator.translator import Translator
 from homeflix.exceptions.not_existing_table import NotExistingTable
+from homeflix.cache.response_cache import ResponseCache
 
 class SqlDatabase:
 
@@ -77,6 +78,9 @@ class SqlDatabase:
         config = getConfig()
         self.db_path = os.path.join(config["path"], config['card-db-name'])
         self.mediaAbsolutePath = config["media-absolute-path"]
+
+        # Response cache for expensive queries
+        self.cache = ResponseCache(os.path.join(config["path"], "cache"))
 
         # used for getting language independent code lists
         self.translator = Translator.getInstance()
@@ -252,6 +256,9 @@ class SqlDatabase:
 
 
     def recreate_static_dbs(self):
+
+        # Clear response cache
+        self.cache.clear()
 
         # Create new empty databases
         self.drop_static_tables()
@@ -4058,6 +4065,12 @@ class SqlDatabase:
         records = {}
         user_id, lang = self.get_user_id_and_lang()
 
+        # Check cache
+        cache_key = self.cache.make_key(method='get_highest_level_cards', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         with self.lock:
 
             try:
@@ -4083,6 +4096,7 @@ class SqlDatabase:
             finally:
                 cur.close()
 
+                self.cache.set(cache_key, records)
                 return records
         return records
 
@@ -4120,6 +4134,12 @@ class SqlDatabase:
         records = {}
         user_id, lang = self.get_user_id_and_lang()
 
+        # Check cache
+        cache_key = self.cache.make_key(method='get_next_level_cards', user_id=user_id, card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         with self.lock:
 
             try:
@@ -4148,6 +4168,7 @@ class SqlDatabase:
 
             finally:
                 cur.close()
+                self.cache.set(cache_key, records)
                 return records
 
         # It should never been here
@@ -4194,6 +4215,12 @@ class SqlDatabase:
 
         records = {}
         user_id, lang = self.get_user_id_and_lang()
+
+        # Check cache
+        cache_key = self.cache.make_key(method='get_lowest_level_cards', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         with self.lock:
 
@@ -4242,6 +4269,7 @@ class SqlDatabase:
 
             finally:
                 cur.close()
+                self.cache.set(cache_key, records)
                 return records
         return records
 
@@ -4256,6 +4284,12 @@ class SqlDatabase:
 
         records = []
         user_id, lang = self.get_user_id_and_lang()
+
+        # Check cache
+        cache_key = self.cache.make_key(method='get_highest_level_abc', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         result = False
         error_message = "Lock error"
@@ -4287,7 +4321,9 @@ class SqlDatabase:
 
                 result = True
                 error_message = None
-                return {"result": result, "data": records, "error": error_message}
+                output = {"result": result, "data": records, "error": error_message}
+                self.cache.set(cache_key, output)
+                return output
 
         return {"result": result, "data": records, "error": error_message}
 
