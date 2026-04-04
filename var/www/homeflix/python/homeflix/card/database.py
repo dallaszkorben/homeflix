@@ -3428,6 +3428,11 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
+        cache_key = self.cache.make_key(method='get_list_of_performers', category=category, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         records = {}
         with self.lock:
             try:
@@ -3473,7 +3478,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_actors(self, category, limit=15, json=True):
         """
@@ -3483,6 +3490,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_actors', category=category, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3529,7 +3541,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_actors_by_role_count(self, category, minimum=3, limit=15, json=True):
         """
@@ -3539,6 +3553,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_actors_by_role_count', category=category, minimum=minimum, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3616,7 +3635,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_voices(self, category, limit=15, json=True):
         """
@@ -3626,6 +3647,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_voices', category=category, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3672,7 +3698,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_voices_by_role_count(self, category, minimum=3, limit=15, json=True):
         """
@@ -3682,6 +3710,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_voices_by_role_count', category=category, minimum=minimum, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3758,7 +3791,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_directors(self, category, limit=15, json=True):
         """
@@ -3767,6 +3802,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_directors', category=category, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3813,7 +3853,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_directors_by_movie_count(self, category, minimum=3, limit=15, json=True):
         """
@@ -3822,6 +3864,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_directors_by_movie_count', category=category, minimum=minimum, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3899,7 +3946,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_writers(self, category, limit=15, json=True):
         """
@@ -3908,6 +3957,11 @@ class SqlDatabase:
 
         result = False
         error_message = "Lock error"
+
+        cache_key = self.cache.make_key(method='get_list_of_writers', category=category, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         records = {}
         with self.lock:
@@ -3954,7 +4008,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
     def get_list_of_tags(self, category, limit=15, json=True):
         """
@@ -3970,6 +4026,11 @@ class SqlDatabase:
             user_id = user_data['user_id']
         else:
             user_id = -1
+
+        cache_key = self.cache.make_key(method='get_list_of_tags', user_id=user_id, category=category, limit=limit)
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         with self.lock:
             try:
@@ -4008,7 +4069,9 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-        return {"result": result, "data": records, "error": error_message}
+        output = {"result": result, "data": records, "error": error_message}
+        self.cache.set(cache_key, output)
+        return output
 
 # ================================================================================================================================================
 # ================================================================================================================================================
