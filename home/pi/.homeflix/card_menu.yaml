@@ -706,6 +706,7 @@ definitions:
                           pre_query:
                             data:
                               category: movie
+                              filter_on: "-"
                             request:
                               method: GET
                               protocol: http
@@ -1396,6 +1397,7 @@ definitions:
                             data:
                               category: music_video
                               level: band
+                              filter_on: "-"
                             request:
                               method: GET
                               protocol: http
@@ -2017,6 +2019,7 @@ definitions:
                             data:
                               category: music_audio
                               level: band
+                              filter_on: "-"
                             request:
                               method: GET
                               protocol: http
@@ -2061,6 +2064,7 @@ definitions:
                             data:
                               category: music_audio
                               level: soundtrack
+                              filter_on: "-"
                             request:
                               method: GET
                               protocol: http
@@ -2105,6 +2109,7 @@ definitions:
                             data:
                               category: music_audio
                               level: composer
+                              filter_on: "-"
                             request:
                               method: GET
                               protocol: http

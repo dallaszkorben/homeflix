@@ -554,6 +554,44 @@ MEDIA_CARD_LEVEL_CONDITION = "(card.level IS NULL OR card.level = 'record' OR ca
 
 This identifies cards that contain actual media files (not just containers).
 
+### Query Filter Level (filter_on parameter)
+
+The `filter_on` parameter controls at which hierarchy level filtering/searching happens in the recursive queries. It works together with the `level` parameter to determine both where to filter and what to show.
+
+#### filter_on values
+
+- **`filter_on=None` or `'v'` (default)**: Filter at the **LOWEST level** (media-level cards: episodes, records, standalone movies). The recursive CTE starts from these cards, applies all WHERE filters (genre, actor, theme, etc.) there, then walks UP the hierarchy to find their parent containers. Example use cases:
+  - "Find all series that contain a Sci-Fi episode" (filter genre at episode level, show series)
+  - "Search by record name 'The Robots', show the band Kraftwerk"
+  - "Show bands that have records in a given genre"
+
+- **`filter_on='-'`**: Filter at the **HIGHEST level** (top-level cards: franchises, series, bands). No recursive walk needed — filters are applied directly on top-level cards. Example use cases:
+  - "Movies in ABC" — show Alien Franchise, Austin Powers Franchise, etc. by their top-level name
+  - "Search by band name Kraftwerk" — filter on the band-level card directly
+
+Both modes always **show** the appropriate level (highest or given), but the difference is where the filter criteria are applied. This is intentional — many combinations are needed (search by record name but show band, search by band name but show records, etc.).
+
+#### SQL CASE logic
+
+In the base case WHERE clause (which cards to start recursion from):
+```sql
+-- filter_on=None/v: start from media-level cards
+WHEN (:filter_on IS NULL OR :filter_on = 'v') THEN MEDIA_CARD_LEVEL_CONDITION
+
+-- filter_on='-': start from top-level cards
+WHEN :filter_on = '-' THEN card.id_higher_card IS NULL
+```
+
+In the outer WHERE clause (which cards to show from recursive result):
+```sql
+-- Both cases show the highest level when level is not specified
+WHEN (:level IS NULL) THEN id_higher_card IS NULL
+```
+
+#### Performance implications
+
+The `filter_on=None` path is significantly slower because it starts from all media-level cards (e.g., 1,636 movie cards) with 18+ LEFT JOINs each, then walks up the hierarchy recursively. The `filter_on='-'` path starts from only top-level cards (e.g., 285 movie cards) with no recursive walk needed.
+
 ### ID Generation
 
 Card IDs are generated using MD5 hashing of the file system path:
