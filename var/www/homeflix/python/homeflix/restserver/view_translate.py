@@ -16,6 +16,7 @@ from homeflix.restserver.endpoints.ep_translate_categories import EPTranslateCat
 from homeflix.restserver.endpoints.ep_translate_themes import EPTranslateThemes
 from homeflix.restserver.endpoints.ep_translate_countries import EPTranslateCountries
 from homeflix.restserver.endpoints.ep_translate_levels import EPTranslateLevels
+from homeflix.restserver.endpoints.ep_translate_selectable_languages import EPTranslateSelectableLanguages
 
 
 # -----------------------------------
@@ -39,6 +40,7 @@ class TranslateView(FlaskView):
         self.epTranslateThemes = EPTranslateThemes(web_gadget)
         self.epTranslateCountries = EPTranslateCountries(web_gadget)
         self.epTranslateLevels = EPTranslateLevels(web_gadget)
+        self.epTranslateSelectableLanguages = EPTranslateSelectableLanguages(web_gadget)
 
     #
     # GET http://localhost:5000/translate/
@@ -178,6 +180,14 @@ class TranslateView(FlaskView):
     @route(EPTranslateLevels.PATH_PAR_URL, methods=[EPTranslateLevels.METHOD])
     def translateLevelsWithParameter(self, lang):
         out = self.epTranslateLevels.executeByParameters(lang=lang)
+        return out
+
+    #
+    # GET http://localhost:80/translate/selectable_languages
+    #
+    @route(EPTranslateSelectableLanguages.PATH_PAR_PAYLOAD, methods=[EPTranslateSelectableLanguages.METHOD])
+    def translateSelectableLanguages(self):
+        out = self.epTranslateSelectableLanguages.executeByPayload({})
         return out
 
 # ===

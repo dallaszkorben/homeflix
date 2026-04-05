@@ -71,6 +71,8 @@ class SqlDatabase:
     TABLE_SEARCH = "Search"
     TABLE_SEARCH_DATA_FIELD = "Search_Data_Field"
 
+    SELECTABLE_LANGUAGE_LIST = ['en', 'hu']
+
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
@@ -517,6 +519,8 @@ class SqlDatabase:
             CREATE TABLE ''' + SqlDatabase.TABLE_LANGUAGE + '''(
                 id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
                 name  TEXT  NOT NULL,
+                in_native  TEXT  NOT NULL,
+                selectable  BOOLEAN  NOT NULL  DEFAULT 0,
                 UNIQUE(name)
             );
         ''')
@@ -923,8 +927,11 @@ class SqlDatabase:
         self.language_name_id_dict = {}
         self.language_id_name_dict = {}
         lang_list = self.translator.get_all_language_codes()
+        in_native_dict = self.translator.get_all_language_in_native()
         for lang in lang_list:
-            id = self.append_language(cur, lang)
+            in_native = in_native_dict.get(lang, lang)
+            selectable = lang in SqlDatabase.SELECTABLE_LANGUAGE_LIST
+            id = self.append_language(cur, lang, in_native=in_native, selectable=selectable)
             self.language_name_id_dict[lang] = id
             self.language_id_name_dict[id] = lang
         cur.execute("commit")
@@ -1281,9 +1288,8 @@ class SqlDatabase:
         (category_id, ) = record if record else (None,)
         return category_id
 
-    def append_language(self, cur, sound):
-        #cur = self.conn.cursor()
-        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_LANGUAGE + ' (name) VALUES (?) RETURNING id', (sound,))
+    def append_language(self, cur, sound, in_native='', selectable=False):
+        cur.execute('INSERT INTO ' + SqlDatabase.TABLE_LANGUAGE + ' (name, in_native, selectable) VALUES (?, ?, ?) RETURNING id', (sound, in_native, selectable))
         record = cur.fetchone()
         (language_id, ) = record if record else (None,)
         return language_id
@@ -3987,6 +3993,17 @@ class SqlDatabase:
         if cache_key is not None:
             self.cache.set(cache_key, output)
         return output
+
+    def get_selectable_languages(self):
+        """Returns list of selectable languages with code and native name."""
+        with self.lock:
+            cur = self.conn.cursor()
+            records = cur.execute(
+                'SELECT name, in_native FROM ' + SqlDatabase.TABLE_LANGUAGE +
+                ' WHERE selectable = 1 ORDER BY id'
+            ).fetchall()
+            cur.close()
+            return {"result": True, "data": [dict(r) for r in records], "error": None}
 
     def get_list_of_tags(self, category, limit=15, cacheable=False, json=True):
         """

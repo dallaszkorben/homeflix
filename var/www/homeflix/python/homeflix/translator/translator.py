@@ -239,6 +239,9 @@ class Translator( Property ):
             lang_list.append(lang)
         return lang_list
 
+    def get_all_language_in_native(self):
+        return dict(self.actual_dictionary['language']['in_native'])
+
     def get_all_country_codes(self):
         country_list = []
         country_dict=self.actual_dictionary['country']['short']

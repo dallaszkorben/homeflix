@@ -40,8 +40,14 @@
         let host = location.hostname;  // Auto-detect: localhost, 192.168.x.x, etc.
         let port = ":80";              // Standard HTTP port
 
-        // Available language options for the interface
-        let language_dict = {"hu": "Magyar", "en": "English"};
+        // Available language options for the interface (loaded from DB)
+        let language_dict = {};
+        let selectable_lang_response = $.getJSON({ method: "GET", url: "http://" + host + port + "/translate/selectable_languages", async: false, dataType: "json" });
+        if(selectable_lang_response.status == 200 && selectable_lang_response.responseJSON["result"]){
+            for(let item of selectable_lang_response.responseJSON["data"]){
+                language_dict[item["name"]] = item["in_native"];
+            }
+        }
 
         // ========================================
         // SESSION RESTORATION
@@ -978,6 +984,11 @@
             selectedLanguage = language_dict[user_data['language_code']];
             $('#language-menu .main-menu-text' ).text(language_prefix + ": " + selectedLanguage);
 
+            // Populate language dropdown from DB
+            for(let [code, native] of Object.entries(language_dict)){
+                $('#language-dropdown').append('<li class="option language" value="' + code + '">' + native + '</li>');
+            }
+
             // Select on language from the dropdown list
             $('.option.language').on('click', function() {
                 let selectedLanguage = $(this).text();
@@ -1438,8 +1449,6 @@
         <div id="language-menu" class="main-menu user">
             <div class="main-menu-text">Language: English</div>
             <ul id="language-dropdown" class="dropdown">
-                <li class="option language" value="en">English</li>
-                <li class="option language" value="hu">Magyar </li>
             </ul>
         </div>
         <div id="personal-menu" class="main-menu user">
