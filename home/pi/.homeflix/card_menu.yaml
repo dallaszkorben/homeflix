@@ -842,7 +842,6 @@ definitions:
                               path: "/personal/tag/get"
                           query_loop:
                             data:
-                              cacheable: true
                               category: movie
                             # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                             data_from_pre_response_list:
@@ -1552,7 +1551,6 @@ definitions:
                               path: "/personal/tag/get"
                           query_loop:
                             data:
-                              cacheable: true
                               category: music_video
                             # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                             data_from_pre_response_list:
@@ -2299,7 +2297,6 @@ definitions:
                               path: "/personal/tag/get"
                           query_loop:
                             data:
-                              cacheable: true
                               category: music_audio
                             # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                             data_from_pre_response_list:
@@ -2469,7 +2466,6 @@ definitions:
                   path: "/personal/tag/get"
               query_loop:
                 data:
-                  cacheable: true
                   category: radio_play
                 # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                 data_from_pre_response_list:
@@ -2557,7 +2553,6 @@ definitions:
                   path: "/personal/tag/get"
               query_loop:
                 data:
-                  cacheable: true
                   category: audiobook
                 # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                 data_from_pre_response_list:

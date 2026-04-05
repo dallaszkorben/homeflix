@@ -1,7 +1,10 @@
 import logging
 import time
+import os
 
 from homeflix.card.database import SqlDatabase as DB
+from homeflix.cache.cache_warming import start_warming
+from homeflix.config.config import getConfig
 
 from homeflix.exceptions.invalid_api_usage import InvalidAPIUsage
 from homeflix.restserver.endpoints.ep import EP
@@ -51,5 +54,12 @@ class EPControlRebuildDbStatic(EP):
         logging.debug("Collecting {0} pcs cards, including {1} pcs media took {2:.1f} seconds".format(card_records[0], media_records[0], diff))
         print("Collecting {0} pcs cards, including {1} pcs media took {2:.1f} seconds".format(card_records[0], media_records[0], diff))
         output["result"] = "SUCCESS"
+
+        # Start cache warming in background thread.
+        # This pre-populates the file cache for all cacheable queries
+        # so the first user visit after rebuild is instant.
+        config = getConfig()
+        card_menu_path = os.path.join(config["path"], config["card-menu-file-name"])
+        start_warming(self.web_gadget.db, card_menu_path)
 
         return output_json(output, EP.CODE_OK)

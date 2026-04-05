@@ -3321,6 +3321,12 @@ class SqlDatabase:
 
     def get_user_id_and_lang(self):
 
+        # Allow background jobs (cache warming) to override user context
+        # without Flask session. Set _warming_user_id/_warming_lang on the
+        # db instance before calling query methods from a background thread.
+        if hasattr(self, '_warming_user_id') and self._warming_user_id is not None:
+            return self._warming_user_id, self._warming_lang
+
         user_data = None
         if has_request_context():
             user_data = session.get('logged_in_user', None)

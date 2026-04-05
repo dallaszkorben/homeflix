@@ -80,7 +80,11 @@ class ResponseCache:
 
     def set(self, cache_key, data):
         """
-        Write query response to cache file.
+        Write query response to cache file atomically.
+
+        Writes to a temporary file first, then uses os.replace() for
+        atomic rename. This prevents corrupted cache files if the warming
+        thread and a user request write the same key simultaneously.
 
         Creates the cache directory if it doesn't exist.
         Silently handles write errors (disk full, permissions, etc.)
@@ -93,8 +97,10 @@ class ResponseCache:
         try:
             os.makedirs(self.cache_dir, exist_ok=True)
             path = os.path.join(self.cache_dir, cache_key + '.json')
-            with open(path, 'w', encoding='utf-8') as f:
+            tmp_path = path + '.tmp'
+            with open(tmp_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False)
+            os.replace(tmp_path, path)
         except Exception as e:
             logging.warning(f"Cache write failed: {e}")
 
