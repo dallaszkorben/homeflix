@@ -103,6 +103,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: drama
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: drama_AND__NOT_comedy_AND__NOT_war_AND__NOT_satire_AND__NOT_crime_AND__NOT_thriller_AND__NOT_fantasy_AND__NOT_music_AND__NOT_scifi_AND__NOT_horror
                                       request: *request_collect_highest_mixed
@@ -112,6 +113,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: scifi
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: scifi_AND__NOT_trash
                                       request: *request_collect_highest_mixed
@@ -121,6 +123,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: fantasy
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: fantasy
                                       request: *request_collect_highest_mixed
@@ -130,6 +133,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: comedy
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: comedy_AND__NOT_teen
                                       request: *request_collect_highest_mixed
@@ -139,6 +143,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: teen
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: teen
                                       request: *request_collect_highest_mixed
@@ -148,6 +153,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: satire
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: satire
                                       request: *request_collect_highest_mixed
@@ -157,6 +163,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: crime
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: crime_AND__NOT_trash
                                       request: *request_collect_highest_mixed
@@ -166,6 +173,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: action
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: action_AND__NOT_trash
                                       request: *request_collect_highest_mixed
@@ -175,6 +183,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: thriller
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: thriller
                                       request: *request_collect_highest_mixed
@@ -184,6 +193,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: horror
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: horror
                                       request: *request_collect_highest_mixed
@@ -193,6 +203,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: western
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: western
                                       request: *request_collect_highest_mixed
@@ -202,6 +213,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: war
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: war
                                       request: *request_collect_highest_mixed
@@ -211,6 +223,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: music
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: music
                                       request: *request_collect_highest_mixed
@@ -220,6 +233,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: history
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: history
                                       request: *request_collect_highest_mixed
@@ -229,6 +243,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: documentary
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: documentary
                                       request: *request_collect_highest_mixed
@@ -238,6 +253,7 @@ definitions:
                                             translator: translated_genre_movie
                                             key: trash
                                       data:
+                                        cacheable: true
                                         category: movie
                                         genres: trash
                                       request: *request_collect_highest_mixed
@@ -268,6 +284,7 @@ definitions:
                                             translator: translated_themes
                                             key: apocalypse
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: apocalypse
                                       request: *request_collect_highest_mixed
@@ -277,6 +294,7 @@ definitions:
                                             translator: translated_themes
                                             key: dystopia
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: dystopia
                                       request: *request_collect_highest_mixed
@@ -286,6 +304,7 @@ definitions:
                                             translator: translated_themes
                                             key: conspiracy
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: conspiracy
                                       request: *request_collect_highest_mixed
@@ -295,6 +314,7 @@ definitions:
                                             translator: translated_themes
                                             key: drog
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: drog
                                       request: *request_collect_highest_mixed
@@ -304,6 +324,7 @@ definitions:
                                             translator: translated_themes
                                             key: maffia
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: maffia
                                       request: *request_collect_highest_mixed
@@ -313,6 +334,7 @@ definitions:
                                             translator: translated_themes
                                             key: broker
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: broker
                                       request: *request_collect_highest_mixed
@@ -322,6 +344,7 @@ definitions:
                                             translator: translated_themes
                                             key: media
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: media
                                       request: *request_collect_highest_mixed
@@ -331,6 +354,7 @@ definitions:
                                             translator: translated_themes
                                             key: psychopathy
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: psychopathy
                                       request: *request_collect_highest_mixed
@@ -340,6 +364,7 @@ definitions:
                                             translator: translated_themes
                                             key: evil
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: evil
                                       request: *request_collect_highest_mixed
@@ -349,6 +374,7 @@ definitions:
                                             translator: translated_themes
                                             key: alien
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: alien
                                       request: *request_collect_highest_mixed
@@ -358,6 +384,7 @@ definitions:
                                             translator: translated_themes
                                             key: revenge
                                       data:
+                                        cacheable: true
                                         category: movie
                                         themes: revenge
                                       request: *request_collect_highest_mixed
@@ -385,6 +412,7 @@ definitions:
                                   - dynamic_queried:
                                       pre_query:
                                         data:
+                                          cacheable: true
                                           category: movie
                                           minimum: 2
                                           limit: 100
@@ -394,6 +422,7 @@ definitions:
                                           path: "/collect/directors/by/movie/count"
                                       query_loop:
                                         data:
+                                          cacheable: true
                                           category: movie
                                         # take the value of the response of pre_query and use it as 'directors' in the new request
                                         data_from_pre_response_list:
@@ -427,6 +456,7 @@ definitions:
                                   - dynamic_queried:
                                       pre_query:
                                         data:
+                                          cacheable: true
                                           category: movie
                                           minimum: 3
                                           limit: 100
@@ -436,6 +466,7 @@ definitions:
                                           path: "/collect/actors/by/role/count"
                                       query_loop:
                                         data:
+                                          cacheable: true
                                           category: movie
                                         # take the value of the response of pre_query and use it as 'actors' in the new request
                                         data_from_pre_response_list:
@@ -476,6 +507,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: tale
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: tale
@@ -489,6 +521,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: drama
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: drama
@@ -502,6 +535,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: comedy
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: comedy
@@ -515,6 +549,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: thriller
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: thriller
@@ -528,6 +563,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: action
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: action
@@ -541,6 +577,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: scifi
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: scifi
@@ -554,6 +591,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: documentary
                           data:
+                            cacheable: true
                             category: movie
                             level: series
                             genres: documentary
@@ -590,6 +628,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: drama
                           data:
+                            cacheable: true
                             category: movie
                             level: franchise
                             genres: drama
@@ -603,6 +642,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: comedy
                           data:
+                            cacheable: true
                             category: movie
                             level: franchise
                             genres: comedy
@@ -616,6 +656,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: thriller
                           data:
+                            cacheable: true
                             category: movie
                             level: franchise
                             genres: thriller
@@ -629,6 +670,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: action
                           data:
+                            cacheable: true
                             category: movie
                             level: franchise
                             genres: action
@@ -642,6 +684,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: scifi
                           data:
+                            cacheable: true
                             category: movie
                             level: franchise
                             genres: scifi
@@ -676,6 +719,7 @@ definitions:
                                 translator: translated_genre_movie
                                 key: drama
                           data:
+                            cacheable: true
                             category: movie
                             level: remake
                           request: *request_collect_highest_mixed
@@ -705,6 +749,7 @@ definitions:
                       - dynamic_queried:
                           pre_query:
                             data:
+                              cacheable: true
                               category: movie
                               filter_on: "-"
                             request:
@@ -713,6 +758,7 @@ definitions:
                               path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
+                              cacheable: true
                               category: movie
                               filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
                             # take the value of the response of pre_query and use it as 'title' in the new request
@@ -787,6 +833,7 @@ definitions:
                               path: "/personal/tag/get"
                           query_loop:
                             data:
+                              cacheable: true
                               category: movie
                             # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                             data_from_pre_response_list:
@@ -1021,6 +1068,7 @@ definitions:
                                       title:
                                         - text: "60s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 60s
@@ -1029,6 +1077,7 @@ definitions:
                                       title:
                                         - text: "70s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 70s
@@ -1037,6 +1086,7 @@ definitions:
                                       title:
                                         - text: "80s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 80s
@@ -1045,6 +1095,7 @@ definitions:
                                       title:
                                         - text: "90s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 90s
@@ -1053,6 +1104,7 @@ definitions:
                                       title:
                                         - text: "2000s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 2000s
@@ -1061,6 +1113,7 @@ definitions:
                                       title:
                                         - text: "2010s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 2010s
@@ -1093,6 +1146,7 @@ definitions:
                                       title:
                                         - text: "60s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 60s
@@ -1101,6 +1155,7 @@ definitions:
                                       title:
                                         - text: "70s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 70s
@@ -1109,6 +1164,7 @@ definitions:
                                       title:
                                         - text: "80s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 80s
@@ -1117,6 +1173,7 @@ definitions:
                                       title:
                                         - text: "90s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 90s
@@ -1125,6 +1182,7 @@ definitions:
                                       title:
                                         - text: "2000s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 2000s
@@ -1133,6 +1191,7 @@ definitions:
                                       title:
                                         - text: "2010s"
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         decade: 2010s
@@ -1198,6 +1257,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: new_wave
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: new_wave
@@ -1209,6 +1269,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: electronic
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: electronic
@@ -1220,6 +1281,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: pop
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: pop
@@ -1231,6 +1293,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: synth
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: synth
@@ -1242,6 +1305,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: rock
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: rock
@@ -1253,6 +1317,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: alternative
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: alternative
@@ -1264,6 +1329,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: punk
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: punk
@@ -1299,6 +1365,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: new_wave
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: new_wave
@@ -1310,6 +1377,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: electronic
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: electronic
@@ -1321,6 +1389,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: pop
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: pop
@@ -1332,6 +1401,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: synth
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: synth
@@ -1343,6 +1413,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: rock
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: rock
@@ -1354,6 +1425,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: alternative
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: alternative
@@ -1365,6 +1437,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: punk
                                       data:
+                                        cacheable: true
                                         category: music_video
                                         level: band
                                         genres: punk
@@ -1395,6 +1468,7 @@ definitions:
                       - dynamic_queried:
                           pre_query:
                             data:
+                              cacheable: true
                               category: music_video
                               level: band
                               filter_on: "-"
@@ -1404,6 +1478,7 @@ definitions:
                               path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
+                              cacheable: true
                               category: music_video
                               filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
                               level: band
@@ -1468,6 +1543,7 @@ definitions:
                               path: "/personal/tag/get"
                           query_loop:
                             data:
+                              cacheable: true
                               category: music_video
                             # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                             data_from_pre_response_list:
@@ -1622,6 +1698,7 @@ definitions:
                                       title:
                                         - text: "60s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 60s
@@ -1630,6 +1707,7 @@ definitions:
                                       title:
                                         - text: "70s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 70s
@@ -1638,6 +1716,7 @@ definitions:
                                       title:
                                         - text: "80s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 80s
@@ -1646,6 +1725,7 @@ definitions:
                                       title:
                                         - text: "90s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 90s
@@ -1654,6 +1734,7 @@ definitions:
                                       title:
                                         - text: "2000s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 2000s
@@ -1662,6 +1743,7 @@ definitions:
                                       title:
                                         - text: "2010s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 2010s
@@ -1694,6 +1776,7 @@ definitions:
                                       title:
                                         - text: "60s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 60s
@@ -1702,6 +1785,7 @@ definitions:
                                       title:
                                         - text: "70s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 70s
@@ -1710,6 +1794,7 @@ definitions:
                                       title:
                                         - text: "80s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 80s
@@ -1718,6 +1803,7 @@ definitions:
                                       title:
                                         - text: "90s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 90s
@@ -1726,6 +1812,7 @@ definitions:
                                       title:
                                         - text: "2000s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 2000s
@@ -1734,6 +1821,7 @@ definitions:
                                       title:
                                         - text: "2010s"
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         decade: 2010s
@@ -1799,6 +1887,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: new_wave
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: new_wave
@@ -1810,6 +1899,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: electronic
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: electronic
@@ -1821,6 +1911,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: pop
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: pop
@@ -1832,6 +1923,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: synth
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: synth
@@ -1843,6 +1935,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: rock
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: rock
@@ -1854,6 +1947,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: alternative
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: alternative
@@ -1865,6 +1959,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: punk
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: punk
@@ -1876,6 +1971,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: soundtrack
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: soundtrack
                                       request: *request_collect_highest_mixed
@@ -1910,6 +2006,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: new_wave
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: new_wave
@@ -1921,6 +2018,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: electronic
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: electronic
@@ -1932,6 +2030,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: pop
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: pop
@@ -1943,6 +2042,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: synth
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: synth
@@ -1954,6 +2054,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: rock
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: rock
@@ -1965,6 +2066,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: alternative
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: alternative
@@ -1976,6 +2078,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: punk
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: punk
@@ -1987,6 +2090,7 @@ definitions:
                                             translator: translated_genre_music
                                             key: soundtrack
                                       data:
+                                        cacheable: true
                                         category: music_audio
                                         level: band
                                         genres: soundtrack
@@ -2017,6 +2121,7 @@ definitions:
                       - dynamic_queried:
                           pre_query:
                             data:
+                              cacheable: true
                               category: music_audio
                               level: band
                               filter_on: "-"
@@ -2026,6 +2131,7 @@ definitions:
                               path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
+                              cacheable: true
                               category: music_audio
                               filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
                               level: band
@@ -2062,6 +2168,7 @@ definitions:
                       - dynamic_queried:
                           pre_query:
                             data:
+                              cacheable: true
                               category: music_audio
                               level: soundtrack
                               filter_on: "-"
@@ -2071,6 +2178,7 @@ definitions:
                               path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
+                              cacheable: true
                               category: music_audio
                               filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
                               level: soundtrack
@@ -2107,6 +2215,7 @@ definitions:
                       - dynamic_queried:
                           pre_query:
                             data:
+                              cacheable: true
                               category: music_audio
                               level: composer
                               filter_on: "-"
@@ -2116,6 +2225,7 @@ definitions:
                               path: "/collect/highest/mixed/abc"
                           query_loop:
                             data:
+                              cacheable: true
                               category: music_audio
                               filter_on: "-"  # ensure the filter is on the series title (not on the episode title)
                               level: composer
@@ -2180,6 +2290,7 @@ definitions:
                               path: "/personal/tag/get"
                           query_loop:
                             data:
+                              cacheable: true
                               category: music_audio
                             # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                             data_from_pre_response_list:
@@ -2304,6 +2415,7 @@ definitions:
                     translator: translated_labels
                     key: radioplay
               data:
+                cacheable: true
                 category: radio_play
               request: *request_collect_highest_mixed
 
@@ -2348,6 +2460,7 @@ definitions:
                   path: "/personal/tag/get"
               query_loop:
                 data:
+                  cacheable: true
                   category: radio_play
                 # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                 data_from_pre_response_list:
@@ -2390,6 +2503,7 @@ definitions:
                     translator: translated_labels
                     key: audiobook
               data:
+                cacheable: true
                 category: audiobook
               request: *request_collect_highest_mixed
 
@@ -2434,6 +2548,7 @@ definitions:
                   path: "/personal/tag/get"
               query_loop:
                 data:
+                  cacheable: true
                   category: audiobook
                 # take the 'name' attribute from the response of pre_query and use it as 'tag' in the new request
                 data_from_pre_response_list:
@@ -2474,6 +2589,7 @@ definitions:
                     translator: translated_labels
                     key: ebook
               data:
+                cacheable: true
                 category: ebook
               request: *request_collect_highest_mixed
 # ====================================================================
@@ -2507,6 +2623,7 @@ definitions:
                     translator: translated_labels
                     key: dia
               data:
+                cacheable: true
                 category: dia
               request: *request_collect_highest_mixed
 # ====================================================================
@@ -2540,6 +2657,7 @@ definitions:
                     translator: translated_labels
                     key: entertainment
               data:
+                cacheable: true
                 category: entertainment
               request: *request_collect_highest_mixed
 
@@ -2574,6 +2692,7 @@ definitions:
                     translator: translated_labels
                     key: knowledge
               data:
+                cacheable: true
                 category: knowledge
               request: *request_collect_highest_mixed
 
@@ -2608,6 +2727,7 @@ definitions:
                     translator: translated_labels
                     key: personal
               data:
+                cacheable: true
                 category: personal
               request: *request_collect_highest_mixed
 # ====================================================================

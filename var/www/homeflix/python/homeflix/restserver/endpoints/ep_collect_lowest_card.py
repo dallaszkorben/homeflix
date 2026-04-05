@@ -129,6 +129,7 @@ class EPCollectLowest(EP):
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_lowest_level_cards(category=category, view_state=view_state, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate, lang=lang, limit=100)
+        cacheable = payload.get('cacheable', False)
+        output = self.web_gadget.db.get_lowest_level_cards(category=category, view_state=view_state, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate, lang=lang, limit=100, cacheable=cacheable)
 
         return output_json(output, EP.CODE_OK)

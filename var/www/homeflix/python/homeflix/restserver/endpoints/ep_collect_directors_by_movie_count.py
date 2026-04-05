@@ -48,6 +48,7 @@ class EPCollectDirectorsByMovieCount(EP):
             )
         )
 
-        output = self.web_gadget.db.get_list_of_directors_by_movie_count(category=category, minimum=minimum, limit=limit, json=True)
+        cacheable = payload.get('cacheable', False)
+        output = self.web_gadget.db.get_list_of_directors_by_movie_count(category=category, minimum=minimum, limit=limit, json=True, cacheable=cacheable)
 
         return output_json(output, EP.CODE_OK)

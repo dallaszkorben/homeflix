@@ -164,5 +164,7 @@ class ResponseCache:
 - [x] Create homeflix/cache/response_cache.py
 - [x] Integrate cache into database.py query methods
 - [x] Add cache.clear() to recreate_static_dbs()
-- [ ] Test on localhost (first visit slow, second fast, rebuild clears)
+- [x] Test on localhost (first visit slow, second fast, rebuild clears)
+- [x] Add cacheable flag to card_menu.yaml and endpoints
+- [x] Test cacheable vs non-cacheable (playlists always fresh, catalog cached)
 - [ ] Review for weaknesses

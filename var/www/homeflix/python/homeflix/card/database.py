@@ -71,7 +71,6 @@ class SqlDatabase:
     TABLE_SEARCH = "Search"
     TABLE_SEARCH_DATA_FIELD = "Search_Data_Field"
 
-
     def __init__(self, web_gadget):
         self.web_gadget = web_gadget
 
@@ -168,7 +167,6 @@ class SqlDatabase:
         self.locale_map = {'hu': 'hu_HU.UTF-8', 'en': 'en_US.UTF-8', 'sv': 'sv_SE.UTF-8'}
         self._set_locale()
 
-
     def _set_locale(self):
         """
         Sets the system locale based on the logged-in user's language preference.
@@ -208,10 +206,8 @@ class SqlDatabase:
         # Debug output to verify the set locale
         # print(f"\n\nlocale: {locale.getlocale()}\n\n")
 
-
     def __del__(self):
         self.conn.close()
-
 
     def is_static_dbs_ok(self):
         error_code = 1001
@@ -233,7 +229,6 @@ class SqlDatabase:
             cur.execute("commit")
         return True
 
-
     def is_personal_dbs_ok(self):
         error_code = 1001
         cur = self.conn.cursor()
@@ -254,7 +249,6 @@ class SqlDatabase:
             cur.execute("commit")
         return True
 
-
     def recreate_static_dbs(self):
 
         # Clear response cache
@@ -269,7 +263,6 @@ class SqlDatabase:
         # Fill up the database
         self.web_gadget.cardHandle.collectCardsFromFileSystem(self.mediaAbsolutePath, self )
 
-
     def recreate_personal_dbs(self):
 
         # Create new empty databases
@@ -277,7 +270,6 @@ class SqlDatabase:
         logging.debug("All personal tables are dropped")
         self.create_personal_tables()
         logging.debug("All personal tables are recreated")
-
 
     def drop_static_tables(self):
         cur = self.conn.cursor()
@@ -290,14 +282,12 @@ class SqlDatabase:
             except sqlite3.OperationalError as e:
                 logging.error("Wanted to Drop '{0}' 'Static' table, but error happened: {1}".format(table, e))
 
-
     def drop_personal_tables(self):
         for table in self.table_personal_list:
             try:
                 self.conn.execute("DROP TABLE {0}".format(table))
             except sqlite3.OperationalError as e:
                 logging.error("Wanted to Drop '{0}' 'Personal' table, but error happened: {1}".format(table, e))
-
 
     def create_personal_tables(self):
 
@@ -411,7 +401,6 @@ class SqlDatabase:
 
         self.fill_up_user_table()
 
-
     def fill_up_user_table(self):
 
         with self.lock:
@@ -493,7 +482,6 @@ class SqlDatabase:
             finally:
                 cur.execute("commit")
                 cur.close
-
 
     def create_static_tables(self):
 
@@ -578,10 +566,6 @@ class SqlDatabase:
                 FOREIGN KEY (id_higher_card) REFERENCES ''' + SqlDatabase.TABLE_CARD + ''' (id)
             );
         ''')
-
-
-
-
 
         self.conn.execute('''
             CREATE TABLE ''' + SqlDatabase.TABLE_CARD_GENRE + '''(
@@ -787,13 +771,6 @@ class SqlDatabase:
             );
         ''' )
 
-
-
-
-
-
-
-
         self.conn.execute('''
            CREATE TABLE ''' + SqlDatabase.TABLE_ROLE + '''(
                id      INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
@@ -824,14 +801,12 @@ class SqlDatabase:
            );
         ''' )
 
-
         self.fill_up_theme_table_from_dict()
         self.fill_up_genre_table_from_dict()
         self.fill_up_language_table_from_dict()
         self.fill_up_country_table_from_dict()
         self.fill_up_category_table_from_dict()
         self.fill_up_mediatype_table_from_dict()
-
 
     def fill_up_constant_dicts(self):
         self.category_name_id_dict = {}
@@ -889,7 +864,6 @@ class SqlDatabase:
 
         cur.execute("commit")
 
-
     def fill_up_category_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -901,7 +875,6 @@ class SqlDatabase:
             self.category_name_id_dict[category] = id
             self.category_id_name_dict[id] = category
         cur.execute("commit")
-
 
     def fill_up_genre_table_from_dict(self):
         cur = self.conn.cursor()
@@ -915,7 +888,6 @@ class SqlDatabase:
             self.genre_id_name_dict[id] = genre
         cur.execute("commit")
 
-
     def fill_up_mediatype_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -927,7 +899,6 @@ class SqlDatabase:
             self.mediatype_name_id_dict[mediatype] = id
             self.mediatype_id_name_dict[id] = mediatype
         cur.execute("commit")
-
 
     def fill_up_theme_table_from_dict(self):
         cur = self.conn.cursor()
@@ -941,7 +912,6 @@ class SqlDatabase:
             self.theme_id_name_dict[id] = theme
         cur.execute("commit")
 
-
     def fill_up_language_table_from_dict(self):
         cur = self.conn.cursor()
         cur.execute("begin")
@@ -953,7 +923,6 @@ class SqlDatabase:
             self.language_name_id_dict[lang] = id
             self.language_id_name_dict[id] = lang
         cur.execute("commit")
-
 
     def fill_up_country_table_from_dict(self):
         cur = self.conn.cursor()
@@ -967,13 +936,11 @@ class SqlDatabase:
             self.country_id_name_dict[id] = country
         cur.execute("commit")
 
-
     def append_search_request_method(self, cur, name):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST_METHOD + ' (name) VALUES (?) RETURNING name', (name,))
         record = cur.fetchone()
         (method_name, ) = record if record else (None,)
         return method_name
-
 
     def append_search_request_protocol(self, cur, name):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST_PROTOCOL + ' (name) VALUES (?) RETURNING name', (name,))
@@ -981,20 +948,17 @@ class SqlDatabase:
         (protocol_name, ) = record if record else (None,)
         return protocol_name
 
-
     def append_search_request_path(self, cur, name):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST_PATH + ' (name) VALUES (?) RETURNING name', (name,))
         record = cur.fetchone()
         (path_name, ) = record if record else (None,)
         return path_name
 
-
     def append_search_request(self, cur, method, protocol, path):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_SEARCH_REQUEST + ' (id_request_method, id_request_protocol, id_request_path) VALUES (?, ?, ?) RETURNING id', (method, protocol, path))
         record = cur.fetchone()
         (id, ) = record if record else (None,)
         return id
-
 
     def store_search(self, thumbnail_id, thumbnail_dict):
         """
@@ -1145,7 +1109,6 @@ class SqlDatabase:
         # If the lock failed
         return {"result": result, "data": result_data, "error": error_message}
 
-
     def delete_search(self, search_id):
         result = False
         data = {}
@@ -1196,7 +1159,6 @@ class SqlDatabase:
 
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
-
 
     def get_search(self, thumbnail_id):
         result = False
@@ -1284,7 +1246,6 @@ class SqlDatabase:
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
 
-
     def append_user(self, cur, username, password, is_admin=False, user_id=None, language_code='en', descriptor_color='rgb(69,113,144)', show_original_title=True, show_lyrics_anyway=True, show_storyline_anyway=True, play_continuously=True, history_days=365):
         created_epoch = int(datetime.now().timestamp())
         id_language = self.language_name_id_dict[language_code]
@@ -1308,14 +1269,12 @@ class SqlDatabase:
         (user_id, ) = record if record else (None,)
         return user_id
 
-
     def append_category(self, cur, category):
         #cur = self.conn.cursor()
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_CATEGORY + ' (name) VALUES (?) RETURNING id', (category,))
         record = cur.fetchone()
         (category_id, ) = record if record else (None,)
         return category_id
-
 
     def append_language(self, cur, sound):
         #cur = self.conn.cursor()
@@ -1324,13 +1283,11 @@ class SqlDatabase:
         (language_id, ) = record if record else (None,)
         return language_id
 
-
     def append_country(self, cur, origin):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_COUNTRY + ' (name) VALUES (?) RETURNING id', (origin,))
         record = cur.fetchone()
         (country_id, ) = record if record else (None,)
         return country_id
-
 
     def append_genre(self, cur, genre):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_GENRE + ' (name) VALUES (?) RETURNING id', (genre,))
@@ -1338,20 +1295,17 @@ class SqlDatabase:
         (genre_id, ) = record if record else (None,)
         return genre_id
 
-
     def append_theme(self, cur, theme):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_THEME + ' (name) VALUES (?) RETURNING id', (theme,))
         record = cur.fetchone()
         (theme_id, ) = record if record else (None,)
         return theme_id
 
-
     def append_mediatype(self, cur, mediatype):
         cur.execute('INSERT INTO ' + SqlDatabase.TABLE_MEDIATYPE + ' (name) VALUES (?) RETURNING id', (mediatype,))
         record = cur.fetchone()
         (mediatype_id, ) = record if record else (None,)
         return mediatype_id
-
 
     def append_card_media(self, card_path, title_orig, titles={}, title_on_thumbnail=1, title_show_sequence='', card_id=None, isappendix=0, show=1, download=0, category=None,  level=None, storylines={}, lyrics={}, decade=None, date=None, length=None, full_time=None, net_start_time=None, net_stop_time=None, sounds=[], subs=[], genres=[], themes=[], origins=[], writers=[], actors=[], stars=[], directors=[], voices=[], hosts=[], guests=[], interviewers=[], interviewees=[], presenters=[], lecturers=[], performers=[], reporters=[], media={}, basename=None, source_path=None, absolute_media_path=None, sequence=None, higher_card_id=None):
 
@@ -1527,7 +1481,6 @@ class SqlDatabase:
                     # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. role_id: {3}. Role: {4}.".format(card_id, person_id, actor, role_id, role))
                     # logging.error( "    card_id: '{0}'. person_id: {1}. Person: {2}. Role: {3}.".format(card_id, person_id, actor, role))
 
-
             #
             # INSERT into TABLE_CARD_STARS
             #
@@ -1599,7 +1552,6 @@ class SqlDatabase:
                             (id_host, id_card)
                             VALUES (:person_id, :card_id);'''
                     cur.execute(query, {'person_id': person_id, 'card_id': card_id})
-
 
             #
             # INSERT into TABLE_CARD_GUEST
@@ -1855,7 +1807,6 @@ class SqlDatabase:
 
             #logging.error("media: '{0}' ".format(media))
 
-
             for media_type in media:
                 media_list = media[media_type]
                 for medium in media_list:
@@ -1876,7 +1827,6 @@ class SqlDatabase:
         cur.execute("commit")
 
         return card_id
-
 
     def append_hierarchy(self, card_path, title_orig, titles, title_on_thumbnail=1, title_show_sequence='', card_id=None, show=1, download=0, isappendix=0, date=None, decade=None, category=None, storylines={}, level=None, genres=None, themes=None, origins=None, performers=[], basename=None, source_path=None, absolute_media_path=None, sequence=None, higher_card_id=None):
 
@@ -1991,7 +1941,6 @@ class SqlDatabase:
         #logging.error("TEST returns {0} with id: {1}".format(titles, hierarchy_id))
         return hierarchy_id
 
-
     # ================
     #
     # === requests ===
@@ -2067,7 +2016,6 @@ class SqlDatabase:
                     logging.error(error_message)
                     raise sqlite3.Error(error_message)
 
-
                 # Verify history existence
                 query = '''
                     SELECT
@@ -2138,7 +2086,6 @@ class SqlDatabase:
 
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
-
 
     def get_logged_in_user_data(self):
         result = False
@@ -2397,7 +2344,6 @@ class SqlDatabase:
         # If the lock failed
         return full_media_file_name
 
-
     def update_user_data(self, password=None, language_code=None, descriptor_color=None, show_original_title=None, show_lyrics_anyway=None, show_storyline_anyway=None, play_continuously=None, history_days=None):
         """
         Updates user profile data in the database with selective field updates.
@@ -2552,7 +2498,6 @@ class SqlDatabase:
         # If the lock failed
         return {"result": result, "data": data, "error": error_message}
 
-
     def _update_session_with_db(self, username):
         """
         Synchronizes the Flask session data with the current database state for a user.
@@ -2585,7 +2530,6 @@ class SqlDatabase:
             # Reconfigure system locale based on updated language preference
             # Not needed because after user data update, SESSION RESTORATION MODE will automatically exexuted doing _set_lacale() anyway
             # self._set_locale()
-
 
     def get_history(self, card_id=None, limit_days=None, limit_records=None):
         result = False
@@ -2644,7 +2588,6 @@ class SqlDatabase:
 
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
-
 
     def update_rating(self, card_id, rate=None, skip_continuous_play=None):
         result = False
@@ -2746,7 +2689,6 @@ class SqlDatabase:
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
 
-
     def insert_tag(self, card_id, name):
         result = False
         data = {}
@@ -2823,7 +2765,6 @@ class SqlDatabase:
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
 
-
     def delete_tag(self, card_id, name):
         result = False
         data = {}
@@ -2884,7 +2825,6 @@ class SqlDatabase:
                     error_message = "The tag does not exist"
                     raise sqlite3.Error(error_message)
 
-
                 result = True
                 error_message = None
 
@@ -2898,7 +2838,6 @@ class SqlDatabase:
 
         # If there was a problem with the file lock
         return {"result": result, "data": data, "error": error_message}
-
 
     def get_tags(self, category="movie", view_state=None, tags=None, title=None, genres=None, themes=None, directors=None, actors=None, lecturers=None, performers=None, origins=None, decade=None, lang='en', limit=100, json=True):
         result = False
@@ -3324,7 +3263,6 @@ class SqlDatabase:
                 # Apply user's language preference to system locale
                 self._set_locale()
 
-
             return {'result': result, 'data':data, 'error': error}
 
         # CREDENTIAL-BASED LOGIN MODE: Username and password provided
@@ -3420,7 +3358,7 @@ class SqlDatabase:
             cur.execute("commit")
             return record
 
-    def get_list_of_performers(self, category, limit=15, json=True):
+    def get_list_of_performers(self, category, limit=15, cacheable=False, json=True):
         """
         Gives back performer name's list ordered by abc
         """
@@ -3428,10 +3366,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_performers', category=category, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_performers', category=category, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3479,10 +3419,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_actors(self, category, limit=15, json=True):
+    def get_list_of_actors(self, category, limit=15, cacheable=False, json=True):
         """
         Gives back actor name's list, ordered by the number of the movies they played in
         limited by the given value
@@ -3491,10 +3432,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_actors', category=category, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_actors', category=category, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3542,10 +3485,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_actors_by_role_count(self, category, minimum=3, limit=15, json=True):
+    def get_list_of_actors_by_role_count(self, category, minimum=3, limit=15, cacheable=False, json=True):
         """
         Gives back actor name's list, ordered by the number of the movies they played in
         limited by the given value
@@ -3554,10 +3498,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_actors_by_role_count', category=category, minimum=minimum, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_actors_by_role_count', category=category, minimum=minimum, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3636,10 +3582,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_voices(self, category, limit=15, json=True):
+    def get_list_of_voices(self, category, limit=15, cacheable=False, json=True):
         """
         Gives back voice name's list, ordered by the number of the movies they played in
         limited by the given value
@@ -3648,10 +3595,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_voices', category=category, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_voices', category=category, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3699,10 +3648,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_voices_by_role_count(self, category, minimum=3, limit=15, json=True):
+    def get_list_of_voices_by_role_count(self, category, minimum=3, limit=15, cacheable=False, json=True):
         """
         Gives back voice name's list, ordered by the number of the movies they played in
         limited by the given value
@@ -3711,10 +3661,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_voices_by_role_count', category=category, minimum=minimum, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_voices_by_role_count', category=category, minimum=minimum, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3792,10 +3744,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_directors(self, category, limit=15, json=True):
+    def get_list_of_directors(self, category, limit=15, cacheable=False, json=True):
         """
         Gives back director name's list, ordered by the name
         """
@@ -3803,10 +3756,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_directors', category=category, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_directors', category=category, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3854,10 +3809,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_directors_by_movie_count(self, category, minimum=3, limit=15, json=True):
+    def get_list_of_directors_by_movie_count(self, category, minimum=3, limit=15, cacheable=False, json=True):
         """
         Returns a list of director names, ordered by the number of movies they have directed, limited to the specified maximum count
         """
@@ -3865,10 +3821,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_directors_by_movie_count', category=category, minimum=minimum, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_directors_by_movie_count', category=category, minimum=minimum, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -3947,10 +3905,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_writers(self, category, limit=15, json=True):
+    def get_list_of_writers(self, category, limit=15, cacheable=False, json=True):
         """
         Gives back writers name's list, ordered by the name
         """
@@ -3958,10 +3917,12 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
-        cache_key = self.cache.make_key(method='get_list_of_writers', category=category, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_writers', category=category, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         records = {}
         with self.lock:
@@ -4009,10 +3970,11 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
-    def get_list_of_tags(self, category, limit=15, json=True):
+    def get_list_of_tags(self, category, limit=15, cacheable=False, json=True):
         """
         Gives back tags for the given category for the user, ordered by the name
         """
@@ -4027,10 +3989,12 @@ class SqlDatabase:
         else:
             user_id = -1
 
-        cache_key = self.cache.make_key(method='get_list_of_tags', user_id=user_id, category=category, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_list_of_tags', user_id=user_id, category=category, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         with self.lock:
             try:
@@ -4070,7 +4034,8 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
-        self.cache.set(cache_key, output)
+        if cache_key is not None:
+            self.cache.set(cache_key, output)
         return output
 
 # ================================================================================================================================================
@@ -4091,15 +4056,12 @@ class SqlDatabase:
 #''' + SqlDatabase.TABLE_CARD_DIRECTOR + ''' cd,
 #'' + SqlDatabase.TABLE_CATEGORY + ''' cat ''' + ('''
 
-
-
-
     #
     # GET /collect/highest/mixed
     #
     # ✅
     #
-    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+    def get_highest_level_cards(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, cacheable=False, json=True):
         """
         FULL QUERY for highest level list                ---
         Returns mixed standalone media and level cards   ---
@@ -4129,10 +4091,12 @@ class SqlDatabase:
         user_id, lang = self.get_user_id_and_lang()
 
         # Check cache
-        cache_key = self.cache.make_key(method='get_highest_level_cards', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_highest_level_cards', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         with self.lock:
 
@@ -4159,7 +4123,8 @@ class SqlDatabase:
             finally:
                 cur.close()
 
-                self.cache.set(cache_key, records)
+                if cache_key is not None:
+                    self.cache.set(cache_key, records)
                 return records
         return records
 
@@ -4170,7 +4135,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+    def get_next_level_cards(self, card_id, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, cacheable=False, json=True):
         """
         FULL QUERY for the children cards of the given card
         Returns the next child cards which could be:
@@ -4198,10 +4163,12 @@ class SqlDatabase:
         user_id, lang = self.get_user_id_and_lang()
 
         # Check cache
-        cache_key = self.cache.make_key(method='get_next_level_cards', user_id=user_id, card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_next_level_cards', user_id=user_id, card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         with self.lock:
 
@@ -4231,7 +4198,8 @@ class SqlDatabase:
 
             finally:
                 cur.close()
-                self.cache.set(cache_key, records)
+                if cache_key is not None:
+                    self.cache.set(cache_key, records)
                 return records
 
         # It should never been here
@@ -4244,7 +4212,7 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, json=True):
+    def get_lowest_level_cards(self, category, view_state=None, tags=None, level=None, title=None, genres=None, themes=None, directors=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=100, cacheable=False, json=True):
 
         """
         FULL QUERY for lowest (medium) level list
@@ -4280,10 +4248,12 @@ class SqlDatabase:
         user_id, lang = self.get_user_id_and_lang()
 
         # Check cache
-        cache_key = self.cache.make_key(method='get_lowest_level_cards', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_lowest_level_cards', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         with self.lock:
 
@@ -4332,7 +4302,8 @@ class SqlDatabase:
 
             finally:
                 cur.close()
-                self.cache.set(cache_key, records)
+                if cache_key is not None:
+                    self.cache.set(cache_key, records)
                 return records
         return records
 
@@ -4343,16 +4314,18 @@ class SqlDatabase:
     #
     # ✅
     #
-    def get_highest_level_abc(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=1000, json=True):
+    def get_highest_level_abc(self, category, view_state=None, tags=None, level=None, filter_on=None, title=None, genres=None, themes=None, directors=None, writers=None, actors=None, voices=None, lecturers=None, performers=None, origins=None, rate_value=None, decade=None, lang='en', limit=1000, cacheable=False, json=True):
 
         records = []
         user_id, lang = self.get_user_id_and_lang()
 
         # Check cache
-        cache_key = self.cache.make_key(method='get_highest_level_abc', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
-        cached = self.cache.get(cache_key)
-        if cached is not None:
-            return cached
+        cache_key = None
+        if cacheable:
+            cache_key = self.cache.make_key(method='get_highest_level_abc', user_id=user_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate_value, decade=decade, lang=lang, limit=limit)
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                return cached
 
         result = False
         error_message = "Lock error"
@@ -4385,12 +4358,11 @@ class SqlDatabase:
                 result = True
                 error_message = None
                 output = {"result": result, "data": records, "error": error_message}
-                self.cache.set(cache_key, output)
+                if cache_key is not None:
+                    self.cache.set(cache_key, output)
                 return output
 
         return {"result": result, "data": records, "error": error_message}
-
-
 
 # ---
 
@@ -4413,10 +4385,6 @@ class SqlDatabase:
         records.insert(0, {"filter": "0%_OR_1%_OR_2%_OR_3%_OR_4%_OR_5%_OR_6%_OR_7%_OR_8%_OR_9%", "name": "0-9"})
 
         return {"result": result, "data": records, "error": error_message}
-
-
-
-
 
 # RAW Queries
 
@@ -4475,7 +4443,6 @@ class SqlDatabase:
                 mixed_id_list.tags,
                 mixed_id_list.rate,
                 mixed_id_list.skip_continuous_play,
-
 
                 mixed_id_list.hosts,
                 mixed_id_list.guests,
@@ -6082,7 +6049,6 @@ class SqlDatabase:
                             )gnr
                             ON gnr.id_card=card.id
 
-
                             ------------------------------------
                             --- ORIGINS for the higher level ---
                             --- like band or LP              ---
@@ -6572,7 +6538,6 @@ class SqlDatabase:
 
                             ) core,
 
-
                             --- Conditional ---
                             Category category
 
@@ -6637,7 +6602,6 @@ class SqlDatabase:
                             rec,
                             Card card,
 
-
                             (
                             SELECT
                                 unioned.id id,
@@ -6694,7 +6658,6 @@ class SqlDatabase:
                             GROUP BY unioned.id
 
                             ) core
-
 
                         WHERE
 
@@ -8048,7 +8011,6 @@ class SqlDatabase:
 
                     MAX(title_req) title_req,
                     MAX(title_orig) title_orig
-
 
                 FROM
                     (

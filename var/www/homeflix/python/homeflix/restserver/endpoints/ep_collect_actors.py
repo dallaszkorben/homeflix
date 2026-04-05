@@ -44,6 +44,7 @@ class EPCollectActors(EP):
             )
         )
 
-        output = self.web_gadget.db.get_list_of_actors(category=category, limit=limit, json=True)
+        cacheable = payload.get('cacheable', False)
+        output = self.web_gadget.db.get_list_of_actors(category=category, limit=limit, json=True, cacheable=cacheable)
 
         return output_json(output, EP.CODE_OK)

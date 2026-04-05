@@ -139,6 +139,7 @@ class EPCollectNextMixed(EP):
         if decade == '*':
             decade=None
 
-        output = self.web_gadget.db.get_next_level_cards(card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate, decade=decade, lang=lang, limit=100)
+        cacheable = payload.get('cacheable', False)
+        output = self.web_gadget.db.get_next_level_cards(card_id=card_id, category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, rate_value=rate, decade=decade, lang=lang, limit=100, cacheable=cacheable)
 
         return output_json(output, EP.CODE_OK)

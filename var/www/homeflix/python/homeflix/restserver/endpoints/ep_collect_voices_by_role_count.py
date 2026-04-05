@@ -48,6 +48,7 @@ class EPCollectVoicesByRoleCount(EP):
             )
         )
 
-        output = self.web_gadget.db.get_list_of_voices_by_role_count(category=category, minimum=minimum, limit=limit, json=True)
+        cacheable = payload.get('cacheable', False)
+        output = self.web_gadget.db.get_list_of_voices_by_role_count(category=category, minimum=minimum, limit=limit, json=True, cacheable=cacheable)
 
         return output_json(output, EP.CODE_OK)
