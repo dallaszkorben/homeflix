@@ -1,6 +1,15 @@
 # ###########
 #  DEFINITIONS
 # ###########
+#
+# cacheable: true/false (default: false)
+#   Controls server-side file caching for dynamic_hard_coded and dynamic_queried entries.
+#   When true, the SQL query result is cached on disk and reused for subsequent requests.
+#   When false (or omitted), the query always hits the database.
+#   Use true for static catalog data (genres, directors, ABC, etc.).
+#   Omit for personal/dynamic data (playlists, search, tags).
+#   Cache is cleared on Rebuild Static DB.
+#
 definitions:
   parts:
     request_collect_highest_mixed: &request_collect_highest_mixed

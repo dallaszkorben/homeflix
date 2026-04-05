@@ -78,7 +78,10 @@ class SqlDatabase:
         self.db_path = os.path.join(config["path"], config['card-db-name'])
         self.mediaAbsolutePath = config["media-absolute-path"]
 
-        # Response cache for expensive queries
+        # Server-side file cache for expensive SQL query results.
+        # Queries with cacheable=True check this cache before running SQL.
+        # Cache is cleared on Rebuild Static DB (see recreate_static_dbs()).
+        # Cache location: {config_path}/cache/ (e.g., /home/pi/.homeflix/cache/)
         self.cache = ResponseCache(os.path.join(config["path"], "cache"))
 
         # used for getting language independent code lists
@@ -252,6 +255,8 @@ class SqlDatabase:
     def recreate_static_dbs(self):
 
         # Clear response cache
+        # Clear server-side response cache so all clients get fresh data
+        # after the static DB is rebuilt
         self.cache.clear()
 
         # Create new empty databases
@@ -3366,6 +3371,8 @@ class SqlDatabase:
         result = False
         error_message = "Lock error"
 
+        # Check server-side file cache (only when cacheable flag is set in card_menu.yaml).
+        # If cached, return immediately without running the expensive SQL query.
         cache_key = None
         if cacheable:
             cache_key = self.cache.make_key(method='get_list_of_performers', category=category, limit=limit)
@@ -3419,6 +3426,7 @@ class SqlDatabase:
                 cur.close()
 
         output = {"result": result, "data": records, "error": error_message}
+        # Store result in file cache for future requests (only if cacheable)
         if cache_key is not None:
             self.cache.set(cache_key, output)
         return output

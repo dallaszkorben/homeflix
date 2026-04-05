@@ -141,6 +141,9 @@ class EPCollectHighestMixed(EP):
         if decade == '*':
             decade=None
 
+        # cacheable flag from card_menu.yaml — controls server-side file caching.
+        # Catalog queries (genres, directors, ABC) set this to true.
+        # Personal queries (playlists, search) omit it (defaults to False).
         cacheable = payload.get('cacheable', False)
         output = self.web_gadget.db.get_highest_level_cards(category=category, view_state=view_state, tags=tags, level=level, filter_on=filter_on, title=title, genres=genres, themes=themes, directors=directors, writers=writers, actors=actors, voices=voices, lecturers=lecturers, performers=performers, origins=origins, decade=decade, rate_value=rate, lang=lang, limit=100, cacheable=cacheable)
 
