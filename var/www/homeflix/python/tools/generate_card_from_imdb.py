@@ -29,6 +29,7 @@ if __name__ == "__main__":
     IMDB_ID = "tt0258463"   # IMDB ID for individual movie - The Bourne Identity
     IMDB_ID = "tt0121387"   # IMDB ID for individual movie - Hófehér
     IMDB_ID = "tt0155267"   # IMDB ID for individual movie - The Thomas Crown Affair
+    IMDB_ID = "tt0059812"   # IMDOBB ID for individual movie - Tizedes meg a tobbiek
 
 
     IMDB_ID = "tt0098936"   # IMDB ID for series - Twin Peaks
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     IMDB_ID = "tt0124218"   # IMDB ID for series - Csengetett mylord
     IMDB_ID = "tt2452242"   # IMDB ID for series - Happy
 
-    IMDB_ID = "tt2452242"
+    IMDB_ID = "tt0059812"
 
     cons_path = os.path.expanduser('~/tmp/homeflix/')
     dest_path = os.path.expanduser('/media/akoel/vegyes/MEDIA/01.Movie/01.Standalone')

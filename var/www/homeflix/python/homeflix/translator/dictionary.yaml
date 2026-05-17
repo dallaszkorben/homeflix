@@ -337,6 +337,7 @@ genre:
         announcement: Announcement
         parliament: Parliament
         re_dubbing: Re-Dubbing
+        parody: Parody
 
     personal:
         photos: Photos
