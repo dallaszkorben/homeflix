@@ -282,6 +282,7 @@ genre:
     knowledge:
         lecture: Előadás
         lecture_notes: Előadás jegyzetek
+        presentation: Bemutató
         e-learning: E-learning
         diy: Barkács
         datasheet: Adatlap
@@ -309,7 +310,6 @@ genre:
         standup: Standup
         skit: Kabaré
         analysis: Elemzés
-        talk: Beszélgetés
         show: Show
         interview: Interjú
         news: Híradó
@@ -445,6 +445,7 @@ theme:
     biology: Biologia
     psychology: Pszihologia
     health: Egészség
+    health_care: Egészségügy
     cancer: Rák
     oil: Olaj
     brain: Agy
@@ -480,6 +481,7 @@ theme:
     light: Fény
     jewellery: Ékszerek
     archery: Íjjászat
+    boat: Hajózás
     eu: Europai Unió
     scandal: Botrány
     cathastroph: Katasztrófa

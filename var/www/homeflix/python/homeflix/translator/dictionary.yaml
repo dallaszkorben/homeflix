@@ -282,6 +282,7 @@ genre:
     knowledge:
         lecture: Lecture
         lecture_notes: Lecture Notes
+        presentation: Presentation
         e-learning: E-learning
         diy: DIY
         datasheet: Datasheet
@@ -309,7 +310,6 @@ genre:
         standup: Standup
         skit: Skit
         analysis: Analysis
-        talk: Talk
         show: Show
         interview: Interview
         news: News
@@ -445,6 +445,7 @@ theme:
     biology: Biology
     psychology: Psychology
     health: Health
+    health_care: Health Care
     cancer: Cancer
     oil: Oil
     brain: Brain
@@ -480,6 +481,7 @@ theme:
     light: Light
     jewellery: Jewellery
     archery: Archery
+    boat: Boat
     eu: European Union
     scandal: Scandal
     cathastroph: Catastrophe
